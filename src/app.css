@@ -233,6 +233,33 @@ textarea {
   animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
+/*
+ * A named group paints above the root snapshot, so anything that sits over the interface has to be
+ * named too and ordered here, or it drops behind every named region for the length of a transition.
+ * The scan lines are the visible case: losing their 12.5% for 260ms brightened the whole page.
+ */
+.identity {
+  view-transition-name: identity;
+}
+
+.system-button {
+  view-transition-name: system-button;
+}
+
+.terminal {
+  view-transition-name: terminal;
+}
+
+::view-transition-group(scan-lines) {
+  z-index: 20;
+}
+
+::view-transition-group(identity),
+::view-transition-group(system-button),
+::view-transition-group(terminal) {
+  z-index: 30;
+}
+
 /* Cards and widget slots each get their own name, so a reorder or an edit-mode change morphs them. */
 .view-item {
   view-transition-name: match-element;
@@ -270,6 +297,7 @@ textarea {
 
 .scan-lines {
   z-index: 15;
+  view-transition-name: scan-lines;
 }
 
 .scan-lines-below {
