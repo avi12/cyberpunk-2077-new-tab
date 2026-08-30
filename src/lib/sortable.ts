@@ -290,6 +290,13 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     slot.element.style.translate = `${landing.left - slot.left}px ${landing.top - slot.top}px`;
   }
 
+  function sizeTo(slot: Slot, landing: Slot) {
+    slot.element.style.width = `${landing.width}px`;
+    slot.element.style.height = `${landing.height}px`;
+    // A grid item's height is `auto` until something reads it, and a transition cannot start there.
+    slot.element.getBoundingClientRect();
+  }
+
   /** Open the gap the item would land in: every other sibling takes the slot it would then sit in. */
   function reflow(before: number) {
     if (!source) {
@@ -418,6 +425,8 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
         const { style } = slot.element;
         style.transition = "";
         style.translate = "";
+        style.width = "";
+        style.height = "";
         style.zIndex = "";
         slot.element.classList.remove(DRAGGING_CLASS);
       }
@@ -486,8 +495,27 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
       return;
     }
 
-    dragged.element.style.transition = `translate ${SETTLE_MS}ms ${SETTLE_EASE}`;
-    requestAnimationFrame(() => slideTo(dragged, landing));
+    /**
+     * A card is as tall as the row it was lifted from, and the row it lands in is often a different
+     * size - so it grows or shrinks into the slot rather than snapping to it when the order commits.
+     */
+    const isResizing = landing.width !== dragged.width || landing.height !== dragged.height;
+    if (isResizing) {
+      sizeTo(dragged, dragged);
+    }
+
+    dragged.element.style.transition = [
+      `translate ${SETTLE_MS}ms ${SETTLE_EASE}`,
+      `width ${SETTLE_MS}ms ${SLIDE_EASE}`,
+      `height ${SETTLE_MS}ms ${SLIDE_EASE}`
+    ].join(", ");
+    requestAnimationFrame(() => {
+      slideTo(dragged, landing);
+
+      if (isResizing) {
+        sizeTo(dragged, landing);
+      }
+    });
     setTimeout(() => {
       void commit(isCancelled);
     }, SETTLE_MS);
