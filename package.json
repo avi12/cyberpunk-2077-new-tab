@@ -1,0 +1,61 @@
+{
+  "name": "cyberpunk-2077-new-tab",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A Cyberpunk 2077 themed new tab page: clock, search, quotes, netlinks seeded from your most-visited sites, and drag-ordered widgets.",
+  "author": "Avi <avi6106@gmail.com> (https://avi12.com)",
+  "license": "MIT",
+  "imports": {
+    "#imports": "./.wxt/types/imports-module.d.ts"
+  },
+  "scripts": {
+    "ext:dev": "wxt",
+    "ext:dev:firefox": "wxt -b firefox",
+    "ext:build": "wxt build",
+    "ext:build:firefox": "wxt build -b firefox",
+    "ext:zip": "wxt zip",
+    "ext:zip:firefox": "wxt zip -b firefox",
+    "ext:dev:hmr": "node scripts/dev.mjs",
+    "ext:sideload": "node scripts/sideload.mjs",
+    "lint": "oxlint --type-aware --fix -c .oxlintrc.fix.json && eslint --fix && oxlint --type-aware",
+    "stylelint": "stylelint . --fix",
+    "svelte:check": "svelte-check --tsconfig ./tsconfig.json",
+    "fallow": "fallow",
+    "icons:generate": "node scripts/generate-icons.mjs",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "@webext-core/messaging": "^3.0.2",
+    "html-to-image": "^1.11.13",
+    "zod": "^4.5.2"
+  },
+  "devDependencies": {
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@sveltejs/vite-plugin-svelte": "7.1.2",
+    "@tsconfig/svelte": "^5.0.8",
+    "@types/chrome": "^0.2.2",
+    "@types/node": "^26.1.0",
+    "@wxt-dev/module-svelte": "2.0.5",
+    "eslint": "^10.6.0",
+    "eslint-plugin-import-newlines": "^2.0.0",
+    "eslint-plugin-perfectionist": "^5.9.1",
+    "eslint-plugin-svelte": "3.20.0",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "fallow": "^3.20.0",
+    "globals": "^17.7.0",
+    "oxlint": "^1.72.0",
+    "oxlint-tsgolint": "^0.24.0",
+    "postcss": "^8.5.16",
+    "postcss-html": "^1.8.1",
+    "stylelint": "^17.14.0",
+    "stylelint-config-ccb": "^3.32.0",
+    "svelte": "5.56.4",
+    "svelte-check": "^4.7.3",
+    "svelte-eslint-parser": "1.8.0",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.62.1",
+    "web-ext-run": "^0.2.4",
+    "wxt": "^0.20.27"
+  },
+  "packageManager": "pnpm@11.1.2"
+}

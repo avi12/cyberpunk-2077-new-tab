@@ -1,0 +1,14 @@
+node_modules/
+.idea/
+.output/
+.wxt/
+.fallow/
+.dev-logs/
+user-profiles/
+keys/
+stats.html
+*.log
+.env
+.env.*
+!.env.example
+reference/
