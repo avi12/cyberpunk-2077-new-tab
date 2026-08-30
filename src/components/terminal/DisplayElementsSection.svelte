@@ -5,6 +5,7 @@
   import { GLITCH_SHORT_MS } from "@/lib/glitch.svelte";
   import PanelSection from "./PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
+  import { withViewTransition } from "@/lib/view-transition";
 
   const { onElementGlitch }: { onElementGlitch: (key: keyof DisplayPreferences | null) => void } = $props();
 
@@ -39,8 +40,6 @@
     }
   ];
 
-  const MOUNT_DELAY_MS = 10;
-
   function commit({ key, isVisible }: {
     key: keyof DisplayPreferences;
     isVisible: boolean;
@@ -49,6 +48,45 @@
       ...settings.displayPreferences.current,
       [key]: isVisible
     };
+  }
+
+  function beat(durationMs: number) {
+    return new Promise(resolve => setTimeout(resolve, durationMs));
+  }
+
+  /**
+   * The element glitches on its way out, and the mount or unmount itself happens inside a view
+   * transition - every element in the page stack carries a `view-transition-name`, so the one
+   * leaving fades where it stood while the rest close the gap instead of jumping into it.
+   *
+   * The greeting stays mounted for as long as it is glitching, so clearing the glitch is the DOM
+   * change that removes it. That is why it goes inside the transition rather than after it.
+   */
+  async function hide(key: keyof DisplayPreferences) {
+    onElementGlitch(key);
+    await beat(GLITCH_SHORT_MS);
+    await withViewTransition(() => {
+      commit({
+        key,
+        isVisible: false
+      });
+      onElementGlitch(null);
+    });
+  }
+
+  /** The other way round: it arrives with the neighbours moving aside, and glitches once it lands. */
+  async function show(key: keyof DisplayPreferences) {
+    await withViewTransition(() => commit({
+      key,
+      isVisible: true
+    }));
+    onElementGlitch(key);
+    await beat(GLITCH_SHORT_MS);
+    onElementGlitch(null);
+  }
+
+  function toggle(key: keyof DisplayPreferences) {
+    return settings.displayPreferences.current[key] ? hide(key) : show(key);
   }
 </script>
 
@@ -59,29 +97,7 @@
         <button
           class="option-button elements__toggle"
           aria-pressed={settings.displayPreferences.current[element.key]}
-          onclick={() => {
-            if (settings.displayPreferences.current[element.key]) {
-              onElementGlitch(element.key);
-              setTimeout(() => {
-                commit({
-                  key: element.key,
-                  isVisible: false
-                });
-                onElementGlitch(null);
-              }, GLITCH_SHORT_MS);
-
-              return;
-            }
-
-            commit({
-              key: element.key,
-              isVisible: true
-            });
-            setTimeout(() => {
-              onElementGlitch(element.key);
-              setTimeout(() => onElementGlitch(null), GLITCH_SHORT_MS);
-            }, MOUNT_DELAY_MS);
-          }}
+          onclick={() => void toggle(element.key)}
           type="button">
           <span>{element.label}</span>
           {@html settings.displayPreferences.current[element.key] ? eye : eyeOff}
