@@ -1,3 +1,15 @@
+<script lang="ts" module>
+  /**
+   * Outside edit mode a card is a plain link, and the browser drags it: it carries the URL, and it
+   * hands the cursor a snapshot of whatever it started from - here, the whole card. A card sliding
+   * under the pointer is what edit mode's own drag looks like, so this one leaves the cursor bare
+   * and lets the browser's own drop feedback speak instead. `setDragImage` still needs something to
+   * draw, and a transparent pixel draws nothing.
+   */
+  const BLANK_DRAG_IMAGE = new Image();
+  BLANK_DRAG_IMAGE.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+</script>
+
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/defaults";
   import gripVertical from "@/assets/icons/grip-vertical.svg?raw";
@@ -33,6 +45,10 @@
     }
   }
 
+  function onDragStart(e: DragEvent) {
+    e.dataTransfer?.setDragImage(BLANK_DRAG_IMAGE, 0, 0);
+  }
+
   function onClick(e: MouseEvent) {
     if (isEditing) {
       e.preventDefault();
@@ -53,7 +69,8 @@
     href={bookmark.url}
     onauxclick={onAuxClick}
     onclick={onClick}
-    oncontextmenu={e => onContextMenu(e, bookmark)}>
+    oncontextmenu={e => onContextMenu(e, bookmark)}
+    ondragstart={onDragStart}>
     <span class="card__icon">{@html iconByName(bookmark.icon || "Default")}</span>
     <span class="card__title hover-glitch">{bookmark.title}</span>
   </a>
