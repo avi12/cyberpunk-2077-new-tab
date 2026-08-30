@@ -1,4 +1,5 @@
 import { hostLabel, hostOf } from "../link";
+import { BookmarkCategory } from "../storage/defaults";
 import type { IconName } from "./choices";
 
 /**
@@ -277,6 +278,40 @@ const CLASSES: {
   }
 ];
 
+/**
+ * Which section a glyph belongs to. The two layers above already say what a link *is*, so the
+ * section it belongs in is one more reading of the same answer rather than a second set of tables.
+ * A glyph left out has no opinion, and a link wearing it is left where its owner put it.
+ */
+const ICON_CATEGORIES: Partial<Record<IconName, BookmarkCategory>> = {
+  Basket: BookmarkCategory.daily,
+  Bot: BookmarkCategory.work,
+  Brain: BookmarkCategory.work,
+  Camera: BookmarkCategory.social,
+  Chart: BookmarkCategory.work,
+  Chat: BookmarkCategory.social,
+  Code: BookmarkCategory.work,
+  Coffee: BookmarkCategory.daily,
+  Design: BookmarkCategory.work,
+  Food: BookmarkCategory.daily,
+  Gaming: BookmarkCategory.entertainment,
+  Heart: BookmarkCategory.daily,
+  Home: BookmarkCategory.daily,
+  Mail: BookmarkCategory.daily,
+  Money: BookmarkCategory.daily,
+  Music: BookmarkCategory.entertainment,
+  News: BookmarkCategory.daily,
+  Podcast: BookmarkCategory.entertainment,
+  Popcorn: BookmarkCategory.entertainment,
+  Security: BookmarkCategory.daily,
+  Skull: BookmarkCategory.work,
+  Star: BookmarkCategory.daily,
+  Terminal: BookmarkCategory.work,
+  Video: BookmarkCategory.entertainment,
+  Wallet: BookmarkCategory.daily,
+  Work: BookmarkCategory.work
+};
+
 /** The section a link is filed under has the last word, the way a store category would. */
 const CATEGORY_ICONS: Record<string, IconName> = {
   daily: "Star",
@@ -297,25 +332,45 @@ function knows({ tokens, keywords }: {
   return tokens.some(token => keywords.some(keyword => token.startsWith(keyword)));
 }
 
-/** The glyph a link would carry if nobody picked one. */
-export function pickIcon({ url, title, category }: {
+/** The two layers that read the link itself, before the section it happens to be filed under. */
+function classify({ url, title }: {
   url: string;
   title: string;
-  category: string;
-}): IconName {
+}): IconName | null {
   const site = SITE_ICONS[hostLabel(url)];
   if (site) {
     return site;
   }
 
   const tokens = tokensOf(`${hostOf(url)} ${title}`);
-  const classified = CLASSES.find(entry => knows({
+
+  return CLASSES.find(entry => knows({
     tokens,
     keywords: entry.keywords
-  }));
-  if (classified) {
-    return classified.icon;
-  }
+  }))?.icon ?? null;
+}
 
-  return CATEGORY_ICONS[category.toLowerCase()] ?? DEFAULT_ICON;
+/** The glyph a link would carry if nobody picked one. */
+export function pickIcon({ url, title, category }: {
+  url: string;
+  title: string;
+  category: string;
+}): IconName {
+  return classify({
+    url,
+    title
+  }) ?? CATEGORY_ICONS[category.toLowerCase()] ?? DEFAULT_ICON;
+}
+
+/** The section a link belongs in, or null when nothing about the link says. */
+export function pickCategory({ url, title }: {
+  url: string;
+  title: string;
+}): BookmarkCategory | null {
+  const icon = classify({
+    url,
+    title
+  });
+
+  return icon ? ICON_CATEGORIES[icon] ?? null : null;
 }

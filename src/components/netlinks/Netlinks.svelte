@@ -6,6 +6,7 @@
   import CategorySection from "./CategorySection.svelte";
   import ContextMenu from "./ContextMenu.svelte";
   import Modal from "@/components/modals/Modal.svelte";
+  import { pickCategory } from "@/lib/icons/auto";
   import NameForm from "./NameForm.svelte";
   import plus from "@/assets/icons/plus.svg?raw";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -41,6 +42,15 @@
     return groups;
   });
   const visibleCategories = $derived(categories.filter(name => isEditing || (byCategory[name]?.length ?? 0) > 0));
+  /** Only links the tables recognise, that would land somewhere else, in a section that still exists. */
+  const misfiled = $derived(settings.bookmarks.current.filter(bookmark => filedCategory(bookmark) !== null));
+  const sortLabel = $derived.by(() => {
+    if (misfiled.length === 0) {
+      return "Every link already sits in the section that fits it";
+    }
+
+    return `Move ${misfiled.length} link(s) into the section that fits`;
+  });
   const pendingDeleteCount = $derived.by(() => {
     if (!pendingDelete) {
       return 0;
@@ -48,6 +58,19 @@
 
     return byCategory[pendingDelete]?.length ?? 0;
   });
+
+  /** Where the tables would file a link, or null when they would leave it exactly where it is. */
+  function filedCategory(bookmark: Bookmark) {
+    const category = pickCategory({
+      url: bookmark.url,
+      title: bookmark.title
+    });
+    if (!category || !categories.includes(category) || category === (bookmark.category || BookmarkCategory.other)) {
+      return null;
+    }
+
+    return category;
+  }
 
   /** A category's own bookmarks, in the order the array already holds them. */
   function bookmarksIn(category: string) {
@@ -83,6 +106,19 @@
         },
         ...landing.slice(move.toIndex)
       ]
+    });
+  }
+
+  function sortIntoCategories() {
+    withViewTransition(() => {
+      settings.bookmarks.current = settings.bookmarks.current.map(bookmark => {
+        const category = filedCategory(bookmark);
+
+        return category ? {
+          ...bookmark,
+          category
+        } : bookmark;
+      });
     });
   }
 
@@ -178,6 +214,12 @@
     <h2 class="netlinks__title"><span class="hover-glitch" data-text="NETLINKS">NETLINKS</span></h2>
     <div class="netlinks__controls">
       {#if isEditing}
+        <button
+          class="netlinks__sort"
+          disabled={misfiled.length === 0}
+          onclick={sortIntoCategories}
+          type="button"
+          use:tooltip={sortLabel}>SORT</button>
         <button class="netlinks__save" onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
       {:else}
         <button class="netlinks__icon-button" aria-label={EDIT_LABEL} onclick={() => withViewTransition(() => (isEditing = true))} type="button" use:tooltip={EDIT_LABEL}>
@@ -343,15 +385,31 @@
     align-items: center;
   }
 
-  .netlinks__save {
+  .netlinks__save,
+  .netlinks__sort {
     padding: 0.25rem 0.75rem;
     border: 1px solid var(--cp-primary);
     color: var(--cp-primary);
     font-family: var(--cp-mono);
 
-    &:hover {
+    &:hover:not(:disabled) {
       border-color: var(--cp-primary-hover);
       color: var(--cp-primary-hover);
+    }
+  }
+
+  .netlinks__sort {
+    border-color: var(--cp-secondary);
+    color: var(--cp-secondary);
+    transition: border-color 200ms, color 200ms, opacity 200ms;
+
+    &:disabled {
+      opacity: 40%;
+    }
+
+    &:hover:not(:disabled) {
+      border-color: var(--cp-secondary-hi);
+      color: var(--cp-secondary-hi);
     }
   }
 
