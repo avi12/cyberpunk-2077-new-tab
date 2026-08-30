@@ -1,14 +1,14 @@
 <script lang="ts">
   import type { GeoLocation, WidgetConfig } from "@/lib/storage/defaults";
   import type { WeatherReading } from "@/lib/weather";
-  import { Cloud, Wind } from "@/lib/icons/nodes";
+  import cloud from "@/assets/icons/cloud.svg?raw";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
   import { deviceLocation } from "@/lib/geolocation";
   import { fetchWeather, formatTemperature, temperatureUnit, WEATHER_REFRESH_MS, weatherIcon } from "@/lib/weather";
   import { GLITCH_SHORT_MS, Glitch } from "@/lib/glitch.svelte";
-  import Icon from "@/lib/icons/Icon.svelte";
   import LocationOverrideModal from "./LocationOverrideModal.svelte";
   import WidgetLocation from "./WidgetLocation.svelte";
+  import wind from "@/assets/icons/wind.svg?raw";
 
   const {
     config,
@@ -83,10 +83,6 @@
     };
   });
 
-  function toggleUnit() {
-    glitch.fireThen(() => onConfigChange({ temperatureUnit: !isCelsius }), GLITCH_SHORT_MS);
-  }
-
   function openLocation() {
     isEditingLocation = true;
   }
@@ -95,26 +91,26 @@
 <article class="widget-card glitch-border">
   {#if isLoading}
     <div class="weather__row">
-      <span class="weather__icon weather__icon--isLoading pulse"><Icon node={Cloud} size={32} /></span>
+      <span class="weather__icon weather__icon--isLoading pulse">{@html cloud}</span>
       <p class="weather__temp weather__temp--muted">--{unit}</p>
     </div>
     <WidgetLocation name={location.name} onEdit={openLocation} />
     <p class="weather__desc weather__desc--muted">Scanning...</p>
   {:else if isFailed || !reading}
     <div class="weather__row">
-      <span class="weather__icon weather__icon--error"><Icon node={Wind} size={32} /></span>
+      <span class="weather__icon weather__icon--error">{@html wind}</span>
       <p class="weather__temp weather__temp--error">ERR</p>
     </div>
     <WidgetLocation name={location.name} isFailed onEdit={openLocation} />
     <p class="weather__desc weather__desc--error">System offline</p>
   {:else}
     <div class="weather__row">
-      <span style:color={icon?.color} class="weather__icon"><Icon node={icon!.node} size={32} /></span>
+      <span style:color={icon?.color} class="weather__icon">{@html icon!.svg}</span>
       <button
         class="weather__temp weather__temp--button"
         class:glitch={glitch.active}
         data-text={temperature}
-        onclick={toggleUnit}
+        onclick={() => glitch.fireThen(() => onConfigChange({ temperatureUnit: !isCelsius }), GLITCH_SHORT_MS)}
         type="button">
         {temperature}
       </button>
@@ -143,6 +139,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+
+  .weather__icon :global(svg) {
+    width: 32px;
+    height: 32px;
   }
 
   .weather__icon--isLoading {

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { MapPin, Settings } from "@/lib/icons/nodes";
-  import Icon from "@/lib/icons/Icon.svelte";
+  import mapPin from "@/assets/icons/map-pin.svg?raw";
+  import settings from "@/assets/icons/settings.svg?raw";
 
   const {
     name,
@@ -16,12 +16,12 @@
 <div class="widget-location-row">
   {#if onEdit}
     <button class="widget-location" class:widget-location--edit={isFailed} onclick={onEdit} type="button">
-      <Icon node={isFailed ? Settings : MapPin} size={12} />
+      {@html isFailed ? settings : mapPin}
       {isFailed ? "EDIT" : name}
     </button>
   {:else}
     <p class="widget-location">
-      <Icon node={MapPin} size={12} />
+      {@html mapPin}
       {name}
     </p>
   {/if}
@@ -32,5 +32,10 @@
     display: flex;
     justify-content: flex-end;
     margin-top: 0.5rem;
+
+    :global(svg) {
+      width: 12px;
+      height: 12px;
+    }
   }
 </style>

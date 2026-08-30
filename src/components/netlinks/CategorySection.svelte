@@ -1,15 +1,18 @@
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/defaults";
-  import { ChevronDown, ChevronRight, Grip, SquarePen, Trash2 } from "@/lib/icons/nodes";
   import BookmarkCard from "./BookmarkCard.svelte";
-  import Icon from "@/lib/icons/Icon.svelte";
+  import chevronDown from "@/assets/icons/chevron-down.svg?raw";
+  import chevronRight from "@/assets/icons/chevron-right.svg?raw";
+  import grip from "@/assets/icons/grip.svg?raw";
   import { sortable } from "@/lib/sortable";
+  import squarePen from "@/assets/icons/square-pen.svg?raw";
+  import trash2 from "@/assets/icons/trash2.svg?raw";
 
   const {
     category,
     bookmarks,
     isEditing,
-    collapsed,
+    isCollapsed,
     onBookmarkOrderChange,
     onToggleCollapse,
     onEditCategory,
@@ -22,7 +25,7 @@
     category: string;
     bookmarks: Bookmark[];
     isEditing: boolean;
-    collapsed: boolean;
+    isCollapsed: boolean;
     onBookmarkOrderChange: (change: {
       category: string;
       ids: string[];
@@ -33,8 +36,11 @@
     onDeleteBookmark: (id: string) => void;
     onEditBookmark: (bookmark: Bookmark) => void;
     onOpenBookmark: (url: string) => void;
-    onBookmarkContextMenu: (event: MouseEvent, bookmark: Bookmark) => void;
+    onBookmarkContextMenu: (e: MouseEvent, bookmark: Bookmark) => void;
   } = $props();
+
+  const EDIT_CATEGORY_LABEL = "Edit category";
+  const DELETE_CATEGORY_LABEL = "Delete category";
 
   const ids = $derived(bookmarks.map(bookmark => bookmark.id));
 </script>
@@ -42,41 +48,41 @@
 <section class="category view-item">
   <div class="category__header">
     {#if isEditing}
-      <span class="category__grip"><Icon node={Grip} size={20} /></span>
+      <span class="category__grip">{@html grip}</span>
     {/if}
     <h3 class="category__heading">
       <button
         class="category__toggle"
-        aria-expanded={!collapsed}
+        aria-expanded={!isCollapsed}
         onclick={() => onToggleCollapse(category)}
         type="button">
         {category}
-        <Icon node={collapsed ? ChevronRight : ChevronDown} size={20} />
+        {@html isCollapsed ? chevronRight : chevronDown}
       </button>
     </h3>
     {#if isEditing}
       <div class="category__actions">
         <button
           class="category__action category__action--edit"
-          aria-label="Edit category"
+          aria-label={EDIT_CATEGORY_LABEL}
           onclick={() => onEditCategory(category)}
-          title="Edit category"
+          title={EDIT_CATEGORY_LABEL}
           type="button">
-          <Icon node={SquarePen} size={16} />
+          {@html squarePen}
         </button>
         <button
           class="category__action category__action--delete"
-          aria-label="Delete category"
+          aria-label={DELETE_CATEGORY_LABEL}
           onclick={() => onDeleteCategory(category)}
-          title="Delete category"
+          title={DELETE_CATEGORY_LABEL}
           type="button">
-          <Icon node={Trash2} size={16} />
+          {@html trash2}
         </button>
       </div>
     {/if}
   </div>
 
-  {#if !collapsed}
+  {#if !isCollapsed}
     <ul
       class="category__grid"
       use:sortable={{
@@ -114,6 +120,11 @@
 
   .category__grip {
     color: var(--cp-secondary);
+
+    :global(svg) {
+      width: 20px;
+      height: 20px;
+    }
   }
 
   .category__heading {
@@ -140,11 +151,21 @@
     &:hover {
       color: var(--cp-secondary-hi);
     }
+
+    :global(svg) {
+      width: 20px;
+      height: 20px;
+    }
   }
 
   .category__actions {
     display: flex;
     gap: 0.25rem;
+  }
+
+  .category__action :global(svg) {
+    width: 16px;
+    height: 16px;
   }
 
   .category__action--edit {

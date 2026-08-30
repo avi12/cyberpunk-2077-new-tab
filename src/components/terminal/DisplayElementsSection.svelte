@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { DisplayPreferences } from "@/lib/storage/defaults";
-  import { Eye, EyeOff } from "@/lib/icons/nodes";
+  import eye from "@/assets/icons/eye.svg?raw";
+  import eyeOff from "@/assets/icons/eye-off.svg?raw";
   import { GLITCH_SHORT_MS } from "@/lib/glitch.svelte";
-  import Icon from "@/lib/icons/Icon.svelte";
   import PanelSection from "./PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
 
@@ -50,30 +50,6 @@
       [key]: isVisible
     };
   }
-
-  function toggle(key: keyof DisplayPreferences) {
-    if (settings.displayPreferences.current[key]) {
-      onElementGlitch(key);
-      setTimeout(() => {
-        commit({
-          key,
-          isVisible: false
-        });
-        onElementGlitch(null);
-      }, GLITCH_SHORT_MS);
-
-      return;
-    }
-
-    commit({
-      key,
-      isVisible: true
-    });
-    setTimeout(() => {
-      onElementGlitch(key);
-      setTimeout(() => onElementGlitch(null), GLITCH_SHORT_MS);
-    }, MOUNT_DELAY_MS);
-  }
 </script>
 
 <PanelSection title="Display Elements">
@@ -83,10 +59,32 @@
         <button
           class="option-button elements__toggle"
           aria-pressed={settings.displayPreferences.current[element.key]}
-          onclick={() => toggle(element.key)}
+          onclick={() => {
+            if (settings.displayPreferences.current[element.key]) {
+              onElementGlitch(element.key);
+              setTimeout(() => {
+                commit({
+                  key: element.key,
+                  isVisible: false
+                });
+                onElementGlitch(null);
+              }, GLITCH_SHORT_MS);
+
+              return;
+            }
+
+            commit({
+              key: element.key,
+              isVisible: true
+            });
+            setTimeout(() => {
+              onElementGlitch(element.key);
+              setTimeout(() => onElementGlitch(null), GLITCH_SHORT_MS);
+            }, MOUNT_DELAY_MS);
+          }}
           type="button">
           <span>{element.label}</span>
-          <Icon node={settings.displayPreferences.current[element.key] ? Eye : EyeOff} size={16} />
+          {@html settings.displayPreferences.current[element.key] ? eye : eyeOff}
         </button>
       </li>
     {/each}
@@ -105,5 +103,10 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
+
+    :global(svg) {
+      width: 16px;
+      height: 16px;
+    }
   }
 </style>

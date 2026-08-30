@@ -5,15 +5,8 @@
   // `foo.svelte` as a component file and cannot follow the edge, so the modules are declared
   // reachable here and their specifiers exempted from the unresolved-import check.
   "dynamicallyLoaded": ["src/**/*.svelte.ts"],
-  "ignoreUnresolvedImports": ["@/lib/glitch.svelte", "@/lib/storage/settings.svelte"],
-  // Generated verbatim from the original extension's bundle: the catalogue is deliberately complete,
-  // and the bundler drops the icons no component imports.
-  "ignoreExports": [
-    {
-      "file": "src/lib/icons/nodes.ts",
-      "exports": ["*"]
-    }
-  ],
+  // Vite resolves `?raw` to the file's text; fallow sees the query and gives up on the path.
+  "ignoreUnresolvedImports": ["@/assets/icons/*.svg?raw", "@/lib/glitch.svelte", "@/lib/storage/settings.svelte"],
   // All three are used through tooling rather than an import: the Svelte Vite plugin by
   // @wxt-dev/module-svelte, postcss-html as stylelint's customSyntax, web-ext-run by `wxt dev`.
   "ignoreDependencies": ["@sveltejs/vite-plugin-svelte", "postcss-html", "web-ext-run"],

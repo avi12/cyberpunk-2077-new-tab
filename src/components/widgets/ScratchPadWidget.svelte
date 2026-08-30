@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { WidgetConfig } from "@/lib/storage/defaults";
-  import { FileText, Save } from "@/lib/icons/nodes";
-  import Icon from "@/lib/icons/Icon.svelte";
+  import fileText from "@/assets/icons/file-text.svg?raw";
+  import save from "@/assets/icons/save.svg?raw";
   import { untrack } from "svelte";
 
   const {
@@ -14,43 +14,33 @@
 
   const SAVE_DEBOUNCE_MS = 1000;
   const MANUAL_SAVE_FLASH_MS = 500;
+  const COUNTER_DIGITS = 5;
 
   let text = $state(untrack(() => config.content ?? ""));
   let isSaving = $state(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   $effect(() => () => clearTimeout(timer));
-
-  function onInput() {
-    clearTimeout(timer);
-    isSaving = true;
-    timer = setTimeout(() => {
-      onConfigChange({ content: text });
-      isSaving = false;
-    }, SAVE_DEBOUNCE_MS);
-  }
-
-  function saveNow() {
-    clearTimeout(timer);
-    isSaving = true;
-    onConfigChange({ content: text });
-    timer = setTimeout(() => (isSaving = false), MANUAL_SAVE_FLASH_MS);
-  }
 </script>
 
 <article class="widget-card glitch-border">
   <header class="widget-card__header">
     <h3 class="widget-card__label">
-      <Icon node={FileText} size={20} />
+      {@html fileText}
       Scratch Pad
     </h3>
     <button
       class="widget-card__icon-button"
       class:pulse={isSaving}
       aria-label="Save now"
-      onclick={saveNow}
+      onclick={() => {
+        clearTimeout(timer);
+        isSaving = true;
+        onConfigChange({ content: text });
+        timer = setTimeout(() => (isSaving = false), MANUAL_SAVE_FLASH_MS);
+      }}
       type="button">
-      <Icon node={Save} size={16} />
+      {@html save}
     </button>
   </header>
 
@@ -58,13 +48,30 @@
   <textarea
     id="scratch-pad"
     class="scratch scrollbar-cyberpunk"
-    oninput={onInput}
+    oninput={() => {
+      clearTimeout(timer);
+      isSaving = true;
+      timer = setTimeout(() => {
+        onConfigChange({ content: text });
+        isSaving = false;
+      }, SAVE_DEBOUNCE_MS);
+    }}
     bind:value={text}></textarea>
 
-  <p class="scratch__count">{text.length.toString().padStart(5, "0")}</p>
+  <p class="scratch__count">{text.length.toString().padStart(COUNTER_DIGITS, "0")}</p>
 </article>
 
 <style>
+  .widget-card__label :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  .widget-card__icon-button :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+
   .scratch {
     overflow-y: auto;
     width: 100%;

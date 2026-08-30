@@ -1,10 +1,13 @@
 <script lang="ts">
-  import { BACKGROUND_COLORS, BACKGROUND_IMAGES, BackgroundMediaType } from "@/lib/storage/defaults";
+  import { BACKGROUND_COLORS, BACKGROUND_IMAGES, BackgroundMediaType, DEFAULT_BACKGROUND } from "@/lib/storage/defaults";
   import { CACHED_PREFIX, clearBackgroundMedia, saveBackgroundMedia } from "@/lib/storage/media-store";
-  import { Image, Trash2, Upload, Video, XMark } from "@/lib/icons/nodes";
-  import Icon from "@/lib/icons/Icon.svelte";
+  import image from "@/assets/icons/image.svg?raw";
   import PanelSection from "./PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
+  import trash2 from "@/assets/icons/trash2.svg?raw";
+  import uploadIcon from "@/assets/icons/upload.svg?raw";
+  import video from "@/assets/icons/video.svg?raw";
+  import xMark from "@/assets/icons/x-mark.svg?raw";
 
   type UploadableMedia = BackgroundMediaType.image | BackgroundMediaType.video;
 
@@ -46,31 +49,10 @@
     }
   }
 
-  function applyUrl() {
-    const value = urlEntry?.trim();
-    if (!value) {
-      return;
-    }
-
-    settings.backgroundMediaType.current = mediaKind;
-    settings.background.current = value.replace(/^http:\/\//, "https://");
-    urlEntry = null;
-  }
-
-  function openFilePicker() {
-    if (mediaKind === BackgroundMediaType.image) {
-      elImageInput?.click();
-
-      return;
-    }
-
-    elVideoInput?.click();
-  }
-
   async function clearCustom() {
     await clearBackgroundMedia();
     settings.backgroundMediaType.current = BackgroundMediaType.none;
-    settings.background.current = BACKGROUND_IMAGES[1].value;
+    settings.background.current = DEFAULT_BACKGROUND;
   }
 </script>
 
@@ -82,7 +64,7 @@
         aria-pressed={mediaKind === BackgroundMediaType.image}
         onclick={() => (mediaKind = BackgroundMediaType.image)}
         type="button">
-        <Icon node={Image} size={14} />
+        {@html image}
         Image
       </button>
       <button
@@ -90,7 +72,7 @@
         aria-pressed={mediaKind === BackgroundMediaType.video}
         onclick={() => (mediaKind = BackgroundMediaType.video)}
         type="button">
-        <Icon node={Video} size={14} />
+        {@html video}
         Video
       </button>
     </div>
@@ -117,17 +99,28 @@
       <div class="stack--tight">
         {#if mediaKind === BackgroundMediaType.image}
           <button class="custom__button" onclick={() => (urlEntry = "")} type="button">
-            <Icon node={Image} size={16} />
+            {@html image}
             Enter URL
           </button>
         {/if}
-        <button class="custom__button" onclick={openFilePicker} type="button">
-          <Icon node={Upload} size={16} />
+        <button
+          class="custom__button"
+          onclick={() => {
+            if (mediaKind === BackgroundMediaType.image) {
+              elImageInput?.click();
+
+              return;
+            }
+
+            elVideoInput?.click();
+          }}
+          type="button">
+          {@html uploadIcon}
           Upload File
         </button>
         {#if isCustom}
           <button class="custom__button custom__button--danger" onclick={() => void clearCustom()} type="button">
-            <Icon node={Trash2} size={16} />
+            {@html trash2}
             Clear Custom
           </button>
         {/if}
@@ -144,11 +137,23 @@
           type="url"
           bind:value={urlEntry} />
         <div class="row">
-          <button class="cyber-button cyber-button--primary cyber-button--grow custom__small" onclick={applyUrl} type="button">
+          <button
+            class="cyber-button cyber-button--primary cyber-button--grow custom__small"
+            onclick={() => {
+              const value = urlEntry?.trim();
+              if (!value) {
+                return;
+              }
+
+              settings.backgroundMediaType.current = mediaKind;
+              settings.background.current = value.replace(/^http:\/\//, "https://");
+              urlEntry = null;
+            }}
+            type="button">
             Apply
           </button>
           <button class="cyber-button cyber-button--muted custom__small" onclick={() => (urlEntry = null)} type="button">
-            <Icon node={XMark} size={16} />
+            {@html xMark}
           </button>
         </div>
       </div>
@@ -182,6 +187,11 @@
     gap: 0.25rem;
     justify-content: center;
     align-items: center;
+
+    :global(svg) {
+      width: 14px;
+      height: 14px;
+    }
   }
 
   .custom__row {
@@ -214,6 +224,11 @@
     padding: 0.5rem;
     font-size: 0.75rem;
     line-height: 1rem;
+
+    :global(svg) {
+      width: 16px;
+      height: 16px;
+    }
   }
 
   .custom__button {
@@ -232,6 +247,11 @@
 
     &:hover {
       background: var(--cp-surface-3);
+    }
+
+    :global(svg) {
+      width: 16px;
+      height: 16px;
     }
   }
 

@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { ChevronDown } from "@/lib/icons/nodes";
+  import chevronDown from "@/assets/icons/chevron-down.svg?raw";
   import { engineById, runSearch, SCAN_DELAY_MS } from "@/lib/search";
-  import Icon from "@/lib/icons/Icon.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
 
   const { glitching = false }: { glitching?: boolean } = $props();
@@ -28,10 +27,6 @@
       query
     });
   }
-
-  function selectEngine(id: string) {
-    settings.activeSearchEngine.current = id;
-  }
 </script>
 
 <search class="search" class:glitch={glitching}>
@@ -43,7 +38,7 @@
         popovertarget={ENGINE_POPOVER_ID}
         type="button">
         {engine.name}
-        <Icon node={ChevronDown} size={16} />
+        {@html chevronDown}
       </button>
       <ul id={ENGINE_POPOVER_ID} class="search__engine-list scrollbar-cyberpunk" popover="auto">
         {#each settings.searchEngines.current as option (option.id)}
@@ -52,7 +47,7 @@
               class="search__engine-option"
               class:is-active={option.id === settings.activeSearchEngine.current}
               aria-current={option.id === settings.activeSearchEngine.current}
-              onclick={() => selectEngine(option.id)}
+              onclick={() => (settings.activeSearchEngine.current = option.id)}
               popovertarget={ENGINE_POPOVER_ID}
               popovertargetaction="hide"
               type="button">
@@ -114,6 +109,11 @@
 
     &:hover {
       background: var(--cp-surface-2);
+    }
+
+    :global(svg) {
+      width: 16px;
+      height: 16px;
     }
   }
 

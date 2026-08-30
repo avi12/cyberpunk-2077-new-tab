@@ -3,8 +3,7 @@
   import { BACKGROUND_IMAGES, COLOR_THEMES, SCAN_LINES_MODES } from "@/lib/storage/defaults";
   import CustomBackgroundSection from "./terminal/CustomBackgroundSection.svelte";
   import DisplayElementsSection from "./terminal/DisplayElementsSection.svelte";
-  import Icon from "@/lib/icons/Icon.svelte";
-  import { Monitor } from "@/lib/icons/nodes";
+  import monitor from "@/assets/icons/monitor.svg?raw";
   import OptionGroup from "./OptionGroup.svelte";
   import PanelSection from "./terminal/PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -23,7 +22,7 @@
     aria-label="Terminal display settings"
     popovertarget={PANEL_ID}
     type="button">
-    <Icon node={Monitor} size={24} />
+    {@html monitor}
   </button>
 
   <div id={PANEL_ID} class="terminal__popup terminal-display-popup scrollbar-cyberpunk" popover="auto">
@@ -70,6 +69,11 @@
     right: 1rem;
     bottom: 1rem;
     z-index: 30;
+  }
+
+  .corner-button :global(svg) {
+    width: 24px;
+    height: 24px;
   }
 
   /* A popover, so Escape and light dismiss come from the browser instead of a document listener. */

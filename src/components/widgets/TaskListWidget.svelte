@@ -1,8 +1,10 @@
 <script lang="ts">
   import type { Task, WidgetConfig } from "@/lib/storage/defaults";
-  import { ClipboardList, Plus, Square, SquareCheck } from "@/lib/icons/nodes";
+  import clipboardList from "@/assets/icons/clipboard-list.svg?raw";
   import { GLITCH_LONG_MS } from "@/lib/glitch.svelte";
-  import Icon from "@/lib/icons/Icon.svelte";
+  import plus from "@/assets/icons/plus.svg?raw";
+  import square from "@/assets/icons/square.svg?raw";
+  import squareCheck from "@/assets/icons/square-check.svg?raw";
   import { untrack } from "svelte";
 
   const {
@@ -31,51 +33,32 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => onConfigChange({ tasks: next }), SAVE_DEBOUNCE_MS);
   }
-
-  function addTask() {
-    tasks = [
-      ...tasks,
-      {
-        id: Date.now().toString(),
-        text: "",
-        completed: false
-      }
-    ];
-    save(tasks);
-  }
-
-  function editTask({ id, text }: { id: string; text: string }) {
-    tasks = tasks.map(task => (task.id === id ? {
-      ...task,
-      text
-    } : task));
-    save(tasks);
-  }
-
-  function completeTask(id: string) {
-    tasks = tasks.map(task => (task.id === id ? {
-      ...task,
-      completed: true
-    } : task));
-    idCompleting = id;
-    removalTimer = setTimeout(() => {
-      tasks = tasks.filter(task => task.id !== id);
-      save(tasks);
-      idCompleting = null;
-    }, GLITCH_LONG_MS);
-  }
 </script>
 
 <article class="widget-card glitch-border">
   <header class="widget-card__header">
     <h3 class="widget-card__label">
-      <Icon node={ClipboardList} size={20} />
+      {@html clipboardList}
       GIGS
     </h3>
     <div class="tasks__meta">
       <output class="tasks__count">{tasks.length.toString().padStart(COUNTER_DIGITS, "0")}</output>
-      <button class="widget-card__icon-button" aria-label="Add gig" onclick={addTask} type="button">
-        <Icon node={Plus} size={16} />
+      <button
+        class="widget-card__icon-button"
+        aria-label="Add gig"
+        onclick={() => {
+          tasks = [
+            ...tasks,
+            {
+              id: Date.now().toString(),
+              text: "",
+              completed: false
+            }
+          ];
+          save(tasks);
+        }}
+        type="button">
+        {@html plus}
       </button>
     </div>
   </header>
@@ -93,9 +76,21 @@
           <button
             class="tasks__check"
             aria-label="Complete gig"
-            onclick={() => completeTask(task.id)}
+            onclick={() => {
+              const { id } = task;
+              tasks = tasks.map(item => (item.id === id ? {
+                ...item,
+                completed: true
+              } : item));
+              idCompleting = id;
+              removalTimer = setTimeout(() => {
+                tasks = tasks.filter(item => item.id !== id);
+                save(tasks);
+                idCompleting = null;
+              }, GLITCH_LONG_MS);
+            }}
             type="button">
-            <Icon node={task.completed && idCompleting === task.id ? SquareCheck : Square} size={16} />
+            {@html task.completed && idCompleting === task.id ? squareCheck : square}
           </button>
           <label class="visually-hidden" for="task-{task.id}">Gig</label>
           <textarea
@@ -103,10 +98,14 @@
             class="tasks__text scrollbar-cyberpunk"
             onblur={() => (idFocused = null)}
             onfocus={() => (idFocused = task.id)}
-            oninput={e => editTask({
-              id: task.id,
-              text: e.currentTarget.value
-            })}
+            oninput={e => {
+              const text = e.currentTarget.value;
+              tasks = tasks.map(item => (item.id === task.id ? {
+                ...item,
+                text
+              } : item));
+              save(tasks);
+            }}
             rows="1"
             value={task.text}></textarea>
         </li>
@@ -116,6 +115,16 @@
 </article>
 
 <style>
+  .widget-card__label :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  .widget-card__icon-button :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+
   .tasks__meta {
     display: flex;
     gap: 0.5rem;
@@ -168,6 +177,11 @@
     margin-top: 0.125rem;
     color: var(--cp-primary);
     transition: color 200ms;
+
+    :global(svg) {
+      width: 16px;
+      height: 16px;
+    }
 
     &:hover {
       color: var(--cp-primary-hover);

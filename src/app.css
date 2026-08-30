@@ -57,6 +57,12 @@ button {
   list-style: none;
 }
 
+/* Icons are inlined `<svg>` files, so a component sizes and colours them through the box around. */
+svg {
+  display: block;
+  flex-shrink: 0;
+}
+
 :where(a) {
   color: inherit;
   text-decoration: none;

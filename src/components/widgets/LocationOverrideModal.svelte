@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { GeoLocation } from "@/lib/storage/defaults";
-  import { MapPin } from "@/lib/icons/nodes";
-  import Icon from "@/lib/icons/Icon.svelte";
+  import mapPin from "@/assets/icons/map-pin.svg?raw";
   import Modal from "@/components/modals/Modal.svelte";
   import { z } from "@/lib/zod";
   import { untrack } from "svelte";
@@ -101,11 +100,6 @@
       longitude
     });
   }
-
-  function followDevice() {
-    error = "";
-    onFollowDevice();
-  }
 </script>
 
 <Modal {isOpen} {onClose}>
@@ -119,13 +113,16 @@
       class:is-active={isDeviceLit}
       class:is-dimmed={!isDeviceLit}
       aria-pressed={isDeviceLit}
-      onclick={followDevice}
+      onclick={() => {
+        error = "";
+        onFollowDevice();
+      }}
       onfocusin={e => e.stopPropagation()}
       type="button">
-      <Icon node={MapPin} size={16} />
+      {@html mapPin}
       Follow my location
     </button>
-    <p class="location__caption">Read from this device on every load, and never stored.</p>
+    <p class="location__caption">Read from this device on every load, and never stored</p>
 
     <fieldset class="location__fields" class:is-dimmed={isDeviceLit}>
       <legend class="location__legend">Coordinates</legend>
@@ -209,6 +206,11 @@
     line-height: 1rem;
     text-transform: uppercase;
     transition: border-color 200ms, background-color 200ms, color 200ms;
+
+    :global(svg) {
+      width: 16px;
+      height: 16px;
+    }
 
     &:hover {
       border-color: var(--cp-primary-hover);

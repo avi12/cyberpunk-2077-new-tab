@@ -5,7 +5,17 @@ const TITLE_CACHE_KEY = "tabTitle";
 
 const TERMINAL_FAVICON = "/icon/terminal.svg";
 
-const FAVICON_COLOR = "#22d3ee";
+/**
+ * The tab strip follows the OS theme rather than the page's, so a favicon ships both strokes and
+ * lets a media query pick one - at full strength the cyan reads as near-white against light
+ * browser chrome. `src/public/icon/terminal.svg`, the pre-script default in `index.html`, repeats the
+ * pair because a static asset cannot read it from here.
+ */
+const FAVICON_STROKE = {
+  light: "#0b7a8e",
+  dark: "#22d3ee"
+} as const;
+
 const FAVICON_SIZE = 32;
 
 export function applyCachedTabTitle(): void {
@@ -25,17 +35,18 @@ export function applyTabTitle(title: string): void {
   }
 }
 
-/** Serialises one icon to an SVG data URI, mirroring how the original built its favicon. */
-function faviconHref(iconName: string): string {
-  const children = iconByName(iconName)
-    .map(([tag, attrs]) => `<${tag} ${Object.entries(attrs).map(([key, value]) => `${key}="${value}"`).join(" ")}/>`)
-    .join("");
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${FAVICON_SIZE}" height="${FAVICON_SIZE}" ` +
-    `viewBox="0 0 24 24" fill="none" stroke="${FAVICON_COLOR}" stroke-width="2" ` +
-    `stroke-linecap="round" stroke-linejoin="round">${children}</svg>`;
+/** Restyles the icon file itself into a data URI, rather than rebuilding the same markup by hand. */
+function faviconHref(iconName: string) {
+  const elIcon = new DOMParser().parseFromString(iconByName(iconName), "image/svg+xml").documentElement;
+  elIcon.setAttribute("width", String(FAVICON_SIZE));
+  elIcon.setAttribute("height", String(FAVICON_SIZE));
+  elIcon.setAttribute("stroke", FAVICON_STROKE.light);
 
-  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  const elStyle = document.createElementNS(elIcon.namespaceURI, "style");
+  elStyle.textContent = `@media(prefers-color-scheme:dark){svg{stroke:${FAVICON_STROKE.dark}}}`;
+  elIcon.prepend(elStyle);
+
+  return `data:image/svg+xml,${encodeURIComponent(elIcon.outerHTML)}`;
 }
 
 export function applyTabFavicon(iconName: string): void {

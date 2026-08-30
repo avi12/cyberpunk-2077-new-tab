@@ -1,9 +1,10 @@
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/defaults";
-  import { GripVertical, SquarePen, XMark } from "@/lib/icons/nodes";
-  import Icon from "@/lib/icons/Icon.svelte";
+  import gripVertical from "@/assets/icons/grip-vertical.svg?raw";
   import { iconByName } from "@/lib/icons/choices";
+  import squarePen from "@/assets/icons/square-pen.svg?raw";
   import { tooltip } from "@/lib/tooltip";
+  import xMark from "@/assets/icons/x-mark.svg?raw";
 
   const {
     bookmark,
@@ -23,9 +24,10 @@
 
   const EDIT_LABEL = "Edit bookmark";
   const DELETE_LABEL = "Delete bookmark";
+  const MIDDLE_MOUSE_BUTTON = 1;
 
   function onAuxClick(e: MouseEvent) {
-    if (!isEditing && e.button === 1) {
+    if (!isEditing && e.button === MIDDLE_MOUSE_BUTTON) {
       e.preventDefault();
       window.open(bookmark.url, "_blank");
     }
@@ -51,7 +53,7 @@
     onauxclick={onAuxClick}
     onclick={onClick}
     oncontextmenu={e => onContextMenu(e, bookmark)}>
-    <span class="card__icon"><Icon node={iconByName(bookmark.icon || "Default")} size={24} /></span>
+    <span class="card__icon">{@html iconByName(bookmark.icon || "Default")}</span>
     <span class="card__title hover-glitch">{bookmark.title}</span>
   </a>
 
@@ -63,7 +65,7 @@
         onclick={() => onEdit(bookmark)}
         type="button"
         use:tooltip={EDIT_LABEL}>
-        <Icon node={SquarePen} size={16} />
+        {@html squarePen}
       </button>
       <button
         class="card__action card__action--delete"
@@ -71,10 +73,10 @@
         onclick={() => onDelete(bookmark.id)}
         type="button"
         use:tooltip={DELETE_LABEL}>
-        <Icon node={XMark} size={16} />
+        {@html xMark}
       </button>
     </div>
-    <span class="card__grip"><Icon node={GripVertical} size={18} /></span>
+    <span class="card__grip">{@html gripVertical}</span>
   {/if}
 </li>
 
@@ -114,6 +116,11 @@
   .card__icon {
     margin-bottom: 0.25rem;
     color: var(--cp-primary);
+
+    :global(svg) {
+      width: 24px;
+      height: 24px;
+    }
   }
 
   .card__title {
@@ -130,6 +137,11 @@
     z-index: 10;
     display: flex;
     gap: 0.25rem;
+  }
+
+  .card__action :global(svg) {
+    width: 16px;
+    height: 16px;
   }
 
   .card__action--edit {
@@ -154,6 +166,11 @@
     left: 0.25rem;
     color: var(--cp-primary);
     pointer-events: none;
+
+    :global(svg) {
+      width: 18px;
+      height: 18px;
+    }
   }
 
 </style>

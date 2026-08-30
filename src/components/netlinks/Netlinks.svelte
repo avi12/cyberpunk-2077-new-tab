@@ -2,16 +2,17 @@
   import type { Bookmark } from "@/lib/storage/defaults";
   import { addCategory, deleteCategory, normalizeName, renameCategory, toggleCollapsed } from "@/lib/categories";
   import { BookmarkCategory } from "@/lib/storage/defaults";
-  import { Plus, Settings, TriangleAlert } from "@/lib/icons/nodes";
   import BookmarkForm from "./BookmarkForm.svelte";
   import CategorySection from "./CategorySection.svelte";
   import ContextMenu from "./ContextMenu.svelte";
-  import Icon from "@/lib/icons/Icon.svelte";
   import Modal from "@/components/modals/Modal.svelte";
   import NameForm from "./NameForm.svelte";
   import { bookmarkOrderItem } from "@/lib/storage/items";
+  import plus from "@/assets/icons/plus.svg?raw";
   import { settings } from "@/lib/storage/settings.svelte";
+  import settingsIcon from "@/assets/icons/settings.svg?raw";
   import { sortable } from "@/lib/sortable";
+  import triangleAlert from "@/assets/icons/triangle-alert.svg?raw";
   import { withViewTransition } from "@/lib/view-transition";
 
   let isEditing = $state(false);
@@ -49,61 +50,6 @@
     bookmarkToEdit = null;
   }
 
-  function saveBookmark(draft: Omit<Bookmark, "id">) {
-    const url = /^https?:\/\//.test(draft.url) ? draft.url : `https://${draft.url}`;
-
-    if (bookmarkToEdit) {
-      const id = bookmarkToEdit.id;
-      settings.bookmarks.current = settings.bookmarks.current.map(bookmark =>
-        (bookmark.id === id ? {
-          ...bookmark,
-          ...draft,
-          url
-        } : bookmark));
-    } else {
-      settings.bookmarks.current = [
-        ...settings.bookmarks.current,
-        {
-          id: Date.now().toString(),
-          ...draft,
-          url
-        }
-      ];
-    }
-
-    closeForm();
-  }
-
-  function deleteBookmark(id: string) {
-    settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.id !== id);
-  }
-
-  function startEditBookmark(bookmark: Bookmark) {
-    bookmarkToEdit = bookmark;
-    isFormOpen = true;
-  }
-
-  function reorderBookmarks({ category, ids }: {
-    category: string;
-    ids: string[];
-  }) {
-    const inCategory = settings.bookmarks.current.filter(bookmark => bookmark.category === category);
-    const reordered = ids
-      .map(id => inCategory.find(bookmark => bookmark.id === id))
-      .filter(bookmark => bookmark !== undefined);
-
-    settings.bookmarks.current = [
-      ...settings.bookmarks.current.filter(bookmark => bookmark.category !== category),
-      ...reordered
-    ];
-    void bookmarkOrderItem(category).setValue(ids);
-  }
-
-  function startRename(category: string) {
-    renamingCategory = category;
-    renameDraft = category;
-  }
-
   async function confirmRename() {
     const from = renamingCategory;
     const to = normalizeName(renameDraft);
@@ -122,17 +68,6 @@
       to
     });
     renamingCategory = null;
-  }
-
-  function confirmAddCategory() {
-    const name = normalizeName(newCategoryName);
-    if (!name || categories.includes(name)) {
-      return;
-    }
-
-    addCategory(name);
-    newCategoryName = "";
-    isAddingCategory = false;
   }
 
   async function requestDeleteCategory(category: string) {
@@ -174,7 +109,7 @@
         <button class="netlinks__save" onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
       {:else}
         <button class="netlinks__icon-button" aria-label="Edit netlinks" onclick={() => withViewTransition(() => (isEditing = true))} type="button">
-          <Icon node={Settings} size={20} />
+          {@html settingsIcon}
         </button>
       {/if}
       <button
@@ -182,14 +117,41 @@
         aria-label="Add link"
         onclick={() => withViewTransition(() => (isFormOpen = !isFormOpen))}
         type="button">
-        <Icon node={Plus} size={20} />
+        {@html plus}
       </button>
     </div>
   </div>
 
   {#if isFormOpen}
     {#key bookmarkToEdit?.id ?? "new"}
-      <BookmarkForm {bookmarkToEdit} {categories} onCancel={closeForm} onSubmit={saveBookmark} />
+      <BookmarkForm
+        {bookmarkToEdit}
+        {categories}
+        onCancel={closeForm}
+        onSubmit={draft => {
+          const url = /^https?:\/\//.test(draft.url) ? draft.url : `https://${draft.url}`;
+
+          if (bookmarkToEdit) {
+            const id = bookmarkToEdit.id;
+            settings.bookmarks.current = settings.bookmarks.current.map(bookmark =>
+              (bookmark.id === id ? {
+                ...bookmark,
+                ...draft,
+                url
+              } : bookmark));
+          } else {
+            settings.bookmarks.current = [
+              ...settings.bookmarks.current,
+              {
+                id: Date.now().toString(),
+                ...draft,
+                url
+              }
+            ];
+          }
+
+          closeForm();
+        }} />
     {/key}
   {/if}
 
@@ -218,14 +180,31 @@
           <CategorySection
             bookmarks={byCategory[category] ?? []}
             {category}
-            collapsed={settings.collapsedCategories.current[category] ?? false}
+            isCollapsed={settings.collapsedCategories.current[category] ?? false}
             {isEditing}
             {onBookmarkContextMenu}
-            onBookmarkOrderChange={reorderBookmarks}
-            onDeleteBookmark={deleteBookmark}
+            onBookmarkOrderChange={change => {
+              const inCategory = settings.bookmarks.current.filter(bookmark => bookmark.category === change.category);
+              const reordered = change.ids
+                .map(id => inCategory.find(bookmark => bookmark.id === id))
+                .filter(bookmark => bookmark !== undefined);
+
+              settings.bookmarks.current = [
+                ...settings.bookmarks.current.filter(bookmark => bookmark.category !== change.category),
+                ...reordered
+              ];
+              void bookmarkOrderItem(change.category).setValue(change.ids);
+            }}
+            onDeleteBookmark={id => (settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.id !== id))}
             onDeleteCategory={name => void requestDeleteCategory(name)}
-            onEditBookmark={startEditBookmark}
-            onEditCategory={startRename}
+            onEditBookmark={bookmark => {
+              bookmarkToEdit = bookmark;
+              isFormOpen = true;
+            }}
+            onEditCategory={name => {
+              renamingCategory = name;
+              renameDraft = name;
+            }}
             onOpenBookmark={url => (window.location.href = url)}
             onToggleCollapse={name => withViewTransition(() => toggleCollapsed(name))} />
         {/if}
@@ -243,12 +222,21 @@
             newCategoryName = "";
             isAddingCategory = false;
           }}
-          onConfirm={confirmAddCategory}
+          onConfirm={() => {
+            const name = normalizeName(newCategoryName);
+            if (!name || categories.includes(name)) {
+              return;
+            }
+
+            addCategory(name);
+            newCategoryName = "";
+            isAddingCategory = false;
+          }}
           variant="primary"
           bind:value={newCategoryName} />
       {:else}
         <button class="netlinks__add-button" onclick={() => (isAddingCategory = true)} type="button">
-          <Icon node={Plus} size={20} />
+          {@html plus}
           ADD CATEGORY
         </button>
       {/if}
@@ -266,12 +254,12 @@
 
 <Modal isOpen={pendingDelete !== null} onClose={() => (pendingDelete = null)} variant="warning">
   <div class="warning__heading">
-    <Icon node={TriangleAlert} size={24} />
+    {@html triangleAlert}
     <h2 class="warning__title">Warning</h2>
   </div>
   <p class="warning__body">
     Deleting the category "{pendingDelete}" will also delete all {pendingDeleteCount} bookmark(s) in it.
-    This action cannot be undone.
+    This can't be undone
   </p>
   <div class="row">
     <button
@@ -338,6 +326,11 @@
     &:hover {
       color: var(--cp-secondary-hi);
     }
+
+    :global(svg) {
+      width: 20px;
+      height: 20px;
+    }
   }
 
   .netlinks__icon-button--accent {
@@ -366,6 +359,11 @@
     &:hover {
       background: var(--cp-surface-2);
     }
+
+    :global(svg) {
+      width: 20px;
+      height: 20px;
+    }
   }
 
   .warning__heading {
@@ -374,6 +372,11 @@
     align-items: center;
     margin-bottom: 1rem;
     color: var(--cp-secondary);
+
+    :global(svg) {
+      width: 24px;
+      height: 24px;
+    }
   }
 
   .warning__title {

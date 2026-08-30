@@ -2,18 +2,19 @@
   import type { DisplayPreferences } from "@/lib/storage/defaults";
   import { ColorTheme, ScanLinesMode } from "@/lib/storage/defaults";
   import { applyTabFavicon, applyTabTitle } from "@/lib/tab-identity";
-  import { Cog, Info, Settings } from "@/lib/icons/nodes";
   import AboutModal from "@/components/modals/AboutModal.svelte";
   import Background from "@/components/Background.svelte";
   import Clock from "@/components/Clock.svelte";
+  import cog from "@/assets/icons/cog.svg?raw";
   import { greeting } from "@/lib/time";
-  import Icon from "@/lib/icons/Icon.svelte";
   import IdentityModal from "@/components/modals/IdentityModal.svelte";
+  import info from "@/assets/icons/info.svg?raw";
   import { loadSettings, settings } from "@/lib/storage/settings.svelte";
   import Netlinks from "@/components/netlinks/Netlinks.svelte";
   import Quote from "@/components/Quote.svelte";
   import SearchBar from "@/components/SearchBar.svelte";
   import { seedBookmarksFromTopSites } from "@/lib/top-sites";
+  import settingsIcon from "@/assets/icons/settings.svg?raw";
   import SystemSettingsModal from "@/components/modals/SystemSettingsModal.svelte";
   import TerminalDisplayPanel from "@/components/TerminalDisplayPanel.svelte";
   import WidgetPanel from "@/components/widgets/WidgetPanel.svelte";
@@ -72,7 +73,7 @@
 
   <header class="identity">
     <button class="identity__button" onclick={() => (isIdentityOpen = true)} type="button">
-      <Icon node={Settings} size={16} />
+      {@html settingsIcon}
       <span class="mono">IDENTITY</span>
     </button>
   </header>
@@ -122,7 +123,7 @@
       onclick={() => (isSystemOpen = true)}
       title="System Settings"
       type="button">
-      <Icon node={Cog} size={24} />
+      {@html cog}
     </button>
   </div>
 
@@ -134,7 +135,7 @@
 
   <footer class="footer">
     <button class="footer__info" aria-label="Show information" onclick={() => (isAboutOpen = true)} type="button">
-      <Icon node={Info} size={20} />
+      {@html info}
     </button>
     <p class="footer__text">
       © 2077 Arasaka Corporation. All rights reserved. Night City License #NC-77-2077
@@ -172,6 +173,11 @@
     &:hover {
       border-color: var(--cp-primary-hover);
       color: var(--cp-primary-hover);
+    }
+
+    :global(svg) {
+      width: 16px;
+      height: 16px;
     }
   }
 
@@ -216,6 +222,11 @@
     bottom: 1rem;
     left: 1rem;
     z-index: 30;
+
+    :global(svg) {
+      width: 24px;
+      height: 24px;
+    }
   }
 
   .footer {
@@ -231,6 +242,11 @@
 
     &:hover {
       color: var(--cp-secondary-hi);
+    }
+
+    :global(svg) {
+      width: 20px;
+      height: 20px;
     }
   }
 

@@ -1,9 +1,13 @@
 <script lang="ts">
   import type { WidgetConfig } from "@/lib/storage/defaults";
-  import { ChevronDown, ChevronUp, ExternalLink, Rss, Settings, WifiOff } from "@/lib/icons/nodes";
-  import Icon from "@/lib/icons/Icon.svelte";
+  import chevronDown from "@/assets/icons/chevron-down.svg?raw";
+  import chevronUp from "@/assets/icons/chevron-up.svg?raw";
+  import externalLink from "@/assets/icons/external-link.svg?raw";
   import Modal from "@/components/modals/Modal.svelte";
+  import rss from "@/assets/icons/rss.svg?raw";
+  import settings from "@/assets/icons/settings.svg?raw";
   import { untrack } from "svelte";
+  import wifiOff from "@/assets/icons/wifi-off.svg?raw";
 
   const {
     config,
@@ -23,17 +27,19 @@
   const SAVE_DEBOUNCE_MS = 500;
   const MIN_ITEMS = 1;
   const MAX_ITEMS = 50;
+  const DEFAULT_MAX_ITEMS = 10;
+  const SKELETON_ROWS = [0, 1, 2];
 
   let items = $state<FeedItem[]>([]);
   let isLoading = $state(false);
   let isFailed = $state(false);
   let isSettingsOpen = $state(false);
   let urlDraft = $state(untrack(() => config.feedUrl ?? ""));
-  let countDraft = $state(untrack(() => config.maxItems ?? 10));
+  let countDraft = $state(untrack(() => config.maxItems ?? DEFAULT_MAX_ITEMS));
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   const feedUrl = $derived(config.feedUrl ?? "");
-  const maxItems = $derived(config.maxItems ?? 10);
+  const maxItems = $derived(config.maxItems ?? DEFAULT_MAX_ITEMS);
 
   function parseFeed(xml: string): FeedItem[] {
     const document_ = new DOMParser().parseFromString(xml, "text/xml");
@@ -97,7 +103,7 @@
   }
 
   function setCount(value: number) {
-    countDraft = Math.max(MIN_ITEMS, Math.min(MAX_ITEMS, value || 10));
+    countDraft = Math.max(MIN_ITEMS, Math.min(MAX_ITEMS, value || DEFAULT_MAX_ITEMS));
     queueSave();
   }
 </script>
@@ -105,7 +111,7 @@
 <article class="widget-card glitch-border">
   <header class="widget-card__header">
     <h3 class="widget-card__label">
-      <Icon node={Rss} size={20} />
+      {@html rss}
       RSS Feed
     </h3>
     <button
@@ -113,7 +119,7 @@
       aria-label="RSS feed settings"
       onclick={() => (isSettingsOpen = true)}
       type="button">
-      <Icon node={Settings} size={16} />
+      {@html settings}
     </button>
   </header>
 
@@ -121,17 +127,17 @@
     <p class="rss__empty">No feed configured</p>
   {:else if isLoading}
     <div class="stack--tight rss__skeletons">
-      {#each [0, 1, 2] as row (row)}
+      {#each SKELETON_ROWS as i (i)}
         <div class="rss__skeleton pulse"></div>
       {/each}
       <p class="rss__status">Loading feed...</p>
     </div>
   {:else if isFailed}
     <div class="rss__notice">
-      <span class="rss__notice-icon"><Icon node={WifiOff} size={24} /></span>
+      <span class="rss__notice-icon">{@html wifiOff}</span>
       <p class="rss__error">Feed Error</p>
       <button class="rss__edit" onclick={() => (isSettingsOpen = true)} type="button">
-        <Icon node={Settings} size={12} />
+        {@html settings}
         Edit URL
       </button>
     </div>
@@ -139,7 +145,7 @@
     <div class="rss__notice">
       <p class="rss__none">No items found</p>
       <button class="rss__edit rss__edit--cyan" onclick={() => (isSettingsOpen = true)} type="button">
-        <Icon node={Settings} size={12} />
+        {@html settings}
         Edit URL
       </button>
     </div>
@@ -149,7 +155,7 @@
         <li>
           <a class="rss__item" href={item.link} rel="noopener noreferrer" target="_blank">
             <span class="rss-title-container"><span class="rss-title">{item.title}</span></span>
-            <span class="rss__item-icon"><Icon node={ExternalLink} size={12} /></span>
+            <span class="rss__item-icon">{@html externalLink}</span>
           </a>
         </li>
       {/each}
@@ -170,7 +176,7 @@
         bind:value={urlDraft} />
     </div>
     <div>
-      <label class="cyber-label" for="rss-count">Max Items (1-50)</label>
+      <label class="cyber-label" for="rss-count">Max Items ({MIN_ITEMS}-{MAX_ITEMS})</label>
       <div class="number-input-container">
         <input
           id="rss-count"
@@ -186,14 +192,14 @@
             aria-label="More items"
             onclick={() => setCount(countDraft + 1)}
             type="button">
-            <Icon node={ChevronUp} size={14} />
+            {@html chevronUp}
           </button>
           <button
             class="spinner-button"
             aria-label="Fewer items"
             onclick={() => setCount(countDraft - 1)}
             type="button">
-            <Icon node={ChevronDown} size={14} />
+            {@html chevronDown}
           </button>
         </div>
       </div>
@@ -205,6 +211,16 @@
 </Modal>
 
 <style>
+  .widget-card__label :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  .widget-card__icon-button :global(svg) {
+    width: 16px;
+    height: 16px;
+  }
+
   .rss__empty {
     padding: 2rem 0;
     color: var(--cp-text-faint);
@@ -246,6 +262,11 @@
 
   .rss__notice-icon {
     color: var(--cp-secondary);
+
+    :global(svg) {
+      width: 24px;
+      height: 24px;
+    }
   }
 
   .rss__error {
@@ -270,6 +291,11 @@
     font-family: var(--cp-mono);
     font-size: 0.75rem;
     line-height: 1rem;
+
+    :global(svg) {
+      width: 12px;
+      height: 12px;
+    }
 
     &:hover {
       color: var(--cp-accent-hi);
@@ -314,6 +340,11 @@
   .rss__item-icon {
     flex-shrink: 0;
     color: var(--cp-text-dimmer);
+
+    :global(svg) {
+      width: 12px;
+      height: 12px;
+    }
   }
 
   .rss__item:hover .rss__item-icon {
@@ -339,6 +370,11 @@
         animation: none;
       }
     }
+  }
+
+  .spinner-button :global(svg) {
+    width: 14px;
+    height: 14px;
   }
 
   @keyframes scroll-text {

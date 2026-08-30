@@ -1,6 +1,5 @@
 <script lang="ts">
   import { ICON_CHOICES, iconByName } from "@/lib/icons/choices";
-  import Icon from "@/lib/icons/Icon.svelte";
 
   const {
     label,
@@ -25,7 +24,7 @@
     popovertarget={panelId}
     type="button">
     <span>{label}</span>
-    <Icon node={iconByName(selected)} size={20} />
+    {@html iconByName(selected)}
   </button>
 
   <div
@@ -46,7 +45,7 @@
             popovertargetaction="hide"
             title={choice.name}
             type="button">
-            <span class="picker__icon"><Icon node={choice.node} size={20} /></span>
+            <span class="picker__icon">{@html choice.svg}</span>
             {#if showNames}
               <span class="picker__name">{choice.name}</span>
             {/if}
@@ -60,6 +59,11 @@
 <style>
   .picker {
     position: relative;
+
+    :global(svg) {
+      width: 20px;
+      height: 20px;
+    }
   }
 
   .picker__trigger {

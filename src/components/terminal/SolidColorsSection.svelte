@@ -1,16 +1,16 @@
 <script lang="ts">
   import { BACKGROUND_COLORS } from "@/lib/storage/defaults";
   import { hexToHsv, hsvToHex, isHexColor } from "@/lib/color";
-  import Icon from "@/lib/icons/Icon.svelte";
   import OptionGroup from "@/components/OptionGroup.svelte";
   import PanelSection from "./PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
   import { withViewTransition } from "@/lib/view-transition";
-  import { XMark } from "@/lib/icons/nodes";
+  import xMark from "@/assets/icons/x-mark.svg?raw";
 
   const FALLBACK_SWATCH = "#00ffff";
+  const DEFAULT_CUSTOM_COLOR = "#003333";
 
-  let customColor = $state("#003333");
+  let customColor = $state(DEFAULT_CUSTOM_COLOR);
   let isPickerOpen = $state(false);
   let hue = $state(180);
   let darkness = $state(80);
@@ -119,7 +119,7 @@
             aria-label="Close custom color picker"
             onclick={() => (isPickerOpen = false)}
             type="button">
-            <Icon node={XMark} size={16} />
+            {@html xMark}
           </button>
         </div>
       </div>
@@ -222,6 +222,11 @@
 
     &:hover {
       color: var(--cp-secondary);
+    }
+
+    :global(svg) {
+      width: 16px;
+      height: 16px;
     }
   }
 

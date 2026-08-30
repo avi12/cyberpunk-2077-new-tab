@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { Camera } from "@/lib/icons/nodes";
-  import Icon from "@/lib/icons/Icon.svelte";
+  import camera from "@/assets/icons/camera.svg?raw";
   import Modal from "./Modal.svelte";
   import { tooltip } from "@/lib/tooltip";
 
@@ -59,10 +58,10 @@
 
 <Modal {isOpen} {onClose} title="About">
   <p class="about__body">
-    Cyberpunk 2077 themed start page.<br />
-    Fully customizable with many dynamic and interactive elements.
+    Cyberpunk 2077 themed start page<br />
+    Fully customizable with many dynamic and interactive elements
   </p>
-  <p class="about__tagline">Never fade away, samurai.</p>
+  <p class="about__tagline">Never fade away, samurai</p>
   <div class="about__actions">
     {#each ABOUT_LINKS as link (link.href)}
       <a
@@ -80,7 +79,7 @@
       onclick={() => void capture()}
       type="button"
       use:tooltip={SCREENSHOT_LABEL}>
-      <Icon node={Camera} size={20} />
+      {@html camera}
     </button>
   </div>
 </Modal>
@@ -113,6 +112,11 @@
     padding: 0.5rem 0.75rem;
     background: var(--cp-accent);
     color: var(--cp-on-accent);
+
+    :global(svg) {
+      width: 20px;
+      height: 20px;
+    }
 
     &:hover {
       background: var(--cp-accent-lo);

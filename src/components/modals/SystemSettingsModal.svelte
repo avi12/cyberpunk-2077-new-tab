@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { Download, TriangleAlert, Upload } from "@/lib/icons/nodes";
+  import download from "@/assets/icons/download.svg?raw";
   import { downloadFile, exportSettings, importSettings, SETTINGS_FILE_NAME } from "@/lib/settings-file";
-  import Icon from "@/lib/icons/Icon.svelte";
   import Modal from "./Modal.svelte";
+  import triangleAlert from "@/assets/icons/triangle-alert.svg?raw";
+  import upload from "@/assets/icons/upload.svg?raw";
 
   const {
     isOpen,
@@ -21,14 +22,6 @@
       error = "";
     }
   });
-
-  function exportToFile() {
-    downloadFile({
-      name: SETTINGS_FILE_NAME,
-      contents: exportSettings(),
-      type: "application/json"
-    });
-  }
 
   async function importFromFile(e: Event) {
     const input = e.currentTarget;
@@ -54,7 +47,7 @@
   {#if isConfirmingImport}
     <div class="stack">
       <p class="system__warning">
-        <Icon node={TriangleAlert} size={24} />
+        {@html triangleAlert}
         This will overwrite your current settings!
       </p>
       <input
@@ -78,15 +71,22 @@
     </div>
   {:else}
     <div class="stack">
-      <button class="cyber-button cyber-button--cyan system__action" onclick={exportToFile} type="button">
-        <Icon node={Download} size={20} />
+      <button
+        class="cyber-button cyber-button--cyan system__action"
+        onclick={() => downloadFile({
+          name: SETTINGS_FILE_NAME,
+          contents: exportSettings(),
+          type: "application/json"
+        })}
+        type="button">
+        {@html download}
         Export Settings
       </button>
       <button
         class="cyber-button cyber-button--primary system__action"
         onclick={() => (isConfirmingImport = true)}
         type="button">
-        <Icon node={Upload} size={20} />
+        {@html upload}
         Import Settings
       </button>
     </div>
@@ -100,6 +100,11 @@
     align-items: center;
     color: var(--cp-secondary);
     font-family: var(--cp-mono);
+
+    :global(svg) {
+      width: 24px;
+      height: 24px;
+    }
   }
 
   .system__action {
@@ -109,6 +114,11 @@
     align-items: center;
     width: 100%;
     padding: 0.75rem;
+
+    :global(svg) {
+      width: 20px;
+      height: 20px;
+    }
   }
 
   /* The file input is hidden, so its label carries the button's appearance. */

@@ -1,11 +1,11 @@
 <script lang="ts">
   import type { Widget, WidgetConfig } from "@/lib/storage/defaults";
   import { WidgetType } from "@/lib/storage/defaults";
-  import { Grip, Settings } from "@/lib/icons/nodes";
-  import Icon from "@/lib/icons/Icon.svelte";
+  import grip from "@/assets/icons/grip.svg?raw";
   import RssWidget from "./RssWidget.svelte";
   import ScratchPadWidget from "./ScratchPadWidget.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
+  import settingsIcon from "@/assets/icons/settings.svg?raw";
   import { sortable } from "@/lib/sortable";
   import { flip } from "svelte/animate";
   import { withViewTransition } from "@/lib/view-transition";
@@ -34,13 +34,6 @@
     settings.widgets.current = settings.widgets.current.map(widget => (widget.id === id ? change(widget) : widget));
   }
 
-  function toggle(id: string) {
-    withViewTransition(() => updateWidget(id, widget => ({
-      ...widget,
-      enabled: !widget.enabled
-    })));
-  }
-
   function patchConfig(id: string, patch: WidgetConfig) {
     updateWidget(id, widget => ({
       ...widget,
@@ -66,7 +59,7 @@
           aria-label="Widget settings"
           onclick={() => withViewTransition(() => (isEditing = true))}
           type="button">
-          <Icon node={Settings} size={20} />
+          {@html settingsIcon}
         </button>
       {/if}
     </div>
@@ -89,14 +82,17 @@
         {#if isEditing}
           <div class="widgets__row">
             <div class="widgets__row-label">
-              <span class="widgets__grip"><Icon node={Grip} size={16} /></span>
+              <span class="widgets__grip">{@html grip}</span>
               <span class="widgets__name">{WIDGET_LABELS[widget.type]}</span>
             </div>
             <button
               class="widgets__toggle"
               class:is-on={widget.enabled}
               aria-pressed={widget.enabled}
-              onclick={() => toggle(widget.id)}
+              onclick={() => withViewTransition(() => updateWidget(widget.id, current => ({
+                ...current,
+                enabled: !current.enabled
+              })))}
               type="button">
               {widget.enabled ? "ON" : "OFF"}
             </button>
@@ -157,6 +153,11 @@
   .widgets__icon-button {
     color: var(--cp-secondary);
 
+    :global(svg) {
+      width: 20px;
+      height: 20px;
+    }
+
     &:hover {
       color: var(--cp-secondary-hi);
     }
@@ -188,6 +189,11 @@
 
   .widgets__grip {
     color: var(--cp-primary);
+
+    :global(svg) {
+      width: 16px;
+      height: 16px;
+    }
   }
 
   .widgets__name {
