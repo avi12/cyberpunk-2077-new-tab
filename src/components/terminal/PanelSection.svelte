@@ -41,7 +41,6 @@
     font-size: 0.875rem;
     line-height: 1.25rem;
     text-transform: uppercase;
-    cursor: var(--cp-cursor);
 
     &::after {
       content: "";
