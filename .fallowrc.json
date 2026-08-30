@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/getfallow/fallow/main/schema/fallowrc.json",
+  "entry": ["src/entrypoints/**", "scripts/*.mjs"],
+  // Svelte 5 rune modules are `*.svelte.ts`, imported without the `.ts`. Fallow's resolver reads
+  // `foo.svelte` as a component file and cannot follow the edge, so the modules are declared
+  // reachable here and their specifiers exempted from the unresolved-import check.
+  "dynamicallyLoaded": ["src/**/*.svelte.ts"],
+  "ignoreUnresolvedImports": ["@/lib/glitch.svelte", "@/lib/storage/settings.svelte"],
+  // Generated verbatim from the original extension's bundle: the catalogue is deliberately complete,
+  // and the bundler drops the icons no component imports.
+  "ignoreExports": [
+    {
+      "file": "src/lib/icons/nodes.ts",
+      "exports": ["*"]
+    }
+  ],
+  // All three are used through tooling rather than an import: the Svelte Vite plugin by
+  // @wxt-dev/module-svelte, postcss-html as stylelint's customSyntax, web-ext-run by `wxt dev`.
+  "ignoreDependencies": ["@sveltejs/vite-plugin-svelte", "postcss-html", "web-ext-run"],
+  "health": {
+    "maxCognitive": 30,
+    "maxCrap": 10000
+  },
+  "rules": {
+    "unused-enum-members": "warn",
+    // Svelte is a compiler: nothing it exports survives into the shipped bundle as a runtime
+    // dependency, so it belongs in devDependencies.
+    "dev-dependency-in-production": "off"
+  }
+}

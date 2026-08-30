@@ -1,0 +1,80 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "typescript",
+    "unicorn",
+    "oxc",
+    "import"
+  ],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "browser": true,
+    "builtin": true
+  },
+  "globals": {
+    "browser": "readonly",
+    "chrome": "readonly"
+  },
+  "rules": {
+    "no-void": ["error", { "allowAsStatement": true }],
+    "prefer-const": "error",
+    "no-nested-ternary": "error",
+    "curly": ["error", "all"],
+    "object-shorthand": ["error", "always", { "avoidExplicitReturnArrows": true }],
+    "id-length": ["error", {
+      "min": 3,
+      "exceptions": ["_", "id", "os", "db", "ui", "js", "to", "x", "y", "a", "b", "c", "n", "i", "e", "on", "up", "ok", "h", "w", "s", "hue", "sat", "val", "url", "key", "lat", "lon", "map"],
+      "properties": "never"
+    }],
+    "func-style": ["error", "declaration", { "allowArrowFunctions": false }],
+    "arrow-body-style": ["error", "as-needed"],
+    "no-control-regex": "off",
+    "typescript/no-explicit-any": "error",
+    "typescript/ban-ts-comment": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/unbound-method": "off",
+    "typescript/await-thenable": "off",
+    "typescript/no-base-to-string": "off",
+    "typescript/restrict-template-expressions": "off",
+    "typescript/no-useless-default-assignment": "off",
+    "typescript/no-unused-vars": ["error", {
+      "varsIgnorePattern": "^_",
+      "argsIgnorePattern": "^_",
+      "caughtErrorsIgnorePattern": "^_",
+      "ignoreRestSiblings": true
+    }],
+    "typescript/consistent-type-assertions": ["error", { "assertionStyle": "never" }],
+    "import/first": "error",
+    "import/default": "off",
+    "no-restricted-globals": ["error", { "name": "process", "message": "extension/Vite code does not run under Node - read config via import.meta.env, not process" }]
+  },
+  "overrides": [
+    {
+      "files": ["./scripts/*.ts", "**/*.config.ts", "**/*.config.js", "**/*.config.mjs"],
+      "env": {
+        "node": true
+      },
+      "rules": {
+        "no-restricted-globals": "off"
+      }
+    },
+    {
+      "files": ["**/*.svelte"],
+      "rules": {
+        "typescript/no-explicit-any": "off",
+        "prefer-const": "off",
+        "no-self-assign": "off",
+        "no-unassigned-vars": "off"
+      }
+    }
+  ],
+  "ignorePatterns": [
+    "node_modules/**",
+    ".output/**",
+    ".wxt/**",
+    ".fallow/**",
+    "reference/**"
+  ]
+}
