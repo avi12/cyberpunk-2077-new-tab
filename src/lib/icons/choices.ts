@@ -39,7 +39,7 @@ import tvMinimalPlay from "@/assets/icons/tv-minimal-play.svg?raw";
 import wallet from "@/assets/icons/wallet.svg?raw";
 import zap from "@/assets/icons/zap.svg?raw";
 
-export type IconChoice = {
+type IconChoice = {
   name: string;
   svg: string;
 };
@@ -49,7 +49,7 @@ export type IconChoice = {
  * order. A bookmark stores the `name`, so these strings are a persisted contract: renaming one
  * orphans every bookmark that used it.
  */
-export const ICON_CHOICES: IconChoice[] = [
+export const ICON_CHOICES = [
   {
     name: "Default",
     svg: bookmarkPlus
@@ -210,7 +210,10 @@ export const ICON_CHOICES: IconChoice[] = [
     name: "Zap",
     svg: zap
   }
-];
+] as const satisfies readonly IconChoice[];
+
+/** The closed set of stored icon names. */
+export type IconName = (typeof ICON_CHOICES)[number]["name"];
 
 export function iconByName(name: string): string {
   const choice = ICON_CHOICES.find(entry => entry.name === name);
