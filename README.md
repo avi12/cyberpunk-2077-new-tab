@@ -36,14 +36,19 @@ pnpm fallow           # dead code, duplication, complexity
 
 ## Permissions
 
-Four, and each backs one feature:
+Six on Chrome, four on Firefox, and each backs one feature:
 
-| Permission    | Why                                                                    |
-| ------------- | ---------------------------------------------------------------------- |
-| `search`      | the "Default" search option runs the browser's own configured engine    |
-| `topSites`    | seeds the netlinks grid on first run                                    |
-| `geolocation` | the "USE MY LOCATION" button in the weather / world-clock location form |
-| `storage`     | every setting                                                          |
+| Permission       | Why                                                                     |
+| ---------------- | ----------------------------------------------------------------------- |
+| `search`         | the "Default" search option runs the browser's own configured engine     |
+| `topSites`       | seeds the netlinks grid on first run                                     |
+| `geolocation`    | the "USE MY LOCATION" button in the weather / world-clock location form  |
+| `storage`        | every setting                                                           |
+| `identity`       | "USE BROWSER ACCOUNT" fills the greeting name from the signed-in account |
+| `identity.email` | that account's email is the only name Chrome will hand over             |
+
+The last two are Chrome-only: Firefox exposes the `identity` namespace without
+`getProfileUserInfo`, so its manifest omits both and the button reports no account.
 
 No host permissions: open-meteo, timeapi, allorigins and bigdatacloud all answer with
 `Access-Control-Allow-Origin: *`, and an extension page follows ordinary CORS.
