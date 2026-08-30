@@ -1,10 +1,8 @@
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/defaults";
-  import { iconByName } from "@/lib/icons/choices";
   import { normalizeUrl, resolveTitle } from "@/lib/link";
   import { pickIcon } from "@/lib/icons/auto";
   import squareCheck from "@/assets/icons/square-check.svg?raw";
-  import { tooltip } from "@/lib/tooltip";
   import { untrack } from "svelte";
   import xMark from "@/assets/icons/x-mark.svg?raw";
 
@@ -29,7 +27,7 @@
   let url = $state(untrack(() => bookmarkToEdit?.url ?? ""));
   let isResolving = $state(false);
 
-  /** Nothing to pick by hand: the link decides its own glyph, and it updates as you type. */
+  /** Nothing to pick by hand: the link decides its own glyph from what is in the fields. */
   const icon = $derived(pickIcon({
     url: normalizeUrl(url),
     title,
@@ -72,8 +70,6 @@
 </script>
 
 <form class="link-card" onsubmit={e => void submit(e)}>
-  <span class="link-card__icon">{@html iconByName(icon)}</span>
-
   <label class="visually-hidden" for="link-url">URL</label>
   <input
     id="link-url"
@@ -99,49 +95,38 @@
       class="link-card__action"
       aria-label={submitLabel}
       disabled={isResolving}
-      type="submit"
-      use:tooltip={submitLabel}>
+      type="submit">
       {@html squareCheck}
     </button>
     <button
       class="link-card__action link-card__action--cancel"
       aria-label={CANCEL_LABEL}
       onclick={onCancel}
-      type="button"
-      use:tooltip={CANCEL_LABEL}>
+      type="button">
       {@html xMark}
     </button>
   </div>
 </form>
 
 <style>
-  /* Shaped like a bookmark card, because it is the card being written. */
+  /* Shaped like a bookmark card, because it is the card being written - and no taller, so
+     opening it never moves the row. */
   .link-card {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.3rem;
     justify-content: center;
     align-items: center;
     height: 100%;
     min-height: 100px;
-    padding: 0.75rem;
+    padding: 0.5rem;
     border: 2px solid var(--cp-accent);
     background: var(--cp-surface);
   }
 
-  /* Primary, not the form's accent: this is a preview of the card's own icon. */
-  .link-card__icon {
-    color: var(--cp-primary);
-
-    :global(svg) {
-      width: 24px;
-      height: 24px;
-    }
-  }
-
   .link-card__field {
     width: 100%;
-    padding: 0.25rem 0.4rem;
+    padding: 0.2rem 0.4rem;
     border: 1px solid var(--cp-primary);
     background: var(--cp-surface-2);
     color: var(--cp-text);
@@ -169,6 +154,7 @@
   }
 
   .link-card__action {
+    display: flex;
     color: var(--cp-primary);
     transition: color 200ms, opacity 200ms;
 
@@ -181,8 +167,8 @@
     }
 
     :global(svg) {
-      width: 18px;
-      height: 18px;
+      width: 16px;
+      height: 16px;
     }
   }
 
