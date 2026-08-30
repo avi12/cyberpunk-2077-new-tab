@@ -49,6 +49,7 @@
   <a
     class="card glitch-border"
     class:is-editing={isEditing}
+    draggable={!isEditing}
     href={bookmark.url}
     onauxclick={onAuxClick}
     onclick={onClick}
