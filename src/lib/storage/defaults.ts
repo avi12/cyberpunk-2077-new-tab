@@ -99,12 +99,6 @@ export enum BookmarkCategory {
   other = "other"
 }
 
-/** Where a widget takes its coordinates from. Not persisted - a stored location is the custom one. */
-export enum LocationMode {
-  automatic = "automatic",
-  custom = "custom"
-}
-
 export type SelectOption<TValue extends string> = {
   value: TValue;
   label: string;
@@ -306,17 +300,6 @@ export const COLOR_THEMES: SelectOption<ColorTheme>[] = [
   {
     value: ColorTheme.cyberNinja,
     label: "Cyber Ninja"
-  }
-];
-
-export const LOCATION_MODES: SelectOption<LocationMode>[] = [
-  {
-    value: LocationMode.automatic,
-    label: "Automatic"
-  },
-  {
-    value: LocationMode.custom,
-    label: "Custom"
   }
 ];
 

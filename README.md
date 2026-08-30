@@ -109,8 +109,10 @@ scripts/
   under the name "Night City" and only ever moved if you typed new ones. Here the widget reads the
   device position through the extension's own `geolocation` permission on each load and stores
   nothing, falling back to Night City when there is no fix. Its location line opens the same override
-  form the world clock uses, where "Custom" pins a latitude and longitude instead - a stored location
-  *is* the override, and choosing "Automatic" again clears it.
+  form the world clock uses, holding the two sources side by side: "Follow my location" keeps reading
+  the device, and confirming a latitude and longitude pins those instead. Whichever one the widget is
+  reading is lit and the other is dimmed, though both stay usable; a stored location *is* the
+  override, so following the device again clears it.
 - **Dropdowns are popovers.** The engine list, the icon pickers and the Terminal Display panel use
   `popover="auto"` with CSS anchor positioning, so opening, Escape and click-outside dismissal come
   from the browser instead of a document-level listener.
