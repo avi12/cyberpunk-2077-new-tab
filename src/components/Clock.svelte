@@ -1,7 +1,6 @@
 <script lang="ts">
   import { currentDate, currentDateIso, currentTime, currentTimeIso } from "@/lib/time";
-  import { GLITCH_LONG_MS, GLITCH_SHORT_MS, Glitch } from "@/lib/glitch.svelte";
-  import { settings } from "@/lib/storage/settings.svelte";
+  import { GLITCH_LONG_MS, Glitch } from "@/lib/glitch.svelte";
 
   const {
     showTime,
@@ -19,19 +18,17 @@
   const RANDOM_GLITCH_INTERVAL_MS = 5000;
   const RANDOM_GLITCH_CHANCE = 0.1;
 
-  const toggleGlitch = new Glitch();
   const randomGlitch = new Glitch();
 
   let date = $state(currentDate());
   let dateIso = $state(currentDateIso());
   let timeIso = $state(currentTimeIso());
-  const use24Hour = $derived(settings.timeFormat.current);
-  let time = $derived(currentTime(use24Hour));
-  const glitching = $derived(toggleGlitch.active || randomGlitch.active || glitchingTime);
+  let time = $state(currentTime());
+  const glitching = $derived(randomGlitch.active || glitchingTime);
 
   $effect(() => {
     const tick = setInterval(() => {
-      time = currentTime(use24Hour);
+      time = currentTime();
       timeIso = currentTimeIso();
       date = currentDate();
       dateIso = currentDateIso();
@@ -45,7 +42,6 @@
     return () => {
       clearInterval(tick);
       clearInterval(stutter);
-      toggleGlitch.stop();
       randomGlitch.stop();
     };
   });
@@ -53,21 +49,13 @@
 
 <div class="clock">
   {#if showTime}
-    <button
-      class="clock__time hover-glitch"
-      class:glitch={glitching}
-      aria-label="Toggle 12 or 24 hour clock"
-      data-text={time}
-      onclick={() => toggleGlitch.fireThen(() => {
-        settings.timeFormat.current = !settings.timeFormat.current;
-      }, GLITCH_SHORT_MS)}
-      type="button">
+    <p class="clock__time hover-glitch" class:glitch={glitching} data-text={time}>
       <time datetime={timeIso}>{time}</time>
       {#if glitching}
         <span class="clock__ghost clock__ghost--a glitch-1" aria-hidden="true">{time}</span>
         <span class="clock__ghost clock__ghost--b glitch-2" aria-hidden="true">{time}</span>
       {/if}
-    </button>
+    </p>
   {/if}
   {#if showDate}
     <p class="clock__date hover-glitch" class:glitch={glitchingDate} data-text={date}>
@@ -92,11 +80,6 @@
     font-size: 3.75rem;
     line-height: 1;
     letter-spacing: 0.025em;
-    transition: color 200ms;
-
-    &:hover {
-      color: var(--cp-primary-hover);
-    }
   }
 
   /* The two offset copies that make the RGB-split glitch read as a broken display. */

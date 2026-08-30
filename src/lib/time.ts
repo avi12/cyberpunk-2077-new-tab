@@ -1,20 +1,12 @@
 /**
- * Intl decides how a time reads - whether there is an AM/PM at all, what it is called, and where it
- * sits - so nothing here spells out a day period or pads an hour by hand. The two formatters are
- * built once because the clock reformats every second.
+ * Intl decides how a time reads - 24-hour or not, whether there is a day period, what it is called
+ * and where it sits - from the locale alone, so there is nothing here to spell out or configure.
+ * Built once because the clock reformats every second.
  */
-const TIME_FORMATS = {
-  h23: new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-    hourCycle: "h23"
-  }),
-  h12: new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-    hourCycle: "h12"
-  })
-};
+const TIME_FORMAT = new Intl.DateTimeFormat(undefined, {
+  hour: "numeric",
+  minute: "2-digit"
+});
 
 const DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
   weekday: "long",
@@ -23,17 +15,8 @@ const DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
   day: "numeric"
 });
 
-/** What the locale itself does, and so what the clock starts on before anyone touches the toggle. */
-export function prefers24Hour(): boolean {
-  return !new Intl.DateTimeFormat(undefined, { hour: "numeric" }).resolvedOptions().hour12;
-}
-
-export function currentTime(use24Hour: boolean): string {
-  if (use24Hour) {
-    return TIME_FORMATS.h23.format(new Date());
-  }
-
-  return TIME_FORMATS.h12.format(new Date());
+export function currentTime(): string {
+  return TIME_FORMAT.format(new Date());
 }
 
 export function currentDate(): string {

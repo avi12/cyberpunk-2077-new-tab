@@ -20,7 +20,6 @@ import {
   DEFAULT_TAB_FAVICON,
   DEFAULT_TAB_TITLE,
   DEFAULT_TEMPERATURE_UNIT,
-  DEFAULT_TIME_FORMAT,
   DEFAULT_USER_NAME,
   DEFAULT_WEATHER_LOCATION,
   DEFAULT_WIDGET_ORDER,
@@ -46,8 +45,6 @@ export const activeSearchEngineItem = storage.defineItem<string>("local:activeSe
 export const weatherLocationItem = storage.defineItem<GeoLocation>("local:weatherLocation", { fallback: DEFAULT_WEATHER_LOCATION });
 
 export const temperatureUnitItem = storage.defineItem<boolean>("local:temperatureUnit", { fallback: DEFAULT_TEMPERATURE_UNIT });
-
-export const timeFormatItem = storage.defineItem<boolean>("local:timeFormat", { fallback: DEFAULT_TIME_FORMAT });
 
 export const colorThemeItem = storage.defineItem<ColorTheme>("local:colorTheme", { fallback: DEFAULT_COLOR_THEME });
 

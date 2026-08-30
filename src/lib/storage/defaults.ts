@@ -1,5 +1,3 @@
-import { prefers24Hour } from "../time";
-
 export type Bookmark = {
   id: string;
   title: string;
@@ -37,7 +35,6 @@ export enum WidgetType {
 export type WidgetConfig = {
   location?: GeoLocation;
   temperatureUnit?: boolean;
-  timeFormat?: boolean;
   showDate?: boolean;
   content?: string;
   tasks?: Task[];
@@ -312,6 +309,3 @@ export const DEFAULT_BACKGROUND_BRIGHTNESS = 100;
 
 /** `true` means the metric reading, matching the original's boolean. */
 export const DEFAULT_TEMPERATURE_UNIT = true;
-
-/** `true` means 24-hour, and the locale decides which one a fresh install starts on. */
-export const DEFAULT_TIME_FORMAT = prefers24Hour();
