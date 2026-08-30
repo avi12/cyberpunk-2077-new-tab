@@ -64,10 +64,13 @@ out of OAuth, so the button tries two things in order:
    `wxt.config.ts` - an OAuth client id is public and ships in the manifest, so it lives in the
    config rather than in an env file.
 2. Without a client id, or when consent is refused, `getProfileUserInfo` gives the email and a name
-   is read out of its local part instead: `jane.doe@...` becomes `Jane Doe`.
+   is read out of its local part instead, minus the digits people add to claim a taken address:
+   `jane.doe@...` becomes `Jane Doe`, `avi6106@...` becomes `Avi`.
 
 To turn on step 1: create an OAuth client of type "Chrome extension" in the Google Cloud console for
-this extension's id, and paste the id into `GOOGLE_CLIENT_ID`. An unpacked extension and a published
+this extension's id, and paste the id into `GOOGLE_CLIENT_ID`. It is a console-only job - the IAP
+OAuth admin API that `gcloud` wraps was shut down in March 2026, and it only ever created IAP web
+clients. An unpacked extension and a published
 one have different ids unless `key` is pinned in the manifest, so pin it or register both.
 
 No host permissions: open-meteo, timeapi, allorigins and bigdatacloud all answer with

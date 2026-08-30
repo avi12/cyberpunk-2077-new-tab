@@ -9,12 +9,14 @@ import { browser } from "#imports";
  * userinfo endpoint answers with the account's given name. That needs an
  * OAuth client id in the manifest (see the README), so when the build has none - or the account
  * refuses consent - this falls back to the one thing the plain `identity` permission gives, the
- * email address, and reads a name out of its local part: "jane.doe@..." becomes "Jane Doe".
+ * email address, and reads a name out of its local part: "jane.doe@..." becomes "Jane Doe" and
+ * "avi6106@..." becomes "Avi".
  */
 
 const USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
 
 const NAME_SEPARATORS = /[._+-]+/;
+const TRAILING_DIGITS = /\d+$/;
 
 const userInfoSchema = z.object({
   given_name: z.string().optional(),
@@ -52,6 +54,23 @@ async function nameFromAccount(): Promise<string | null> {
   }
 }
 
+function capitalize(word: string): string {
+  return word[0].toUpperCase() + word.slice(1);
+}
+
+/** "jane.doe" -> "Jane Doe", "avi6106" -> "Avi": the digits people add to claim a taken address. */
+function nameFromLocalPart(localPart: string): string | null {
+  const words = localPart
+    .split(NAME_SEPARATORS)
+    .map(part => part.replace(TRAILING_DIGITS, ""))
+    .filter(Boolean);
+  if (words.length === 0) {
+    return localPart ? capitalize(localPart) : null;
+  }
+
+  return words.map(capitalize).join(" ");
+}
+
 async function nameFromEmail(): Promise<string | null> {
   if (!browser.identity?.getProfileUserInfo) {
     return null;
@@ -59,12 +78,7 @@ async function nameFromEmail(): Promise<string | null> {
 
   const { email } = await browser.identity.getProfileUserInfo({ accountStatus: "ANY" });
 
-  return email
-    .split("@")[0]
-    .split(NAME_SEPARATORS)
-    .filter(Boolean)
-    .map(part => part[0].toUpperCase() + part.slice(1))
-    .join(" ") || null;
+  return nameFromLocalPart(email.split("@")[0]);
 }
 
 export async function browserAccountName(): Promise<string | null> {
