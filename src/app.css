@@ -137,7 +137,7 @@ button {
   --cp-quote-glow: #ef4444;
   --cp-pulse: #ef4444;
   --cp-slider-fill: #ef4444;
-  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
+  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23ef4444'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
 }
 
 .edgerunners {
@@ -161,17 +161,20 @@ button {
   --cp-pulse: #10b981;
   --cp-slider-fill: #8b5cf6;
   --cp-slider-thumb: #10b981;
-  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
+  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%2310b981'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
 }
 
 /*
  * The page replaces the system cursor outright, as the original does: a cyan arrow over everything,
  * and a neon plus reticle over anything interactive. Only the reticle is themed - the arrow is the
  * same in all three themes. `:is(...)` outranks `*`, so neither rule needs `!important`.
+ *
+ * Both are drawn twice, a dark stroke under the bright one: the reticle is the accent colour, and
+ * the accent is also what fills a pressed button, where a single-colour cursor disappeared.
  */
 :root {
-  --cp-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2300ffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z'%3E%3C/path%3E%3C/svg%3E") 0 0, auto;
-  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f9f002' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
+  --cp-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' stroke='%2300ffff'%3E%3C/path%3E%3C/svg%3E") 0 0, auto;
+  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23f9f002'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
 }
 
 * {
