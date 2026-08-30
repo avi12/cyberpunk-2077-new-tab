@@ -52,22 +52,27 @@ The last two are Chrome-only: Firefox exposes the `identity` namespace without `
 
 ### Browser account name
 
-Chrome hands out a *name* only through OAuth, so the button tries two things in order:
+No Chrome API hands over a name on its own:
+[`identity.getProfileUserInfo`](https://developer.chrome.com/docs/extensions/reference/api/identity#method-getProfileUserInfo)
+answers with an email address and an account id, and that is the whole of it. A real name only comes
+out of OAuth, so the button tries two things in order:
 
-1. `identity.getAuthToken` mints a token for the profile's Google account and
-   `https://www.googleapis.com/oauth2/v3/userinfo` answers with its given name. This needs
-   `GOOGLE_CLIENT_ID` filled in at the top of `wxt.config.ts` - an OAuth client id is public and
-   ships in the manifest, so it lives in the config rather than in an env file.
-2. Without a client id, or when consent is refused, `identity.getProfileUserInfo` gives an email and
-   nothing else, so a name is read out of its local part: `jane.doe@…` becomes `Jane Doe`.
+1. [`identity.getAuthToken`](https://developer.chrome.com/docs/extensions/how-to/integrate/oauth)
+   mints a token for the profile's Google account, and OpenID Connect's
+   [userinfo endpoint](https://developers.google.com/identity/openid-connect/openid-connect#obtainuserinfo)
+   answers with its `given_name`. This needs `GOOGLE_CLIENT_ID` filled in at the top of
+   `wxt.config.ts` - an OAuth client id is public and ships in the manifest, so it lives in the
+   config rather than in an env file.
+2. Without a client id, or when consent is refused, `getProfileUserInfo` gives the email and a name
+   is read out of its local part instead: `jane.doe@...` becomes `Jane Doe`.
 
 To turn on step 1: create an OAuth client of type "Chrome extension" in the Google Cloud console for
-this extension's id, give it the `.../auth/userinfo.profile` scope, and paste the id into
-`GOOGLE_CLIENT_ID`. A published extension and an unpacked one have different ids unless `key` is
-pinned in the manifest, so pin it or register both.
+this extension's id, and paste the id into `GOOGLE_CLIENT_ID`. An unpacked extension and a published
+one have different ids unless `key` is pinned in the manifest, so pin it or register both.
 
 No host permissions: open-meteo, timeapi, allorigins and bigdatacloud all answer with
-`Access-Control-Allow-Origin: *`, and an extension page follows ordinary CORS.
+`Access-Control-Allow-Origin: *`, Google's userinfo endpoint echoes the extension's own origin back,
+and an extension page follows ordinary CORS.
 
 ## Layout
 

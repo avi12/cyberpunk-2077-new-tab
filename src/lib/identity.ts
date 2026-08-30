@@ -4,14 +4,15 @@ import { browser } from "#imports";
 /**
  * The name of the person signed into the browser.
  *
- * Chrome hands out a display name only through OAuth: `getAuthToken` mints a token for the profile's
- * Google account and the userinfo endpoint answers with the account's given name. That needs an
+ * Chrome hands out a display name only through OAuth - `identity` returns an email and a gaia id and
+ * nothing else. `getAuthToken` mints a token for the profile's Google account and OpenID Connect's
+ * userinfo endpoint answers with the account's given name. That needs an
  * OAuth client id in the manifest (see the README), so when the build has none - or the account
  * refuses consent - this falls back to the one thing the plain `identity` permission gives, the
  * email address, and reads a name out of its local part: "jane.doe@..." becomes "Jane Doe".
  */
 
-const USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
+const USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
 
 const NAME_SEPARATORS = /[._+-]+/;
 

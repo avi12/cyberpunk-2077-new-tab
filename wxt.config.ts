@@ -10,7 +10,8 @@ const IDENTITY_PERMISSIONS = ["identity", "identity.email"];
  * omitted altogether and the identity button falls back to the account's email address.
  */
 const GOOGLE_CLIENT_ID = "";
-const PROFILE_SCOPE = "https://www.googleapis.com/auth/userinfo.profile";
+/** The pair OpenID Connect asks for; `profile` is what carries the name. */
+const PROFILE_SCOPES = ["openid", "profile"];
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -35,7 +36,7 @@ export default defineConfig({
     ...(GOOGLE_CLIENT_ID ? {
       oauth2: {
         client_id: GOOGLE_CLIENT_ID,
-        scopes: [PROFILE_SCOPE]
+        scopes: PROFILE_SCOPES
       }
     } : {}),
     action: {
