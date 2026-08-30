@@ -9,6 +9,7 @@
   import NameForm from "./NameForm.svelte";
   import plus from "@/assets/icons/plus.svg?raw";
   import { settings } from "@/lib/storage/settings.svelte";
+  import type { SortableMove } from "@/lib/sortable";
   import settingsIcon from "@/assets/icons/settings.svg?raw";
   import { sortable } from "@/lib/sortable";
   import { tooltip } from "@/lib/tooltip";
@@ -47,6 +48,43 @@
 
     return byCategory[pendingDelete]?.length ?? 0;
   });
+
+  /** A category's own bookmarks, in the order the array already holds them. */
+  function bookmarksIn(category: string) {
+    return settings.bookmarks.current.filter(bookmark => (bookmark.category || BookmarkCategory.other) === category);
+  }
+
+  /** Rewrite one category, leaving every other category's bookmarks exactly where they were. */
+  function writeCategory({ category, bookmarks }: {
+    category: string;
+    bookmarks: Bookmark[];
+  }) {
+    settings.bookmarks.current = [
+      ...settings.bookmarks.current.filter(bookmark => (bookmark.category || BookmarkCategory.other) !== category),
+      ...bookmarks
+    ];
+  }
+
+  function moveBookmark(move: SortableMove) {
+    const moved = settings.bookmarks.current.find(bookmark => bookmark.id === move.id);
+    if (!moved) {
+      return;
+    }
+
+    const landing = bookmarksIn(move.toKey);
+    settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.id !== move.id);
+    writeCategory({
+      category: move.toKey,
+      bookmarks: [
+        ...landing.slice(0, move.toIndex),
+        {
+          ...moved,
+          category: move.toKey
+        },
+        ...landing.slice(move.toIndex)
+      ]
+    });
+  }
 
   function closeForm() {
     formCategory = null;
@@ -184,16 +222,16 @@
               formCategory = name;
             }}
             {onBookmarkContextMenu}
+            onBookmarkMove={moveBookmark}
             onBookmarkOrderChange={change => {
-              const inCategory = settings.bookmarks.current.filter(bookmark => bookmark.category === change.category);
-              const reordered = change.ids
-                .map(id => inCategory.find(bookmark => bookmark.id === id))
-                .filter(bookmark => bookmark !== undefined);
+              const inCategory = bookmarksIn(change.category);
 
-              settings.bookmarks.current = [
-                ...settings.bookmarks.current.filter(bookmark => bookmark.category !== change.category),
-                ...reordered
-              ];
+              writeCategory({
+                category: change.category,
+                bookmarks: change.ids
+                  .map(id => inCategory.find(bookmark => bookmark.id === id))
+                  .filter(bookmark => bookmark !== undefined)
+              });
             }}
             onDeleteBookmark={id => (settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.id !== id))}
             onDeleteCategory={requestDeleteCategory}

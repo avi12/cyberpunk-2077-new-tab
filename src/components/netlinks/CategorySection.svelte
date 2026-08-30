@@ -7,6 +7,7 @@
   import plus from "@/assets/icons/plus.svg?raw";
   import type { Snippet } from "svelte";
   import { sortable } from "@/lib/sortable";
+  import type { SortableMove } from "@/lib/sortable";
   import squarePen from "@/assets/icons/square-pen.svg?raw";
   import { tooltip } from "@/lib/tooltip";
   import trash2 from "@/assets/icons/trash2.svg?raw";
@@ -20,6 +21,7 @@
     editingBookmarkId,
     linkForm,
     onBookmarkOrderChange,
+    onBookmarkMove,
     onToggleCollapse,
     onEditCategory,
     onDeleteCategory,
@@ -43,6 +45,7 @@
       category: string;
       ids: string[];
     }) => void;
+    onBookmarkMove: (move: SortableMove) => void;
     onToggleCollapse: (category: string) => void;
     onEditCategory: (category: string) => void;
     onDeleteCategory: (category: string) => void;
@@ -55,6 +58,8 @@
 
   const EDIT_CATEGORY_LABEL = "Edit category";
   const DELETE_CATEGORY_LABEL = "Delete category";
+
+  const BOOKMARK_GROUP = "bookmarks";
 
   const ids = $derived(bookmarks.map(bookmark => bookmark.id));
   /** A card that is being written is not a card to drag, and its neighbours stay put with it. */
@@ -104,6 +109,9 @@
       use:sortable={{
         ids,
         disabled: !isEditing || isWriting,
+        group: BOOKMARK_GROUP,
+        groupKey: category,
+        onMove: onBookmarkMove,
         onReorder: ids => onBookmarkOrderChange({
           category,
           ids
