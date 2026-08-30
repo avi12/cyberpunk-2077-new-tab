@@ -101,6 +101,11 @@
 {/if}
 
 <style>
+  /*
+   * Named so the wallpaper is captured on its own rather than inside the root snapshot: the root is
+   * what every view transition fades, and the wallpaper does not change when the netlinks or a
+   * widget does. Only one of the two is ever in the DOM, so they can share the name.
+   */
   .background__layer,
   .background__video {
     position: fixed;
@@ -109,6 +114,7 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
+    view-transition-name: background;
   }
 
   .background__layer {
@@ -131,5 +137,6 @@
     z-index: -1;
     background: linear-gradient(to bottom, rgb(0 0 0 / 70%), rgb(0 0 0 / 60%));
     pointer-events: none;
+    view-transition-name: background-scrim;
   }
 </style>
