@@ -1,5 +1,6 @@
 <script lang="ts">
   import { ICON_CHOICES, iconByName } from "@/lib/icons/choices";
+  import { tooltip } from "@/lib/tooltip";
 
   const {
     label,
@@ -39,12 +40,13 @@
           <button
             class="picker__option"
             class:is-selected={choice.name === selected}
+            aria-label={choice.name}
             aria-pressed={choice.name === selected}
             onclick={() => onSelect(choice.name)}
             popovertarget={panelId}
             popovertargetaction="hide"
-            title={choice.name}
-            type="button">
+            type="button"
+            use:tooltip={choice.name}>
             <span class="picker__icon">{@html choice.svg}</span>
             {#if showNames}
               <span class="picker__name">{choice.name}</span>

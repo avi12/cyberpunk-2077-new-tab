@@ -17,9 +17,11 @@
   import settingsIcon from "@/assets/icons/settings.svg?raw";
   import SystemSettingsModal from "@/components/modals/SystemSettingsModal.svelte";
   import TerminalDisplayPanel from "@/components/TerminalDisplayPanel.svelte";
+  import { tooltip } from "@/lib/tooltip";
   import WidgetPanel from "@/components/widgets/WidgetPanel.svelte";
 
   const GREETING_REFRESH_MS = 60_000;
+  const SYSTEM_SETTINGS_LABEL = "System Settings";
 
   let isReady = $state(false);
   let isAboutOpen = $state(false);
@@ -119,10 +121,10 @@
   <div class="system-button">
     <button
       class="corner-button"
-      aria-label="System Settings"
+      aria-label={SYSTEM_SETTINGS_LABEL}
       onclick={() => (isSystemOpen = true)}
-      title="System Settings"
-      type="button">
+      type="button"
+      use:tooltip={SYSTEM_SETTINGS_LABEL}>
       {@html cog}
     </button>
   </div>

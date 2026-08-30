@@ -8,6 +8,7 @@
   import type { Snippet } from "svelte";
   import { sortable } from "@/lib/sortable";
   import squarePen from "@/assets/icons/square-pen.svg?raw";
+  import { tooltip } from "@/lib/tooltip";
   import trash2 from "@/assets/icons/trash2.svg?raw";
 
   const {
@@ -76,16 +77,16 @@
           class="category__action category__action--edit"
           aria-label={EDIT_CATEGORY_LABEL}
           onclick={() => onEditCategory(category)}
-          title={EDIT_CATEGORY_LABEL}
-          type="button">
+          type="button"
+          use:tooltip={EDIT_CATEGORY_LABEL}>
           {@html squarePen}
         </button>
         <button
           class="category__action category__action--delete"
           aria-label={DELETE_CATEGORY_LABEL}
           onclick={() => onDeleteCategory(category)}
-          title={DELETE_CATEGORY_LABEL}
-          type="button">
+          type="button"
+          use:tooltip={DELETE_CATEGORY_LABEL}>
           {@html trash2}
         </button>
       </div>
