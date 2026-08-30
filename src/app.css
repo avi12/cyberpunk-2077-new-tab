@@ -354,15 +354,23 @@ textarea {
  */
 .cyberpunk-tooltip {
   /*
-   * `anchor()` insets rather than `position-area`: the latter's alignment is safe by default, so it
-   * quietly slides a tooltip over its own trigger instead of overflowing, and `flip-block` then
-   * never fires. Chrome 152 verified.
+   * The two axes want opposite things, so they are placed by opposite means.
+   *
+   * Block: an `anchor()` inset, not `position-area`, whose alignment is safe by default - it would
+   * slide the tooltip down over its own trigger rather than overflow the top, and a position that
+   * never overflows never fires a fallback. An inset overflows honestly, so `flip-block` runs.
+   *
+   * Inline: `justify-self: anchor-center` between viewport insets, not `left: anchor(center)` with
+   * a `translate`. A translate moves the painted box and not the one overflow is measured against,
+   * so a tooltip on a corner button hung 30px off the side of the screen with nothing to catch it;
+   * anchor-center is measured where it lands and stays inside the viewport on its own.
    */
   inset: auto;
+  inset-inline: 0;
   bottom: calc(anchor(top) + 8px);
-  left: anchor(center);
+  justify-self: anchor-center;
   width: max-content;
-  max-width: 16rem;
+  max-width: min(16rem, 100vw - 1rem);
   margin: 0;
   padding: 6px 12px;
   border: 2px solid rgb(0 255 255 / 80%);
@@ -380,7 +388,6 @@ textarea {
     opacity 200ms,
     display 200ms allow-discrete,
     overlay 200ms allow-discrete;
-  translate: -50%;
   position-try-fallbacks: flip-block;
 
   &:popover-open {
