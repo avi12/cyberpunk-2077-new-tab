@@ -13,8 +13,10 @@ import { tick } from "svelte";
  * decided against a layout that is not itself moving, and the order is written once at the end
  * rather than on every crossing - which is what made the old engine stutter under the pointer.
  *
- * Pointer events only, so mouse, pen and touch behave the same; the handles carry
- * `touch-action: none` so a touch-drag never scrolls the page instead.
+ * Pointer events only, so mouse, pen and touch behave the same. The action stamps
+ * `touch-action: none` on whatever starts a drag - the handle, or the item itself when there is no
+ * handle - so a touch-drag reorders instead of scrolling the page; it owns that because it is the
+ * only place that knows which element that is, and it lifts the stamp again while disabled.
  */
 
 export type SortableOptions = {
@@ -121,6 +123,23 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     centers = slots.map(centerOf);
     fromIndex = ids.indexOf(draggedId);
     toIndex = fromIndex;
+  }
+
+  /**
+   * `touch-action` is read when a touch lands, too late for any handler to set it, so every drag
+   * target carries it from the moment it renders.
+   */
+  function stampTouchAction() {
+    for (const child of node.children) {
+      if (!(child instanceof HTMLElement) || !child.hasAttribute(ID_ATTRIBUTE)) {
+        continue;
+      }
+
+      const elTarget = current.handle ? child.querySelector(current.handle) : child;
+      if (elTarget instanceof HTMLElement) {
+        elTarget.style.touchAction = current.disabled ? "" : "none";
+      }
+    }
   }
 
   /** A transparent sheet under the lifted item, so the drag owns every surface it passes over. */
@@ -339,15 +358,26 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
 
   node.addEventListener("pointerdown", onPointerDown);
 
+  // Handles come and go with edit mode, so the stamp follows the rendered children rather than the
+  // options, which change in the same flush but not necessarily after the DOM does.
+  const observer = new MutationObserver(stampTouchAction);
+  observer.observe(node, {
+    childList: true,
+    subtree: true
+  });
+  stampTouchAction();
+
   return {
     update(next: SortableOptions) {
       current = next;
+      stampTouchAction();
 
       if (next.disabled && isDragging) {
         finish(true);
       }
     },
     destroy() {
+      observer.disconnect();
       node.removeEventListener("pointerdown", onPointerDown);
       finish(true);
     }
