@@ -2,6 +2,7 @@
   import type { WidgetConfig } from "@/lib/storage/defaults";
   import chevronDown from "@/assets/icons/chevron-down.svg?raw";
   import chevronUp from "@/assets/icons/chevron-up.svg?raw";
+  import { proxied } from "@/lib/cors-proxy";
   import externalLink from "@/assets/icons/external-link.svg?raw";
   import Modal from "@/components/modals/Modal.svelte";
   import rss from "@/assets/icons/rss.svg?raw";
@@ -22,7 +23,6 @@
     link: string;
   };
 
-  const PROXY = "https://api.allorigins.win/raw?url=";
   const REFRESH_MS = 900_000;
   const SAVE_DEBOUNCE_MS = 500;
   const MIN_ITEMS = 1;
@@ -66,7 +66,7 @@
     isLoading = true;
     isFailed = false;
     try {
-      const response = await fetch(`${PROXY}${encodeURIComponent(feedUrl)}`);
+      const response = await fetch(proxied(feedUrl));
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
