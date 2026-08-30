@@ -2,6 +2,7 @@
   import { Camera } from "@/lib/icons/nodes";
   import Icon from "@/lib/icons/Icon.svelte";
   import Modal from "./Modal.svelte";
+  import { tooltip } from "@/lib/tooltip";
 
   const {
     isOpen,
@@ -19,6 +20,7 @@
 
   const ABOUT_LINKS: AboutLink[] = [];
 
+  const SCREENSHOT_LABEL = "Capture screenshot";
   const SCREENSHOT_SCALE = 2;
   const SCREENSHOT_BACKGROUND = "#000c14";
   const CLOSE_ANIMATION_MS = 300;
@@ -64,20 +66,20 @@
   <div class="about__actions">
     {#each ABOUT_LINKS as link (link.href)}
       <a
-        class="cyberpunk-tooltip about__action"
-        data-tooltip={link.tooltip}
+        class="about__action"
         href={link.href}
         rel="noopener noreferrer"
-        target="_blank">
+        target="_blank"
+        use:tooltip={link.tooltip}>
         {link.label}
       </a>
     {/each}
     <button
-      class="cyberpunk-tooltip about__action about__action--cyan"
-      aria-label="Capture screenshot"
-      data-tooltip="Capture Screenshot"
+      class="about__action about__action--cyan"
+      aria-label={SCREENSHOT_LABEL}
       onclick={() => void capture()}
-      type="button">
+      type="button"
+      use:tooltip={SCREENSHOT_LABEL}>
       <Icon node={Camera} size={20} />
     </button>
   </div>

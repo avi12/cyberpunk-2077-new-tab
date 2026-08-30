@@ -4,6 +4,7 @@
   import Icon from "@/lib/icons/Icon.svelte";
   import Modal from "./Modal.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
+  import { tooltip } from "@/lib/tooltip";
   import { tick } from "svelte";
 
   const {
@@ -13,6 +14,8 @@
     isOpen: boolean;
     onClose: () => void;
   } = $props();
+
+  const EDIT_LABEL = "Edit name";
 
   let draft = $state(settings.userName.current);
   let isEditing = $state(false);
@@ -67,11 +70,11 @@
       {:else}
         <p class="cyber-input identity__box">{draft}</p>
         <button
-          class="cyberpunk-tooltip identity__edit"
-          aria-label="Edit name"
-          data-tooltip="Edit name"
+          class="identity__edit"
+          aria-label={EDIT_LABEL}
           onclick={() => void startEditing()}
-          type="button">
+          type="button"
+          use:tooltip={EDIT_LABEL}>
           <Icon node={SquarePen} size={16} />
         </button>
       {/if}
@@ -114,13 +117,6 @@
 
     &:hover {
       color: var(--cp-accent);
-    }
-
-    /* Centred on the button the tooltip hangs past the dialog, which then grows a scrollbar. */
-    &::after {
-      right: 0;
-      left: auto;
-      translate: 0;
     }
   }
 

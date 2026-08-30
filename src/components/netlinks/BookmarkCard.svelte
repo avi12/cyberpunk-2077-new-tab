@@ -3,6 +3,7 @@
   import { GripVertical, SquarePen, XMark } from "@/lib/icons/nodes";
   import Icon from "@/lib/icons/Icon.svelte";
   import { iconByName } from "@/lib/icons/choices";
+  import { tooltip } from "@/lib/tooltip";
 
   const {
     bookmark,
@@ -19,6 +20,9 @@
     onOpen: (url: string) => void;
     onContextMenu: (e: MouseEvent, bookmark: Bookmark) => void;
   } = $props();
+
+  const EDIT_LABEL = "Edit bookmark";
+  const DELETE_LABEL = "Delete bookmark";
 
   function onAuxClick(e: MouseEvent) {
     if (!isEditing && e.button === 1) {
@@ -54,19 +58,19 @@
   {#if isEditing}
     <div class="card__actions">
       <button
-        class="cyberpunk-tooltip card__action card__action--edit"
-        aria-label="Edit bookmark"
-        data-tooltip="Edit bookmark"
+        class="card__action card__action--edit"
+        aria-label={EDIT_LABEL}
         onclick={() => onEdit(bookmark)}
-        type="button">
+        type="button"
+        use:tooltip={EDIT_LABEL}>
         <Icon node={SquarePen} size={16} />
       </button>
       <button
-        class="cyberpunk-tooltip card__action card__action--delete"
-        aria-label="Delete bookmark"
-        data-tooltip="Delete bookmark"
+        class="card__action card__action--delete"
+        aria-label={DELETE_LABEL}
         onclick={() => onDelete(bookmark.id)}
-        type="button">
+        type="button"
+        use:tooltip={DELETE_LABEL}>
         <Icon node={XMark} size={16} />
       </button>
     </div>

@@ -217,15 +217,6 @@ button {
 /* Cards and widget slots each get their own name, so a reorder or an edit-mode change morphs them. */
 .view-item {
   view-transition-name: match-element;
-
-  /*
-   * That name also makes each one a stacking context, so a tooltip reaching past its own card is
-   * painted under the next card however high its own z-index is. Raising the whole card while its
-   * tooltip is up is the only level where the sort order is decided.
-   */
-  &:has(.cyberpunk-tooltip:hover) {
-    z-index: 1;
-  }
 }
 
 .clock {
@@ -289,57 +280,57 @@ button {
 
 /* ---------- Tooltip ---------- */
 
+/*
+ * Tooltips are popovers in the top layer, positioned against their trigger's `anchor-name` - see
+ * lib/tooltip.ts. Nothing in the page can paint over the top layer, which is the whole point: as
+ * pseudo-elements these lost to whatever card came next in the DOM.
+ */
 .cyberpunk-tooltip {
-  position: relative;
+  /*
+   * `anchor()` insets rather than `position-area`: the latter's alignment is safe by default, so it
+   * quietly slides a tooltip over its own trigger instead of overflowing, and `flip-block` then
+   * never fires. Chrome 152 verified.
+   */
+  inset: auto;
+  bottom: calc(anchor(top) + 8px);
+  left: anchor(center);
+  width: max-content;
+  max-width: 16rem;
+  margin: 0;
+  padding: 6px 12px;
+  border: 2px solid rgb(0 255 255 / 80%);
+  background-color: rgb(17 24 39 / 95%);
+  color: #ffffff;
+  font-family: "Courier New", monospace;
+  font-weight: 400;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-transform: uppercase;
+  opacity: 0%;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+  transition:
+    opacity 200ms,
+    display 200ms allow-discrete,
+    overlay 200ms allow-discrete;
+  translate: -50%;
+  position-try-fallbacks: flip-block;
 
-  &::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    z-index: 1000;
-    margin-bottom: 8px;
-    padding: 6px 12px;
-    border: 2px solid rgb(0 255 255 / 80%);
-    background-color: rgb(17 24 39 / 95%);
-    color: #ffffff;
-    font-family: "Courier New", monospace;
-    font-weight: 400;
-    font-size: 0.75rem;
-    line-height: 1rem;
-    text-transform: uppercase;
-    white-space: nowrap;
-    opacity: 0%;
-    visibility: hidden;
-    backdrop-filter: blur(4px);
-    pointer-events: none;
-    transition: opacity 200ms, visibility 200ms;
-    translate: -50%;
-  }
+  &:popover-open {
+    @starting-style {
+      opacity: 0%;
+    }
 
-  &::before {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    z-index: 1000;
-    margin-bottom: 2px;
-    border: 4px solid transparent;
-    border-top-color: rgb(0 255 255 / 80%);
-    opacity: 0%;
-    visibility: hidden;
-    transition: opacity 200ms, visibility 200ms;
-    translate: -50%;
-  }
-
-  &:hover::after,
-  &:hover::before {
     opacity: 100%;
-    visibility: visible;
   }
 }
 
-.cyberpunk-tooltip:hover::after,
+@media (prefers-reduced-motion: reduce) {
+  .cyberpunk-tooltip {
+    transition: none;
+  }
+}
+
 /* ---------- Glitch effects ---------- */
 .hover-glitch {
   position: relative;
