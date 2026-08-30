@@ -12,11 +12,15 @@
   import { settings } from "@/lib/storage/settings.svelte";
   import settingsIcon from "@/assets/icons/settings.svg?raw";
   import { sortable } from "@/lib/sortable";
+  import { tooltip } from "@/lib/tooltip";
   import triangleAlert from "@/assets/icons/triangle-alert.svg?raw";
   import { withViewTransition } from "@/lib/view-transition";
 
+  const EDIT_LABEL = "Edit netlinks";
+
   let isEditing = $state(false);
-  let isFormOpen = $state(false);
+  /** The category the link form is open inside, so a link is always added where it will land. */
+  let formCategory = $state<string | null>(null);
   let bookmarkToEdit = $state<Bookmark | null>(null);
   let renamingCategory = $state<string | null>(null);
   let renameDraft = $state("");
@@ -46,7 +50,7 @@
   });
 
   function closeForm() {
-    isFormOpen = false;
+    formCategory = null;
     bookmarkToEdit = null;
   }
 
@@ -101,51 +105,28 @@
   }
 </script>
 
-<nav class="netlinks" aria-label="Netlinks">
-  <div class="netlinks__header">
-    <h2 class="netlinks__title"><span class="hover-glitch" data-text="NETLINKS">NETLINKS</span></h2>
-    <div class="netlinks__controls">
-      {#if isEditing}
-        <button class="netlinks__save" onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
-      {:else}
-        <button class="netlinks__icon-button" aria-label="Edit netlinks" onclick={() => withViewTransition(() => (isEditing = true))} type="button">
-          {@html settingsIcon}
-        </button>
-      {/if}
-      <button
-        class="netlinks__icon-button netlinks__icon-button--accent"
-        aria-label="Add link"
-        onclick={() => withViewTransition(() => (isFormOpen = !isFormOpen))}
-        type="button">
-        {@html plus}
-      </button>
-    </div>
-  </div>
-
-  {#if isFormOpen}
+{#snippet linkForm(category: string)}
+  {#if formCategory === category}
     {#key bookmarkToEdit?.id ?? "new"}
       <BookmarkForm
         {bookmarkToEdit}
         {categories}
+        defaultCategory={category}
         onCancel={closeForm}
         onSubmit={draft => {
-          const url = /^https?:\/\//.test(draft.url) ? draft.url : `https://${draft.url}`;
-
           if (bookmarkToEdit) {
             const id = bookmarkToEdit.id;
             settings.bookmarks.current = settings.bookmarks.current.map(bookmark =>
               (bookmark.id === id ? {
                 ...bookmark,
-                ...draft,
-                url
+                ...draft
               } : bookmark));
           } else {
             settings.bookmarks.current = [
               ...settings.bookmarks.current,
               {
                 id: Date.now().toString(),
-                ...draft,
-                url
+                ...draft
               }
             ];
           }
@@ -154,6 +135,21 @@
         }} />
     {/key}
   {/if}
+{/snippet}
+
+<nav class="netlinks" aria-label="Netlinks">
+  <div class="netlinks__header">
+    <h2 class="netlinks__title"><span class="hover-glitch" data-text="NETLINKS">NETLINKS</span></h2>
+    <div class="netlinks__controls">
+      {#if isEditing}
+        <button class="netlinks__save" onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
+      {:else}
+        <button class="netlinks__icon-button" aria-label={EDIT_LABEL} onclick={() => withViewTransition(() => (isEditing = true))} type="button" use:tooltip={EDIT_LABEL}>
+          {@html settingsIcon}
+        </button>
+      {/if}
+    </div>
+  </div>
 
   <div
     class="netlinks__categories"
@@ -180,8 +176,14 @@
           <CategorySection
             bookmarks={byCategory[category] ?? []}
             {category}
+            isAddingLink={formCategory === category && !bookmarkToEdit}
             isCollapsed={settings.collapsedCategories.current[category] ?? false}
             {isEditing}
+            {linkForm}
+            onAddBookmark={name => {
+              bookmarkToEdit = null;
+              formCategory = name;
+            }}
             {onBookmarkContextMenu}
             onBookmarkOrderChange={change => {
               const inCategory = settings.bookmarks.current.filter(bookmark => bookmark.category === change.category);
@@ -199,7 +201,7 @@
             onDeleteCategory={name => void requestDeleteCategory(name)}
             onEditBookmark={bookmark => {
               bookmarkToEdit = bookmark;
-              isFormOpen = true;
+              formCategory = bookmark.category || BookmarkCategory.other;
             }}
             onEditCategory={name => {
               renamingCategory = name;
@@ -330,14 +332,6 @@
     :global(svg) {
       width: 20px;
       height: 20px;
-    }
-  }
-
-  .netlinks__icon-button--accent {
-    color: var(--cp-accent);
-
-    &:hover {
-      color: var(--cp-accent-hi);
     }
   }
 

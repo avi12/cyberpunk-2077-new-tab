@@ -4,6 +4,8 @@
   import chevronDown from "@/assets/icons/chevron-down.svg?raw";
   import chevronRight from "@/assets/icons/chevron-right.svg?raw";
   import grip from "@/assets/icons/grip.svg?raw";
+  import plus from "@/assets/icons/plus.svg?raw";
+  import type { Snippet } from "svelte";
   import { sortable } from "@/lib/sortable";
   import squarePen from "@/assets/icons/square-pen.svg?raw";
   import trash2 from "@/assets/icons/trash2.svg?raw";
@@ -13,10 +15,13 @@
     bookmarks,
     isEditing,
     isCollapsed,
+    isAddingLink,
+    linkForm,
     onBookmarkOrderChange,
     onToggleCollapse,
     onEditCategory,
     onDeleteCategory,
+    onAddBookmark,
     onDeleteBookmark,
     onEditBookmark,
     onOpenBookmark,
@@ -26,6 +31,10 @@
     bookmarks: Bookmark[];
     isEditing: boolean;
     isCollapsed: boolean;
+    /** True while the form below the heading is composing a new link for this section. */
+    isAddingLink: boolean;
+    /** Rendered inside this section so a link is composed where it will land. */
+    linkForm: Snippet<[string]>;
     onBookmarkOrderChange: (change: {
       category: string;
       ids: string[];
@@ -33,6 +42,7 @@
     onToggleCollapse: (category: string) => void;
     onEditCategory: (category: string) => void;
     onDeleteCategory: (category: string) => void;
+    onAddBookmark: (category: string) => void;
     onDeleteBookmark: (id: string) => void;
     onEditBookmark: (bookmark: Bookmark) => void;
     onOpenBookmark: (url: string) => void;
@@ -83,6 +93,8 @@
   </div>
 
   {#if !isCollapsed}
+    {@render linkForm(category)}
+
     <ul
       class="category__grid"
       use:sortable={{
@@ -102,6 +114,14 @@
           onEdit={onEditBookmark}
           onOpen={onOpenBookmark} />
       {/each}
+      {#if isEditing && !isAddingLink}
+        <li>
+          <button class="category__add" onclick={() => onAddBookmark(category)} type="button">
+            {@html plus}
+            ADD LINK
+          </button>
+        </li>
+      {/if}
     </ul>
   {/if}
 </section>
@@ -188,6 +208,36 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.75rem;
+  }
+
+  /* Sized like a bookmark card, so the tile reads as the slot the new link will occupy. */
+  .category__add {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    min-height: 100px;
+    padding: 1rem;
+    border: 2px dashed var(--cp-secondary);
+    color: var(--cp-secondary);
+    font-family: var(--cp-mono);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: background-color 200ms, border-color 200ms, color 200ms;
+
+    &:hover {
+      border-color: var(--cp-accent);
+      background: var(--cp-surface-2);
+      color: var(--cp-accent);
+    }
+
+    :global(svg) {
+      width: 24px;
+      height: 24px;
+    }
   }
 
   @media (width >= 640px) {
