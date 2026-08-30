@@ -1,0 +1,351 @@
+/*
+ * Shared control primitives. The original spelled each of these out as the same Tailwind class
+ * string in a dozen places; here each has one home. They are global rather than scoped because
+ * every one of them is used from more than one component.
+ */
+
+.cyberpunk-container {
+  /*
+   * The original loaded Share Tech Mono but never referenced it - `font-mono` resolved to Tailwind's
+   * default stack, which is what actually rendered. Same stack here, so the type is identical and
+   * nothing is fetched from a font CDN.
+   */
+  --cp-mono: ui-monospace, sfmono-regular, menlo, monaco, consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* ---------- Dialogs ---------- */
+
+/*
+ * Modals are real `<dialog>` elements opened with `showModal()`, so focus trapping, Escape and the
+ * backdrop come from the platform instead of the original's overlay div and key listeners.
+ */
+
+/*
+ * The open and closed states animate in both directions without a line of JavaScript:
+ * `allow-discrete` keeps `display` and `overlay` animatable, and `@starting-style` supplies the
+ * frame the dialog enters from.
+ */
+.cyber-dialog {
+  width: 100%;
+  max-width: 28rem;
+  padding: 1.5rem;
+  border: 2px solid var(--cp-primary);
+  background: var(--cp-surface);
+  color: var(--cp-text);
+  font-family: var(--cp-mono);
+  opacity: 0%;
+  transition:
+    opacity 160ms cubic-bezier(0.2, 0, 0, 1),
+    scale 160ms cubic-bezier(0.2, 0, 0, 1),
+    display 160ms allow-discrete,
+    overlay 160ms allow-discrete;
+  scale: 0.96;
+
+  &[open] {
+    @starting-style {
+      opacity: 0%;
+      scale: 0.96;
+    }
+
+    opacity: 100%;
+    scale: 1;
+  }
+
+  &::backdrop {
+    background: rgb(0 0 0 / 0%);
+    transition:
+      background-color 160ms cubic-bezier(0.2, 0, 0, 1),
+      display 160ms allow-discrete,
+      overlay 160ms allow-discrete;
+  }
+
+  &[open]::backdrop {
+    @starting-style {
+      background: rgb(0 0 0 / 0%);
+    }
+
+    background: rgb(0 0 0 / 70%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cyber-dialog,
+  .cyber-dialog::backdrop {
+    transition: none;
+  }
+}
+
+.cyber-dialog--warning {
+  border-color: var(--cp-secondary);
+}
+
+.cyber-dialog__title {
+  margin-bottom: 1rem;
+  color: var(--cp-accent);
+  font-family: var(--cp-mono);
+  font-size: 1.5rem;
+  line-height: 2rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* ---------- Inputs ---------- */
+
+.cyber-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--cp-primary);
+  border-radius: 0;
+  background: var(--cp-surface-2);
+  color: var(--cp-text);
+  font-family: var(--cp-mono);
+
+  &:focus {
+    border-color: var(--cp-accent);
+  }
+}
+
+.cyber-input--spinner {
+  padding-right: 2rem;
+}
+
+.cyber-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--cp-primary);
+  font-family: var(--cp-mono);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  text-transform: uppercase;
+}
+
+.cyber-error {
+  color: var(--cp-secondary);
+  font-family: var(--cp-mono);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+/* ---------- Buttons ---------- */
+
+.cyber-button {
+  padding: 0.5rem 1rem;
+  font-family: var(--cp-mono);
+  text-transform: uppercase;
+  transition: background-color 200ms, color 200ms, border-color 200ms;
+}
+
+.cyber-button--primary {
+  background: var(--cp-secondary);
+  color: var(--cp-on-accent);
+  font-weight: 700;
+
+  &:hover {
+    background: var(--cp-secondary-hi);
+  }
+}
+
+.cyber-button--accent {
+  background: var(--cp-accent);
+  color: var(--cp-on-accent);
+  font-weight: 700;
+
+  &:hover {
+    background: var(--cp-accent-lo);
+  }
+}
+
+.cyber-button--cyan {
+  background: var(--cp-primary);
+  color: var(--cp-on-accent);
+  font-weight: 700;
+
+  &:hover {
+    background: var(--cp-primary-hover);
+  }
+}
+
+.cyber-button--ghost {
+  border: 1px solid var(--cp-primary);
+  color: var(--cp-primary);
+
+  &:hover {
+    background: var(--cp-surface-2);
+  }
+}
+
+.cyber-button--muted {
+  background: var(--cp-surface-3);
+  color: var(--cp-text);
+
+  &:hover {
+    background: var(--cp-outline);
+  }
+}
+
+.cyber-button--danger {
+  background: var(--cp-danger);
+  color: var(--cp-text);
+
+  &:hover {
+    background: var(--cp-danger-hover);
+  }
+}
+
+.cyber-button--block {
+  width: 100%;
+}
+
+.cyber-button--grow {
+  flex: 1;
+}
+
+/* The small square icon buttons pinned to the page corners. */
+.corner-button {
+  padding: 0.5rem;
+  border: 2px solid var(--cp-primary);
+  background: var(--cp-surface);
+  color: var(--cp-primary);
+
+  &:hover {
+    border-color: var(--cp-primary-hover);
+    color: var(--cp-primary-hover);
+  }
+}
+
+/* ---------- Option rows ---------- */
+
+/*
+ * The pick-one rows in the Terminal Display panel and the icon pickers: unselected is a dark tile,
+ * selected inverts to the accent.
+ */
+.option-button {
+  padding: 0.5rem;
+  background: var(--cp-surface-2);
+  color: var(--cp-text);
+  font-family: var(--cp-mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-transform: uppercase;
+  transition: background-color 200ms, color 200ms;
+
+  &:hover {
+    background: var(--cp-surface-3);
+  }
+
+  &[aria-pressed="true"],
+  &[aria-checked="true"] {
+    background: var(--cp-secondary);
+    color: var(--cp-on-accent);
+
+    &:hover {
+      background: var(--cp-secondary);
+    }
+  }
+}
+
+.option-button[aria-pressed="true"],
+.option-button[aria-pressed="true"]:hover,
+.option-button[aria-checked="true"]:hover {
+  background: var(--cp-secondary);
+}
+
+/* The image/video pair uses cyan rather than pink for its selected state. */
+.option-button--cyan[aria-pressed="true"],
+.option-button--cyan[aria-pressed="true"]:hover {
+  background: var(--cp-primary);
+  color: var(--cp-on-accent);
+}
+
+/* ---------- Widget cards ---------- */
+
+/* Every widget is the same bordered panel; only the contents differ. */
+.widget-card {
+  padding: 1rem;
+  border: 2px solid var(--cp-primary);
+  background: var(--cp-surface);
+}
+
+.widget-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.widget-card__label {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--cp-primary);
+  font-family: var(--cp-mono);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  text-transform: uppercase;
+}
+
+.widget-card__icon-button {
+  color: var(--cp-primary);
+  transition: color 200ms;
+
+  &:hover {
+    color: var(--cp-primary-hover);
+  }
+}
+
+/* The location line every geo-backed widget shows under its reading. */
+.widget-location {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  color: var(--cp-primary);
+  font-family: var(--cp-mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-transform: uppercase;
+
+  &:hover {
+    color: var(--cp-primary-hover);
+  }
+}
+
+.widget-location--edit {
+  color: var(--cp-accent);
+
+  &:hover {
+    color: var(--cp-accent-hi);
+  }
+}
+
+/* ---------- Layout helpers used by more than one component ---------- */
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stack--tight {
+  gap: 0.5rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.mono {
+  font-family: var(--cp-mono);
+}
+
+.visually-hidden {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

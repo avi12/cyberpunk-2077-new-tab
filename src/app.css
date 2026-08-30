@@ -1,0 +1,943 @@
+/*
+ * Global stylesheet: reset, theme tokens, and the effect classes that cross component boundaries.
+ *
+ * The original extension themed itself with ~120 `!important` Tailwind overrides per theme. Here a
+ * single token set on `.cyberpunk-container` is the source of truth, and the two alternate
+ * theme classes only redefine the tokens. Component-local layout lives in each `.svelte` file's
+ * scoped `\3c style>`; anything applied from more than one component lives here, because Svelte's
+ * scoping would otherwise strip it.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scrollbar-color: #00ffff #000c14;
+  scrollbar-width: thin;
+  line-height: 1.15;
+  tab-size: 4;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background-color: #000c14;
+  font-family: system-ui, "Segoe UI", roboto, helvetica, arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+}
+
+button,
+input,
+select,
+textarea {
+  margin: 0;
+  font-family: inherit;
+  font-size: 100%;
+  line-height: 1.15;
+}
+
+button {
+  appearance: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+:where(h1, h2, h3, h4, p, blockquote, figure, ul, ol) {
+  margin: 0;
+}
+
+:where(ul, ol) {
+  padding: 0;
+  list-style: none;
+}
+
+:where(a) {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Every control the original renders is square-cornered and unfocused-outline-free. */
+:where(input, textarea, select, button):focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+/*
+ * Theme tokens. `cyberpunk2077` is the base set; the two alternates redefine only what differs, so
+ * a colour has exactly one definition per theme and none is repeated across rules.
+ */
+.cyberpunk-container {
+  /* Structural colours - identical in all three themes. */
+  --cp-bg: #000c14;
+  --cp-on-accent: #000000;
+  --cp-text: #ffffff;
+  --cp-danger: #7f1d1d;
+  --cp-danger-hover: #991b1b;
+
+  /* Cyan is the constant across all three themes: it is the terminal itself. */
+  --cp-primary: #22d3ee;
+  --cp-primary-hover: #67e8f9;
+  --cp-accent: #fde047;
+  --cp-accent-hi: #fef08a;
+  --cp-accent-lo: #facc15;
+  --cp-secondary: #ec4899;
+  --cp-secondary-hi: #f472b6;
+  --cp-surface: #111827;
+  --cp-surface-2: #1f2937;
+  --cp-surface-3: #374151;
+  --cp-outline: #4b5563;
+  --cp-text-dim: #d1d5db;
+  --cp-text-dimmer: #9ca3af;
+  --cp-text-faint: #6b7280;
+
+  /* Raw neon used by the glitch/scan effects - deliberately not the Tailwind palette. */
+  --cp-glitch-a: #ff0090;
+  --cp-glitch-b: #00ffff;
+  --cp-glitch-c: #f9f002;
+  --cp-accent-vivid: #f9f002;
+  --cp-greeting-glow: #f9f002;
+  --cp-quote-glow: #00ffff;
+  --cp-pulse: #00ffff;
+  --cp-slider-fill: #ec4899;
+  --cp-slider-thumb: #22d3ee;
+
+  position: relative;
+  overflow: hidden;
+  background-color: var(--cp-bg);
+  background-position: 50%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  transition: all 500ms ease-in-out;
+}
+
+.cyberninja {
+  --cp-accent: #ef4444;
+  --cp-accent-hi: #f87171;
+  --cp-accent-lo: #dc2626;
+  --cp-secondary: #ef4444;
+  --cp-secondary-hi: #f87171;
+  --cp-surface: #1a1a1a;
+  --cp-surface-2: #2a2a2a;
+  --cp-surface-3: #3a3a3a;
+  --cp-outline: #4a4a4a;
+  --cp-text-dim: #e5e7eb;
+  --cp-text-dimmer: #d1d5db;
+  --cp-text-faint: #9ca3af;
+  --cp-glitch-a: #ef4444;
+  --cp-glitch-c: #ef4444;
+  --cp-accent-vivid: #ef4444;
+  --cp-greeting-glow: #ef4444;
+  --cp-quote-glow: #ef4444;
+  --cp-pulse: #ef4444;
+  --cp-slider-fill: #ef4444;
+  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ef4444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
+}
+
+.edgerunners {
+  --cp-accent: #10b981;
+  --cp-accent-hi: #34d399;
+  --cp-accent-lo: #059669;
+  --cp-secondary: #8b5cf6;
+  --cp-secondary-hi: #a78bfa;
+  --cp-surface: #1a1a1a;
+  --cp-surface-2: #2a2a2a;
+  --cp-surface-3: #3a3a3a;
+  --cp-outline: #4a4a4a;
+  --cp-text-dim: #e5e7eb;
+  --cp-text-dimmer: #d1d5db;
+  --cp-text-faint: #9ca3af;
+  --cp-glitch-a: #8b5cf6;
+  --cp-glitch-c: #10b981;
+  --cp-accent-vivid: #10b981;
+  --cp-greeting-glow: #10b981;
+  --cp-quote-glow: #10b981;
+  --cp-pulse: #10b981;
+  --cp-slider-fill: #8b5cf6;
+  --cp-slider-thumb: #10b981;
+  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
+}
+
+/*
+ * The page replaces the system cursor outright, as the original does: a cyan arrow over everything,
+ * and a neon plus reticle over anything interactive. Only the reticle is themed - the arrow is the
+ * same in all three themes. `:is(...)` outranks `*`, so neither rule needs `!important`.
+ */
+:root {
+  --cp-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2300ffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z'%3E%3C/path%3E%3C/svg%3E") 0 0, auto;
+  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f9f002' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
+}
+
+* {
+  cursor: var(--cp-cursor);
+}
+
+:is(a, button, [role="button"], select, summary, [type="submit"], [type="button"]) {
+  cursor: var(--cp-cursor-pointer);
+}
+
+/* ---------- View transitions ---------- */
+
+/*
+ * State changes that reflow the page (theme, scan lines, background, edit modes, a completed gig)
+ * are wrapped in a view transition. Naming the persistent regions makes them morph between the two
+ * states instead of the whole page cross-fading over itself.
+ */
+::view-transition-group(*) {
+  animation-duration: 260ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+::view-transition-old(root) {
+  animation: 200ms cubic-bezier(0.2, 0, 0, 1) both view-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 260ms cubic-bezier(0.2, 0, 0, 1) both view-fade-in;
+}
+
+@keyframes view-fade-out {
+  to {
+    opacity: 0%;
+  }
+}
+
+@keyframes view-fade-in {
+  from {
+    opacity: 0%;
+  }
+}
+
+/* Cards and widget slots each get their own name, so a reorder or an edit-mode change morphs them. */
+.view-item {
+  view-transition-name: match-element;
+}
+
+.clock {
+  view-transition-name: clock;
+}
+
+.search {
+  view-transition-name: search;
+}
+
+.quote {
+  view-transition-name: quote;
+}
+
+.netlinks {
+  view-transition-name: netlinks;
+}
+
+.widget-layer {
+  view-transition-name: widgets;
+}
+
+/* ---------- Overlays ---------- */
+
+.scan-lines,
+.scan-lines-below {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(rgb(18 16 16 / 0%) 50%, rgb(0 0 0 / 25%) 50%) 0 0 / 100% 4px;
+  pointer-events: none;
+}
+
+.scan-lines {
+  z-index: 15;
+}
+
+.scan-lines-below {
+  z-index: 1;
+}
+
+.cyberpunk-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  background: radial-gradient(circle, transparent 50%, rgb(0 0 0 / 70%) 150%);
+  pointer-events: none;
+}
+
+/* ---------- Scrollbars & selection ---------- */
+
+::selection {
+  background: rgb(255 0 144 / 70%);
+  color: #ffffff;
+  text-shadow: none;
+}
+
+.scrollbar-cyberpunk {
+  scrollbar-color: #00ffff #1a1a1a;
+  scrollbar-width: thin;
+}
+
+/* ---------- Tooltip ---------- */
+
+.cyberpunk-tooltip {
+  position: relative;
+
+  &::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    z-index: 1000;
+    margin-bottom: 8px;
+    padding: 6px 12px;
+    border: 2px solid rgb(0 255 255 / 80%);
+    background-color: rgb(17 24 39 / 95%);
+    color: #ffffff;
+    font-family: "Courier New", monospace;
+    font-weight: 400;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0%;
+    visibility: hidden;
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+    transition: opacity 200ms, visibility 200ms;
+    translate: -50%;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    z-index: 1000;
+    margin-bottom: 2px;
+    border: 4px solid transparent;
+    border-top-color: rgb(0 255 255 / 80%);
+    opacity: 0%;
+    visibility: hidden;
+    transition: opacity 200ms, visibility 200ms;
+    translate: -50%;
+  }
+
+  &:hover::after,
+  &:hover::before {
+    opacity: 100%;
+    visibility: visible;
+  }
+}
+
+.cyberpunk-tooltip:hover::after,
+/* ---------- Glitch effects ---------- */
+.hover-glitch {
+  position: relative;
+
+  &:hover {
+    animation: 300ms steps(2, end) hover-glitch;
+
+    .edgerunners & {
+      animation-name: edgerunners-hover-glitch;
+    }
+  }
+}
+
+/* Default and Cyber Ninja share this shape; Edgerunners cycles a third colour and needs its own. */
+@keyframes hover-glitch {
+  0% {
+    text-shadow: 2px 2px var(--cp-glitch-a), -2px -2px var(--cp-glitch-b);
+    translate: 0;
+  }
+
+  25% {
+    text-shadow: -2px 2px var(--cp-glitch-a), 2px -2px var(--cp-glitch-b);
+    translate: 1px 1px;
+  }
+
+  50% {
+    text-shadow: 2px -2px var(--cp-glitch-a), -2px 2px var(--cp-glitch-b);
+    translate: -1px -1px;
+  }
+
+  75% {
+    text-shadow: -2px -2px var(--cp-glitch-a), 2px 2px var(--cp-glitch-b);
+    translate: 1px -1px;
+  }
+
+  100% {
+    text-shadow: none;
+    translate: 0;
+  }
+}
+
+@keyframes edgerunners-hover-glitch {
+  0% {
+    text-shadow: 2px 2px #8b5cf6, -2px -2px #00ffff;
+    translate: 0;
+  }
+
+  25% {
+    text-shadow: -2px 2px #10b981, 2px -2px #8b5cf6;
+    translate: 1px 1px;
+  }
+
+  50% {
+    text-shadow: 2px -2px #00ffff, -2px 2px #10b981;
+    translate: -1px -1px;
+  }
+
+  75% {
+    text-shadow: -2px -2px #8b5cf6, 2px 2px #10b981;
+    translate: 1px -1px;
+  }
+
+  100% {
+    text-shadow: none;
+    translate: 0;
+  }
+}
+
+.glitch {
+  position: relative;
+  text-shadow:
+    0.1em 0 color-mix(in sRGB, var(--cp-glitch-a) 90%, transparent),
+    -0.05em -0.1em color-mix(in sRGB, var(--cp-glitch-b) 90%, transparent),
+    0.05em 0.1em color-mix(in sRGB, var(--cp-glitch-c) 90%, transparent);
+  animation: 100ms infinite glitch;
+}
+
+.glitch-1 {
+  text-shadow: -0.1em 0 color-mix(in sRGB, var(--cp-glitch-a) 90%, transparent);
+  animation: 100ms infinite glitch-1;
+}
+
+/*
+ * The second glitch layer follows cyan in the two cyan-accented themes but the green accent in
+ * Edgerunners, which is the only theme where the two diverge.
+ */
+.glitch-2 {
+  text-shadow: 0.1em 0 color-mix(in sRGB, var(--cp-glitch-b) 90%, transparent);
+  animation: 100ms infinite glitch-2;
+
+  .edgerunners & {
+    text-shadow: 0.1em 0 color-mix(in sRGB, var(--cp-glitch-c) 90%, transparent);
+  }
+}
+
+@keyframes glitch {
+  0% {
+    filter: hue-rotate(0deg);
+    translate: 0;
+  }
+
+  10% {
+    filter: hue-rotate(90deg);
+    scale: 1.02;
+    translate: -4px 4px;
+  }
+
+  20% {
+    filter: hue-rotate(180deg);
+    scale: 0.98;
+    translate: -4px -4px;
+  }
+
+  30% {
+    filter: hue-rotate(270deg);
+    scale: 1.01;
+    translate: 4px 4px;
+  }
+
+  40% {
+    filter: hue-rotate(360deg);
+    scale: 0.99;
+    translate: 4px -4px;
+  }
+
+  50% {
+    filter: hue-rotate(45deg);
+    scale: 1.03;
+    translate: -2px 2px;
+  }
+
+  60% {
+    filter: hue-rotate(135deg);
+    scale: 0.97;
+    translate: 2px -2px;
+  }
+
+  70% {
+    filter: hue-rotate(225deg);
+    scale: 1.02;
+    translate: -3px -3px;
+  }
+
+  80% {
+    filter: hue-rotate(315deg);
+    scale: 0.98;
+    translate: 3px 3px;
+  }
+
+  90% {
+    filter: hue-rotate(180deg);
+    scale: 1.01;
+    translate: -1px 1px;
+  }
+
+  100% {
+    filter: hue-rotate(0deg);
+    translate: 0;
+  }
+}
+
+@keyframes glitch-1 {
+  0% {
+    clip-path: inset(0);
+    translate: 0;
+  }
+
+  20% {
+    clip-path: inset(20% 0 60%);
+    translate: -4px 4px;
+  }
+
+  40% {
+    clip-path: inset(60% 0 20%);
+    translate: -4px -4px;
+  }
+
+  60% {
+    clip-path: inset(40% 0);
+    translate: 4px 4px;
+  }
+
+  80% {
+    clip-path: inset(10% 0 80%);
+    translate: 4px -4px;
+  }
+
+  100% {
+    clip-path: inset(0);
+    translate: 0;
+  }
+}
+
+@keyframes glitch-2 {
+  0% {
+    clip-path: inset(0);
+    translate: 0;
+  }
+
+  25% {
+    clip-path: inset(80% 0 10%);
+    translate: 4px 4px;
+  }
+
+  50% {
+    clip-path: inset(30% 0 50%);
+    translate: 4px -4px;
+  }
+
+  75% {
+    clip-path: inset(70% 0 20%);
+    translate: -4px 4px;
+  }
+
+  100% {
+    clip-path: inset(0);
+    translate: 0;
+  }
+}
+
+.quote-hover:hover {
+  animation: 200ms steps(3, end) quote-glitch;
+}
+
+@keyframes quote-glitch {
+  0% {
+    clip-path: inset(50% 0 30%);
+    transform: skew(54deg, 1deg);
+  }
+
+  10% {
+    clip-path: inset(10% 0 85%);
+    transform: skew(90deg, 3deg);
+  }
+
+  50% {
+    clip-path: inset(40% 0 43%);
+    transform: skew(-90deg, -2deg);
+  }
+
+  100% {
+    clip-path: none;
+    translate: none;
+  }
+}
+
+/*
+ * The border chase runs a different number of colour stops per theme, so unlike every other effect
+ * it cannot be reduced to one keyframe reading tokens - three keyframes, selected by theme class.
+ */
+.glitch-border {
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    z-index: -1;
+    border: 2px solid transparent;
+  }
+
+  &:hover::before {
+    border-color: var(--cp-accent-vivid);
+    animation: 1000ms infinite border-glitch;
+
+    .cyberninja & {
+      animation-name: cyberninja-border-glitch;
+    }
+
+    .edgerunners & {
+      animation-name: edgerunners-border-glitch;
+    }
+  }
+}
+
+@keyframes border-glitch {
+  0% {
+    border-color: var(--cp-accent-vivid);
+  }
+
+  25% {
+    border-color: var(--cp-glitch-b);
+  }
+
+  50% {
+    border-color: var(--cp-glitch-a);
+  }
+
+  75% {
+    border-color: var(--cp-glitch-b);
+  }
+
+  100% {
+    border-color: var(--cp-accent-vivid);
+  }
+}
+
+@keyframes cyberninja-border-glitch {
+  0% {
+    border-color: var(--cp-accent-vivid);
+  }
+
+  50% {
+    border-color: var(--cp-glitch-b);
+  }
+
+  100% {
+    border-color: var(--cp-accent-vivid);
+  }
+}
+
+@keyframes edgerunners-border-glitch {
+  0% {
+    border-color: var(--cp-accent-vivid);
+  }
+
+  33% {
+    border-color: var(--cp-glitch-b);
+  }
+
+  66% {
+    border-color: var(--cp-secondary);
+  }
+
+  100% {
+    border-color: var(--cp-accent-vivid);
+  }
+}
+
+/* The search button's "SCANNING..." sweep. */
+.scanning-effect {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgb(0 255 255 / 20%), transparent);
+    animation: 2000ms infinite scan;
+  }
+}
+
+@keyframes scan {
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 200%;
+  }
+}
+
+.scanning-text {
+  animation: 2000ms infinite scanning-text-color;
+}
+
+@keyframes scanning-text-color {
+  0%,
+  100% {
+    color: #00ffff;
+  }
+
+  50% {
+    color: #ff0090;
+  }
+}
+
+/* ---------- Gigs (task list) ---------- */
+
+.task-glitch {
+  animation: 200ms infinite task-glitch;
+}
+
+/* Not themed in the original - the completion burst always flashes the base neon triad. */
+@keyframes task-glitch {
+  0% {
+    border-color: #666666;
+    filter: hue-rotate(0deg) brightness(1);
+    scale: 1;
+    translate: 0;
+  }
+
+  25% {
+    border-color: #ff0090;
+    filter: hue-rotate(90deg) brightness(1.2);
+    scale: 1.02;
+    translate: -2px 2px;
+  }
+
+  50% {
+    border-color: #f9f002;
+    filter: hue-rotate(180deg) brightness(0.8);
+    scale: 0.98;
+    translate: 2px -2px;
+  }
+
+  75% {
+    border-color: #00ffff;
+    filter: hue-rotate(270deg) brightness(1.1);
+    scale: 1.01;
+    translate: -1px -1px;
+  }
+
+  100% {
+    border-color: #666666;
+    opacity: 0%;
+    filter: hue-rotate(0deg) brightness(1);
+    scale: 1;
+    translate: 0;
+  }
+}
+
+.task-pulse {
+  animation: 2000ms infinite task-pulse;
+}
+
+@keyframes task-pulse {
+  0% {
+    border-color: var(--cp-pulse);
+    box-shadow: 0 0 color-mix(in sRGB, var(--cp-pulse) 40%, transparent);
+  }
+
+  50% {
+    border-color: var(--cp-pulse);
+    box-shadow: 0 0 0 4px color-mix(in sRGB, var(--cp-pulse) 10%, transparent);
+  }
+
+  100% {
+    border-color: var(--cp-pulse);
+    box-shadow: 0 0 transparent;
+  }
+}
+
+/* While an item is dissolving the scrollbar would jump - collapse it for the 200ms. */
+.task-list-glitching {
+  scrollbar-width: none;
+}
+
+/* ---------- Bookmark context menu ---------- */
+
+.context-menu-glitch {
+  animation: 90ms infinite context-menu-glitch;
+}
+
+@keyframes context-menu-glitch {
+  0% {
+    border-color: #00ffff;
+    filter: hue-rotate(0deg) brightness(1);
+    scale: 1;
+    translate: 0;
+  }
+
+  20% {
+    border-color: #ff0090;
+    filter: hue-rotate(90deg) brightness(1.2);
+    scale: 1.05;
+    translate: -3px 3px;
+  }
+
+  40% {
+    border-color: #f9f002;
+    filter: hue-rotate(180deg) brightness(0.8);
+    scale: 0.95;
+    translate: 3px -3px;
+  }
+
+  60% {
+    border-color: #00ffff;
+    filter: hue-rotate(270deg) brightness(1.1);
+    scale: 1.02;
+    translate: -2px -2px;
+  }
+
+  80% {
+    border-color: #ff0090;
+    filter: hue-rotate(360deg) brightness(0.9);
+    scale: 0.98;
+    translate: 2px 2px;
+  }
+
+  100% {
+    border-color: #00ffff;
+    opacity: 0%;
+    filter: hue-rotate(0deg) brightness(1);
+    scale: 1;
+    translate: 0;
+  }
+}
+
+/* ---------- Greeting & quote glow ---------- */
+
+.greeting {
+  view-transition-name: greeting;
+  animation: 2000ms infinite alternate greeting-shadow;
+}
+
+@keyframes greeting-shadow {
+  0% {
+    text-shadow: 0 0 5px color-mix(in sRGB, var(--cp-greeting-glow) 70%, transparent);
+  }
+
+  100% {
+    text-shadow: 0 0 15px color-mix(in sRGB, var(--cp-greeting-glow) 90%, transparent);
+  }
+}
+
+.quote-box {
+  position: relative;
+  z-index: 1;
+}
+
+.quote-glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  box-shadow: inset 0 0 10px color-mix(in sRGB, var(--cp-quote-glow) 30%, transparent);
+}
+
+/* Set by the sortable action on the item under the pointer, for as long as the drag lasts. */
+.sortable-dragging {
+  position: relative;
+  z-index: 999;
+  pointer-events: none;
+}
+
+/* ---------- Shared form controls ---------- */
+
+/* Number fields render their own .spinner-button pair, so the native control is hidden outright. */
+[type="number"] {
+  appearance: textfield;
+}
+
+.number-input-container {
+  position: relative;
+}
+
+.spinner-buttons {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  translate: 0 -50%;
+}
+
+.spinner-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 20px;
+  height: 16px;
+  border: none;
+  background: none;
+  color: #00ffff;
+  cursor: pointer;
+  user-select: none;
+  transition: all 200ms;
+
+  &:hover {
+    color: var(--cp-accent-vivid);
+  }
+
+  &:active {
+    color: #000000;
+    scale: 0.9;
+  }
+}
+
+/* ---------- Utility classes shared by more than one component ---------- */
+
+/* The soft breathing pulse the original borrowed from Tailwind for loading states. */
+.pulse {
+  animation: 2000ms cubic-bezier(0.4, 0, 0.6, 1) infinite pulse;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none;
+  }
+
+  .glitch,
+  .glitch-1,
+  .glitch-2,
+  .greeting,
+  .task-pulse,
+  .task-glitch,
+  .context-menu-glitch,
+  .scanning-effect::after,
+  .scanning-text,
+  .pulse,
+  .hover-glitch:hover,
+  .quote-hover:hover,
+  .glitch-border:hover::before {
+    animation: none;
+  }
+}
