@@ -17,6 +17,7 @@
     isEditing,
     isCollapsed,
     isAddingLink,
+    editingBookmarkId,
     linkForm,
     onBookmarkOrderChange,
     onToggleCollapse,
@@ -32,9 +33,11 @@
     bookmarks: Bookmark[];
     isEditing: boolean;
     isCollapsed: boolean;
-    /** True while the form below the heading is composing a new link for this section. */
+    /** True while the grid's ADD LINK tile has become the card being written. */
     isAddingLink: boolean;
-    /** Rendered inside this section so a link is composed where it will land. */
+    /** The card in this grid that has become a form, if any. */
+    editingBookmarkId: string | null;
+    /** Rendered in the slot the link will occupy, so it is written where it lands. */
     linkForm: Snippet<[string]>;
     onBookmarkOrderChange: (change: {
       category: string;
@@ -54,6 +57,8 @@
   const DELETE_CATEGORY_LABEL = "Delete category";
 
   const ids = $derived(bookmarks.map(bookmark => bookmark.id));
+  /** A card that is being written is not a card to drag, and its neighbours stay put with it. */
+  const isWriting = $derived(isAddingLink || ids.includes(editingBookmarkId ?? ""));
 </script>
 
 <section class="category view-item">
@@ -94,33 +99,39 @@
   </div>
 
   {#if !isCollapsed}
-    {@render linkForm(category)}
-
     <ul
       class="category__grid"
       use:sortable={{
         ids,
-        disabled: !isEditing,
+        disabled: !isEditing || isWriting,
         onReorder: ids => onBookmarkOrderChange({
           category,
           ids
         })
       }}>
       {#each bookmarks as bookmark (bookmark.id)}
-        <BookmarkCard
-          {bookmark}
-          {isEditing}
-          onContextMenu={onBookmarkContextMenu}
-          onDelete={onDeleteBookmark}
-          onEdit={onEditBookmark}
-          onOpen={onOpenBookmark} />
+        {#if bookmark.id === editingBookmarkId}
+          <li data-sortable-id={bookmark.id}>{@render linkForm(category)}</li>
+        {:else}
+          <BookmarkCard
+            {bookmark}
+            {isEditing}
+            onContextMenu={onBookmarkContextMenu}
+            onDelete={onDeleteBookmark}
+            onEdit={onEditBookmark}
+            onOpen={onOpenBookmark} />
+        {/if}
       {/each}
-      {#if isEditing && !isAddingLink}
+      {#if isEditing}
         <li>
-          <button class="category__add" onclick={() => onAddBookmark(category)} type="button">
-            {@html plus}
-            ADD LINK
-          </button>
+          {#if isAddingLink}
+            {@render linkForm(category)}
+          {:else}
+            <button class="category__add" onclick={() => onAddBookmark(category)} type="button">
+              {@html plus}
+              ADD LINK
+            </button>
+          {/if}
         </li>
       {/if}
     </ul>

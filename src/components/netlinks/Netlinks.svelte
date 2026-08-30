@@ -106,35 +106,32 @@
 </script>
 
 {#snippet linkForm(category: string)}
-  {#if formCategory === category}
-    {#key bookmarkToEdit?.id ?? "new"}
-      <BookmarkForm
-        {bookmarkToEdit}
-        {categories}
-        defaultCategory={category}
-        onCancel={closeForm}
-        onSubmit={draft => {
-          if (bookmarkToEdit) {
-            const id = bookmarkToEdit.id;
-            settings.bookmarks.current = settings.bookmarks.current.map(bookmark =>
-              (bookmark.id === id ? {
-                ...bookmark,
-                ...draft
-              } : bookmark));
-          } else {
-            settings.bookmarks.current = [
-              ...settings.bookmarks.current,
-              {
-                id: Date.now().toString(),
-                ...draft
-              }
-            ];
-          }
+  {#key bookmarkToEdit?.id ?? "new"}
+    <BookmarkForm
+      {bookmarkToEdit}
+      {category}
+      onCancel={closeForm}
+      onSubmit={draft => {
+        if (bookmarkToEdit) {
+          const id = bookmarkToEdit.id;
+          settings.bookmarks.current = settings.bookmarks.current.map(bookmark =>
+            (bookmark.id === id ? {
+              ...bookmark,
+              ...draft
+            } : bookmark));
+        } else {
+          settings.bookmarks.current = [
+            ...settings.bookmarks.current,
+            {
+              id: Date.now().toString(),
+              ...draft
+            }
+          ];
+        }
 
-          closeForm();
-        }} />
-    {/key}
-  {/if}
+        closeForm();
+      }} />
+  {/key}
 {/snippet}
 
 <nav class="netlinks" aria-label="Netlinks">
@@ -176,7 +173,8 @@
           <CategorySection
             bookmarks={byCategory[category] ?? []}
             {category}
-            isAddingLink={formCategory === category && !bookmarkToEdit}
+            editingBookmarkId={bookmarkToEdit?.id ?? null}
+            isAddingLink={formCategory === category}
             isCollapsed={settings.collapsedCategories.current[category] ?? false}
             {isEditing}
             {linkForm}
@@ -199,10 +197,7 @@
             }}
             onDeleteBookmark={id => (settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.id !== id))}
             onDeleteCategory={name => void requestDeleteCategory(name)}
-            onEditBookmark={bookmark => {
-              bookmarkToEdit = bookmark;
-              formCategory = bookmark.category || BookmarkCategory.other;
-            }}
+            onEditBookmark={bookmark => (bookmarkToEdit = bookmark)}
             onEditCategory={name => {
               renamingCategory = name;
               renameDraft = name;
