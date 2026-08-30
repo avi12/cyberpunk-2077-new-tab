@@ -234,9 +234,10 @@ textarea {
 }
 
 /*
- * A named group paints above the root snapshot, so anything that sits over the interface has to be
- * named too and ordered here, or it drops behind every named region for the length of a transition.
- * The scan lines are the visible case: losing their 12.5% for 260ms brightened the whole page.
+ * Named groups all paint above the root snapshot, in capture order, which is not the order the page
+ * paints in - so the page's own stacking is restated here, group by group, with the same numbers the
+ * elements carry. Without it the scan lines slip under the interface they cover (everything brightens
+ * by the 12.5% they take out) and the widgets slip under the lines (they darken by it).
  */
 .identity {
   view-transition-name: identity;
@@ -250,14 +251,33 @@ textarea {
   view-transition-name: terminal;
 }
 
-::view-transition-group(scan-lines) {
-  z-index: 20;
+::view-transition-group(greeting),
+::view-transition-group(clock),
+::view-transition-group(search),
+::view-transition-group(quote),
+::view-transition-group(netlinks),
+::view-transition-group(match-element) {
+  z-index: 10;
 }
 
-::view-transition-group(identity),
+::view-transition-group(scan-lines) {
+  z-index: 15;
+}
+
+/*
+ * A widget slot is a `.view-item` like a bookmark card, so it shares the generated `match-element`
+ * name and cannot be told apart by name alone - but it lives in the widget layer, above the lines,
+ * while the cards live in the page below them. The class is what separates the two.
+ */
+::view-transition-group(*.above-scan-lines),
+::view-transition-group(widgets),
 ::view-transition-group(system-button),
 ::view-transition-group(terminal) {
   z-index: 30;
+}
+
+::view-transition-group(identity) {
+  z-index: 40;
 }
 
 /* Cards and widget slots each get their own name, so a reorder or an edit-mode change morphs them. */

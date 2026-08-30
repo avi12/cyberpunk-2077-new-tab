@@ -165,6 +165,7 @@
 
   .widgets__slot {
     margin-bottom: 1rem;
+    view-transition-class: above-scan-lines;
 
     &.is-disabled {
       opacity: 50%;
