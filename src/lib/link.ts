@@ -3,7 +3,13 @@ import { readProxied } from "./cors-proxy";
 const SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/i;
 const WWW_PATTERN = /^www\./;
 const TITLE_TIMEOUT_MS = 5000;
-const MAX_TITLE_LENGTH = 100;
+const MAX_TITLE_LENGTH = 60;
+
+/**
+ * A page title is almost always "<name> <separator> <tagline>", and a card has room for the name.
+ * The colon needs its trailing space, so "10: 30" splits and a bare "10:30" does not.
+ */
+const TITLE_TAGLINE_PATTERN = /\s+[|·—–-]\s+|:\s+/;
 
 /**
  * Second-level labels that belong to the public suffix rather than to the site, so `bbc.co.uk`
@@ -59,7 +65,9 @@ async function fetchPageTitle(url: string) {
   // A document from `DOMParser` is inert: it runs no script and loads no subresource.
   const page = new DOMParser().parseFromString(body, "text/html");
 
-  return page.title.trim().slice(0, MAX_TITLE_LENGTH);
+  const [name] = page.title.trim().split(TITLE_TAGLINE_PATTERN);
+
+  return (name || page.title).trim().slice(0, MAX_TITLE_LENGTH);
 }
 
 /** The page's own title when it can be read, and the host name when it can't. */
