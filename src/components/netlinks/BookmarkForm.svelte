@@ -2,6 +2,7 @@
   import type { Bookmark } from "@/lib/storage/defaults";
   import { normalizeUrl, resolveTitle } from "@/lib/link";
   import { pickIcon } from "@/lib/icons/auto";
+  import sparkles from "@/assets/icons/sparkles.svg?raw";
   import squareCheck from "@/assets/icons/square-check.svg?raw";
   import { untrack } from "svelte";
   import xMark from "@/assets/icons/x-mark.svg?raw";
@@ -20,25 +21,32 @@
   } = $props();
 
   const CANCEL_LABEL = "Discard";
+  const FETCH_TITLE_LABEL = "Fetch the title from the link";
   const SCANNING_PLACEHOLDER = "SCANNING";
   const TITLE_PLACEHOLDER = "Title";
 
   let title = $state(untrack(() => bookmarkToEdit?.title ?? ""));
   let url = $state(untrack(() => bookmarkToEdit?.url ?? ""));
   let isResolving = $state(false);
+  let hasTriedSubmit = $state(false);
+  let elUrl: HTMLInputElement | undefined;
 
+  const normalizedUrl = $derived(normalizeUrl(url));
   /** Nothing to pick by hand: the link decides its own glyph from what is in the fields. */
   const icon = $derived(pickIcon({
-    url: normalizeUrl(url),
+    url: normalizedUrl,
     title,
     category
   }));
   const submitLabel = $derived(bookmarkToEdit ? "Save link" : "Add link");
+  /** The form suppresses the browser's own required bubble, so the field has to say it itself. */
+  const isUrlMissing = $derived(hasTriedSubmit && !url.trim());
 
-  function focusUrl(elUrl: HTMLInputElement) {
-    elUrl.focus();
+  function focusUrl(elField: HTMLInputElement) {
+    elUrl = elField;
+    elField.focus();
     // Focus leaves the caret at the end, which scrolls a long URL past its own host name.
-    elUrl.scrollLeft = 0;
+    elField.scrollLeft = 0;
   }
 
   function onKeyDown(e: KeyboardEvent) {
@@ -47,17 +55,27 @@
     }
   }
 
+  async function readTitle() {
+    isResolving = true;
+    title = await resolveTitle(normalizedUrl);
+    isResolving = false;
+  }
+
   async function submit(e: SubmitEvent) {
     e.preventDefault();
-    if (!url || isResolving) {
+    if (isResolving) {
       return;
     }
 
-    const normalizedUrl = normalizeUrl(url);
+    hasTriedSubmit = true;
+    if (!url.trim()) {
+      elUrl?.focus();
+
+      return;
+    }
+
     if (!title) {
-      isResolving = true;
-      title = await resolveTitle(normalizedUrl);
-      isResolving = false;
+      await readTitle();
     }
 
     onSubmit({
@@ -69,12 +87,14 @@
   }
 </script>
 
-<form class="link-card" onsubmit={e => void submit(e)}>
+<form class="link-card" novalidate onsubmit={e => void submit(e)}>
   <label class="visually-hidden" for="link-url">URL</label>
   <input
     id="link-url"
     class="link-card__field"
+    class:is-missing={isUrlMissing}
     {@attach focusUrl}
+    aria-invalid={isUrlMissing}
     onkeydown={onKeyDown}
     placeholder="URL"
     required
@@ -91,6 +111,15 @@
     bind:value={title} />
 
   <div class="link-card__actions">
+    <button
+      class="link-card__action link-card__action--fetch"
+      class:is-working={isResolving}
+      aria-label={FETCH_TITLE_LABEL}
+      disabled={!url.trim() || isResolving}
+      onclick={() => void readTitle()}
+      type="button">
+      {@html sparkles}
+    </button>
     <button
       class="link-card__action"
       aria-label={submitLabel}
@@ -148,6 +177,14 @@
     text-align: center;
   }
 
+  .link-card__field.is-missing {
+    border-color: var(--cp-secondary);
+
+    &::placeholder {
+      color: var(--cp-secondary);
+    }
+  }
+
   .link-card__actions {
     display: flex;
     gap: 0.75rem;
@@ -172,11 +209,35 @@
     }
   }
 
+  .link-card__action--fetch {
+    color: var(--cp-accent);
+
+    &:hover:not(:disabled) {
+      color: var(--cp-accent-hi);
+    }
+  }
+
   .link-card__action--cancel {
     color: var(--cp-secondary);
 
-    &:hover {
+    &:hover:not(:disabled) {
       color: var(--cp-secondary-hi);
+    }
+  }
+
+  .link-card__action.is-working {
+    animation: pulse 700ms cubic-bezier(0.2, 0, 0, 1) infinite alternate;
+  }
+
+  @keyframes pulse {
+    to {
+      opacity: 35%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .link-card__action.is-working {
+      animation: none;
     }
   }
 </style>
