@@ -58,11 +58,18 @@ type Board = {
   top: number;
   right: number;
   bottom: number;
+  columnGap: number;
+  rowGap: number;
   slots: Slot[];
   /** The trailing cell holding no item - where one appended to this container would land. */
   spare: Slot | null;
   ids: string[];
   centers: SlotCenter[];
+};
+
+type Position = {
+  left: number;
+  top: number;
 };
 
 type Member = {
@@ -148,6 +155,7 @@ function measure(member: Member): Board {
   }
 
   const rect = member.node.getBoundingClientRect();
+  const style = getComputedStyle(member.node);
 
   return {
     node: member.node,
@@ -156,10 +164,36 @@ function measure(member: Member): Board {
     top: rect.top,
     right: rect.right,
     bottom: rect.bottom,
+    columnGap: parseFloat(style.columnGap) || 0,
+    rowGap: parseFloat(style.rowGap) || 0,
     slots,
     spare,
     ids: slots.map(slot => slot.id),
     centers: slots.map(centerOf)
+  };
+}
+
+/**
+ * Where a list one item longer would put its last cell: along the row while it fits, and at the
+ * start of a new one when it does not. It is what the add tile steps into as the grid grows.
+ */
+function cellAfter(board: Board): Position | null {
+  const last = board.spare ?? board.slots.at(-1);
+  if (!last) {
+    return null;
+  }
+
+  const left = last.left + last.width + board.columnGap;
+  if (left + last.width <= board.right + 1) {
+    return {
+      left,
+      top: last.top
+    };
+  }
+
+  return {
+    left: board.left,
+    top: last.top + last.height + board.rowGap
   };
 }
 
@@ -286,11 +320,14 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     elRaised = null;
   }
 
-  function slideTo(slot: Slot, landing: Slot) {
+  function slideTo(slot: Slot, landing: Position) {
     slot.element.style.translate = `${landing.left - slot.left}px ${landing.top - slot.top}px`;
   }
 
-  function sizeTo(slot: Slot, landing: Slot) {
+  function sizeTo(slot: Slot, landing: {
+    width: number;
+    height: number;
+  }) {
     slot.element.style.width = `${landing.width}px`;
     slot.element.style.height = `${landing.height}px`;
     // A grid item's height is `auto` until something reads it, and a transition cannot start there.
@@ -312,25 +349,61 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
 
       slideTo(source.slots[source.ids.indexOf(id)], source.slots[position]);
     }
+
+    // Nothing has left this list, so its tile keeps the cell it already has.
+    if (source.spare) {
+      source.spare.element.style.translate = "";
+    }
+  }
+
+  /** The source as it will look without the card: everything after it, and the tile, steps back one. */
+  function closeSource() {
+    if (!source) {
+      return;
+    }
+
+    for (const [index, slot] of source.slots.entries()) {
+      if (index <= fromIndex) {
+        continue;
+      }
+
+      slideTo(slot, source.slots[index - 1]);
+    }
+
+    const last = source.slots.at(-1);
+    if (source.spare && last) {
+      slideTo(source.spare, last);
+    }
   }
 
   /** The same gap in a list the item is only visiting: everything from `before` steps along one. */
   function openGap(board: Board, before: number) {
+    const after = cellAfter(board);
     for (const [index, slot] of board.slots.entries()) {
-      const landing = index < before ? slot : board.slots[index + 1] ?? board.spare;
+      const landing = index < before ? slot : board.slots[index + 1] ?? board.spare ?? after;
       if (landing) {
         slideTo(slot, landing);
       }
     }
+
+    // The list is one longer while the card is over it, so its tile steps on too - onto a new row
+    // when the one it is on has no room left.
+    if (board.spare && after) {
+      slideTo(board.spare, after);
+    }
   }
 
-  function closeGap(board: Board) {
+  function releaseBoard(board: Board) {
     for (const slot of board.slots) {
       if (slot.id === draggedId) {
         continue;
       }
 
       slot.element.style.translate = "";
+    }
+
+    if (board.spare) {
+      board.spare.element.style.translate = "";
     }
   }
 
@@ -346,6 +419,7 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     raiseBranch();
     document.body.style.userSelect = "none";
 
+    const slide = isReduced ? "none" : `translate ${SIBLING_SLIDE_MS}ms ${SLIDE_EASE}`;
     for (const board of boards) {
       for (const slot of board.slots) {
         const { style } = slot.element;
@@ -356,7 +430,12 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
           continue;
         }
 
-        style.transition = isReduced ? "none" : `translate ${SIBLING_SLIDE_MS}ms ${SLIDE_EASE}`;
+        style.transition = slide;
+      }
+
+      // The add tile is a cell like any other, so it slides between them like any other.
+      if (board.spare) {
+        board.spare.element.style.transition = slide;
       }
     }
   }
@@ -389,9 +468,18 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
       y: e.clientY
     }) ?? target;
     if (over !== target) {
-      closeGap(target);
+      if (target !== source) {
+        releaseBoard(target);
+      }
+
       target = over;
       toIndex = over === source ? fromIndex : -1;
+
+      if (over === source) {
+        reflow(fromIndex);
+      } else {
+        closeSource();
+      }
     }
 
     const isHome = target === source;
@@ -429,6 +517,11 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
         style.height = "";
         style.zIndex = "";
         slot.element.classList.remove(DRAGGING_CLASS);
+      }
+
+      if (board.spare) {
+        board.spare.element.style.transition = "";
+        board.spare.element.style.translate = "";
       }
     }
 
