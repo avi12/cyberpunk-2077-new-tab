@@ -27,7 +27,6 @@ export type Task = {
 
 export enum WidgetType {
   weather = "weather",
-  worldClock = "worldclock",
   scratchPad = "scratchpad",
   taskList = "tasklist",
   rss = "rss"
@@ -184,12 +183,6 @@ export const DEFAULT_WEATHER_LOCATION: GeoLocation = {
   longitude: -122.4194
 };
 
-export const DEFAULT_WORLD_CLOCK_LOCATION: GeoLocation = {
-  name: "Tokyo",
-  latitude: 35.6762,
-  longitude: 139.6503
-};
-
 export const DEFAULT_WIDGETS: Widget[] = [
   {
     id: "weather-1",
@@ -197,16 +190,6 @@ export const DEFAULT_WIDGETS: Widget[] = [
     enabled: true,
     config: {
       temperatureUnit: true
-    }
-  },
-  {
-    id: "worldclock-1",
-    type: WidgetType.worldClock,
-    enabled: false,
-    config: {
-      location: DEFAULT_WORLD_CLOCK_LOCATION,
-      timeFormat: true,
-      showDate: true
     }
   },
   {

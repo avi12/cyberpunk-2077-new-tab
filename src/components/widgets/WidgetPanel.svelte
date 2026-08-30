@@ -11,11 +11,9 @@
   import { withViewTransition } from "@/lib/view-transition";
   import TaskListWidget from "./TaskListWidget.svelte";
   import WeatherWidget from "./WeatherWidget.svelte";
-  import WorldClockWidget from "./WorldClockWidget.svelte";
 
   const WIDGET_LABELS: Record<WidgetType, string> = {
     [WidgetType.weather]: "Weather",
-    [WidgetType.worldClock]: "World Clock",
     [WidgetType.scratchPad]: "Scratch Pad",
     [WidgetType.taskList]: "Gigs",
     [WidgetType.rss]: "RSS Feed"
@@ -108,8 +106,6 @@
         {#if widget.enabled}
           {#if widget.type === WidgetType.weather}
             <WeatherWidget config={widget.config} onConfigChange={patch => patchConfig(widget.id, patch)} />
-          {:else if widget.type === WidgetType.worldClock}
-            <WorldClockWidget config={widget.config} onConfigChange={patch => patchConfig(widget.id, patch)} />
           {:else if widget.type === WidgetType.scratchPad}
             <ScratchPadWidget config={widget.config} onConfigChange={patch => patchConfig(widget.id, patch)} />
           {:else if widget.type === WidgetType.taskList}

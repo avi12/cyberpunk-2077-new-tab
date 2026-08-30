@@ -42,7 +42,7 @@ Six on Chrome, four on Firefox, and each backs one feature:
 | ---------------- | ----------------------------------------------------------------------- |
 | `search`         | the "Default" search option runs the browser's own configured engine     |
 | `topSites`       | seeds the netlinks grid on first run                                     |
-| `geolocation`    | the weather's automatic location, and "USE MY LOCATION" in either form  |
+| `geolocation`    | the weather's location, whenever it is following this device             |
 | `storage`        | every setting                                                           |
 | `identity`       | "USE BROWSER ACCOUNT" names the greeting after the signed-in account     |
 | `identity.email` | that address is the only name any browser API will hand over             |
@@ -108,11 +108,12 @@ scripts/
 - **The weather follows the device by default.** The original shipped San Francisco's coordinates
   under the name "Night City" and only ever moved if you typed new ones. Here the widget reads the
   device position through the extension's own `geolocation` permission on each load and stores
-  nothing, falling back to Night City when there is no fix. Its location line opens the same override
-  form the world clock uses, holding the two sources side by side: "Follow my location" keeps reading
-  the device, and confirming a latitude and longitude pins those instead. Whichever one the widget is
-  reading is lit and the other is dimmed, though both stay usable; a stored location *is* the
-  override, so following the device again clears it.
+  nothing, falling back to Night City when there is no fix. Its location line opens a form holding the
+  two sources side by side: "Follow my location" keeps reading the device, and confirming a latitude
+  and longitude pins those instead. Whichever one the widget is reading is lit and the other is
+  dimmed, though both stay usable; a stored location *is* the override, so following the device again
+  clears it.
+- **No world clock.** The header clock is the only clock.
 - **Dropdowns are popovers.** The engine list, the icon pickers and the Terminal Display panel use
   `popover="auto"` with CSS anchor positioning, so opening, Escape and click-outside dismissal come
   from the browser instead of a document-level listener.

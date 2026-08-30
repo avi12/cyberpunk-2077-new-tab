@@ -60,7 +60,7 @@ async function reverseGeocode({ latitude, longitude }: {
   }
 }
 
-export async function detectLocation(): Promise<GeoLocation | null> {
+async function detectLocation(): Promise<GeoLocation | null> {
   const coords = await currentPosition();
   if (!coords) {
     return null;

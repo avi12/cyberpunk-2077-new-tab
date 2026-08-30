@@ -136,16 +136,16 @@
 </article>
 
 <LocationOverrideModal
-  {isAutomatic}
+  isFollowingDevice={isAutomatic}
   isOpen={isEditingLocation}
   {location}
   onClose={() => (isEditingLocation = false)}
-  onSave={next => {
-    onConfigChange({ location: next });
+  onFollowDevice={() => {
+    onConfigChange({ location: undefined });
     isEditingLocation = false;
   }}
-  onUseAutomatic={() => {
-    onConfigChange({ location: undefined });
+  onSave={next => {
+    onConfigChange({ location: next });
     isEditingLocation = false;
   }} />
 

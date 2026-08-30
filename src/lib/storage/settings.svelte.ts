@@ -62,16 +62,20 @@ class Setting<TValue> {
 }
 
 /**
- * Widgets shipped after the user last saved are absent from their stored list, and would silently
- * disappear from the settings panel. Appending the missing ones keeps an upgrade additive - the
- * same migration the original performed on every read.
+ * The stored list is reconciled with the shipped one on every read: widgets added since the user
+ * last saved are appended, and ones that have since been retired are dropped rather than left as
+ * empty slots in the panel.
  */
-function withNewWidgets(stored: Widget[]): Widget[] {
-  return [...stored, ...DEFAULT_WIDGETS.filter(shipped => !stored.some(widget => widget.id === shipped.id))];
+function withShippedWidgets(stored: Widget[]): Widget[] {
+  const shipped = stored.filter(widget => DEFAULT_WIDGETS.some(({ id }) => id === widget.id));
+
+  return [...shipped, ...DEFAULT_WIDGETS.filter(({ id }) => !shipped.some(widget => widget.id === id))];
 }
 
-function withNewWidgetIds(stored: string[]): string[] {
-  return [...stored, ...DEFAULT_WIDGET_ORDER.filter(id => !stored.includes(id))];
+function withShippedWidgetIds(stored: string[]): string[] {
+  const shipped = stored.filter(id => DEFAULT_WIDGET_ORDER.includes(id));
+
+  return [...shipped, ...DEFAULT_WIDGET_ORDER.filter(id => !shipped.includes(id))];
 }
 
 export const settings = {
@@ -91,8 +95,8 @@ export const settings = {
   backgroundMediaType: new Setting<BackgroundMediaType>(backgroundMediaTypeItem),
   backgroundMediaVersion: new Setting<number>(backgroundMediaVersionItem),
   userName: new Setting<string>(userNameItem),
-  widgets: new Setting<Widget[]>(widgetsItem, withNewWidgets),
-  widgetOrder: new Setting<string[]>(widgetOrderItem, withNewWidgetIds),
+  widgets: new Setting<Widget[]>(widgetsItem, withShippedWidgets),
+  widgetOrder: new Setting<string[]>(widgetOrderItem, withShippedWidgetIds),
   scanLinesMode: new Setting<ScanLinesMode>(scanLinesModeItem),
   tabTitle: new Setting<string>(tabTitleItem),
   tabFavicon: new Setting<string>(tabFaviconItem)

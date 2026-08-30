@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { GeoLocation } from "@/lib/storage/defaults";
   import { MapPin } from "@/lib/icons/nodes";
-  import { detectLocation } from "@/lib/geolocation";
   import Icon from "@/lib/icons/Icon.svelte";
   import Modal from "@/components/modals/Modal.svelte";
   import { z } from "@/lib/zod";
@@ -12,16 +11,15 @@
     location,
     onSave,
     onClose,
-    onUseAutomatic,
-    isAutomatic = false
+    onFollowDevice,
+    isFollowingDevice
   }: {
     isOpen: boolean;
     location: GeoLocation;
     onSave: (location: GeoLocation) => void;
     onClose: () => void;
-    /** Given by a widget that can follow the device; without it, coordinates are the only source. */
-    onUseAutomatic?: () => void;
-    isAutomatic?: boolean;
+    onFollowDevice: () => void;
+    isFollowingDevice: boolean;
   } = $props();
 
   const LATITUDE_RANGE = [-90, 90];
@@ -63,15 +61,13 @@
 
   let draft = $state(untrack(() => asDraft(location)));
   let error = $state("");
-  let isLocating = $state(false);
   let isEditing = $state(false);
 
   /**
-   * Which source is live, and so which half of the form is lit: the device until the coordinates are
-   * touched, the coordinates from then on. Both halves stay usable either way.
+   * Which source is lit: the device until the coordinates are touched, the coordinates from then on.
+   * Both halves stay usable either way.
    */
-  const canFollowDevice = $derived(Boolean(onUseAutomatic));
-  const isFollowingDevice = $derived(canFollowDevice && isAutomatic && !isEditing);
+  const isDeviceLit = $derived(isFollowingDevice && !isEditing);
 
   function round(value: number): number {
     return Number(value.toFixed(DECIMALS));
@@ -106,26 +102,9 @@
     });
   }
 
-  async function sync() {
-    if (onUseAutomatic) {
-      onUseAutomatic();
-
-      return;
-    }
-
-    isLocating = true;
+  function followDevice() {
     error = "";
-    const detected = await detectLocation();
-    isLocating = false;
-
-    if (!detected) {
-      error = "Location unavailable - enter coordinates manually";
-
-      return;
-    }
-
-    // A fix is the whole answer, so there is nothing left to confirm.
-    onSave(detected);
+    onFollowDevice();
   }
 </script>
 
@@ -137,27 +116,18 @@
   <form class="stack" onfocusin={() => (isEditing = true)} onsubmit={confirm}>
     <button
       class="location__sync"
-      class:is-active={isFollowingDevice}
-      class:is-dimmed={canFollowDevice && !isFollowingDevice}
-      aria-pressed={canFollowDevice ? isFollowingDevice : undefined}
-      disabled={isLocating}
-      onclick={() => void sync()}
+      class:is-active={isDeviceLit}
+      class:is-dimmed={!isDeviceLit}
+      aria-pressed={isDeviceLit}
+      onclick={followDevice}
       onfocusin={e => e.stopPropagation()}
       type="button">
       <Icon node={MapPin} size={16} />
-      {#if isLocating}
-        Locating...
-      {:else if canFollowDevice}
-        Follow my location
-      {:else}
-        Use my location
-      {/if}
+      Follow my location
     </button>
-    {#if canFollowDevice}
-      <p class="location__caption">Read from this device on every load, and never stored.</p>
-    {/if}
+    <p class="location__caption">Read from this device on every load, and never stored.</p>
 
-    <fieldset class="location__fields" class:is-dimmed={isFollowingDevice}>
+    <fieldset class="location__fields" class:is-dimmed={isDeviceLit}>
       <legend class="location__legend">Coordinates</legend>
 
       <p class="location__field">
@@ -240,11 +210,7 @@
     text-transform: uppercase;
     transition: border-color 200ms, background-color 200ms, color 200ms;
 
-    &:disabled {
-      opacity: 60%;
-    }
-
-    &:hover:not(:disabled) {
+    &:hover {
       border-color: var(--cp-primary-hover);
       background: var(--cp-surface-2);
       color: var(--cp-primary-hover);
