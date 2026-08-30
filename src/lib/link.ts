@@ -1,4 +1,4 @@
-import { proxied } from "./cors-proxy";
+import { readProxied } from "./cors-proxy";
 
 const SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/i;
 const WWW_PATTERN = /^www\./;
@@ -51,13 +51,13 @@ function nameFromUrl(url: string) {
 }
 
 async function fetchPageTitle(url: string) {
-  const response = await fetch(proxied(url), { signal: AbortSignal.timeout(TITLE_TIMEOUT_MS) });
-  if (!response.ok) {
-    return "";
-  }
+  const body = await readProxied({
+    url,
+    timeoutMs: TITLE_TIMEOUT_MS
+  });
 
   // A document from `DOMParser` is inert: it runs no script and loads no subresource.
-  const page = new DOMParser().parseFromString(await response.text(), "text/html");
+  const page = new DOMParser().parseFromString(body, "text/html");
 
   return page.title.trim().slice(0, MAX_TITLE_LENGTH);
 }

@@ -2,7 +2,7 @@
   import type { WidgetConfig } from "@/lib/storage/defaults";
   import chevronDown from "@/assets/icons/chevron-down.svg?raw";
   import chevronUp from "@/assets/icons/chevron-up.svg?raw";
-  import { proxied } from "@/lib/cors-proxy";
+  import { readProxied } from "@/lib/cors-proxy";
   import externalLink from "@/assets/icons/external-link.svg?raw";
   import Modal from "@/components/modals/Modal.svelte";
   import rss from "@/assets/icons/rss.svg?raw";
@@ -66,12 +66,12 @@
     isLoading = true;
     isFailed = false;
     try {
-      const response = await fetch(proxied(feedUrl));
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const feed = await readProxied({ url: feedUrl });
+      if (!feed) {
+        throw new Error(`No proxy could read ${feedUrl}`);
       }
 
-      items = parseFeed(await response.text());
+      items = parseFeed(feed);
     } catch {
       isFailed = true;
       items = [];
