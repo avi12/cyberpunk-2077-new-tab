@@ -49,12 +49,6 @@
       randomGlitch.stop();
     };
   });
-
-  function toggleFormat() {
-    toggleGlitch.fireThen(() => {
-      settings.timeFormat.current = !settings.timeFormat.current;
-    }, GLITCH_SHORT_MS);
-  }
 </script>
 
 <div class="clock">
@@ -64,7 +58,9 @@
       class:glitch={glitching}
       aria-label="Toggle 12 or 24 hour clock"
       data-text={time}
-      onclick={toggleFormat}
+      onclick={() => toggleGlitch.fireThen(() => {
+        settings.timeFormat.current = !settings.timeFormat.current;
+      }, GLITCH_SHORT_MS)}
       type="button">
       <time datetime={timeIso}>{time}</time>
       {#if glitching}

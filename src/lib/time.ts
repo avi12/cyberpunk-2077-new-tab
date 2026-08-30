@@ -57,17 +57,22 @@ export function currentTimeIso(): string {
   return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 }
 
+const MORNING_START_HOUR = 5;
+const AFTERNOON_START_HOUR = 12;
+const EVENING_START_HOUR = 17;
+const NIGHT_START_HOUR = 21;
+
 export function greeting(userName: string): string {
   const hours = new Date().getHours();
-  if (hours >= 5 && hours < 12) {
+  if (hours >= MORNING_START_HOUR && hours < AFTERNOON_START_HOUR) {
     return `Morning, ${userName}`;
   }
 
-  if (hours >= 12 && hours < 17) {
+  if (hours >= AFTERNOON_START_HOUR && hours < EVENING_START_HOUR) {
     return `Afternoon, ${userName}`;
   }
 
-  if (hours >= 17 && hours < 21) {
+  if (hours >= EVENING_START_HOUR && hours < NIGHT_START_HOUR) {
     return `Evening, ${userName}`;
   }
 

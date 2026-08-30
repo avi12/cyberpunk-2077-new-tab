@@ -39,10 +39,10 @@ export async function renameCategory({ from, to }: {
 
   const collapsed = settings.collapsedCategories.current;
   if (from in collapsed) {
-    const { [from]: wasCollapsed, ...rest } = collapsed;
+    const { [from]: isCollapsed, ...rest } = collapsed;
     settings.collapsedCategories.current = {
       ...rest,
-      [to]: wasCollapsed
+      [to]: isCollapsed
     };
   }
 }

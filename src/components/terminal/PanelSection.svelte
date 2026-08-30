@@ -60,8 +60,6 @@
     }
   }
 
-  /* The disclosure marker is drawn as a chevron, matching the original's button. */
-
   .section__badge {
     color: var(--cp-secondary);
     font-family: var(--cp-mono);

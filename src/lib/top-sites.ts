@@ -128,8 +128,8 @@ export async function seedBookmarksFromTopSites(): Promise<Bookmark[] | null> {
     return null;
   }
 
-  const bookmarks: Bookmark[] = sites.map((site, index) => ({
-    id: `top-${index}`,
+  const bookmarks: Bookmark[] = sites.map((site, i) => ({
+    id: `top-${i}`,
     title: titleForSite(site),
     url: site.url,
     category: SEEDED_CATEGORY,

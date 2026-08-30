@@ -1,4 +1,4 @@
-import { BACKGROUND_IMAGES, BackgroundMediaType } from "./storage/defaults";
+import { BackgroundMediaType, DEFAULT_BACKGROUND } from "./storage/defaults";
 import { CACHED_PREFIX } from "./storage/media-store";
 import { allSettings, settings } from "./storage/settings.svelte";
 import { z } from "./zod";
@@ -13,7 +13,7 @@ import { z } from "./zod";
 export const SETTINGS_FILE_NAME = "cyberstart-settings.json";
 
 function exportableBackground(value: string): string {
-  return value.startsWith(CACHED_PREFIX) ? BACKGROUND_IMAGES[1].value : value;
+  return value.startsWith(CACHED_PREFIX) ? DEFAULT_BACKGROUND : value;
 }
 
 export function exportSettings(): string {
@@ -52,11 +52,11 @@ export function downloadFile({ name, contents, type }: {
   type: string;
 }): void {
   const url = URL.createObjectURL(new Blob([contents], { type }));
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = name;
-  document.body.append(anchor);
-  anchor.click();
-  anchor.remove();
+  const elAnchor = document.createElement("a");
+  elAnchor.href = url;
+  elAnchor.download = name;
+  document.body.append(elAnchor);
+  elAnchor.click();
+  elAnchor.remove();
   URL.revokeObjectURL(url);
 }

@@ -11,8 +11,8 @@
     "{quote.text}"
     <span class="quote-glow" aria-hidden="true"></span>
   </blockquote>
-  <figcaption class="quote__author hover-glitch" class:glitch={glitching} data-text={`— ${quote.author}`}>
-    — <cite>{quote.author}</cite>
+  <figcaption class="quote__author hover-glitch" class:glitch={glitching} data-text={`- ${quote.author}`}>
+    - <cite>{quote.author}</cite>
   </figcaption>
 </figure>
 
