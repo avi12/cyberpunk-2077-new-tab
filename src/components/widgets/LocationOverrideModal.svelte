@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { GeoLocation } from "@/lib/storage/defaults";
-  import { CircleHelp, MapPin } from "@/lib/icons/nodes";
+  import { MapPin } from "@/lib/icons/nodes";
   import { detectLocation } from "@/lib/geolocation";
   import Icon from "@/lib/icons/Icon.svelte";
   import Modal from "@/components/modals/Modal.svelte";
@@ -124,18 +124,14 @@
       return;
     }
 
-    draft = asDraft(detected);
-    isEditing = true;
+    // A fix is the whole answer, so there is nothing left to confirm.
+    onSave(detected);
   }
 </script>
 
 <Modal {isOpen} {onClose}>
   <header class="location__heading">
     <h2 class="cyber-dialog__title location__title">Location Override</h2>
-    <a class="location__help" href="https://www.latlong.net" rel="noopener noreferrer" target="_blank">
-      <Icon node={CircleHelp} size={16} />
-      <span>Find Coordinates</span>
-    </a>
   </header>
 
   <form class="stack" onfocusin={() => (isEditing = true)} onsubmit={confirm}>
@@ -216,20 +212,6 @@
   .location__title {
     margin-bottom: 1rem;
     text-align: left;
-  }
-
-  .location__help {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    margin-bottom: 1rem;
-    color: var(--cp-primary);
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-
-    &:hover {
-      color: var(--cp-primary-hover);
-    }
   }
 
   /* Both sources stay usable; the dim only says which one the widget is reading right now. */
