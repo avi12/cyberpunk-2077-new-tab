@@ -113,7 +113,10 @@ scripts/
   and longitude pins those instead. Whichever one the widget is reading is lit and the other is
   dimmed, though both stay usable; a stored location *is* the override, so following the device again
   clears it.
-- **No world clock.** The header clock is the only clock.
+- **No world clock, and no hand-written AM/PM.** The header clock is the only clock, and `Intl`
+  formats it - which day period the locale uses, and whether it has one at all - as it formats the
+  temperature's degree sign and unit. A fresh install starts on whatever hour cycle the locale
+  reports; the toggle still overrides it.
 - **Dropdowns are popovers.** The engine list, the icon pickers and the Terminal Display panel use
   `popover="auto"` with CSS anchor positioning, so opening, Escape and click-outside dismissal come
   from the browser instead of a document-level listener.

@@ -1,52 +1,60 @@
-export function formatTime({ hours, minutes, use24Hour }: {
-  hours: number;
-  minutes: number;
-  use24Hour: boolean;
-}): string {
-  const paddedMinutes = minutes.toString().padStart(2, "0");
-  if (use24Hour) {
-    return `${hours.toString().padStart(2, "0")}:${paddedMinutes}`;
-  }
+/**
+ * Intl decides how a time reads - whether there is an AM/PM at all, what it is called, and where it
+ * sits - so nothing here spells out a day period or pads an hour by hand. The two formatters are
+ * built once because the clock reformats every second.
+ */
+const TIME_FORMATS = {
+  h23: new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    hourCycle: "h23"
+  }),
+  h12: new Intl.DateTimeFormat(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    hourCycle: "h12"
+  })
+};
 
-  const suffix = hours >= 12 ? "PM" : "AM";
-  const hour12 = hours % 12 || 12;
+const DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
+  weekday: "long",
+  year: "numeric",
+  month: "long",
+  day: "numeric"
+});
 
-  return `${hour12}:${paddedMinutes} ${suffix}`;
+/** What the locale itself does, and so what the clock starts on before anyone touches the toggle. */
+export function prefers24Hour(): boolean {
+  return !new Intl.DateTimeFormat(undefined, { hour: "numeric" }).resolvedOptions().hour12;
 }
 
 export function currentTime(use24Hour: boolean): string {
-  const now = new Date();
+  if (use24Hour) {
+    return TIME_FORMATS.h23.format(new Date());
+  }
 
-  return formatTime({
-    hours: now.getHours(),
-    minutes: now.getMinutes(),
-    use24Hour
-  });
+  return TIME_FORMATS.h12.format(new Date());
 }
 
 export function currentDate(): string {
-  return new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric"
-  });
+  return DATE_FORMAT.format(new Date());
+}
+
+function pad(value: number): string {
+  return value.toString().padStart(2, "0");
 }
 
 export function currentDateIso(): string {
   const now = new Date();
 
-  return `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, "0")}-${now.getDate().toString().padStart(2, "0")}`;
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
+/** `<time datetime>` is a machine format, so it stays 24-hour whatever the locale reads like. */
 export function currentTimeIso(): string {
   const now = new Date();
 
-  return formatTime({
-    hours: now.getHours(),
-    minutes: now.getMinutes(),
-    use24Hour: true
-  });
+  return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 }
 
 export function greeting(userName: string): string {

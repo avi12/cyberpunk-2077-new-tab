@@ -1,3 +1,5 @@
+import { prefers24Hour } from "../time";
+
 export type Bookmark = {
   id: string;
   title: string;
@@ -308,6 +310,8 @@ export const DEFAULT_TAB_TITLE = "Cyberstart 2077";
 export const DEFAULT_TAB_FAVICON = "Terminal";
 export const DEFAULT_BACKGROUND_BRIGHTNESS = 100;
 
-/** Both `true` values mean the metric/24-hour reading, matching the original's booleans. */
+/** `true` means the metric reading, matching the original's boolean. */
 export const DEFAULT_TEMPERATURE_UNIT = true;
-export const DEFAULT_TIME_FORMAT = true;
+
+/** `true` means 24-hour, and the locale decides which one a fresh install starts on. */
+export const DEFAULT_TIME_FORMAT = prefers24Hour();

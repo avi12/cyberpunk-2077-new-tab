@@ -4,7 +4,7 @@
   import { Cloud, Wind } from "@/lib/icons/nodes";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
   import { deviceLocation } from "@/lib/geolocation";
-  import { fetchWeather, toFahrenheit, WEATHER_REFRESH_MS, weatherIcon } from "@/lib/weather";
+  import { fetchWeather, formatTemperature, temperatureUnit, WEATHER_REFRESH_MS, weatherIcon } from "@/lib/weather";
   import { GLITCH_SHORT_MS, Glitch } from "@/lib/glitch.svelte";
   import Icon from "@/lib/icons/Icon.svelte";
   import LocationOverrideModal from "./LocationOverrideModal.svelte";
@@ -29,16 +29,16 @@
   const isAutomatic = $derived(!config.location);
   const location = $derived(config.location ?? detected ?? DEFAULT_WEATHER_LOCATION);
   const isCelsius = $derived(config.temperatureUnit !== false);
-  const temperature = $derived(displayTemperature({
-    reading: reading?.temperature,
-    isCelsius
-  }));
-  const unit = $derived.by(() => {
-    if (isCelsius) {
-      return "C";
+  const unit = $derived(temperatureUnit(isCelsius));
+  const temperature = $derived.by(() => {
+    if (!reading) {
+      return "";
     }
 
-    return "F";
+    return formatTemperature({
+      celsius: reading.temperature,
+      isCelsius
+    });
   });
   const icon = $derived.by(() => {
     if (!reading) {
@@ -47,17 +47,6 @@
 
     return weatherIcon(reading.weatherCode);
   });
-
-  function displayTemperature({ reading, isCelsius }: {
-    reading: number | undefined;
-    isCelsius: boolean;
-  }): number {
-    if (reading === undefined) {
-      return 0;
-    }
-
-    return isCelsius ? reading : toFahrenheit(reading);
-  }
 
   async function refresh() {
     try {
@@ -107,7 +96,7 @@
   {#if isLoading}
     <div class="weather__row">
       <span class="weather__icon weather__icon--isLoading pulse"><Icon node={Cloud} size={32} /></span>
-      <p class="weather__temp weather__temp--muted">--°C</p>
+      <p class="weather__temp weather__temp--muted">--{unit}</p>
     </div>
     <WidgetLocation name={location.name} onEdit={openLocation} />
     <p class="weather__desc weather__desc--muted">Scanning...</p>
@@ -124,10 +113,10 @@
       <button
         class="weather__temp weather__temp--button"
         class:glitch={glitch.active}
-        data-text={`${temperature}°${unit}`}
+        data-text={temperature}
         onclick={toggleUnit}
         type="button">
-        {temperature}°{unit}
+        {temperature}
       </button>
     </div>
     <WidgetLocation name={location.name} onEdit={openLocation} />

@@ -114,8 +114,50 @@ export function weatherIcon(code: number): {
   };
 }
 
-export function toFahrenheit(celsius: number): number {
+function toFahrenheit(celsius: number): number {
   return Math.round((celsius * 9) / 5 + 32);
+}
+
+/** Intl writes the degree sign and the unit, in the order and spacing the locale uses. */
+const TEMPERATURE_FORMATS = {
+  celsius: new Intl.NumberFormat(undefined, {
+    style: "unit",
+    unit: "celsius",
+    maximumFractionDigits: 0
+  }),
+  fahrenheit: new Intl.NumberFormat(undefined, {
+    style: "unit",
+    unit: "fahrenheit",
+    maximumFractionDigits: 0
+  })
+};
+
+function temperatureFormat(isCelsius: boolean): Intl.NumberFormat {
+  if (isCelsius) {
+    return TEMPERATURE_FORMATS.celsius;
+  }
+
+  return TEMPERATURE_FORMATS.fahrenheit;
+}
+
+export function formatTemperature({ celsius, isCelsius }: {
+  celsius: number;
+  isCelsius: boolean;
+}): string {
+  if (isCelsius) {
+    return TEMPERATURE_FORMATS.celsius.format(celsius);
+  }
+
+  return TEMPERATURE_FORMATS.fahrenheit.format(toFahrenheit(celsius));
+}
+
+/** The unit on its own, for the placeholder shown while the first reading is still in flight. */
+export function temperatureUnit(isCelsius: boolean): string {
+  return temperatureFormat(isCelsius)
+    .formatToParts(0)
+    .filter(part => part.type === "unit")
+    .map(part => part.value)
+    .join("");
 }
 
 const forecastSchema = z.object({
