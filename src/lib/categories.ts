@@ -1,4 +1,3 @@
-import { bookmarkOrderItem } from "./storage/items";
 import { settings } from "./storage/settings.svelte";
 
 /** Category names are normalised to lower case, matching how the original stored them. */
@@ -16,10 +15,10 @@ export function addCategory(name: string): void {
   }
 }
 
-export async function renameCategory({ from, to }: {
+export function renameCategory({ from, to }: {
   from: string;
   to: string;
-}): Promise<void> {
+}): void {
   settings.bookmarks.current = settings.bookmarks.current.map(bookmark =>
     (bookmark.category === from ? {
       ...bookmark,
@@ -29,12 +28,6 @@ export async function renameCategory({ from, to }: {
 
   if (settings.customCategories.current.includes(from)) {
     settings.customCategories.current = settings.customCategories.current.map(name => (name === from ? to : name));
-  }
-
-  const order = await bookmarkOrderItem(from).getValue();
-  if (order.length > 0) {
-    await bookmarkOrderItem(from).removeValue();
-    await bookmarkOrderItem(to).setValue(order);
   }
 
   const collapsed = settings.collapsedCategories.current;
@@ -47,11 +40,10 @@ export async function renameCategory({ from, to }: {
   }
 }
 
-export async function deleteCategory(name: string): Promise<void> {
+export function deleteCategory(name: string): void {
   settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.category !== name);
   settings.categoryOrder.current = settings.categoryOrder.current.filter(entry => entry !== name);
   settings.customCategories.current = settings.customCategories.current.filter(entry => entry !== name);
-  await bookmarkOrderItem(name).removeValue();
 
   if (name in settings.collapsedCategories.current) {
     const { [name]: _removed, ...rest } = settings.collapsedCategories.current;

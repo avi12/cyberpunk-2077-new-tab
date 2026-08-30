@@ -7,7 +7,6 @@
   import ContextMenu from "./ContextMenu.svelte";
   import Modal from "@/components/modals/Modal.svelte";
   import NameForm from "./NameForm.svelte";
-  import { bookmarkOrderItem } from "@/lib/storage/items";
   import plus from "@/assets/icons/plus.svg?raw";
   import { settings } from "@/lib/storage/settings.svelte";
   import settingsIcon from "@/assets/icons/settings.svg?raw";
@@ -54,7 +53,7 @@
     bookmarkToEdit = null;
   }
 
-  async function confirmRename() {
+  function confirmRename() {
     const from = renamingCategory;
     const to = normalizeName(renameDraft);
     if (!from || !to || to === from) {
@@ -67,28 +66,30 @@
       return;
     }
 
-    await renameCategory({
+    renameCategory({
       from,
       to
     });
     renamingCategory = null;
   }
 
-  async function requestDeleteCategory(category: string) {
+  function requestDeleteCategory(category: string) {
     if ((byCategory[category]?.length ?? 0) > 0) {
       pendingDelete = category;
 
       return;
     }
 
-    await deleteCategory(category);
+    deleteCategory(category);
   }
 
-  async function confirmDeleteCategory() {
-    if (pendingDelete) {
-      await deleteCategory(pendingDelete);
-      pendingDelete = null;
+  function confirmDeleteCategory() {
+    if (!pendingDelete) {
+      return;
     }
+
+    deleteCategory(pendingDelete);
+    pendingDelete = null;
   }
 
   function onBookmarkContextMenu(e: MouseEvent, bookmark: Bookmark) {
@@ -166,7 +167,7 @@
             confirmLabel="SAVE"
             heading="EDIT CATEGORY"
             onCancel={() => (renamingCategory = null)}
-            onConfirm={() => void confirmRename()}
+            onConfirm={confirmRename}
             variant="cyan"
             bind:value={renameDraft} />
         {:else}
@@ -193,10 +194,9 @@
                 ...settings.bookmarks.current.filter(bookmark => bookmark.category !== change.category),
                 ...reordered
               ];
-              void bookmarkOrderItem(change.category).setValue(change.ids);
             }}
             onDeleteBookmark={id => (settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.id !== id))}
-            onDeleteCategory={name => void requestDeleteCategory(name)}
+            onDeleteCategory={requestDeleteCategory}
             onEditBookmark={bookmark => (bookmarkToEdit = bookmark)}
             onEditCategory={name => {
               renamingCategory = name;
@@ -261,7 +261,7 @@
   <div class="row">
     <button
       class="cyber-button cyber-button--primary cyber-button--grow"
-      onclick={() => void confirmDeleteCategory()}
+      onclick={confirmDeleteCategory}
       type="button">
       DELETE
     </button>

@@ -71,7 +71,3 @@ export const tabTitleItem = storage.defineItem<string>("local:tabTitle", { fallb
 export const tabFaviconItem = storage.defineItem<string>("local:tabFavicon", { fallback: DEFAULT_TAB_FAVICON });
 
 export const bookmarksSeededItem = storage.defineItem<boolean>("local:bookmarksSeeded", { fallback: false });
-
-export function bookmarkOrderItem(category: string) {
-  return storage.defineItem<string[]>(`local:bookmarkOrder_${category}`, { fallback: [] });
-}
