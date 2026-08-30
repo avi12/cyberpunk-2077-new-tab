@@ -42,7 +42,7 @@ Six on Chrome, four on Firefox, and each backs one feature:
 | ---------------- | ----------------------------------------------------------------------- |
 | `search`         | the "Default" search option runs the browser's own configured engine     |
 | `topSites`       | seeds the netlinks grid on first run                                     |
-| `geolocation`    | the "USE MY LOCATION" button in the weather / world-clock location form  |
+| `geolocation`    | the weather's automatic location, and "USE MY LOCATION" in either form  |
 | `storage`        | every setting                                                           |
 | `identity`       | "USE BROWSER ACCOUNT" names the greeting after the signed-in account     |
 | `identity.email` | that address is the only name any browser API will hand over             |
@@ -105,12 +105,12 @@ scripts/
 - **Storage is `wxt/storage`**, so it is async; `lib/storage/settings.svelte.ts` wraps it in runes so
   components still read and write synchronously. The tab title is mirrored into `localStorage` purely
   as a paint-time cache, since extension storage cannot answer before the first frame.
-- **The weather follows the device, and only the device.** The original shipped San Francisco's
-  coordinates under the name "Night City" and only ever moved if you typed new ones. Here the widget
-  reads the device position through the extension's own `geolocation` permission on each load and
-  stores nothing; the location is a label, not a control, so the only choice left is whether the
-  widget is on. A refused or unavailable fix falls back to Night City. The world clock keeps its
-  override - picking another timezone is the whole point of that one.
+- **The weather follows the device by default.** The original shipped San Francisco's coordinates
+  under the name "Night City" and only ever moved if you typed new ones. Here the widget reads the
+  device position through the extension's own `geolocation` permission on each load and stores
+  nothing, falling back to Night City when there is no fix. Its location line opens the same override
+  form the world clock uses, where "Custom" pins a latitude and longitude instead - a stored location
+  *is* the override, and choosing "Automatic" again clears it.
 - **Dropdowns are popovers.** The engine list, the icon pickers and the Terminal Display panel use
   `popover="auto"` with CSS anchor positioning, so opening, Escape and click-outside dismissal come
   from the browser instead of a document-level listener.

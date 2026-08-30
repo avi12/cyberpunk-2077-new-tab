@@ -7,6 +7,7 @@
   import { fetchWeather, toFahrenheit, WEATHER_REFRESH_MS, weatherIcon } from "@/lib/weather";
   import { GLITCH_SHORT_MS, Glitch } from "@/lib/glitch.svelte";
   import Icon from "@/lib/icons/Icon.svelte";
+  import LocationOverrideModal from "./LocationOverrideModal.svelte";
   import WidgetLocation from "./WidgetLocation.svelte";
 
   const {
@@ -23,8 +24,10 @@
   let isLoading = $state(true);
   let isFailed = $state(false);
   let detected = $state<GeoLocation | null>(null);
+  let isEditingLocation = $state(false);
 
-  const location = $derived(detected ?? DEFAULT_WEATHER_LOCATION);
+  const isAutomatic = $derived(!config.location);
+  const location = $derived(config.location ?? detected ?? DEFAULT_WEATHER_LOCATION);
   const isCelsius = $derived(config.temperatureUnit !== false);
   const temperature = $derived(displayTemperature({
     reading: reading?.temperature,
@@ -69,6 +72,10 @@
   }
 
   $effect(() => {
+    if (!isAutomatic) {
+      return;
+    }
+
     void deviceLocation().then(fix => {
       detected = fix;
     });
@@ -90,6 +97,10 @@
   function toggleUnit() {
     glitch.fireThen(() => onConfigChange({ temperatureUnit: !isCelsius }), GLITCH_SHORT_MS);
   }
+
+  function openLocation() {
+    isEditingLocation = true;
+  }
 </script>
 
 <article class="widget-card glitch-border">
@@ -98,14 +109,14 @@
       <span class="weather__icon weather__icon--isLoading pulse"><Icon node={Cloud} size={32} /></span>
       <p class="weather__temp weather__temp--muted">--°C</p>
     </div>
-    <WidgetLocation name={location.name} />
+    <WidgetLocation name={location.name} onEdit={openLocation} />
     <p class="weather__desc weather__desc--muted">Scanning...</p>
   {:else if isFailed || !reading}
     <div class="weather__row">
       <span class="weather__icon weather__icon--error"><Icon node={Wind} size={32} /></span>
       <p class="weather__temp weather__temp--error">ERR</p>
     </div>
-    <WidgetLocation name={location.name} isFailed />
+    <WidgetLocation name={location.name} isFailed onEdit={openLocation} />
     <p class="weather__desc weather__desc--error">System offline</p>
   {:else}
     <div class="weather__row">
@@ -119,10 +130,24 @@
         {temperature}°{unit}
       </button>
     </div>
-    <WidgetLocation name={location.name} />
+    <WidgetLocation name={location.name} onEdit={openLocation} />
     <p class="weather__desc">{reading.description}</p>
   {/if}
 </article>
+
+<LocationOverrideModal
+  {isAutomatic}
+  isOpen={isEditingLocation}
+  {location}
+  onClose={() => (isEditingLocation = false)}
+  onSave={next => {
+    onConfigChange({ location: next });
+    isEditingLocation = false;
+  }}
+  onUseAutomatic={() => {
+    onConfigChange({ location: undefined });
+    isEditingLocation = false;
+  }} />
 
 <style>
   .weather__row {

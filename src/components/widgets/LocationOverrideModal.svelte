@@ -3,7 +3,9 @@
   import { ChevronDown, ChevronUp, CircleHelp, MapPin } from "@/lib/icons/nodes";
   import { detectLocation } from "@/lib/geolocation";
   import Icon from "@/lib/icons/Icon.svelte";
+  import { LOCATION_MODES, LocationMode } from "@/lib/storage/defaults";
   import Modal from "@/components/modals/Modal.svelte";
+  import OptionGroup from "@/components/OptionGroup.svelte";
   import { z } from "@/lib/zod";
   import { untrack } from "svelte";
 
@@ -11,12 +13,17 @@
     isOpen,
     location,
     onSave,
-    onClose
+    onClose,
+    onUseAutomatic,
+    isAutomatic = false
   }: {
     isOpen: boolean;
     location: GeoLocation;
     onSave: (location: GeoLocation) => void;
     onClose: () => void;
+    /** Given by a widget that can follow the device; its absence is what makes the mode picker moot. */
+    onUseAutomatic?: () => void;
+    isAutomatic?: boolean;
   } = $props();
 
   const LATITUDE_RANGE = [-90, 90];
@@ -35,11 +42,21 @@
   let draft = $state(untrack(() => ({ ...location })));
   let error = $state("");
   let isLocating = $state(false);
+  let mode = $state(untrack(() => startingMode()));
+
+  function startingMode(): LocationMode {
+    if (isAutomatic) {
+      return LocationMode.automatic;
+    }
+
+    return LocationMode.custom;
+  }
 
   $effect(() => {
     if (isOpen) {
       draft = { ...location };
       error = "";
+      mode = startingMode();
     }
   });
 
@@ -60,6 +77,12 @@
   }
 
   function save() {
+    if (mode === LocationMode.automatic) {
+      onUseAutomatic?.();
+
+      return;
+    }
+
     if (validate()) {
       onSave({ ...draft });
     }
@@ -91,92 +114,109 @@
   </div>
 
   <div class="stack">
-    <button
-      class="location__detect"
-      disabled={isLocating}
-      onclick={() => void useMyLocation()}
-      type="button">
-      <Icon node={MapPin} size={16} />
-      {isLocating ? "LOCATING..." : "USE MY LOCATION"}
-    </button>
+    {#if onUseAutomatic}
+      <OptionGroup
+        columns={2}
+        label="Location source"
+        onSelect={next => (mode = next)}
+        options={LOCATION_MODES}
+        selected={mode} />
+    {/if}
 
-    <div>
-      <label class="visually-hidden" for="location-name">Location Name</label>
-      <input id="location-name" class="cyber-input" placeholder="Location Name" type="text" bind:value={draft.name} />
-    </div>
+    {#if mode === LocationMode.automatic}
+      <p class="location__automatic">
+        <Icon node={MapPin} size={16} />
+        {location.name}
+      </p>
+      <p class="location__hint">Read from this device on every load, and never stored.</p>
+    {:else}
+      <button
+        class="location__detect"
+        disabled={isLocating}
+        onclick={() => void useMyLocation()}
+        type="button">
+        <Icon node={MapPin} size={16} />
+        {isLocating ? "LOCATING..." : "USE MY LOCATION"}
+      </button>
 
-    <div class="number-input-container">
-      <label class="visually-hidden" for="location-latitude">Latitude</label>
-      <input
-        id="location-latitude"
-        class="cyber-input cyber-input--spinner"
-        max="90"
-        min="-90"
-        placeholder="Latitude (-90 to 90)"
-        step={STEP}
-        type="number"
-        bind:value={draft.latitude} />
-      <div class="spinner-buttons">
-        <button
-          class="spinner-button"
-          aria-label="Increase latitude"
-          onclick={() => nudge({
-            field: "latitude",
-            direction: 1
-          })}
-          type="button">
-          <Icon node={ChevronUp} size={14} />
-        </button>
-        <button
-          class="spinner-button"
-          aria-label="Decrease latitude"
-          onclick={() => nudge({
-            field: "latitude",
-            direction: -1
-          })}
-          type="button">
-          <Icon node={ChevronDown} size={14} />
-        </button>
+      <div>
+        <label class="visually-hidden" for="location-name">Location Name</label>
+        <input id="location-name" class="cyber-input" placeholder="Location Name" type="text" bind:value={draft.name} />
       </div>
-    </div>
 
-    <div class="number-input-container">
-      <label class="visually-hidden" for="location-longitude">Longitude</label>
-      <input
-        id="location-longitude"
-        class="cyber-input cyber-input--spinner"
-        max="180"
-        min="-180"
-        placeholder="Longitude (-180 to 180)"
-        step={STEP}
-        type="number"
-        bind:value={draft.longitude} />
-      <div class="spinner-buttons">
-        <button
-          class="spinner-button"
-          aria-label="Increase longitude"
-          onclick={() => nudge({
-            field: "longitude",
-            direction: 1
-          })}
-          type="button">
-          <Icon node={ChevronUp} size={14} />
-        </button>
-        <button
-          class="spinner-button"
-          aria-label="Decrease longitude"
-          onclick={() => nudge({
-            field: "longitude",
-            direction: -1
-          })}
-          type="button">
-          <Icon node={ChevronDown} size={14} />
-        </button>
+      <div class="number-input-container">
+        <label class="visually-hidden" for="location-latitude">Latitude</label>
+        <input
+          id="location-latitude"
+          class="cyber-input cyber-input--spinner"
+          max="90"
+          min="-90"
+          placeholder="Latitude (-90 to 90)"
+          step={STEP}
+          type="number"
+          bind:value={draft.latitude} />
+        <div class="spinner-buttons">
+          <button
+            class="spinner-button"
+            aria-label="Increase latitude"
+            onclick={() => nudge({
+              field: "latitude",
+              direction: 1
+            })}
+            type="button">
+            <Icon node={ChevronUp} size={14} />
+          </button>
+          <button
+            class="spinner-button"
+            aria-label="Decrease latitude"
+            onclick={() => nudge({
+              field: "latitude",
+              direction: -1
+            })}
+            type="button">
+            <Icon node={ChevronDown} size={14} />
+          </button>
+        </div>
       </div>
-    </div>
 
-    {#if error}
-      <p class="cyber-error">{error}</p>
+      <div class="number-input-container">
+        <label class="visually-hidden" for="location-longitude">Longitude</label>
+        <input
+          id="location-longitude"
+          class="cyber-input cyber-input--spinner"
+          max="180"
+          min="-180"
+          placeholder="Longitude (-180 to 180)"
+          step={STEP}
+          type="number"
+          bind:value={draft.longitude} />
+        <div class="spinner-buttons">
+          <button
+            class="spinner-button"
+            aria-label="Increase longitude"
+            onclick={() => nudge({
+              field: "longitude",
+              direction: 1
+            })}
+            type="button">
+            <Icon node={ChevronUp} size={14} />
+          </button>
+          <button
+            class="spinner-button"
+            aria-label="Decrease longitude"
+            onclick={() => nudge({
+              field: "longitude",
+              direction: -1
+            })}
+            type="button">
+            <Icon node={ChevronDown} size={14} />
+          </button>
+        </div>
+      </div>
+
+      {#if error}
+        <p class="cyber-error">{error}</p>
+      {/if}
     {/if}
   </div>
 
@@ -236,6 +276,23 @@
       background: var(--cp-surface-2);
       color: var(--cp-primary-hover);
     }
+  }
+
+  .location__automatic {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    color: var(--cp-primary);
+    font-family: var(--cp-mono);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+
+  .location__hint {
+    color: var(--cp-text-dimmer);
+    font-family: var(--cp-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
   }
 
   .location__actions {
