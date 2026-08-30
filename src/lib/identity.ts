@@ -1,14 +1,63 @@
+import { z } from "./zod";
 import { browser } from "#imports";
 
 /**
- * The account signed into the browser, as a name. Chrome's `identity` API answers with an email
- * address and no display name, so the local part is the closest thing to a name it can give.
- * Firefox exposes the namespace without the profile lookup, so the API itself is the guard.
+ * The name of the person signed into the browser.
+ *
+ * Chrome hands out a display name only through OAuth: `getAuthToken` mints a token for the profile's
+ * Google account and the userinfo endpoint answers with the account's given name. That needs an
+ * OAuth client id in the manifest (see the README), so when the build has none - or the account
+ * refuses consent - this falls back to the one thing the plain `identity` permission gives, the
+ * email address, and reads a name out of its local part: "jane.doe@..." becomes "Jane Doe".
  */
+
+const USERINFO_URL = "https://www.googleapis.com/oauth2/v3/userinfo";
 
 const NAME_SEPARATORS = /[._+-]+/;
 
-function nameFromEmail(email: string): string | null {
+const userInfoSchema = z.object({
+  given_name: z.string().optional(),
+  name: z.string().optional()
+});
+
+async function nameFromAccount(): Promise<string | null> {
+  if (!browser.identity?.getAuthToken) {
+    return null;
+  }
+
+  try {
+    const { token } = await browser.identity.getAuthToken({ interactive: true });
+    if (!token) {
+      return null;
+    }
+
+    const response = await fetch(USERINFO_URL, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    if (!response.ok) {
+      return null;
+    }
+
+    const parsed = userInfoSchema.safeParse(await response.json());
+    if (!parsed.success) {
+      return null;
+    }
+
+    return parsed.data.given_name || parsed.data.name || null;
+  } catch {
+    return null;
+  }
+}
+
+async function nameFromEmail(): Promise<string | null> {
+  if (!browser.identity?.getProfileUserInfo) {
+    return null;
+  }
+
+  const { email } = await browser.identity.getProfileUserInfo({ accountStatus: "ANY" });
+
   return email
     .split("@")[0]
     .split(NAME_SEPARATORS)
@@ -18,11 +67,5 @@ function nameFromEmail(email: string): string | null {
 }
 
 export async function browserAccountName(): Promise<string | null> {
-  if (!browser.identity?.getProfileUserInfo) {
-    return null;
-  }
-
-  const { email } = await browser.identity.getProfileUserInfo({ accountStatus: "ANY" });
-
-  return nameFromEmail(email);
+  return await nameFromAccount() ?? await nameFromEmail();
 }

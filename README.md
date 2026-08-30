@@ -44,11 +44,27 @@ Six on Chrome, four on Firefox, and each backs one feature:
 | `topSites`       | seeds the netlinks grid on first run                                     |
 | `geolocation`    | the "USE MY LOCATION" button in the weather / world-clock location form  |
 | `storage`        | every setting                                                           |
-| `identity`       | "USE BROWSER ACCOUNT" fills the greeting name from the signed-in account |
-| `identity.email` | that account's email is the only name Chrome will hand over             |
+| `identity`       | "USE BROWSER ACCOUNT" names the greeting after the signed-in account     |
+| `identity.email` | the fallback name, when no OAuth client is configured                    |
 
-The last two are Chrome-only: Firefox exposes the `identity` namespace without
+The last two are Chrome-only: Firefox exposes the `identity` namespace without `getAuthToken` or
 `getProfileUserInfo`, so its manifest omits both and the button reports no account.
+
+### Browser account name
+
+Chrome hands out a *name* only through OAuth, so the button tries two things in order:
+
+1. `identity.getAuthToken` mints a token for the profile's Google account and
+   `https://www.googleapis.com/oauth2/v3/userinfo` answers with its given name. This needs
+   `GOOGLE_CLIENT_ID` filled in at the top of `wxt.config.ts` - an OAuth client id is public and
+   ships in the manifest, so it lives in the config rather than in an env file.
+2. Without a client id, or when consent is refused, `identity.getProfileUserInfo` gives an email and
+   nothing else, so a name is read out of its local part: `jane.doe@…` becomes `Jane Doe`.
+
+To turn on step 1: create an OAuth client of type "Chrome extension" in the Google Cloud console for
+this extension's id, give it the `.../auth/userinfo.profile` scope, and paste the id into
+`GOOGLE_CLIENT_ID`. A published extension and an unpacked one have different ids unless `key` is
+pinned in the manifest, so pin it or register both.
 
 No host permissions: open-meteo, timeapi, allorigins and bigdatacloud all answer with
 `Access-Control-Allow-Origin: *`, and an extension page follows ordinary CORS.

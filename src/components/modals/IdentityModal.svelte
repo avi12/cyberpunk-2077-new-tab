@@ -4,6 +4,7 @@
   import Icon from "@/lib/icons/Icon.svelte";
   import Modal from "./Modal.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
+  import { tick } from "svelte";
 
   const {
     isOpen,
@@ -14,15 +15,23 @@
   } = $props();
 
   let draft = $state(settings.userName.current);
+  let isEditing = $state(false);
   let error = $state("");
   let elName = $state<HTMLInputElement>();
 
   $effect(() => {
     if (isOpen) {
       draft = settings.userName.current;
+      isEditing = false;
       error = "";
     }
   });
+
+  async function startEditing() {
+    isEditing = true;
+    await tick();
+    elName?.select();
+  }
 
   async function fillFromBrowser() {
     const name = await browserAccountName();
@@ -34,7 +43,6 @@
 
     error = "";
     draft = name;
-    elName?.focus();
   }
 
   function save(e: SubmitEvent) {
@@ -47,17 +55,26 @@
 <Modal {isOpen} {onClose} title="Identity Override">
   <form class="stack" onsubmit={save}>
     <div class="identity__field">
-      <label class="visually-hidden" for="identity-name">Your name</label>
-      <input
-        bind:this={elName}
-        id="identity-name"
-        class="cyber-input identity__input"
-        placeholder="Enter your name"
-        type="text"
-        bind:value={draft} />
-      <span class="identity__pencil">
-        <Icon node={SquarePen} size={16} />
-      </span>
+      {#if isEditing}
+        <label class="visually-hidden" for="identity-name">Your name</label>
+        <input
+          bind:this={elName}
+          id="identity-name"
+          class="cyber-input identity__box"
+          placeholder="Enter your name"
+          type="text"
+          bind:value={draft} />
+      {:else}
+        <p class="cyber-input identity__box">{draft}</p>
+        <button
+          class="cyberpunk-tooltip identity__edit"
+          aria-label="Edit name"
+          data-tooltip="Edit name"
+          onclick={() => void startEditing()}
+          type="button">
+          <Icon node={SquarePen} size={16} />
+        </button>
+      {/if}
     </div>
 
     <button
@@ -84,18 +101,27 @@
     position: relative;
   }
 
-  .identity__input {
-    padding-right: 2rem;
+  .identity__box {
+    padding-right: 2.25rem;
   }
 
-  /* Purely the affordance that the name is editable - the input underneath takes the clicks. */
-  .identity__pencil {
+  .identity__edit {
     position: absolute;
     top: 50%;
     right: 0.5rem;
-    color: var(--cp-text-faint);
-    pointer-events: none;
+    color: var(--cp-primary);
     translate: 0 -50%;
+
+    &:hover {
+      color: var(--cp-accent);
+    }
+
+    /* Centred on the button the tooltip hangs past the dialog, which then grows a scrollbar. */
+    &::after {
+      right: 0;
+      left: auto;
+      translate: 0;
+    }
   }
 
   .identity__from-browser {
