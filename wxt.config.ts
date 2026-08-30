@@ -1,17 +1,7 @@
 import { defineConfig } from "wxt";
 
-/** Chrome-only: Firefox's `identity` has neither `getAuthToken` nor `getProfileUserInfo`. */
+/** Chrome-only: Firefox's `identity` has no `getProfileUserInfo`. */
 const IDENTITY_PERMISSIONS = ["identity", "identity.email"];
-
-/**
- * Reading the account's real name needs an OAuth client registered for this extension's id - see
- * "Browser account name" in the README, which is also why this is a plain constant: a client id is
- * public, ships in every manifest, and there is exactly one per extension. Left empty the key is
- * omitted altogether and the identity button falls back to the account's email address.
- */
-const GOOGLE_CLIENT_ID = "";
-/** The pair OpenID Connect asks for; `profile` is what carries the name. */
-const PROFILE_SCOPES = ["openid", "profile"];
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -33,12 +23,6 @@ export default defineConfig({
       "storage",
       ...(browser === "firefox" ? [] : IDENTITY_PERMISSIONS)
     ],
-    ...(GOOGLE_CLIENT_ID ? {
-      oauth2: {
-        client_id: GOOGLE_CLIENT_ID,
-        scopes: PROFILE_SCOPES
-      }
-    } : {}),
     action: {
       default_title: "Cyberstart"
     },

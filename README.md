@@ -45,37 +45,27 @@ Six on Chrome, four on Firefox, and each backs one feature:
 | `geolocation`    | the "USE MY LOCATION" button in the weather / world-clock location form  |
 | `storage`        | every setting                                                           |
 | `identity`       | "USE BROWSER ACCOUNT" names the greeting after the signed-in account     |
-| `identity.email` | the fallback name, when no OAuth client is configured                    |
+| `identity.email` | that address is the only name any browser API will hand over             |
 
-The last two are Chrome-only: Firefox exposes the `identity` namespace without `getAuthToken` or
+The last two are Chrome-only: Firefox exposes the `identity` namespace without
 `getProfileUserInfo`, so its manifest omits both and the button reports no account.
 
 ### Browser account name
 
-No Chrome API hands over a name on its own:
+No browser API hands over a name:
 [`identity.getProfileUserInfo`](https://developer.chrome.com/docs/extensions/reference/api/identity#method-getProfileUserInfo)
-answers with an email address and an account id, and that is the whole of it. A real name only comes
-out of OAuth, so the button tries two things in order:
+answers with an email address and an account id, and that is the whole of it - the Chromium team has
+[said the same](https://groups.google.com/a/chromium.org/g/chromium-extensions/c/QN_wvxn5Aiw) about
+reading the profile name. Chrome's OAuth route would give the account's real `given_name`, but it
+needs an `oauth2` key in the manifest, which Edge does not support, and an OAuth client that can only
+be created by hand in the Google Cloud console.
 
-1. [`identity.getAuthToken`](https://developer.chrome.com/docs/extensions/how-to/integrate/oauth)
-   mints a token for the profile's Google account, and OpenID Connect's
-   [userinfo endpoint](https://developers.google.com/identity/openid-connect/openid-connect#obtainuserinfo)
-   answers with its `given_name`. This needs `GOOGLE_CLIENT_ID` filled in at the top of
-   `wxt.config.ts` - an OAuth client id is public and ships in the manifest, so it lives in the
-   config rather than in an env file.
-2. Without a client id, or when consent is refused, `getProfileUserInfo` gives the email and a name
-   is read out of its local part instead, minus the digits people add to claim a taken address:
-   `jane.doe@...` becomes `Jane Doe`, `avi6106@...` becomes `Avi`.
-
-To turn on step 1: create an OAuth client of type "Chrome extension" in the Google Cloud console for
-this extension's id, and paste the id into `GOOGLE_CLIENT_ID`. It is a console-only job - the IAP
-OAuth admin API that `gcloud` wraps was shut down in March 2026, and it only ever created IAP web
-clients. An unpacked extension and a published
-one have different ids unless `key` is pinned in the manifest, so pin it or register both.
+So the name is read out of the address instead, minus the digits people add to claim one that was
+taken: `jane.doe@...` becomes `Jane Doe`, `avi6106@...` becomes `Avi`. A local part that is nothing
+but digits is left as it is, and a browser with no signed-in account says so.
 
 No host permissions: open-meteo, timeapi, allorigins and bigdatacloud all answer with
-`Access-Control-Allow-Origin: *`, Google's userinfo endpoint echoes the extension's own origin back,
-and an extension page follows ordinary CORS.
+`Access-Control-Allow-Origin: *`, and an extension page follows ordinary CORS.
 
 ## Layout
 
