@@ -217,7 +217,8 @@
 
 /*
  * The pick-one rows in the Terminal Display panel and the icon pickers: unselected is a dark tile,
- * selected inverts to the accent.
+ * selected inverts to the accent - the bright one, because these labels are small and unbolded and
+ * the plain secondary does not carry black text far enough.
  */
 .option-button {
   padding: 0.5rem;
@@ -235,19 +236,9 @@
 
   &[aria-pressed="true"],
   &[aria-checked="true"] {
-    background: var(--cp-secondary);
+    background: var(--cp-secondary-hi);
     color: var(--cp-on-accent);
-
-    &:hover {
-      background: var(--cp-secondary);
-    }
   }
-}
-
-.option-button[aria-pressed="true"],
-.option-button[aria-pressed="true"]:hover,
-.option-button[aria-checked="true"]:hover {
-  background: var(--cp-secondary);
 }
 
 /* The image/video pair uses cyan rather than pink for its selected state. */
