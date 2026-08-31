@@ -1,5 +1,6 @@
 <script lang="ts">
   import iconDownload from "@/assets/icons/download.svg?raw";
+  import { dropZone } from "@/lib/drop-zone";
   import { downloadFile, exportSettings, importSettings, SETTINGS_FILE_NAME } from "@/lib/settings-file";
   import Modal from "./Modal.svelte";
   import iconTriangleAlert from "@/assets/icons/triangle-alert.svg?raw";
@@ -13,6 +14,8 @@
     onClose: () => void;
   } = $props();
 
+  const SETTINGS_ACCEPT = ".json,application/json";
+
   let isConfirmingImport = $state(false);
   let error = $state("");
 
@@ -23,23 +26,22 @@
     }
   });
 
-  async function importFromFile(e: Event) {
-    const input = e.currentTarget;
-    if (!(input instanceof HTMLInputElement)) {
-      return;
-    }
-
-    const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-
+  async function importFrom(file: File) {
     try {
       importSettings(await file.text());
       window.location.reload();
     } catch {
       error = "Invalid settings file";
     }
+  }
+
+  async function importPicked(e: Event) {
+    const file = e.currentTarget instanceof HTMLInputElement ? e.currentTarget.files?.[0] : null;
+    if (!file) {
+      return;
+    }
+
+    await importFrom(file);
   }
 </script>
 
@@ -53,11 +55,19 @@
       <input
         id="settings-import"
         class="visually-hidden"
-        accept=".json"
-        onchange={e => void importFromFile(e)}
+        accept={SETTINGS_ACCEPT}
+        onchange={e => void importPicked(e)}
         type="file" />
-      <label class="cyber-button cyber-button--primary system__file-label" for="settings-import">
-        Confirm Import
+      <label
+        class="drop-zone"
+        for="settings-import"
+        use:dropZone={{
+          accept: SETTINGS_ACCEPT,
+          onFile: file => void importFrom(file)
+        }}>
+        {@html iconUpload}
+        <span>Drop your settings file here</span>
+        <span class="drop-zone__hint">or click to pick one</span>
       </label>
       {#if error}
         <p class="cyber-error">{error}</p>
@@ -122,11 +132,4 @@
   }
 
   /* The file input is hidden, so its label carries the button's appearance. */
-  .system__file-label {
-    display: block;
-    width: 100%;
-    padding: 0.75rem;
-    text-align: center;
-    cursor: var(--cp-cursor-pointer);
-  }
 </style>
