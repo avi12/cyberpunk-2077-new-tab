@@ -248,6 +248,62 @@
   color: var(--cp-on-accent);
 }
 
+/* ---------- Drop zones ---------- */
+
+/*
+ * Everywhere a file can come in: the visible label of a hidden file input, so one box takes both a
+ * click and a drop, and the same words say what it will take. `data-dropping` is stamped on it by
+ * `dropZone` for as long as a file is over it.
+ */
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem 0.75rem;
+  border: 1px dashed var(--cp-primary);
+  background: color-mix(in sRGB, var(--cp-primary) 6%, transparent);
+  color: var(--cp-primary);
+  font-family: var(--cp-mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-align: center;
+  text-transform: uppercase;
+  transition: background-color 200ms, border-color 200ms, color 200ms, box-shadow 200ms;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    background: color-mix(in sRGB, var(--cp-primary) 12%, transparent);
+  }
+
+  &[data-dropping] {
+    border-color: var(--cp-secondary-hi);
+    border-style: solid;
+    background: color-mix(in sRGB, var(--cp-secondary) 20%, transparent);
+    color: var(--cp-secondary-hi);
+    box-shadow: 0 0 0 4px color-mix(in sRGB, var(--cp-secondary) 25%, transparent);
+  }
+}
+
+.drop-zone__hint {
+  color: var(--cp-text-dimmer);
+}
+
+.drop-zone[data-dropping] .drop-zone__hint {
+  color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drop-zone {
+    transition: none;
+  }
+}
+
 /* ---------- Widget cards ---------- */
 
 /* Every widget is the same bordered panel; only the contents differ. */

@@ -200,7 +200,7 @@ textarea {
   cursor: var(--cp-cursor);
 }
 
-:is(a, button, [role="button"], select, summary, [type="submit"], [type="button"]) {
+:is(a, button, [role="button"], .drop-zone, select, summary, [type="submit"], [type="button"]) {
   cursor: var(--cp-cursor-pointer);
 }
 
