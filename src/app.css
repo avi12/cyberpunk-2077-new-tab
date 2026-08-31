@@ -276,6 +276,16 @@ textarea {
   z-index: 30;
 }
 
+/*
+ * And a slot keeps its snapshots inside itself. Turning a widget off shrinks its slot from a card
+ * to a row, but a snapshot is painted at the size it was captured - so the card that is leaving
+ * hangs over the widgets sliding up underneath it for the whole transition unless the pair is
+ * clipped to the box the group is animating.
+ */
+::view-transition-image-pair(*.above-scan-lines) {
+  overflow: clip;
+}
+
 ::view-transition-group(identity) {
   z-index: 40;
 }
