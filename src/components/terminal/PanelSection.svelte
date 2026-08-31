@@ -29,6 +29,26 @@
     margin-bottom: 1rem;
   }
 
+  /*
+   * The body has a box of its own that the browser owns - `::details-content` - so unrolling it is
+   * a height, not a swap. `content-visibility` goes discretely alongside so the contents are still
+   * there to watch on the way out, and `interpolate-size` is what lets the open state stay `auto`:
+   * a section is as tall as whatever it holds, which is not a number this file could name.
+   */
+  .section::details-content {
+    overflow: hidden;
+    block-size: 0;
+    transition:
+      block-size 200ms cubic-bezier(0.2, 0, 0, 1),
+      content-visibility 200ms allow-discrete;
+    interpolate-size: allow-keywords;
+  }
+
+  /* `open` is the browser's to set rather than the markup's, so the compiler cannot see it. */
+  .section:global([open])::details-content {
+    block-size: auto;
+  }
+
   .section__summary {
     display: flex;
     gap: 0.5rem;
@@ -74,7 +94,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .section__summary::after {
+    .section__summary::after,
+    .section::details-content {
       transition: none;
     }
   }
