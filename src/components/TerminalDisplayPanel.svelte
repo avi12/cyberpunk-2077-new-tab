@@ -103,6 +103,13 @@
      * what lets the open state stay `auto` - the panel is as tall as its own contents, up to the
      * cap above, and neither is a number this file could name. `display` and `overlay` transition
      * discretely so the panel is still there to watch on the way out.
+     *
+     * A panel that is a scroll container while it grows is one its own contents overflow for those
+     * 200ms, so the scrollbar appears for the roll and goes again. It is taken away for exactly as
+     * long as the panel is moving: `scrollbar-width` flips discretely, held back by the length of
+     * the roll on the way open and by nothing at all on the way shut, since a transition reads its
+     * timing from the state being moved into. Only the closed value is spelt here - open belongs
+     * to `.scrollbar-cyberpunk`, which is where this panel gets its scrollbar from.
      */
     height: 0;
     max-height: calc(100dvh - anchor-size(height) - var(--terminal-corner-inset) - var(--terminal-panel-gap));
@@ -117,13 +124,20 @@
       height 200ms cubic-bezier(0.2, 0, 0, 1),
       padding-block 200ms cubic-bezier(0.2, 0, 0, 1),
       border-block-width 200ms cubic-bezier(0.2, 0, 0, 1),
+      scrollbar-width 0ms var(--terminal-scrollbar-delay, 0ms) allow-discrete,
       display 200ms allow-discrete,
       overlay 200ms allow-discrete;
     position-anchor: --terminal-display-button;
     position-try-fallbacks: flip-block;
     interpolate-size: allow-keywords;
 
+    &:not(:popover-open) {
+      scrollbar-width: none;
+    }
+
     &:popover-open {
+      --terminal-scrollbar-delay: 200ms;
+
       height: auto;
       padding-block: 1rem;
       border-block-width: 2px;
@@ -141,6 +155,7 @@
       height: 0;
       padding-block: 0;
       border-block-width: 0;
+      scrollbar-width: none;
     }
   }
 
