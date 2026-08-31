@@ -1,6 +1,8 @@
 <script lang="ts">
   import { BACKGROUND_COLORS, BACKGROUND_IMAGES, BackgroundMediaType, DEFAULT_BACKGROUND } from "@/lib/storage/defaults";
   import { CACHED_PREFIX, clearBackgroundMedia, saveBackgroundMedia } from "@/lib/storage/media-store";
+  import { dropZone } from "@/lib/drop-zone";
+  import { fetchBlob } from "@/lib/cors-proxy";
   import iconImage from "@/assets/icons/image.svg?raw";
   import PanelSection from "./PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -16,37 +18,91 @@
   const BRIGHTNESS_STEP = 5;
   const BRIGHTNESS_RESET = 100;
 
+  const MEDIA_KINDS: Record<UploadableMedia, {
+    accept: string;
+    name: string;
+  }> = {
+    [BackgroundMediaType.image]: {
+      accept: "image/*",
+      name: "an image"
+    },
+    [BackgroundMediaType.video]: {
+      accept: "video/mp4,video/webm",
+      name: "a video"
+    }
+  };
+
   let mediaKind = $state<UploadableMedia>(BackgroundMediaType.image);
   let urlEntry = $state<string | null>(null);
-  let elImageInput = $state<HTMLInputElement>();
-  let elVideoInput = $state<HTMLInputElement>();
+  let isFetching = $state(false);
+  let error = $state("");
 
   const background = $derived(settings.background.current);
+  const accept = $derived(MEDIA_KINDS[mediaKind].accept);
   const brightness = $derived(settings.backgroundBrightness.current);
   const isCustom = $derived(
     ![...BACKGROUND_COLORS.map(entry => entry.value), ...BACKGROUND_IMAGES.map(entry => entry.value)].includes(background)
   );
 
-  async function upload(e: Event, kind: UploadableMedia) {
-    const input = e.currentTarget;
-    if (!(input instanceof HTMLInputElement)) {
+  /**
+   * Everything the user brings in ends up in the same place: the bytes in IndexedDB, the sentinel in
+   * settings. A link is downloaded rather than kept as a link, so the page paints from disk on every
+   * load instead of asking a host that can rate-limit it, move it or disappear.
+   */
+  async function keep({ blob, kind }: {
+    blob: Blob;
+    kind: UploadableMedia;
+  }) {
+    try {
+      await saveBackgroundMedia(blob, kind);
+    } catch {
+      // Out of quota - keeping the previous background is the safe outcome
+      error = "No room left to store that one";
+
       return;
     }
 
-    const file = input.files?.[0];
+    settings.backgroundMediaType.current = kind;
+    settings.backgroundMediaVersion.current += 1;
+    settings.background.current = `${CACHED_PREFIX}${kind}`;
+    urlEntry = null;
+    error = "";
+  }
+
+  async function keepPicked(e: Event) {
+    const file = e.currentTarget instanceof HTMLInputElement ? e.currentTarget.files?.[0] : null;
     if (!file) {
       return;
     }
 
-    try {
-      await saveBackgroundMedia(file, kind);
-      settings.backgroundMediaType.current = kind;
-      settings.backgroundMediaVersion.current += 1;
-      settings.background.current = `${CACHED_PREFIX}${kind}`;
-      urlEntry = null;
-    } catch {
-    // Out of quota - keeping the previous background is the safe outcome
+    await keep({
+      blob: file,
+      kind: mediaKind
+    });
+  }
+
+  async function keepLinked(entered: string) {
+    const url = entered.trim().replace(/^http:\/\//, "https://");
+    if (!url) {
+      return;
     }
+
+    const kind = mediaKind;
+    isFetching = true;
+    error = "";
+    const blob = await fetchBlob({ url });
+    isFetching = false;
+
+    if (!blob?.type.startsWith(`${kind}/`)) {
+      error = `That link did not answer with ${MEDIA_KINDS[kind].name}`;
+
+      return;
+    }
+
+    await keep({
+      blob,
+      kind
+    });
   }
 
   async function clearCustom() {
@@ -97,26 +153,23 @@
 
     {#if urlEntry === null}
       <div class="stack--tight">
-        {#if mediaKind === BackgroundMediaType.image}
-          <button class="custom__button" onclick={() => (urlEntry = "")} type="button">
-            {@html iconImage}
-            Enter URL
-          </button>
-        {/if}
-        <button
-          class="custom__button"
-          onclick={() => {
-            if (mediaKind === BackgroundMediaType.image) {
-              elImageInput?.click();
-
-              return;
-            }
-
-            elVideoInput?.click();
-          }}
-          type="button">
+        <label
+          class="drop-zone"
+          for="background-file"
+          use:dropZone={{
+            accept,
+            onFile: file => void keep({
+              blob: file,
+              kind: mediaKind
+            })
+          }}>
           {@html iconUpload}
-          Upload File
+          <span>Drop {MEDIA_KINDS[mediaKind].name} here</span>
+          <span class="drop-zone__hint">or click to pick one</span>
+        </label>
+        <button class="custom__button" onclick={() => (urlEntry = "")} type="button">
+          {@html mediaKind === BackgroundMediaType.image ? iconImage : iconVideo}
+          Enter URL
         </button>
         {#if isCustom}
           <button class="custom__button custom__button--danger" onclick={() => void clearCustom()} type="button">
@@ -139,18 +192,10 @@
         <div class="row">
           <button
             class="cyber-button cyber-button--primary cyber-button--grow custom__small"
-            onclick={() => {
-              const value = urlEntry?.trim();
-              if (!value) {
-                return;
-              }
-
-              settings.backgroundMediaType.current = mediaKind;
-              settings.background.current = value.replace(/^http:\/\//, "https://");
-              urlEntry = null;
-            }}
+            disabled={isFetching}
+            onclick={() => void keepLinked(urlEntry ?? "")}
             type="button">
-            Apply
+            {isFetching ? "Fetching" : "Apply"}
           </button>
           <button class="cyber-button cyber-button--muted custom__small" onclick={() => (urlEntry = null)} type="button">
             {@html iconXMark}
@@ -159,17 +204,15 @@
       </div>
     {/if}
 
+    {#if error}
+      <p class="cyber-error">{error}</p>
+    {/if}
+
     <input
-      bind:this={elImageInput}
+      id="background-file"
       class="visually-hidden"
-      accept="image/*"
-      onchange={e => void upload(e, BackgroundMediaType.image)}
-      type="file" />
-    <input
-      bind:this={elVideoInput}
-      class="visually-hidden"
-      accept="video/mp4,video/webm"
-      onchange={e => void upload(e, BackgroundMediaType.video)}
+      {accept}
+      onchange={e => void keepPicked(e)}
       type="file" />
   </div>
 </PanelSection>

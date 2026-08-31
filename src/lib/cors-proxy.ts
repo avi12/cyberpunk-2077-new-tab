@@ -22,7 +22,20 @@ async function readThrough({ proxyUrl, timeoutMs }: {
     throw new Error(`${proxyUrl} answered ${response.status}`);
   }
 
-  return response.text();
+  return response;
+}
+
+/** The first proxy to answer. Rejects only when every one of them has failed. */
+async function raceProxies({ url, timeoutMs }: {
+  url: string;
+  timeoutMs: number;
+}) {
+  return Promise.any(
+    PROXY_URLS.map(toProxyUrl => readThrough({
+      proxyUrl: toProxyUrl(url),
+      timeoutMs
+    }))
+  );
 }
 
 /** The body of the first proxy to answer, or an empty string when every one of them fails. */
@@ -30,10 +43,27 @@ export async function readProxied({ url, timeoutMs = PROXY_TIMEOUT_MS }: {
   url: string;
   timeoutMs?: number;
 }) {
-  const reads = PROXY_URLS.map(toProxyUrl => readThrough({
-    proxyUrl: toProxyUrl(url),
+  return raceProxies({
+    url,
     timeoutMs
-  }));
+  }).then(response => response.text()).catch(() => "");
+}
 
-  return Promise.any(reads).catch(() => "");
+/**
+ * The bytes at a URL, for a background the user asked to keep: straight from the host when it sends
+ * the header that allows it, and through the proxies when it does not. `null` when nobody answers.
+ */
+export async function fetchBlob({ url, timeoutMs = PROXY_TIMEOUT_MS }: {
+  url: string;
+  timeoutMs?: number;
+}) {
+  const direct = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) }).catch(() => null);
+  if (direct?.ok) {
+    return direct.blob();
+  }
+
+  return raceProxies({
+    url,
+    timeoutMs
+  }).then(response => response.blob()).catch(() => null);
 }
