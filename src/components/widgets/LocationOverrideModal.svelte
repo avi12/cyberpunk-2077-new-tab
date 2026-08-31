@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { GeoLocation } from "@/lib/storage/defaults";
-  import mapPin from "@/assets/icons/map-pin.svg?raw";
+  import iconMapPin from "@/assets/icons/map-pin.svg?raw";
   import Modal from "@/components/modals/Modal.svelte";
   import { z } from "@/lib/zod";
   import { untrack } from "svelte";
@@ -119,7 +119,7 @@
       }}
       onfocusin={e => e.stopPropagation()}
       type="button">
-      {@html mapPin}
+      {@html iconMapPin}
       Follow my location
     </button>
     <p class="location__caption">Read from this device on every load, and never stored</p>

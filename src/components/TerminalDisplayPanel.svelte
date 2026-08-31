@@ -3,7 +3,7 @@
   import { BACKGROUND_IMAGES, COLOR_THEMES, SCAN_LINES_MODES } from "@/lib/storage/defaults";
   import CustomBackgroundSection from "./terminal/CustomBackgroundSection.svelte";
   import DisplayElementsSection from "./terminal/DisplayElementsSection.svelte";
-  import monitor from "@/assets/icons/monitor.svg?raw";
+  import iconMonitor from "@/assets/icons/monitor.svg?raw";
   import OptionGroup from "./OptionGroup.svelte";
   import PanelSection from "./terminal/PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -22,7 +22,7 @@
     aria-label="Terminal display settings"
     popovertarget={PANEL_ID}
     type="button">
-    {@html monitor}
+    {@html iconMonitor}
   </button>
 
   <div id={PANEL_ID} class="terminal__popup scrollbar-cyberpunk" popover="auto">

@@ -1,16 +1,16 @@
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/defaults";
   import BookmarkCard from "./BookmarkCard.svelte";
-  import chevronDown from "@/assets/icons/chevron-down.svg?raw";
-  import chevronRight from "@/assets/icons/chevron-right.svg?raw";
-  import grip from "@/assets/icons/grip.svg?raw";
-  import plus from "@/assets/icons/plus.svg?raw";
+  import iconChevronDown from "@/assets/icons/chevron-down.svg?raw";
+  import iconChevronRight from "@/assets/icons/chevron-right.svg?raw";
+  import iconGrip from "@/assets/icons/grip.svg?raw";
+  import iconPlus from "@/assets/icons/plus.svg?raw";
   import type { Snippet } from "svelte";
   import { sortable } from "@/lib/sortable";
   import type { SortableMove } from "@/lib/sortable";
-  import squarePen from "@/assets/icons/square-pen.svg?raw";
+  import iconSquarePen from "@/assets/icons/square-pen.svg?raw";
   import { tooltip } from "@/lib/tooltip";
-  import trash2 from "@/assets/icons/trash2.svg?raw";
+  import iconTrash2 from "@/assets/icons/trash2.svg?raw";
 
   const {
     category,
@@ -69,7 +69,7 @@
 <section class="category view-item">
   <div class="category__header">
     {#if isEditing}
-      <span class="category__grip">{@html grip}</span>
+      <span class="category__grip">{@html iconGrip}</span>
     {/if}
     <h3 class="category__heading">
       <button
@@ -78,7 +78,7 @@
         onclick={() => onToggleCollapse(category)}
         type="button">
         {category}
-        {@html isCollapsed ? chevronRight : chevronDown}
+        {@html isCollapsed ? iconChevronRight : iconChevronDown}
       </button>
     </h3>
     {#if isEditing}
@@ -89,7 +89,7 @@
           onclick={() => onEditCategory(category)}
           type="button"
           use:tooltip={EDIT_CATEGORY_LABEL}>
-          {@html squarePen}
+          {@html iconSquarePen}
         </button>
         <button
           class="category__action category__action--delete"
@@ -97,7 +97,7 @@
           onclick={() => onDeleteCategory(category)}
           type="button"
           use:tooltip={DELETE_CATEGORY_LABEL}>
-          {@html trash2}
+          {@html iconTrash2}
         </button>
       </div>
     {/if}
@@ -136,7 +136,7 @@
             {@render linkForm(category)}
           {:else}
             <button class="category__add" onclick={() => onAddBookmark(category)} type="button">
-              {@html plus}
+              {@html iconPlus}
               ADD LINK
             </button>
           {/if}

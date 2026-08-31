@@ -1,9 +1,9 @@
 <script lang="ts">
-  import download from "@/assets/icons/download.svg?raw";
+  import iconDownload from "@/assets/icons/download.svg?raw";
   import { downloadFile, exportSettings, importSettings, SETTINGS_FILE_NAME } from "@/lib/settings-file";
   import Modal from "./Modal.svelte";
-  import triangleAlert from "@/assets/icons/triangle-alert.svg?raw";
-  import upload from "@/assets/icons/upload.svg?raw";
+  import iconTriangleAlert from "@/assets/icons/triangle-alert.svg?raw";
+  import iconUpload from "@/assets/icons/upload.svg?raw";
 
   const {
     isOpen,
@@ -47,7 +47,7 @@
   {#if isConfirmingImport}
     <div class="stack">
       <p class="system__warning">
-        {@html triangleAlert}
+        {@html iconTriangleAlert}
         This will overwrite your current settings!
       </p>
       <input
@@ -79,14 +79,14 @@
           type: "application/json"
         })}
         type="button">
-        {@html download}
+        {@html iconDownload}
         Export Settings
       </button>
       <button
         class="cyber-button cyber-button--primary system__action"
         onclick={() => (isConfirmingImport = true)}
         type="button">
-        {@html upload}
+        {@html iconUpload}
         Import Settings
       </button>
     </div>

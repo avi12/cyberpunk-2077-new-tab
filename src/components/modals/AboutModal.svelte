@@ -1,5 +1,5 @@
 <script lang="ts">
-  import camera from "@/assets/icons/camera.svg?raw";
+  import iconCamera from "@/assets/icons/camera.svg?raw";
   import Modal from "./Modal.svelte";
   import { tooltip } from "@/lib/tooltip";
 
@@ -79,7 +79,7 @@
       onclick={() => void capture()}
       type="button"
       use:tooltip={SCREENSHOT_LABEL}>
-      {@html camera}
+      {@html iconCamera}
     </button>
   </div>
 </Modal>

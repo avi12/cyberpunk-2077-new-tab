@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { WidgetConfig } from "@/lib/storage/defaults";
-  import fileText from "@/assets/icons/file-text.svg?raw";
-  import save from "@/assets/icons/save.svg?raw";
+  import iconFileText from "@/assets/icons/file-text.svg?raw";
+  import iconSave from "@/assets/icons/save.svg?raw";
   import { untrack } from "svelte";
 
   const {
@@ -26,7 +26,7 @@
 <article class="widget-card glitch-border">
   <header class="widget-card__header">
     <h3 class="widget-card__label">
-      {@html fileText}
+      {@html iconFileText}
       Scratch Pad
     </h3>
     <button
@@ -40,7 +40,7 @@
         timer = setTimeout(() => (isSaving = false), MANUAL_SAVE_FLASH_MS);
       }}
       type="button">
-      {@html save}
+      {@html iconSave}
     </button>
   </header>
 

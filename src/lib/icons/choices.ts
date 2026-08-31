@@ -1,43 +1,43 @@
-import aperture from "@/assets/icons/aperture.svg?raw";
-import bolt from "@/assets/icons/bolt.svg?raw";
-import bookmarkPlus from "@/assets/icons/bookmark-plus.svg?raw";
-import bot from "@/assets/icons/bot.svg?raw";
-import brain from "@/assets/icons/brain.svg?raw";
-import briefcase from "@/assets/icons/briefcase.svg?raw";
-import cctv from "@/assets/icons/cctv.svg?raw";
-import chartNoAxesCombined from "@/assets/icons/chart-no-axes-combined.svg?raw";
-import code from "@/assets/icons/code.svg?raw";
-import coffee from "@/assets/icons/coffee.svg?raw";
-import dollarSign from "@/assets/icons/dollar-sign.svg?raw";
-import fingerprint from "@/assets/icons/fingerprint.svg?raw";
-import gamepad2 from "@/assets/icons/gamepad2.svg?raw";
-import gem from "@/assets/icons/gem.svg?raw";
-import globe from "@/assets/icons/globe.svg?raw";
-import hamburger from "@/assets/icons/hamburger.svg?raw";
-import heart from "@/assets/icons/heart.svg?raw";
-import house from "@/assets/icons/house.svg?raw";
-import mail from "@/assets/icons/mail.svg?raw";
-import mapPin from "@/assets/icons/map-pin.svg?raw";
-import map from "@/assets/icons/map.svg?raw";
-import messageCircle from "@/assets/icons/message-circle.svg?raw";
-import music from "@/assets/icons/music.svg?raw";
-import newspaper from "@/assets/icons/newspaper.svg?raw";
-import palette from "@/assets/icons/palette.svg?raw";
-import pawPrint from "@/assets/icons/paw-print.svg?raw";
-import phone from "@/assets/icons/phone.svg?raw";
-import podcast from "@/assets/icons/podcast.svg?raw";
-import popcorn from "@/assets/icons/popcorn.svg?raw";
-import rocket from "@/assets/icons/rocket.svg?raw";
-import shield from "@/assets/icons/shield.svg?raw";
-import shoppingBag from "@/assets/icons/shopping-bag.svg?raw";
-import shoppingBasket from "@/assets/icons/shopping-basket.svg?raw";
-import skull from "@/assets/icons/skull.svg?raw";
-import sparkles from "@/assets/icons/sparkles.svg?raw";
-import star from "@/assets/icons/star.svg?raw";
-import terminal from "@/assets/icons/terminal.svg?raw";
-import tvMinimalPlay from "@/assets/icons/tv-minimal-play.svg?raw";
-import wallet from "@/assets/icons/wallet.svg?raw";
-import zap from "@/assets/icons/zap.svg?raw";
+import iconAperture from "@/assets/icons/aperture.svg?raw";
+import iconBolt from "@/assets/icons/bolt.svg?raw";
+import iconBookmarkPlus from "@/assets/icons/bookmark-plus.svg?raw";
+import iconBot from "@/assets/icons/bot.svg?raw";
+import iconBrain from "@/assets/icons/brain.svg?raw";
+import iconBriefcase from "@/assets/icons/briefcase.svg?raw";
+import iconCctv from "@/assets/icons/cctv.svg?raw";
+import iconChartNoAxesCombined from "@/assets/icons/chart-no-axes-combined.svg?raw";
+import iconCode from "@/assets/icons/code.svg?raw";
+import iconCoffee from "@/assets/icons/coffee.svg?raw";
+import iconDollarSign from "@/assets/icons/dollar-sign.svg?raw";
+import iconFingerprint from "@/assets/icons/fingerprint.svg?raw";
+import iconGamepad2 from "@/assets/icons/gamepad2.svg?raw";
+import iconGem from "@/assets/icons/gem.svg?raw";
+import iconGlobe from "@/assets/icons/globe.svg?raw";
+import iconHamburger from "@/assets/icons/hamburger.svg?raw";
+import iconHeart from "@/assets/icons/heart.svg?raw";
+import iconHouse from "@/assets/icons/house.svg?raw";
+import iconMail from "@/assets/icons/mail.svg?raw";
+import iconMapPin from "@/assets/icons/map-pin.svg?raw";
+import iconMap from "@/assets/icons/map.svg?raw";
+import iconMessageCircle from "@/assets/icons/message-circle.svg?raw";
+import iconMusic from "@/assets/icons/music.svg?raw";
+import iconNewspaper from "@/assets/icons/newspaper.svg?raw";
+import iconPalette from "@/assets/icons/palette.svg?raw";
+import iconPawPrint from "@/assets/icons/paw-print.svg?raw";
+import iconPhone from "@/assets/icons/phone.svg?raw";
+import iconPodcast from "@/assets/icons/podcast.svg?raw";
+import iconPopcorn from "@/assets/icons/popcorn.svg?raw";
+import iconRocket from "@/assets/icons/rocket.svg?raw";
+import iconShield from "@/assets/icons/shield.svg?raw";
+import iconShoppingBag from "@/assets/icons/shopping-bag.svg?raw";
+import iconShoppingBasket from "@/assets/icons/shopping-basket.svg?raw";
+import iconSkull from "@/assets/icons/skull.svg?raw";
+import iconSparkles from "@/assets/icons/sparkles.svg?raw";
+import iconStar from "@/assets/icons/star.svg?raw";
+import iconTerminal from "@/assets/icons/terminal.svg?raw";
+import iconTvMinimalPlay from "@/assets/icons/tv-minimal-play.svg?raw";
+import iconWallet from "@/assets/icons/wallet.svg?raw";
+import iconZap from "@/assets/icons/zap.svg?raw";
 
 type IconChoice = {
   name: string;
@@ -52,163 +52,163 @@ type IconChoice = {
 export const ICON_CHOICES = [
   {
     name: "Default",
-    svg: bookmarkPlus
+    svg: iconBookmarkPlus
   },
   {
     name: "Basket",
-    svg: shoppingBasket
+    svg: iconShoppingBasket
   },
   {
     name: "Bolt",
-    svg: bolt
+    svg: iconBolt
   },
   {
     name: "Bot",
-    svg: bot
+    svg: iconBot
   },
   {
     name: "Brain",
-    svg: brain
+    svg: iconBrain
   },
   {
     name: "Chat",
-    svg: messageCircle
+    svg: iconMessageCircle
   },
   {
     name: "Camera",
-    svg: aperture
+    svg: iconAperture
   },
   {
     name: "CCTV",
-    svg: cctv
+    svg: iconCctv
   },
   {
     name: "Chart",
-    svg: chartNoAxesCombined
+    svg: iconChartNoAxesCombined
   },
   {
     name: "Code",
-    svg: code
+    svg: iconCode
   },
   {
     name: "Coffee",
-    svg: coffee
+    svg: iconCoffee
   },
   {
     name: "Design",
-    svg: palette
+    svg: iconPalette
   },
   {
     name: "Food",
-    svg: hamburger
+    svg: iconHamburger
   },
   {
     name: "Gaming",
-    svg: gamepad2
+    svg: iconGamepad2
   },
   {
     name: "Gem",
-    svg: gem
+    svg: iconGem
   },
   {
     name: "Heart",
-    svg: heart
+    svg: iconHeart
   },
   {
     name: "Home",
-    svg: house
+    svg: iconHouse
   },
   {
     name: "Launch",
-    svg: rocket
+    svg: iconRocket
   },
   {
     name: "Mail",
-    svg: mail
+    svg: iconMail
   },
   {
     name: "Map",
-    svg: map
+    svg: iconMap
   },
   {
     name: "Money",
-    svg: dollarSign
+    svg: iconDollarSign
   },
   {
     name: "Music",
-    svg: music
+    svg: iconMusic
   },
   {
     name: "News",
-    svg: newspaper
+    svg: iconNewspaper
   },
   {
     name: "Paw",
-    svg: pawPrint
+    svg: iconPawPrint
   },
   {
     name: "Phone",
-    svg: phone
+    svg: iconPhone
   },
   {
     name: "Pin",
-    svg: mapPin
+    svg: iconMapPin
   },
   {
     name: "Podcast",
-    svg: podcast
+    svg: iconPodcast
   },
   {
     name: "Popcorn",
-    svg: popcorn
+    svg: iconPopcorn
   },
   {
     name: "Security",
-    svg: fingerprint
+    svg: iconFingerprint
   },
   {
     name: "Shield",
-    svg: shield
+    svg: iconShield
   },
   {
     name: "Shopping",
-    svg: shoppingBag
+    svg: iconShoppingBag
   },
   {
     name: "Skull",
-    svg: skull
+    svg: iconSkull
   },
   {
     name: "Sparkles",
-    svg: sparkles
+    svg: iconSparkles
   },
   {
     name: "Star",
-    svg: star
+    svg: iconStar
   },
   {
     name: "Terminal",
-    svg: terminal
+    svg: iconTerminal
   },
   {
     name: "Video",
-    svg: tvMinimalPlay
+    svg: iconTvMinimalPlay
   },
   {
     name: "Wallet",
-    svg: wallet
+    svg: iconWallet
   },
   {
     name: "Web",
-    svg: globe
+    svg: iconGlobe
   },
   {
     name: "Work",
-    svg: briefcase
+    svg: iconBriefcase
   },
   {
     name: "Zap",
-    svg: zap
+    svg: iconZap
   }
 ] as const satisfies readonly IconChoice[];
 

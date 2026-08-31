@@ -1,9 +1,9 @@
 <script lang="ts">
   import { browserAccountName } from "@/lib/identity";
-  import fingerprint from "@/assets/icons/fingerprint.svg?raw";
+  import iconFingerprint from "@/assets/icons/fingerprint.svg?raw";
   import Modal from "./Modal.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
-  import squarePen from "@/assets/icons/square-pen.svg?raw";
+  import iconSquarePen from "@/assets/icons/square-pen.svg?raw";
   import { tooltip } from "@/lib/tooltip";
   import { tick } from "svelte";
 
@@ -75,7 +75,7 @@
           onclick={() => void startEditing()}
           type="button"
           use:tooltip={EDIT_LABEL}>
-          {@html squarePen}
+          {@html iconSquarePen}
         </button>
       {/if}
     </div>
@@ -84,7 +84,7 @@
       class="cyber-button cyber-button--ghost identity__from-browser"
       onclick={() => void fillFromBrowser()}
       type="button">
-      {@html fingerprint}
+      {@html iconFingerprint}
       Use browser account
     </button>
 

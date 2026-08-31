@@ -1,14 +1,14 @@
 <script lang="ts">
   import type { WidgetConfig } from "@/lib/storage/defaults";
-  import chevronDown from "@/assets/icons/chevron-down.svg?raw";
-  import chevronUp from "@/assets/icons/chevron-up.svg?raw";
+  import iconChevronDown from "@/assets/icons/chevron-down.svg?raw";
+  import iconChevronUp from "@/assets/icons/chevron-up.svg?raw";
   import { readProxied } from "@/lib/cors-proxy";
-  import externalLink from "@/assets/icons/external-link.svg?raw";
+  import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import Modal from "@/components/modals/Modal.svelte";
-  import rss from "@/assets/icons/rss.svg?raw";
-  import settings from "@/assets/icons/settings.svg?raw";
+  import iconRss from "@/assets/icons/rss.svg?raw";
+  import iconSettings from "@/assets/icons/settings.svg?raw";
   import { untrack } from "svelte";
-  import wifiOff from "@/assets/icons/wifi-off.svg?raw";
+  import iconWifiOff from "@/assets/icons/wifi-off.svg?raw";
 
   const {
     config,
@@ -111,7 +111,7 @@
 <article class="widget-card glitch-border">
   <header class="widget-card__header">
     <h3 class="widget-card__label">
-      {@html rss}
+      {@html iconRss}
       RSS Feed
     </h3>
     <button
@@ -119,7 +119,7 @@
       aria-label="RSS feed settings"
       onclick={() => (isSettingsOpen = true)}
       type="button">
-      {@html settings}
+      {@html iconSettings}
     </button>
   </header>
 
@@ -134,10 +134,10 @@
     </div>
   {:else if isFailed}
     <div class="rss__notice">
-      <span class="rss__notice-icon">{@html wifiOff}</span>
+      <span class="rss__notice-icon">{@html iconWifiOff}</span>
       <p class="rss__error">Feed Error</p>
       <button class="rss__edit" onclick={() => (isSettingsOpen = true)} type="button">
-        {@html settings}
+        {@html iconSettings}
         Edit URL
       </button>
     </div>
@@ -145,7 +145,7 @@
     <div class="rss__notice">
       <p class="rss__none">No items found</p>
       <button class="rss__edit rss__edit--cyan" onclick={() => (isSettingsOpen = true)} type="button">
-        {@html settings}
+        {@html iconSettings}
         Edit URL
       </button>
     </div>
@@ -155,7 +155,7 @@
         <li>
           <a class="rss__item" href={item.link} rel="noopener noreferrer" target="_blank">
             <span class="rss-title-container"><span class="rss-title">{item.title}</span></span>
-            <span class="rss__item-icon">{@html externalLink}</span>
+            <span class="rss__item-icon">{@html iconExternalLink}</span>
           </a>
         </li>
       {/each}
@@ -192,14 +192,14 @@
             aria-label="More items"
             onclick={() => setCount(countDraft + 1)}
             type="button">
-            {@html chevronUp}
+            {@html iconChevronUp}
           </button>
           <button
             class="spinner-button"
             aria-label="Fewer items"
             onclick={() => setCount(countDraft - 1)}
             type="button">
-            {@html chevronDown}
+            {@html iconChevronDown}
           </button>
         </div>
       </div>

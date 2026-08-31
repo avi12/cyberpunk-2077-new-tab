@@ -1,13 +1,13 @@
 <script lang="ts">
   import { BACKGROUND_COLORS, BACKGROUND_IMAGES, BackgroundMediaType, DEFAULT_BACKGROUND } from "@/lib/storage/defaults";
   import { CACHED_PREFIX, clearBackgroundMedia, saveBackgroundMedia } from "@/lib/storage/media-store";
-  import image from "@/assets/icons/image.svg?raw";
+  import iconImage from "@/assets/icons/image.svg?raw";
   import PanelSection from "./PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
-  import trash2 from "@/assets/icons/trash2.svg?raw";
-  import uploadIcon from "@/assets/icons/upload.svg?raw";
-  import video from "@/assets/icons/video.svg?raw";
-  import xMark from "@/assets/icons/x-mark.svg?raw";
+  import iconTrash2 from "@/assets/icons/trash2.svg?raw";
+  import iconUpload from "@/assets/icons/upload.svg?raw";
+  import iconVideo from "@/assets/icons/video.svg?raw";
+  import iconXMark from "@/assets/icons/x-mark.svg?raw";
 
   type UploadableMedia = BackgroundMediaType.image | BackgroundMediaType.video;
 
@@ -64,7 +64,7 @@
         aria-pressed={mediaKind === BackgroundMediaType.image}
         onclick={() => (mediaKind = BackgroundMediaType.image)}
         type="button">
-        {@html image}
+        {@html iconImage}
         Image
       </button>
       <button
@@ -72,7 +72,7 @@
         aria-pressed={mediaKind === BackgroundMediaType.video}
         onclick={() => (mediaKind = BackgroundMediaType.video)}
         type="button">
-        {@html video}
+        {@html iconVideo}
         Video
       </button>
     </div>
@@ -99,7 +99,7 @@
       <div class="stack--tight">
         {#if mediaKind === BackgroundMediaType.image}
           <button class="custom__button" onclick={() => (urlEntry = "")} type="button">
-            {@html image}
+            {@html iconImage}
             Enter URL
           </button>
         {/if}
@@ -115,12 +115,12 @@
             elVideoInput?.click();
           }}
           type="button">
-          {@html uploadIcon}
+          {@html iconUpload}
           Upload File
         </button>
         {#if isCustom}
           <button class="custom__button custom__button--danger" onclick={() => void clearCustom()} type="button">
-            {@html trash2}
+            {@html iconTrash2}
             Clear Custom
           </button>
         {/if}
@@ -153,7 +153,7 @@
             Apply
           </button>
           <button class="cyber-button cyber-button--muted custom__small" onclick={() => (urlEntry = null)} type="button">
-            {@html xMark}
+            {@html iconXMark}
           </button>
         </div>
       </div>

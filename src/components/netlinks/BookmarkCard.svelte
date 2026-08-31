@@ -12,11 +12,11 @@
 
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/defaults";
-  import gripVertical from "@/assets/icons/grip-vertical.svg?raw";
+  import iconGripVertical from "@/assets/icons/grip-vertical.svg?raw";
   import { iconByName } from "@/lib/icons/choices";
-  import squarePen from "@/assets/icons/square-pen.svg?raw";
+  import iconSquarePen from "@/assets/icons/square-pen.svg?raw";
   import { tooltip } from "@/lib/tooltip";
-  import xMark from "@/assets/icons/x-mark.svg?raw";
+  import iconXMark from "@/assets/icons/x-mark.svg?raw";
 
   const {
     bookmark,
@@ -83,7 +83,7 @@
         onclick={() => onEdit(bookmark)}
         type="button"
         use:tooltip={EDIT_LABEL}>
-        {@html squarePen}
+        {@html iconSquarePen}
       </button>
       <button
         class="card__action card__action--delete"
@@ -91,10 +91,10 @@
         onclick={() => onDelete(bookmark.id)}
         type="button"
         use:tooltip={DELETE_LABEL}>
-        {@html xMark}
+        {@html iconXMark}
       </button>
     </div>
-    <span class="card__grip">{@html gripVertical}</span>
+    <span class="card__grip">{@html iconGripVertical}</span>
   {/if}
 </li>
 

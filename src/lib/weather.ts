@@ -1,11 +1,11 @@
 import type { GeoLocation } from "./storage/defaults";
 import { z } from "./zod";
-import cloudLightning from "@/assets/icons/cloud-lightning.svg?raw";
-import cloudRain from "@/assets/icons/cloud-rain.svg?raw";
-import cloudSnow from "@/assets/icons/cloud-snow.svg?raw";
-import cloud from "@/assets/icons/cloud.svg?raw";
-import sun from "@/assets/icons/sun.svg?raw";
-import wind from "@/assets/icons/wind.svg?raw";
+import iconCloudLightning from "@/assets/icons/cloud-lightning.svg?raw";
+import iconCloudRain from "@/assets/icons/cloud-rain.svg?raw";
+import iconCloudSnow from "@/assets/icons/cloud-snow.svg?raw";
+import iconCloud from "@/assets/icons/cloud.svg?raw";
+import iconSun from "@/assets/icons/sun.svg?raw";
+import iconWind from "@/assets/icons/wind.svg?raw";
 
 export type WeatherReading = {
   temperature: number;
@@ -72,41 +72,41 @@ export function weatherIcon(code: number): {
 } {
   if (code <= 1) {
     return {
-      svg: sun,
+      svg: iconSun,
       color: "var(--cp-accent)"
     };
   }
 
   if (code <= 3) {
     return {
-      svg: cloud,
+      svg: iconCloud,
       color: "var(--cp-text-dimmer)"
     };
   }
 
   if (code <= 69) {
     return {
-      svg: cloudRain,
+      svg: iconCloudRain,
       color: "var(--cp-primary)"
     };
   }
 
   if (code <= 79) {
     return {
-      svg: cloudSnow,
+      svg: iconCloudSnow,
       color: "var(--cp-text)"
     };
   }
 
   if (code <= 94) {
     return {
-      svg: cloudLightning,
+      svg: iconCloudLightning,
       color: "var(--cp-secondary)"
     };
   }
 
   return {
-    svg: wind,
+    svg: iconWind,
     color: "var(--cp-text-dim)"
   };
 }

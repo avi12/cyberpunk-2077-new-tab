@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { DisplayPreferences } from "@/lib/storage/defaults";
-  import eye from "@/assets/icons/eye.svg?raw";
-  import eyeOff from "@/assets/icons/eye-off.svg?raw";
+  import iconEye from "@/assets/icons/eye.svg?raw";
+  import iconEyeOff from "@/assets/icons/eye-off.svg?raw";
   import { GLITCH_SHORT_MS } from "@/lib/glitch.svelte";
   import PanelSection from "./PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -100,7 +100,7 @@
           onclick={() => void toggle(element.key)}
           type="button">
           <span>{element.label}</span>
-          {@html settings.displayPreferences.current[element.key] ? eye : eyeOff}
+          {@html settings.displayPreferences.current[element.key] ? iconEye : iconEyeOff}
         </button>
       </li>
     {/each}

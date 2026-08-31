@@ -1,5 +1,5 @@
 <script lang="ts">
-  import chevronDown from "@/assets/icons/chevron-down.svg?raw";
+  import iconChevronDown from "@/assets/icons/chevron-down.svg?raw";
   import { engineById, runSearch, SCAN_DELAY_MS } from "@/lib/search";
   import { settings } from "@/lib/storage/settings.svelte";
 
@@ -38,7 +38,7 @@
         popovertarget={ENGINE_POPOVER_ID}
         type="button">
         {engine.name}
-        {@html chevronDown}
+        {@html iconChevronDown}
       </button>
       <ul id={ENGINE_POPOVER_ID} class="search__engine-list scrollbar-cyberpunk" popover="auto">
         {#each settings.searchEngines.current as option (option.id)}

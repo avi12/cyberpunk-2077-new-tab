@@ -1,11 +1,11 @@
 <script lang="ts">
   import type { Widget, WidgetConfig } from "@/lib/storage/defaults";
   import { WidgetType } from "@/lib/storage/defaults";
-  import grip from "@/assets/icons/grip.svg?raw";
+  import iconGrip from "@/assets/icons/grip.svg?raw";
   import RssWidget from "./RssWidget.svelte";
   import ScratchPadWidget from "./ScratchPadWidget.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
-  import settingsIcon from "@/assets/icons/settings.svg?raw";
+  import iconSettings from "@/assets/icons/settings.svg?raw";
   import { sortable } from "@/lib/sortable";
   import { flip } from "svelte/animate";
   import { withViewTransition } from "@/lib/view-transition";
@@ -59,7 +59,7 @@
           aria-label="Widget settings"
           onclick={() => withViewTransition(() => (isEditing = true))}
           type="button">
-          {@html settingsIcon}
+          {@html iconSettings}
         </button>
       {/if}
     </div>
@@ -82,7 +82,7 @@
         {#if isEditing}
           <div class="widgets__row">
             <div class="widgets__row-label">
-              <span class="widgets__grip">{@html grip}</span>
+              <span class="widgets__grip">{@html iconGrip}</span>
               <span class="widgets__name">{WIDGET_LABELS[widget.type]}</span>
             </div>
             <button

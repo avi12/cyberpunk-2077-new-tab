@@ -1,6 +1,6 @@
 <script lang="ts">
-  import mapPin from "@/assets/icons/map-pin.svg?raw";
-  import settings from "@/assets/icons/settings.svg?raw";
+  import iconMapPin from "@/assets/icons/map-pin.svg?raw";
+  import iconSettings from "@/assets/icons/settings.svg?raw";
 
   const {
     name,
@@ -16,12 +16,12 @@
 <div class="widget-location-row">
   {#if onEdit}
     <button class="widget-location" class:widget-location--edit={isFailed} onclick={onEdit} type="button">
-      {@html isFailed ? settings : mapPin}
+      {@html isFailed ? iconSettings : iconMapPin}
       {isFailed ? "EDIT" : name}
     </button>
   {:else}
     <p class="widget-location">
-      {@html mapPin}
+      {@html iconMapPin}
       {name}
     </p>
   {/if}

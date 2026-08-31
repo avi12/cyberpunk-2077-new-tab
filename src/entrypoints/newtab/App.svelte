@@ -5,16 +5,16 @@
   import AboutModal from "@/components/modals/AboutModal.svelte";
   import Background from "@/components/Background.svelte";
   import Clock from "@/components/Clock.svelte";
-  import cog from "@/assets/icons/cog.svg?raw";
+  import iconCog from "@/assets/icons/cog.svg?raw";
   import { greeting } from "@/lib/time";
   import IdentityModal from "@/components/modals/IdentityModal.svelte";
-  import info from "@/assets/icons/info.svg?raw";
+  import iconInfo from "@/assets/icons/info.svg?raw";
   import { loadSettings, settings } from "@/lib/storage/settings.svelte";
   import Netlinks from "@/components/netlinks/Netlinks.svelte";
   import Quote from "@/components/Quote.svelte";
   import SearchBar from "@/components/SearchBar.svelte";
   import { seedBookmarksFromTopSites } from "@/lib/top-sites";
-  import settingsIcon from "@/assets/icons/settings.svg?raw";
+  import iconSettings from "@/assets/icons/settings.svg?raw";
   import SystemSettingsModal from "@/components/modals/SystemSettingsModal.svelte";
   import TerminalDisplayPanel from "@/components/TerminalDisplayPanel.svelte";
   import { tooltip } from "@/lib/tooltip";
@@ -75,7 +75,7 @@
 
   <header class="identity">
     <button class="identity__button" onclick={() => (isIdentityOpen = true)} type="button">
-      {@html settingsIcon}
+      {@html iconSettings}
       <span class="mono">IDENTITY</span>
     </button>
   </header>
@@ -125,7 +125,7 @@
       onclick={() => (isSystemOpen = true)}
       type="button"
       use:tooltip={SYSTEM_SETTINGS_LABEL}>
-      {@html cog}
+      {@html iconCog}
     </button>
   </div>
 
@@ -137,7 +137,7 @@
 
   <footer class="footer">
     <button class="footer__info" aria-label="Show information" onclick={() => (isAboutOpen = true)} type="button">
-      {@html info}
+      {@html iconInfo}
     </button>
     <p class="footer__text">
       © 2077 Arasaka Corporation. All rights reserved. Night City License #NC-77-2077

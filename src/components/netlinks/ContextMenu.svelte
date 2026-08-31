@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/defaults";
-  import copy from "@/assets/icons/copy.svg?raw";
-  import externalLink from "@/assets/icons/external-link.svg?raw";
+  import iconCopy from "@/assets/icons/copy.svg?raw";
+  import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import { GLITCH_LONG_MS, Glitch } from "@/lib/glitch.svelte";
 
   const {
@@ -58,13 +58,13 @@
 <menu style:left="{x}px" style:top="{y}px" class="context-menu" class:context-menu-glitch={glitch.active}>
   <li>
     <button class="context-menu__item" onclick={() => run(() => window.open(bookmark.url, "_blank"))} type="button">
-      {@html externalLink}
+      {@html iconExternalLink}
       New Tab
     </button>
   </li>
   <li>
     <button class="context-menu__item" onclick={() => run(() => void copyLink())} type="button">
-      {@html copy}
+      {@html iconCopy}
       Copy Link
     </button>
   </li>

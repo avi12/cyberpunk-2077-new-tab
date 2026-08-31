@@ -2,10 +2,10 @@
   import type { Bookmark } from "@/lib/storage/defaults";
   import { normalizeUrl, resolveTitle } from "@/lib/link";
   import { pickIcon } from "@/lib/icons/auto";
-  import sparkles from "@/assets/icons/sparkles.svg?raw";
-  import squareCheck from "@/assets/icons/square-check.svg?raw";
+  import iconSparkles from "@/assets/icons/sparkles.svg?raw";
+  import iconSquareCheck from "@/assets/icons/square-check.svg?raw";
   import { untrack } from "svelte";
-  import xMark from "@/assets/icons/x-mark.svg?raw";
+  import iconXMark from "@/assets/icons/x-mark.svg?raw";
 
   const {
     bookmarkToEdit,
@@ -118,21 +118,21 @@
       disabled={!url.trim() || isResolving}
       onclick={() => void readTitle()}
       type="button">
-      {@html sparkles}
+      {@html iconSparkles}
     </button>
     <button
       class="link-card__action"
       aria-label={submitLabel}
       disabled={isResolving}
       type="submit">
-      {@html squareCheck}
+      {@html iconSquareCheck}
     </button>
     <button
       class="link-card__action link-card__action--cancel"
       aria-label={CANCEL_LABEL}
       onclick={onCancel}
       type="button">
-      {@html xMark}
+      {@html iconXMark}
     </button>
   </div>
 </form>

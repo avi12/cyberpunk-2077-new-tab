@@ -8,13 +8,13 @@
   import Modal from "@/components/modals/Modal.svelte";
   import { pickCategory } from "@/lib/icons/auto";
   import NameForm from "./NameForm.svelte";
-  import plus from "@/assets/icons/plus.svg?raw";
+  import iconPlus from "@/assets/icons/plus.svg?raw";
   import { settings } from "@/lib/storage/settings.svelte";
   import type { SortableMove } from "@/lib/sortable";
-  import settingsIcon from "@/assets/icons/settings.svg?raw";
+  import iconSettings from "@/assets/icons/settings.svg?raw";
   import { sortable } from "@/lib/sortable";
   import { tooltip } from "@/lib/tooltip";
-  import triangleAlert from "@/assets/icons/triangle-alert.svg?raw";
+  import iconTriangleAlert from "@/assets/icons/triangle-alert.svg?raw";
   import { withViewTransition } from "@/lib/view-transition";
 
   const EDIT_LABEL = "Edit netlinks";
@@ -223,7 +223,7 @@
         <button class="netlinks__save" onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
       {:else}
         <button class="netlinks__icon-button" aria-label={EDIT_LABEL} onclick={() => withViewTransition(() => (isEditing = true))} type="button" use:tooltip={EDIT_LABEL}>
-          {@html settingsIcon}
+          {@html iconSettings}
         </button>
       {/if}
     </div>
@@ -313,7 +313,7 @@
           bind:value={newCategoryName} />
       {:else}
         <button class="netlinks__add-button" onclick={() => (isAddingCategory = true)} type="button">
-          {@html plus}
+          {@html iconPlus}
           ADD CATEGORY
         </button>
       {/if}
@@ -331,7 +331,7 @@
 
 <Modal isOpen={pendingDelete !== null} onClose={() => (pendingDelete = null)} variant="warning">
   <div class="warning__heading">
-    {@html triangleAlert}
+    {@html iconTriangleAlert}
     <h2 class="warning__title">Warning</h2>
   </div>
   <p class="warning__body">

@@ -5,7 +5,7 @@
   import PanelSection from "./PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
   import { withViewTransition } from "@/lib/view-transition";
-  import xMark from "@/assets/icons/x-mark.svg?raw";
+  import iconXMark from "@/assets/icons/x-mark.svg?raw";
 
   const FALLBACK_SWATCH = "#00ffff";
   const DEFAULT_CUSTOM_COLOR = "#003333";
@@ -119,7 +119,7 @@
             aria-label="Close custom color picker"
             onclick={() => (isPickerOpen = false)}
             type="button">
-            {@html xMark}
+            {@html iconXMark}
           </button>
         </div>
       </div>

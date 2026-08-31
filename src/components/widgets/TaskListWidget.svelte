@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { Task, WidgetConfig } from "@/lib/storage/defaults";
-  import clipboardList from "@/assets/icons/clipboard-list.svg?raw";
+  import iconClipboardList from "@/assets/icons/clipboard-list.svg?raw";
   import { GLITCH_LONG_MS } from "@/lib/glitch.svelte";
-  import plus from "@/assets/icons/plus.svg?raw";
-  import square from "@/assets/icons/square.svg?raw";
-  import squareCheck from "@/assets/icons/square-check.svg?raw";
+  import iconPlus from "@/assets/icons/plus.svg?raw";
+  import iconSquare from "@/assets/icons/square.svg?raw";
+  import iconSquareCheck from "@/assets/icons/square-check.svg?raw";
   import { untrack } from "svelte";
 
   const {
@@ -38,7 +38,7 @@
 <article class="widget-card glitch-border">
   <header class="widget-card__header">
     <h3 class="widget-card__label">
-      {@html clipboardList}
+      {@html iconClipboardList}
       GIGS
     </h3>
     <div class="tasks__meta">
@@ -58,7 +58,7 @@
           save(tasks);
         }}
         type="button">
-        {@html plus}
+        {@html iconPlus}
       </button>
     </div>
   </header>
@@ -90,7 +90,7 @@
               }, GLITCH_LONG_MS);
             }}
             type="button">
-            {@html task.completed && idCompleting === task.id ? squareCheck : square}
+            {@html task.completed && idCompleting === task.id ? iconSquareCheck : iconSquare}
           </button>
           <label class="visually-hidden" for="task-{task.id}">Gig</label>
           <textarea

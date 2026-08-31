@@ -1,14 +1,14 @@
 <script lang="ts">
   import type { GeoLocation, WidgetConfig } from "@/lib/storage/defaults";
   import type { WeatherReading } from "@/lib/weather";
-  import cloud from "@/assets/icons/cloud.svg?raw";
+  import iconCloud from "@/assets/icons/cloud.svg?raw";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
   import { deviceLocation } from "@/lib/geolocation";
   import { fetchWeather, formatTemperature, temperatureUnit, WEATHER_REFRESH_MS, weatherIcon } from "@/lib/weather";
   import { GLITCH_SHORT_MS, Glitch } from "@/lib/glitch.svelte";
   import LocationOverrideModal from "./LocationOverrideModal.svelte";
   import WidgetLocation from "./WidgetLocation.svelte";
-  import wind from "@/assets/icons/wind.svg?raw";
+  import iconWind from "@/assets/icons/wind.svg?raw";
 
   const {
     config,
@@ -91,14 +91,14 @@
 <article class="widget-card glitch-border">
   {#if isLoading}
     <div class="weather__row">
-      <span class="weather__icon weather__icon--isLoading pulse">{@html cloud}</span>
+      <span class="weather__icon weather__icon--isLoading pulse">{@html iconCloud}</span>
       <p class="weather__temp weather__temp--muted">--{unit}</p>
     </div>
     <WidgetLocation name={location.name} onEdit={openLocation} />
     <p class="weather__desc weather__desc--muted">Scanning...</p>
   {:else if isFailed || !reading}
     <div class="weather__row">
-      <span class="weather__icon weather__icon--error">{@html wind}</span>
+      <span class="weather__icon weather__icon--error">{@html iconWind}</span>
       <p class="weather__temp weather__temp--error">ERR</p>
     </div>
     <WidgetLocation name={location.name} isFailed onEdit={openLocation} />
