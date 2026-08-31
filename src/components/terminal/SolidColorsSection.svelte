@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { BACKGROUND_COLORS } from "@/lib/storage/defaults";
+  import { BACKGROUND_COLORS, BASE_BACKGROUND_COLOR } from "@/lib/storage/defaults";
   import { hexToHsv, hsvToHex, isHexColor } from "@/lib/color";
   import OptionGroup from "@/components/OptionGroup.svelte";
   import PanelSection from "./PanelSection.svelte";
@@ -16,6 +16,19 @@
   let darkness = $state(80);
 
   const background = $derived(settings.background.current);
+
+  /*
+   * An image is painted over the base colour rather than instead of it, so this row always has an
+   * answer - when the background is not a colour itself, the one selected is the one underneath.
+   */
+  const selectedColor = $derived.by(() => {
+    if (isHexColor(background)) {
+      return background;
+    }
+
+    return BASE_BACKGROUND_COLOR;
+  });
+
   const swatch = $derived.by(() => {
     if (isHexColor(customColor)) {
       return customColor;
@@ -61,7 +74,7 @@
     label="Solid background colours"
     onSelect={value => withViewTransition(() => (settings.background.current = value))}
     options={BACKGROUND_COLORS}
-    selected={background} />
+    selected={selectedColor} />
 
   <div class="custom-color-picker">
     <div class="picker__row">

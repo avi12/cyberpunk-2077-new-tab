@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { BackgroundMediaType } from "@/lib/storage/defaults";
+  import { BackgroundMediaType, BASE_BACKGROUND_COLOR } from "@/lib/storage/defaults";
   import { CACHED_PREFIX, loadBackgroundMedia } from "@/lib/storage/media-store";
   import { settings } from "@/lib/storage/settings.svelte";
 
-  const BASE_COLOR = "#000c14";
   const VIDEO_LOAD_TIMEOUT_MS = 15_000;
 
   let objectUrl = $state<string | null>(null);
@@ -90,7 +89,7 @@
   {/key}
 {:else}
   <div
-    style:background-color={isColor ? background : BASE_COLOR}
+    style:background-color={isColor ? background : BASE_BACKGROUND_COLOR}
     style:background-image={imageUrl ? `url(${imageUrl})` : "none"}
     style:filter="brightness({brightness / 100})"
     class="background__layer"></div>

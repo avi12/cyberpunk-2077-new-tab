@@ -249,6 +249,9 @@ export const BACKGROUND_COLORS: SelectOption<string>[] = [
   }
 ];
 
+/* What the page paints under an image or a video, so a solid colour is in effect either way. */
+export const BASE_BACKGROUND_COLOR = BACKGROUND_COLORS[0].value;
+
 export const BACKGROUND_IMAGES: SelectOption<string>[] = [
   {
     value: "https://images.pexels.com/photos/1470405/pexels-photo-1470405.jpeg?auto=compress&cs=tinysrgb&w=1600",
