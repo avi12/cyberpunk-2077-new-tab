@@ -116,7 +116,14 @@
 </div>
 
 <style>
+  /*
+   * The row is exactly the title's line box, and the control slot is pinned to it. The gear and the
+   * SAVE that replaces it are not the same height, and without this the header - and every widget
+   * under it - steps down as one becomes the other.
+   */
   .widgets__header {
+    --widgets-header-size: 1.75rem;
+
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -127,12 +134,15 @@
     color: var(--cp-accent);
     font-family: var(--cp-mono);
     font-size: 1.125rem;
-    line-height: 1.75rem;
+    line-height: var(--widgets-header-size);
     letter-spacing: 0.025em;
     text-transform: uppercase;
   }
 
   .widgets__controls {
+    display: flex;
+    align-items: center;
+    block-size: var(--widgets-header-size);
     margin-left: auto;
   }
 
