@@ -251,6 +251,16 @@ textarea {
   view-transition-name: terminal;
 }
 
+/*
+ * The panel is named separately from the button it belongs to, because an open popover is painted
+ * in the top layer rather than inside its own ancestor - which left it in the root snapshot, and so
+ * washed out through every root cross-fade the page ran underneath it. A name of its own makes it a
+ * group, and a group whose two snapshots are the same holds still.
+ */
+.terminal__popup {
+  view-transition-name: terminal-panel;
+}
+
 ::view-transition-group(greeting),
 ::view-transition-group(clock),
 ::view-transition-group(search),
@@ -272,7 +282,8 @@ textarea {
 ::view-transition-group(*.above-scan-lines),
 ::view-transition-group(widgets),
 ::view-transition-group(system-button),
-::view-transition-group(terminal) {
+::view-transition-group(terminal),
+::view-transition-group(terminal-panel) {
   z-index: 30;
 }
 
