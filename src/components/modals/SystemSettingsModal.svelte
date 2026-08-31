@@ -17,11 +17,13 @@
   const SETTINGS_ACCEPT = ".json,application/json";
 
   let isConfirmingImport = $state(false);
+  let waitingFile = $state<File | null>(null);
   let error = $state("");
 
   $effect(() => {
     if (!isOpen) {
       isConfirmingImport = false;
+      waitingFile = null;
       error = "";
     }
   });
@@ -43,6 +45,24 @@
 
     await importFrom(file);
   }
+
+  /**
+   * A file dropped before the warning has been read waits behind it rather than landing straight in
+   * storage. Dropping it once the warning is on screen is the answer to it, so that one goes in.
+   */
+  async function importWaiting() {
+    if (!waitingFile) {
+      return;
+    }
+
+    await importFrom(waitingFile);
+  }
+
+  function hold(file: File) {
+    waitingFile = file;
+    error = "";
+    isConfirmingImport = true;
+  }
 </script>
 
 <Modal {isOpen} {onClose} title="System Settings">
@@ -58,23 +78,36 @@
         accept={SETTINGS_ACCEPT}
         onchange={e => void importPicked(e)}
         type="file" />
-      <label
-        class="drop-zone"
-        for="settings-import"
-        use:dropZone={{
-          accept: SETTINGS_ACCEPT,
-          onFile: file => void importFrom(file)
-        }}>
-        {@html iconUpload}
-        <span>Drop your settings file here</span>
-        <span class="drop-zone__hint">or click to pick one</span>
-      </label>
+      {#if waitingFile}
+        <button
+          class="cyber-button cyber-button--primary system__action"
+          onclick={() => void importWaiting()}
+          type="button">
+          {@html iconUpload}
+          Import {waitingFile.name}
+        </button>
+      {:else}
+        <label
+          class="drop-zone"
+          for="settings-import"
+          use:dropZone={{
+            accept: SETTINGS_ACCEPT,
+            onFile: file => void importFrom(file)
+          }}>
+          {@html iconUpload}
+          <span>Drop your settings file here</span>
+          <span class="drop-zone__hint">or click to pick one</span>
+        </label>
+      {/if}
       {#if error}
         <p class="cyber-error">{error}</p>
       {/if}
       <button
         class="cyber-button cyber-button--ghost cyber-button--block"
-        onclick={() => (isConfirmingImport = false)}
+        onclick={() => {
+          isConfirmingImport = false;
+          waitingFile = null;
+        }}
         type="button">
         Cancel
       </button>
@@ -93,11 +126,16 @@
         Export Settings
       </button>
       <button
-        class="cyber-button cyber-button--primary system__action"
+        class="drop-zone"
         onclick={() => (isConfirmingImport = true)}
-        type="button">
+        type="button"
+        use:dropZone={{
+          accept: SETTINGS_ACCEPT,
+          onFile: hold
+        }}>
         {@html iconUpload}
-        Import Settings
+        <span>Drop a settings file here</span>
+        <span class="drop-zone__hint">or click to import one</span>
       </button>
     </div>
   {/if}
