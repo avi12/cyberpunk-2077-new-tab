@@ -391,11 +391,19 @@ textarea {
   position-try-fallbacks: flip-block;
 
   &:popover-open {
-    @starting-style {
-      opacity: 0%;
-    }
-
     opacity: 100%;
+  }
+}
+
+/*
+ * Spelt out at the top level rather than nested inside the rule above, which is the shape the
+ * documentation shows and which silently does nothing: the entry style is resolved before the
+ * tooltip is open, so a rule nested under `:popover-open` does not match, and a transition with
+ * nothing to start from does not run - which is why these had never actually faded in.
+ */
+@starting-style {
+  .cyberpunk-tooltip:popover-open {
+    opacity: 0%;
   }
 }
 

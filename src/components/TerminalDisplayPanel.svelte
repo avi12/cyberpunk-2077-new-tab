@@ -96,14 +96,58 @@
     bottom: anchor(top);
     overflow-y: auto;
     width: 16rem;
+
+    /*
+     * Closed is the base state and it is nothing at all: no height, and no block padding or border
+     * either, or the panel would sit there as a 36px bar waiting to grow. `interpolate-size` is
+     * what lets the open state stay `auto` - the panel is as tall as its own contents, up to the
+     * cap above, and neither is a number this file could name. `display` and `overlay` transition
+     * discretely so the panel is still there to watch on the way out.
+     */
+    height: 0;
     max-height: calc(100dvh - anchor-size(height) - var(--terminal-corner-inset) - var(--terminal-panel-gap));
     margin: 0;
     margin-bottom: var(--terminal-panel-gap);
     padding: 1rem;
+    padding-block: 0;
     border: 2px solid var(--cp-secondary);
+    border-block-width: 0;
     background: var(--cp-surface);
+    transition:
+      height 200ms cubic-bezier(0.2, 0, 0, 1),
+      padding-block 200ms cubic-bezier(0.2, 0, 0, 1),
+      border-block-width 200ms cubic-bezier(0.2, 0, 0, 1),
+      display 200ms allow-discrete,
+      overlay 200ms allow-discrete;
     position-anchor: --terminal-display-button;
     position-try-fallbacks: flip-block;
+    interpolate-size: allow-keywords;
+
+    &:popover-open {
+      height: auto;
+      padding-block: 1rem;
+      border-block-width: 2px;
+    }
+  }
+
+  /*
+   * Spelt out at the top level rather than nested inside the rule above, which is the shape the
+   * documentation shows and which silently does nothing: the entry style is resolved before the
+   * panel is open, so a rule nested under `:popover-open` does not match, and a transition with
+   * nothing to start from does not run. Verified in Chrome 152 against all three forms.
+   */
+  @starting-style {
+    .terminal__popup:popover-open {
+      height: 0;
+      padding-block: 0;
+      border-block-width: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .terminal__popup {
+      transition: none;
+    }
   }
 
   .terminal__title {
