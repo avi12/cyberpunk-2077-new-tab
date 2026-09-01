@@ -26,6 +26,7 @@
     "journeys:install": "node companion/src/cli.mjs install",
     "journeys:uninstall": "node companion/src/cli.mjs uninstall",
     "journeys:status": "node companion/src/cli.mjs status",
+    "journeys:package": "node companion/packaging/build.mjs",
     "postinstall": "wxt prepare"
   },
   "dependencies": {
