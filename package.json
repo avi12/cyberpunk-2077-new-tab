@@ -23,6 +23,9 @@
     "fallow": "fallow",
     "icons:generate": "node scripts/generate-icons.mjs",
     "key:generate": "node scripts/generate-key.mjs",
+    "journeys:install": "node companion/src/cli.mjs install",
+    "journeys:uninstall": "node companion/src/cli.mjs uninstall",
+    "journeys:status": "node companion/src/cli.mjs status",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

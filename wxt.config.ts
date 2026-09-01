@@ -50,6 +50,16 @@ export default defineConfig({
   },
   zip: {
     artifactTemplate: "cyberpunk-2077-new-tab-{{versionName}}-{{browser}}.zip",
-    excludeSources: [".output/**", ".wxt/**", ".fallow/**", "reference/**", "scripts/**"]
+    // The companion app is distributed on its own, and `keys/` is the signing key - neither belongs
+    // in a store upload.
+    excludeSources: [
+      ".output/**",
+      ".wxt/**",
+      ".fallow/**",
+      "reference/**",
+      "scripts/**",
+      "companion/**",
+      "keys/**"
+    ]
   }
 });
