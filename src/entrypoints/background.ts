@@ -2,10 +2,6 @@ import { onMessage } from "@/lib/messaging";
 import { defineBackground } from "#imports";
 
 export default defineBackground(() => {
-  browser.action.onClicked.addListener(() => {
-    void browser.tabs.create({});
-  });
-
   onMessage("getTopSites", async () => {
     const sites = await browser.topSites.get();
 

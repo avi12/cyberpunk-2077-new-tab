@@ -12,6 +12,9 @@ export default defineConfig({
   manifest: ({ browser }) => ({
     name: "Cyberpunk 2077 New Tab",
     description: "An immersive Cyberpunk 2077 themed homepage with dynamic and interactive elements!",
+    // No `action` key on purpose: the extension is the new tab, so a toolbar button would only
+    // duplicate the one thing Ctrl+T already does. Nothing may touch `browser.action` while this is
+    // absent - the API is not there to be called, and the read alone would kill the worker.
     // `search` runs the browser's own default engine for the "Default" search option; `topSites`
     // seeds the netlinks on first run; `geolocation` backs the "USE MY LOCATION" button in the
     // weather/world-clock location override; `storage` holds every setting; `identity` +
@@ -25,9 +28,6 @@ export default defineConfig({
       "storage",
       ...(browser === "firefox" ? [] : IDENTITY_PERMISSIONS)
     ],
-    action: {
-      default_title: "Cyberstart"
-    },
     author: {
       email: "avi6106@gmail.com"
     },
