@@ -17,7 +17,8 @@ pnpm ext:dev:hmr      # same loop, detached - survives a closed terminal, CDP on
 pnpm ext:sideload     # open the built extension without a dev server
 pnpm ext:build        # production build into .output/
 pnpm ext:zip          # store-ready zip
-pnpm icons:generate   # re-render public/icon/*.png from the terminal glyph
+pnpm icons:generate   # re-render src/public/icon/*.png from scripts/cyberpunk-logo.ico
+pnpm key:generate     # mint keys/chrome.pem once, and write the permanent extension id
 ```
 
 `ext:dev:hmr` exists because `wxt` shuts down when its stdin closes, which kills the browser the
@@ -49,6 +50,40 @@ Six on Chrome, four on Firefox, and each backs one feature:
 
 The last two are Chrome-only: Firefox exposes the `identity` namespace without
 `getProfileUserInfo`, so its manifest omits both and the button reports no account.
+
+`nativeMessaging` is **optional** and Chromium-only: it is asked for only if you turn on Copilot
+Journeys, so everyone else installs without ever seeing the prompt.
+
+### Permanent extension id
+
+The Chromium manifest carries a `key`, so the extension id is the same everywhere - unpacked, packed
+as a CRX, or installed from a store. Without it the id is a hash of whatever folder the extension was
+loaded from, and the Journeys companion has to name an origin that would then differ on every
+machine. `pnpm key:generate` mints `keys/chrome.pem` (git-ignored; it signs release CRXs and nothing
+else) and writes the public half to `companion/extension-identity.json`, which is the one place both
+the manifest and the companion read it from.
+
+### Copilot Journeys (Edge on Windows)
+
+Edge works out where your browsing is heading and writes the resulting cards into its own profile as
+plaintext JSON - a feature it then only renders in some regions. The new tab shows them anyway, in
+its own colours: title, summary, the sites the card was drawn from, and a button that opens Copilot
+with the prompt Edge generated for it.
+
+An extension cannot read a browser profile file, so the reading is done by
+[a separate app](companion/README.md) that answers over native messaging - a paid Microsoft Store
+add-on. The extension is complete without it: the section only exists on Edge for Windows, it can be
+switched off like any other display element, and with the app absent it is one line saying so - one
+that fills itself in a few seconds after the app arrives, with nothing reloaded or restarted.
+
+The native call is made by the background script rather than the new tab, because `nativeMessaging`
+is optional: a page that was already open when the permission is granted never receives the matching
+API binding, while the background worker is restarted whenever permissions change.
+
+Reading the cards afresh means snapshotting a database of tens of megabytes and takes about a quarter
+of a second, which is long enough to watch, so the answer is cached for an hour. The section is on the
+page as it opens rather than dropping in afterwards: placeholder cards hold exactly the row the real
+ones will occupy, so nothing below the section moves when they arrive, and there is no transition.
 
 ### Browser account name
 
@@ -82,9 +117,14 @@ src/
     sortable.ts            one pointer-driven reorder action, shared by all three drag lists
     ...                    time, quotes, weather, geolocation, colour, search, top-sites, glitch
   components/
-    netlinks/ widgets/ terminal/ modals/
+    netlinks/ widgets/ terminal/ modals/ journeys/
+  public/
+    icon/                  the toolbar/store PNGs and the terminal glyph the tab favicon uses
 scripts/
-  generate-icons.mjs       renders public/icon/*.png from the terminal glyph
+  cyberpunk-logo.ico       the brand mark, the one source every icon size is scaled from
+  generate-icons.mjs       renders src/public/icon/*.png from cyberpunk-logo.ico
+  generate-key.mjs         mints the keypair behind the permanent extension id
+companion/                 the paid Store app that reads Edge's journeys (its own README)
 ```
 
 ### How it differs from the original
