@@ -307,7 +307,7 @@ export const SCAN_LINES_MODES: SelectOption<ScanLinesMode>[] = [
 export const DEFAULT_USER_NAME = "V";
 export const DEFAULT_COLOR_THEME = ColorTheme.cyberpunk2077;
 export const DEFAULT_SCAN_LINES_MODE = ScanLinesMode.default;
-export const DEFAULT_TAB_TITLE = "Cyberstart 2077";
+export const DEFAULT_TAB_TITLE = "Cyberpunk 2077";
 export const DEFAULT_TAB_FAVICON = "Terminal";
 export const DEFAULT_BACKGROUND_BRIGHTNESS = 100;
 

@@ -44,7 +44,7 @@
         height: window.innerHeight
       });
       const anchor = document.createElement("a");
-      anchor.download = `cyberstart-${Date.now()}.png`;
+      anchor.download = `Cyberpunk-${Date.now()}.png`;
       anchor.href = dataUrl;
       document.body.append(anchor);
       anchor.click();

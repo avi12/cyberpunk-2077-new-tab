@@ -10,7 +10,7 @@ export default defineConfig({
   publicDir: "src/public",
   modules: ["@wxt-dev/module-svelte"],
   manifest: ({ browser }) => ({
-    name: "Cyberpunk 2077 Themed Homepage",
+    name: "Cyberpunk 2077 New Tab",
     description: "An immersive Cyberpunk 2077 themed homepage with dynamic and interactive elements!",
     // `search` runs the browser's own default engine for the "Default" search option; `topSites`
     // seeds the netlinks on first run; `geolocation` backs the "USE MY LOCATION" button in the

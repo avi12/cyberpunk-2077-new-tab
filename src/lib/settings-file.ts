@@ -10,7 +10,7 @@ import { z } from "./zod";
  * both without a second edit - the drift the original's two hand-written 21-key lists invited.
  */
 
-export const SETTINGS_FILE_NAME = "cyberstart-settings.json";
+export const SETTINGS_FILE_NAME = "Cyberpunk-settings.json";
 
 function exportableBackground(value: string): string {
   return value.startsWith(CACHED_PREFIX) ? DEFAULT_BACKGROUND : value;
