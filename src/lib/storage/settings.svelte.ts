@@ -8,7 +8,7 @@ import type {
   SearchEngine,
   Widget
 } from "./defaults";
-import { DEFAULT_WIDGET_ORDER, DEFAULT_WIDGETS } from "./defaults";
+import { DEFAULT_DISPLAY_PREFERENCES, DEFAULT_WIDGET_ORDER, DEFAULT_WIDGETS } from "./defaults";
 import {
   activeSearchEngineItem,
   backgroundBrightnessItem,
@@ -71,6 +71,17 @@ function withShippedWidgets(stored: Widget[]): Widget[] {
   return [...shipped, ...DEFAULT_WIDGETS.filter(({ id }) => !shipped.some(widget => widget.id === id))];
 }
 
+/**
+ * An element added to the page after the reader last saved has no answer stored for it, and an
+ * absent answer is not "hidden" - it is the default the element ships with.
+ */
+function withShippedElements(stored: DisplayPreferences): DisplayPreferences {
+  return {
+    ...DEFAULT_DISPLAY_PREFERENCES,
+    ...stored
+  };
+}
+
 function withShippedWidgetIds(stored: string[]): string[] {
   const shipped = stored.filter(id => DEFAULT_WIDGET_ORDER.includes(id));
 
@@ -87,7 +98,7 @@ export const settings = {
   weatherLocation: new Setting<GeoLocation>(weatherLocationItem),
   temperatureUnit: new Setting<boolean>(temperatureUnitItem),
   colorTheme: new Setting<ColorTheme>(colorThemeItem),
-  displayPreferences: new Setting<DisplayPreferences>(displayPreferencesItem),
+  displayPreferences: new Setting<DisplayPreferences>(displayPreferencesItem, withShippedElements),
   background: new Setting<string>(backgroundItem),
   backgroundBrightness: new Setting<number>(backgroundBrightnessItem),
   backgroundMediaType: new Setting<BackgroundMediaType>(backgroundMediaTypeItem),
