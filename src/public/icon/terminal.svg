@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The new tab's default favicon, and the shape the toolbar icon is rasterised from. It renders in
+  the browser's tab strip, which follows the OS theme rather than the page's, so the stroke carries
+  both variants: at full strength the cyan reads as near-white against light chrome. Keep the pair
+  in step with `FAVICON_STROKE` in `src/lib/tab-identity.ts`, which strokes every other favicon.
+-->
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M4 17L10 11L4 5" stroke="#00ffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M12 19H20" stroke="#00ffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <style>
+    path {
+      stroke: #0b7a8e;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      path {
+        stroke: #22d3ee;
+      }
+    }
+  </style>
+  <path d="M4 17L10 11L4 5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 19H20" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
