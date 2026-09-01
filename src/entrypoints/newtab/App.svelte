@@ -42,6 +42,12 @@
   $effect(() => {
     void (async () => {
       await loadSettings();
+      /*
+       * Plainly, and not inside a view transition: the settings land in the same few milliseconds
+       * the companion answers in, and a browser runs one transition at a time - a second one
+       * starting skips the first. Dressing this up would cost the journeys section the animation it
+       * needs, for a quote that is only ever moving at all if the reader has turned quotes off.
+       */
       isReady = true;
       const seeded = await seedBookmarksFromTopSites();
       if (seeded) {
@@ -111,8 +117,8 @@
       <SearchBar glitching={glitchingElement === "showSearchBar"} />
     {/if}
 
-    {#if preferences.showQuotes && isReady}
-      <Quote glitching={glitchingElement === "showQuotes"} />
+    {#if preferences.showQuotes}
+      <Quote glitching={glitchingElement === "showQuotes"} isPending={!isReady} />
     {/if}
 
     {#if HAS_JOURNEYS && preferences.showJourneys}
