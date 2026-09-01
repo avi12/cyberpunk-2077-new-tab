@@ -6,6 +6,7 @@
   import { MAX_JOURNEYS } from "@/lib/journeys/model";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import iconMap from "@/assets/icons/map.svg?raw";
+  import { rememberedRow, rememberRow } from "@/lib/journeys/row";
   import { withViewTransition } from "@/lib/view-transition";
 
   const { glitching = false }: { glitching?: boolean } = $props();
@@ -72,6 +73,34 @@
     });
   }
 
+  /**
+   * The row as it actually came out, kept for the next tab. The grid stretches every card to the
+   * tallest one, so that is the whole of what a placeholder needs to stand in for it.
+   */
+  function measureRow(elList: HTMLElement) {
+    if (journeys.length === 0) {
+      return;
+    }
+
+    const height = Math.round(Math.max(...[...elList.children].map(elCard => elCard.getBoundingClientRect().height)));
+    if (height > 0) {
+      rememberRow({
+        width: elList.clientWidth,
+        height
+      });
+    }
+  }
+
+  /** Applied before the first paint, so the reserved row is the right one rather than a corrected one. */
+  function reserveRow(elList: HTMLElement) {
+    const remembered = rememberedRow();
+    if (remembered?.width !== elList.clientWidth) {
+      return;
+    }
+
+    elList.style.setProperty("--cp-journey-card-height", `${remembered.height}px`);
+  }
+
   async function connect() {
     if (await requestBridgePermission()) {
       await load();
@@ -124,7 +153,7 @@
         </a>
       </div>
     {:else if companionState === JourneysState.connected}
-      <ul class="journeys__list">
+      <ul class="journeys__list" {@attach measureRow}>
         {#each journeys as journey (journey.id)}
           <li><JourneyCard {journey} /></li>
         {/each}
@@ -141,7 +170,7 @@
         <p class="journeys__note">{COMPANION_NAME} linking - give it a few seconds</p>
       </div>
     {:else if companionState === JourneysState.loading}
-      <ul class="journeys__list" aria-hidden="true">
+      <ul class="journeys__list" {@attach reserveRow} aria-hidden="true">
         {#each PLACEHOLDERS as placeholder (placeholder)}
           <li>
             <div class="journeys__placeholder">
@@ -230,7 +259,9 @@
     display: flex;
     flex-direction: column;
     gap: 0.625rem;
-    height: 100%;
+
+    /* The row a real answer came out at, if one has been seen here at this width; its own otherwise. */
+    height: var(--cp-journey-card-height, 100%);
     padding: 0.875rem;
     border: 1px solid var(--cp-outline);
     background: var(--cp-surface);
