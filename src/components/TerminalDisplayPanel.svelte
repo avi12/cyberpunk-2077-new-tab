@@ -9,6 +9,7 @@
   import { settings } from "@/lib/storage/settings.svelte";
   import { withViewTransition } from "@/lib/view-transition";
   import SolidColorsSection from "./terminal/SolidColorsSection.svelte";
+  import SoundSection from "./terminal/SoundSection.svelte";
   import TabIdentitySection from "./terminal/TabIdentitySection.svelte";
 
   const { onElementGlitch }: { onElementGlitch: (key: keyof DisplayPreferences | null) => void } = $props();
@@ -29,6 +30,8 @@
     <h2 class="terminal__title">Terminal Display</h2>
 
     <DisplayElementsSection {onElementGlitch} />
+
+    <SoundSection />
 
     <PanelSection title="Scan Lines">
       <OptionGroup

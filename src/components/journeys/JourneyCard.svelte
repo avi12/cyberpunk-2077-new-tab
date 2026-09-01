@@ -2,6 +2,7 @@
   import iconChevronRight from "@/assets/icons/chevron-right.svg?raw";
   import { COPILOT_URL, copilotPrompt } from "@/lib/journeys/model";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
+  import { blipOnHover } from "@/lib/sound";
   import { hostOf } from "@/lib/link";
   import type { Journey } from "@/lib/journeys/model";
   import { tooltip } from "@/lib/tooltip";
@@ -35,7 +36,7 @@
   });
 </script>
 
-<article class="journey glitch-border">
+<article class="journey glitch-border" use:blipOnHover>
   <h3 class="journey__title hover-glitch" use:tooltip={journey.contextReason}>{journey.title}</h3>
   <p class="journey__summary">{journey.summary}</p>
 

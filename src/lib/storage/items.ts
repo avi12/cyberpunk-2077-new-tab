@@ -15,6 +15,7 @@ import {
   DEFAULT_CATEGORY_ORDER,
   DEFAULT_COLOR_THEME,
   DEFAULT_DISPLAY_PREFERENCES,
+  DEFAULT_PLAY_SOUNDS,
   DEFAULT_SCAN_LINES_MODE,
   DEFAULT_SEARCH_ENGINES,
   DEFAULT_TAB_FAVICON,
@@ -69,6 +70,8 @@ export const scanLinesModeItem = storage.defineItem<ScanLinesMode>("local:scanLi
 export const tabTitleItem = storage.defineItem<string>("local:tabTitle", { fallback: DEFAULT_TAB_TITLE });
 
 export const tabFaviconItem = storage.defineItem<string>("local:tabFavicon", { fallback: DEFAULT_TAB_FAVICON });
+
+export const playSoundsItem = storage.defineItem<boolean>("local:playSounds", { fallback: DEFAULT_PLAY_SOUNDS });
 
 export const bookmarksSeededItem = storage.defineItem<boolean>("local:bookmarksSeeded", { fallback: false });
 

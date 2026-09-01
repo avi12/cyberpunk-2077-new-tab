@@ -21,6 +21,7 @@ import {
   colorThemeItem,
   customCategoriesItem,
   displayPreferencesItem,
+  playSoundsItem,
   scanLinesModeItem,
   searchEnginesItem,
   tabFaviconItem,
@@ -108,7 +109,8 @@ export const settings = {
   widgetOrder: new Setting<string[]>(widgetOrderItem, withShippedWidgetIds),
   scanLinesMode: new Setting<ScanLinesMode>(scanLinesModeItem),
   tabTitle: new Setting<string>(tabTitleItem),
-  tabFavicon: new Setting<string>(tabFaviconItem)
+  tabFavicon: new Setting<string>(tabFaviconItem),
+  playSounds: new Setting<boolean>(playSoundsItem)
 };
 
 export async function loadSettings(): Promise<void> {

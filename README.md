@@ -86,6 +86,15 @@ page as it opens rather than dropping in afterwards: placeholder cards hold the 
 will occupy, so nothing below the section moves when they arrive - and where a card needs a line
 more than the placeholder allowed for, the row grows into it rather than dropping the page.
 
+### Hover sounds
+
+A card answers the cursor with the short metallic tick Night City's menus use. Nothing is loaded for
+it: the blip is two oscillators built on the spot, one modulating the other at an interval no
+instrument would pick, so it comes out mechanical rather than musical - and a little different every
+time, which is what stops a row of cards from sounding like a machine gun. The terminal panel turns
+it off, and the first blip waits for the page's first click, because a page nobody has touched is not
+allowed to make a sound.
+
 ### Browser account name
 
 No browser API hands over a name:
@@ -116,6 +125,7 @@ src/
     icons/                 lucide path data (generated), the <svg> wrapper, the 40-icon picker list
     storage/               defaults -> wxt/storage items -> a rune-backed settings store
     sortable.ts            one pointer-driven reorder action, shared by all three drag lists
+    sound.ts               the hover blip, synthesised rather than loaded
     ...                    time, quotes, weather, geolocation, colour, search, top-sites, glitch
   components/
     netlinks/ widgets/ terminal/ modals/ journeys/
