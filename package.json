@@ -10,11 +10,11 @@
   },
   "scripts": {
     "ext:dev": "wxt",
-    "ext:dev:firefox": "wxt -b firefox",
+    "ext:dev:firefox": "wxt -b firefox --mv3",
     "ext:build": "wxt build",
-    "ext:build:firefox": "wxt build -b firefox",
+    "ext:build:firefox": "wxt build -b firefox --mv3",
     "ext:zip": "wxt zip",
-    "ext:zip:firefox": "wxt zip -b firefox",
+    "ext:zip:firefox": "wxt zip -b firefox --mv3",
     "ext:dev:hmr": "node scripts/dev.mjs",
     "ext:sideload": "node scripts/sideload.mjs",
     "lint": "oxlint --type-aware --fix -c .oxlintrc.fix.json && eslint --fix && oxlint --type-aware",
@@ -25,13 +25,13 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
-    "@webext-core/messaging": "^3.0.2",
+    "@webext-core/messaging": "^4.0.0",
     "html-to-image": "^1.11.13",
-    "zod": "^4.5.2"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^5.10.0",
-    "@sveltejs/vite-plugin-svelte": "7.1.2",
+    "@sveltejs/vite-plugin-svelte": "7.3.0",
     "@tsconfig/svelte": "^5.0.8",
     "@types/chrome": "^0.2.2",
     "@types/node": "^26.1.0",
@@ -39,23 +39,24 @@
     "eslint": "^10.6.0",
     "eslint-plugin-import-newlines": "^2.0.0",
     "eslint-plugin-perfectionist": "^5.9.1",
-    "eslint-plugin-svelte": "3.20.0",
+    "eslint-plugin-svelte": "3.23.0",
     "eslint-plugin-unused-imports": "^4.4.1",
     "fallow": "^3.20.0",
     "globals": "^17.7.0",
     "oxlint": "^1.72.0",
-    "oxlint-tsgolint": "^0.24.0",
+    "oxlint-tsgolint": "^7.0.2001",
     "postcss": "^8.5.16",
-    "postcss-html": "^1.8.1",
+    "postcss-html": "^2.0.0",
     "stylelint": "^17.14.0",
     "stylelint-config-ccb": "^3.32.0",
-    "svelte": "5.56.4",
+    "svelte": "5.57.0",
     "svelte-check": "^4.7.3",
-    "svelte-eslint-parser": "1.8.0",
-    "typescript": "^5.9.2",
+    "svelte-eslint-parser": "1.8.1",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.62.1",
-    "web-ext-run": "^0.2.4",
-    "wxt": "^0.20.27"
+    "vite": "^8.2.2",
+    "web-ext": "^10.6.0",
+    "wxt": "^0.21.4"
   },
   "packageManager": "pnpm@11.1.2"
 }

@@ -6,6 +6,8 @@ const IDENTITY_PERMISSIONS = ["identity", "identity.email"];
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   srcDir: "src",
+  // `srcDir` does not carry `publicDir` with it - that one still resolves against the project root.
+  publicDir: "src/public",
   modules: ["@wxt-dev/module-svelte"],
   manifest: ({ browser }) => ({
     name: "Cyberpunk 2077 Themed Homepage",
@@ -37,7 +39,7 @@ export default defineConfig({
     chromiumArgs: ["--remote-debugging-port=9223"]
   },
   zip: {
-    artifactTemplate: "cyberpunk-2077-new-tab-{{version}}-{{browser}}.zip",
+    artifactTemplate: "cyberpunk-2077-new-tab-{{versionName}}-{{browser}}.zip",
     excludeSources: [".output/**", ".wxt/**", ".fallow/**", "reference/**", "scripts/**"]
   }
 });

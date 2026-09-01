@@ -6,6 +6,8 @@ node_modules/
 .dev-logs/
 user-profiles/
 keys/
+# Local browser binary paths for `wxt -b edge`
+web-ext.config.ts
 stats.html
 *.log
 .env

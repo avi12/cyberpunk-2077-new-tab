@@ -4,14 +4,14 @@
  *
  * `pnpm ext:dev` is the normal loop, but it owns the terminal and closes its browser when that
  * terminal goes away - no good when the browser has to outlive the command, or be driven over the
- * DevTools protocol. This runs the same launcher WXT uses (`web-ext-run`) against `.output/`, with
+ * DevTools protocol. This runs the same launcher WXT uses (`web-ext`) against `.output/`, with
  * no reload watcher. Ctrl+C closes the browser.
  *
  * Usage: `pnpm ext:sideload [--port 9223] [--firefox]`
  */
 
 import process from "node:process";
-import webExt from "web-ext-run";
+import webExt from "web-ext";
 
 const DEFAULT_PORT = 9223;
 
@@ -25,7 +25,7 @@ function flagValue(name, fallback) {
 
 const firefox = args.includes("--firefox");
 const port = Number(flagValue("--port", DEFAULT_PORT));
-const sourceDir = firefox ? ".output/firefox-mv2" : ".output/chrome-mv3";
+const sourceDir = firefox ? ".output/firefox-mv3" : ".output/chrome-mv3";
 
 const runner = await webExt.cmd.run(
   {
