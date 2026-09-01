@@ -6,6 +6,7 @@
   import { MAX_JOURNEYS } from "@/lib/journeys/model";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import iconMap from "@/assets/icons/map.svg?raw";
+  import { withViewTransition } from "@/lib/view-transition";
 
   const { glitching = false }: { glitching?: boolean } = $props();
 
@@ -13,8 +14,9 @@
 
   /**
    * One placeholder per card the answer can hold, so the row the cards will occupy is already the
-   * right size and shape while the companion is being read. There is no transition into it: the
-   * cards take the place of the placeholders where they already stood.
+   * right size and shape while the companion is being read. The cards take the place of the
+   * placeholders where they already stood - and a row that turns out taller or shorter than the one
+   * standing here grows or shrinks into it, rather than snapping the page down or up.
    */
   const PLACEHOLDERS = Array.from({ length: MAX_JOURNEYS }, (_, i) => i);
 
@@ -64,8 +66,10 @@
       return;
     }
 
-    companionState = result.state;
-    journeys = result.journeys;
+    await withViewTransition(() => {
+      companionState = result.state;
+      journeys = result.journeys;
+    });
   }
 
   async function connect() {
@@ -168,8 +172,8 @@
     /*
      * How much of a card goes to its summary, and so how tall a card is. It is fixed, and read by
      * both the card and the placeholder that stands in its place while the companion is being read,
-     * because a row that resized as the text landed would move the page - the one thing this section
-     * must not do. Three lines at the summary's own leading.
+     * so the row is the size it will be before there is anything in it. Three lines at the summary's
+     * own leading.
      */
     --cp-journey-summary-height: 3.9375rem;
 
@@ -219,7 +223,8 @@
   /*
    * The placeholder card mirrors JourneyCard's box and its type metrics line for line, so the row
    * standing here while the companion is read is the height the real cards will need. They take its
-   * place without anything below the section moving, and without a transition to watch.
+   * place without anything below the section moving - and where a card needs a line more or less
+   * than the placeholder allowed, the difference is animated rather than dropped on the page.
    */
   .journeys__placeholder {
     display: flex;

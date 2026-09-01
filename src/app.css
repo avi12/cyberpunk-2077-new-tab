@@ -265,6 +265,7 @@ textarea {
 ::view-transition-group(clock),
 ::view-transition-group(search),
 ::view-transition-group(quote),
+::view-transition-group(journeys),
 ::view-transition-group(netlinks),
 ::view-transition-group(match-element) {
   z-index: 10;
