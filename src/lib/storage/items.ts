@@ -71,3 +71,19 @@ export const tabTitleItem = storage.defineItem<string>("local:tabTitle", { fallb
 export const tabFaviconItem = storage.defineItem<string>("local:tabFavicon", { fallback: DEFAULT_TAB_FAVICON });
 
 export const bookmarksSeededItem = storage.defineItem<boolean>("local:bookmarksSeeded", { fallback: false });
+
+/**
+ * Not a setting: the last answer Edge's journeys bridge gave. Reading it afresh means snapshotting a
+ * database that runs to tens of megabytes and takes a quarter of a second, which is long enough to
+ * see, so the answer outlives the browser session - otherwise the first new tab after every restart
+ * is the slow one. It holds the host's words verbatim; the cards are rebuilt and revalidated on
+ * every read, so an expired one never comes back from here.
+ */
+type JourneysSnapshot = {
+  fetchedAtMs: number;
+  raw: unknown[];
+};
+
+export const journeysSnapshotItem = storage.defineItem<JourneysSnapshot | null>("local:journeysSnapshot", {
+  fallback: null
+});

@@ -8,7 +8,9 @@
   import iconCog from "@/assets/icons/cog.svg?raw";
   import { greeting } from "@/lib/time";
   import IdentityModal from "@/components/modals/IdentityModal.svelte";
+  import { HAS_JOURNEYS } from "@/lib/journeys/platform";
   import iconInfo from "@/assets/icons/info.svg?raw";
+  import Journeys from "@/components/journeys/Journeys.svelte";
   import { loadSettings, settings } from "@/lib/storage/settings.svelte";
   import Netlinks from "@/components/netlinks/Netlinks.svelte";
   import Quote from "@/components/Quote.svelte";
@@ -111,6 +113,10 @@
 
     {#if preferences.showQuotes && isReady}
       <Quote glitching={glitchingElement === "showQuotes"} />
+    {/if}
+
+    {#if HAS_JOURNEYS && preferences.showJourneys}
+      <Journeys glitching={glitchingElement === "showJourneys"} />
     {/if}
 
     {#if preferences.showNetlinks}

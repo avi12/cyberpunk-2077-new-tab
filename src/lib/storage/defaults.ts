@@ -55,6 +55,7 @@ export type DisplayPreferences = {
   showDate: boolean;
   showSearchBar: boolean;
   showQuotes: boolean;
+  showJourneys: boolean;
   showNetlinks: boolean;
   showWidgets: boolean;
 };
@@ -226,6 +227,7 @@ export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
   showDate: true,
   showSearchBar: true,
   showQuotes: true,
+  showJourneys: true,
   showNetlinks: true,
   showWidgets: true
 };

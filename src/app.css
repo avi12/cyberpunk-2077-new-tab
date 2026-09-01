@@ -318,6 +318,10 @@ textarea {
   view-transition-name: quote;
 }
 
+.journeys {
+  view-transition-name: journeys;
+}
+
 .netlinks {
   view-transition-name: netlinks;
 }

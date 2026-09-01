@@ -1,3 +1,4 @@
+import { readNativeJourneys } from "@/lib/journeys/native";
 import { onMessage } from "@/lib/messaging";
 import { defineBackground } from "#imports";
 
@@ -10,6 +11,8 @@ export default defineBackground(() => {
       url: site.url
     }));
   });
+
+  onMessage("readJourneys", async () => readNativeJourneys());
 
   onMessage("searchWithDefaultEngine", ({ data }) => {
     void browser.search.query({

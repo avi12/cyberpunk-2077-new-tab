@@ -3,11 +3,14 @@
   import iconEye from "@/assets/icons/eye.svg?raw";
   import iconEyeOff from "@/assets/icons/eye-off.svg?raw";
   import { GLITCH_SHORT_MS } from "@/lib/glitch.svelte";
+  import { HAS_JOURNEYS } from "@/lib/journeys/platform";
   import PanelSection from "./PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
   import { withViewTransition } from "@/lib/view-transition";
 
   const { onElementGlitch }: { onElementGlitch: (key: keyof DisplayPreferences | null) => void } = $props();
+
+  const JOURNEYS_KEY: keyof DisplayPreferences = "showJourneys";
 
   const DISPLAY_ELEMENTS: { key: keyof DisplayPreferences; label: string }[] = [
     {
@@ -31,6 +34,10 @@
       label: "Quotes"
     },
     {
+      key: "showJourneys",
+      label: "Journeys"
+    },
+    {
       key: "showNetlinks",
       label: "Netlinks"
     },
@@ -39,6 +46,9 @@
       label: "Widgets"
     }
   ];
+
+  /** Journeys are Edge's, so the switch that hides them only exists in Edge. */
+  const elements = DISPLAY_ELEMENTS.filter(({ key }) => HAS_JOURNEYS || key !== JOURNEYS_KEY);
 
   function commit({ key, isVisible }: {
     key: keyof DisplayPreferences;
@@ -92,7 +102,7 @@
 
 <PanelSection title="Display Elements">
   <ul class="elements">
-    {#each DISPLAY_ELEMENTS as element (element.key)}
+    {#each elements as element (element.key)}
       <li>
         <button
           class="option-button elements__toggle"

@@ -5,6 +5,14 @@ import { defineConfig } from "wxt";
 const IDENTITY_PERMISSIONS = ["identity", "identity.email"];
 
 /**
+ * Copilot Journeys are read through the companion app over native messaging, and only Edge on
+ * Windows or macOS has any to read. Optional rather than granted up front, so the prompt only ever
+ * appears for the people the feature exists for - everyone else installs without it, and Firefox
+ * never sees it at all.
+ */
+const JOURNEYS_PERMISSIONS = ["nativeMessaging"];
+
+/**
  * Declaring the public key pins the Chromium extension id - the same one unpacked, packed as a CRX,
  * or installed from a store. The companion app has to name an origin it will talk to, and without
  * this that origin would be a hash of whatever folder the extension was loaded from. The private
@@ -35,9 +43,13 @@ export default defineConfig({
       "topSites",
       "geolocation",
       "storage",
+      "unlimitedStorage",
       ...(browser === "firefox" ? [] : IDENTITY_PERMISSIONS)
     ],
-    ...(browser === "firefox" ? {} : { key: publicKey }),
+    ...(browser === "firefox" ? {} : {
+      key: publicKey,
+      optional_permissions: JOURNEYS_PERMISSIONS
+    }),
     author: {
       email: "avi6106@gmail.com"
     },
