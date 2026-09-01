@@ -82,8 +82,9 @@ API binding, while the background worker is restarted whenever permissions chang
 
 Reading the cards afresh means snapshotting a database of tens of megabytes and takes about a quarter
 of a second, which is long enough to watch, so the answer is cached for an hour. The section is on the
-page as it opens rather than dropping in afterwards: placeholder cards hold exactly the row the real
-ones will occupy, so nothing below the section moves when they arrive, and there is no transition.
+page as it opens rather than dropping in afterwards: placeholder cards hold the row the real ones
+will occupy, so nothing below the section moves when they arrive - and where a card needs a line
+more than the placeholder allowed for, the row grows into it rather than dropping the page.
 
 ### Browser account name
 
