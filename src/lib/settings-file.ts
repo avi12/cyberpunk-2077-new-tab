@@ -18,8 +18,8 @@ function exportableBackground(value: string): string {
 
 export function exportSettings(): string {
   const snapshot: Record<string, unknown> = {};
-  for (const key in allSettings) {
-    snapshot[key] = allSettings[key].current;
+  for (const [key, setting] of Object.entries(allSettings)) {
+    snapshot[key] = setting.current;
   }
 
   snapshot.background = exportableBackground(settings.background.current);
@@ -38,10 +38,10 @@ export function importSettings(json: string): void {
     throw new Error("Invalid settings file");
   }
 
-  for (const key in allSettings) {
+  for (const [key, setting] of Object.entries(allSettings)) {
     const value = parsed.data[key];
     if (value !== undefined && value !== null) {
-      allSettings[key].current = value;
+      setting.current = value;
     }
   }
 }

@@ -21,8 +21,9 @@
     isFollowingDevice: boolean;
   } = $props();
 
-  const LATITUDE_RANGE = [-90, 90];
-  const LONGITUDE_RANGE = [-180, 180];
+  const LATITUDE_RANGE = [-90, 90] as const;
+  const LONGITUDE_RANGE = [-180, 180] as const;
+  const COORDINATES_ERROR = "Enter valid coordinates";
   const DECIMALS = 4;
 
   function coordinateSchema({ min, max, label }: {
@@ -87,7 +88,7 @@
       longitude: draft.longitude
     });
     if (!parsed.success) {
-      error = parsed.error.issues[0].message;
+      error = parsed.error.issues[0]?.message ?? COORDINATES_ERROR;
 
       return;
     }

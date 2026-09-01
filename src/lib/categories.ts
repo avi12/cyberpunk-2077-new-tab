@@ -30,9 +30,8 @@ export function renameCategory({ from, to }: {
     settings.customCategories.current = settings.customCategories.current.map(name => (name === from ? to : name));
   }
 
-  const collapsed = settings.collapsedCategories.current;
-  if (from in collapsed) {
-    const { [from]: isCollapsed, ...rest } = collapsed;
+  const { [from]: isCollapsed, ...rest } = settings.collapsedCategories.current;
+  if (isCollapsed !== undefined) {
     settings.collapsedCategories.current = {
       ...rest,
       [to]: isCollapsed

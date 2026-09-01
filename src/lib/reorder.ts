@@ -15,6 +15,10 @@ export function reorderedIds({ ids, fromIndex, toIndex }: {
   toIndex: number;
 }): string[] {
   const draggedId = ids[fromIndex];
+  if (draggedId === undefined) {
+    return ids;
+  }
+
   const rest = ids.filter((_, index) => index !== fromIndex);
 
   return [...rest.slice(0, toIndex), draggedId, ...rest.slice(toIndex)];

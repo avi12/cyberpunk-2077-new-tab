@@ -198,9 +198,10 @@ function cellAfter(board: Board): Position | null {
 }
 
 /** The nearest element holding every board, so a lifted item is raised only as far as it needs. */
-function commonAncestor(nodes: HTMLElement[]): HTMLElement {
-  let ancestor = nodes[0];
+function commonAncestor(nodes: HTMLElement[]): HTMLElement | null {
+  let ancestor: HTMLElement | null = null;
   for (const node of nodes) {
+    ancestor ??= node;
     while (!ancestor.contains(node) && ancestor.parentElement) {
       ancestor = ancestor.parentElement;
     }
@@ -268,10 +269,11 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
   function snapshot() {
     const group = GROUPS.get(current.group ?? "") ?? new Set<Member>();
     const peers = [...group].filter(peer => peer.node !== node && !peer.read().disabled);
-    boards = [measure(member), ...peers.map(measure)];
-    source = boards[0];
-    target = source;
-    fromIndex = source.ids.indexOf(draggedId);
+    const own = measure(member);
+    boards = [own, ...peers.map(measure)];
+    source = own;
+    target = own;
+    fromIndex = own.ids.indexOf(draggedId);
     toIndex = fromIndex;
   }
 
@@ -343,11 +345,13 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     const others = source.ids.filter(id => id !== draggedId);
     const order = [...others.slice(0, before), draggedId, ...others.slice(before)];
     for (const [position, id] of order.entries()) {
-      if (id === draggedId) {
+      const slot = source.slots[source.ids.indexOf(id)];
+      const landing = source.slots[position];
+      if (id === draggedId || !slot || !landing) {
         continue;
       }
 
-      slideTo(source.slots[source.ids.indexOf(id)], source.slots[position]);
+      slideTo(slot, landing);
     }
 
     // Nothing has left this list, so its tile keeps the cell it already has.
@@ -363,11 +367,12 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     }
 
     for (const [index, slot] of source.slots.entries()) {
-      if (index <= fromIndex) {
+      const landing = source.slots[index - 1];
+      if (index <= fromIndex || !landing) {
         continue;
       }
 
-      slideTo(slot, source.slots[index - 1]);
+      slideTo(slot, landing);
     }
 
     const last = source.slots.at(-1);
@@ -454,11 +459,11 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
   }
 
   function follow(e: PointerEvent) {
-    if (!source || !target) {
+    const dragged = source?.slots[fromIndex];
+    if (!source || !target || !dragged) {
       return;
     }
 
-    const dragged = source.slots[fromIndex];
     const left = e.clientX - grabX;
     const top = e.clientY - grabY;
     dragged.element.style.translate = `${left - dragged.left}px ${top - dragged.top}px`;
@@ -561,14 +566,14 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     }
 
     if (isCancelled || !target) {
-      return source.slots[fromIndex];
+      return source.slots[fromIndex] ?? null;
     }
 
     if (target === source) {
-      return source.slots[toIndex];
+      return source.slots[toIndex] ?? null;
     }
 
-    return target.slots[toIndex] ?? target.spare ?? source.slots[fromIndex];
+    return target.slots[toIndex] ?? target.spare ?? source.slots[fromIndex] ?? null;
   }
 
   /** Spring from the release point into the open slot, then commit once it has settled. */

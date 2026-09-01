@@ -119,7 +119,7 @@ export const DEFAULT_BOOKMARKS: Bookmark[] = [];
  * query-string redirects. Two names carry trailing non-breaking spaces because the original used
  * them to pad the dropdown to a consistent width.
  */
-export const DEFAULT_SEARCH_ENGINES: SearchEngine[] = [
+export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
   {
     id: SearchEngineId.browserDefault,
     name: "Default",
@@ -230,9 +230,12 @@ export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
   showWidgets: true
 };
 
+/* What the page paints under an image or a video, so a solid colour is in effect either way. */
+export const BASE_BACKGROUND_COLOR = "#000c14";
+
 export const BACKGROUND_COLORS: SelectOption<string>[] = [
   {
-    value: "#000c14",
+    value: BASE_BACKGROUND_COLOR,
     label: "Dark"
   },
   {
@@ -249,8 +252,8 @@ export const BACKGROUND_COLORS: SelectOption<string>[] = [
   }
 ];
 
-/* What the page paints under an image or a video, so a solid colour is in effect either way. */
-export const BASE_BACKGROUND_COLOR = BACKGROUND_COLORS[0].value;
+export const DEFAULT_BACKGROUND =
+  "https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg?auto=compress&cs=tinysrgb&w=1600";
 
 export const BACKGROUND_IMAGES: SelectOption<string>[] = [
   {
@@ -258,7 +261,7 @@ export const BACKGROUND_IMAGES: SelectOption<string>[] = [
     label: "City Night"
   },
   {
-    value: "https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    value: DEFAULT_BACKGROUND,
     label: "Neon City"
   },
   {
@@ -270,8 +273,6 @@ export const BACKGROUND_IMAGES: SelectOption<string>[] = [
     label: "Data Center"
   }
 ];
-
-export const DEFAULT_BACKGROUND = BACKGROUND_IMAGES[1].value;
 
 export const COLOR_THEMES: SelectOption<ColorTheme>[] = [
   {

@@ -4,7 +4,7 @@ export type Quote = {
 };
 
 /** The 72 quotes the original shipped, verbatim and in order. */
-const QUOTES: Quote[] = [
+const QUOTES: [Quote, ...Quote[]] = [
   {
     text: "Wake up, samurai. We have a city to burn.",
     author: "Johnny Silverhand"
@@ -297,5 +297,5 @@ const QUOTES: Quote[] = [
 
 /** A fresh quote every time the page opens - the original picked one per mount and kept it. */
 export function randomQuote(): Quote {
-  return QUOTES[Math.floor(Math.random() * QUOTES.length)];
+  return QUOTES[Math.floor(Math.random() * QUOTES.length)] ?? QUOTES[0];
 }

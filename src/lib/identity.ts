@@ -14,7 +14,7 @@ const NAME_SEPARATORS = /[._+-]+/;
 const TRAILING_DIGITS = /\d+$/;
 
 function capitalize(word: string): string {
-  return word[0].toUpperCase() + word.slice(1);
+  return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
 /** Trailing digits are how people claim an address someone else already took, not part of a name. */
@@ -37,5 +37,7 @@ export async function browserAccountName(): Promise<string | null> {
 
   const { email } = await browser.identity.getProfileUserInfo({ accountStatus: "ANY" });
 
-  return nameFromLocalPart(email.split("@")[0]);
+  const [localPart = ""] = email.split("@");
+
+  return nameFromLocalPart(localPart);
 }
