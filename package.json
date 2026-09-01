@@ -22,6 +22,7 @@
     "svelte:check": "svelte-check --tsconfig ./tsconfig.json",
     "fallow": "fallow",
     "icons:generate": "node scripts/generate-icons.mjs",
+    "key:generate": "node scripts/generate-key.mjs",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

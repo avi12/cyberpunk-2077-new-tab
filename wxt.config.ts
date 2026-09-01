@@ -1,7 +1,16 @@
+import extensionIdentity from "./companion/extension-identity.json";
 import { defineConfig } from "wxt";
 
 /** Chrome-only: Firefox's `identity` has no `getProfileUserInfo`. */
 const IDENTITY_PERMISSIONS = ["identity", "identity.email"];
+
+/**
+ * Declaring the public key pins the Chromium extension id - the same one unpacked, packed as a CRX,
+ * or installed from a store. The companion app has to name an origin it will talk to, and without
+ * this that origin would be a hash of whatever folder the extension was loaded from. The private
+ * half lives in git-ignored `keys/`; regenerate both with `pnpm key:generate`.
+ */
+const { publicKey } = extensionIdentity;
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -28,6 +37,7 @@ export default defineConfig({
       "storage",
       ...(browser === "firefox" ? [] : IDENTITY_PERMISSIONS)
     ],
+    ...(browser === "firefox" ? {} : { key: publicKey }),
     author: {
       email: "avi6106@gmail.com"
     },
