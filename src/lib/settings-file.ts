@@ -8,10 +8,22 @@ import { z } from "./zod";
  * Export and import of the whole settings blob.
  *
  * Both walk the `settings` object rather than listing keys, so a setting added there is carried by
- * both without a second edit - the drift the original's two hand-written 21-key lists invited.
+ * both without a second edit - the drift the original's two hand-written 21-key lists invited. The
+ * shape each one may take is the setting's own schema, which is what a file is checked against.
  */
 
 export const SETTINGS_FILE_NAME = "Cyberpunk-settings.json";
+
+export const INVALID_SETTINGS_FILE = "Invalid settings file";
+
+/**
+ * A settings file is a stranger's JSON, so nothing goes in unverified. Every key is optional: a file
+ * written before a setting existed still imports, and one written by a newer build loses only the
+ * keys this one has never heard of.
+ */
+const snapshotSchema = z.object(
+  Object.fromEntries(Object.entries(allSettings).map(([key, setting]) => [key, setting.schema.optional()]))
+);
 
 function exportableBackground(value: string): string {
   return value.startsWith(CACHED_PREFIX) ? DEFAULT_BACKGROUND : value;
@@ -28,20 +40,38 @@ export function exportSettings(): string {
     ? BackgroundMediaType.image
     : settings.backgroundMediaType.current;
 
-  return JSON.stringify(snapshot, null, 2);
+  // The same check the import runs, so a file this page writes is one it will take back.
+  return JSON.stringify(snapshotSchema.parse(snapshot), null, 2);
 }
 
-const snapshotSchema = z.record(z.string(), z.unknown());
+function readJson(json: string): unknown {
+  try {
+    return JSON.parse(json);
+  } catch {
+    throw new Error(INVALID_SETTINGS_FILE);
+  }
+}
 
+/** The first thing wrong with the file, named, because "invalid" alone says nothing to fix. */
+function problem(error: z.ZodError): Error {
+  const path = error.issues[0]?.path.join(".");
+
+  return new Error(path ? `${INVALID_SETTINGS_FILE} - ${path} does not look right` : INVALID_SETTINGS_FILE);
+}
+
+/**
+ * All or nothing: the whole file is checked before a single setting moves, so a bad key leaves the
+ * page as it was rather than half imported.
+ */
 export function importSettings(json: string): void {
-  const parsed = snapshotSchema.safeParse(JSON.parse(json));
+  const parsed = snapshotSchema.safeParse(readJson(json));
   if (!parsed.success) {
-    throw new Error("Invalid settings file");
+    throw problem(parsed.error);
   }
 
   for (const [key, setting] of Object.entries(allSettings)) {
     const value = parsed.data[key];
-    if (value !== undefined && value !== null) {
+    if (value !== undefined) {
       setting.current = value;
     }
   }

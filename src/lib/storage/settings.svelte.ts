@@ -1,3 +1,4 @@
+import { z } from "../zod";
 import { DEFAULT_DISPLAY_PREFERENCES, DEFAULT_WIDGET_ORDER, DEFAULT_WIDGETS } from "./defaults";
 import {
   activeSearchEngineItem,
@@ -22,28 +23,37 @@ import {
   widgetOrderItem,
   widgetsItem
 } from "./items";
-import type {
-  BackgroundMediaType,
-  Bookmark,
-  ColorTheme,
-  DisplayPreferences,
-  GeoLocation,
-  ScanLinesMode,
-  SearchEngine,
-  Widget
+import type { DisplayPreferences, Widget } from "./schema";
+import {
+  bookmarkSchema,
+  displayPreferencesSchema,
+  geoLocationSchema,
+  searchEngineSchema,
+  widgetSchema
 } from "./schema";
-import { displayPreferencesSchema } from "./schema";
+import { BackgroundMediaType, ColorTheme, ScanLinesMode } from "./schema";
 import type { WxtStorageItem } from "wxt/utils/storage";
 
 type StorageItem<TValue> = WxtStorageItem<TValue, Record<string, unknown>>;
 
+/**
+ * One setting: where it is kept, what shape it may take, and how a stored answer is brought up to
+ * date with what this build ships. The schema is what a settings file is checked against, so the
+ * shape a setting accepts is named once and both the compiler and an import obey it.
+ */
 class Setting<TValue> {
   readonly item: StorageItem<TValue>;
+  readonly schema: z.ZodType<TValue>;
   readonly #normalize: (stored: TValue) => TValue;
   #value: TValue = $state()!;
 
-  constructor(item: StorageItem<TValue>, normalize?: (stored: TValue) => TValue) {
+  constructor({ item, schema, normalize }: {
+    item: StorageItem<TValue>;
+    schema: z.ZodType<TValue>;
+    normalize?: (stored: TValue) => TValue;
+  }) {
     this.item = item;
+    this.schema = schema;
     this.#normalize = normalize ?? (stored => stored);
     this.#value = item.fallback;
   }
@@ -91,31 +101,103 @@ function withShippedWidgetIds(stored: string[]): string[] {
 }
 
 export const settings = {
-  bookmarks: new Setting<Bookmark[]>(bookmarksItem),
-  categoryOrder: new Setting<string[]>(categoryOrderItem),
-  collapsedCategories: new Setting<Record<string, boolean>>(collapsedCategoriesItem),
-  customCategories: new Setting<string[]>(customCategoriesItem),
-  searchEngines: new Setting<SearchEngine[]>(searchEnginesItem),
-  activeSearchEngine: new Setting<string>(activeSearchEngineItem),
-  weatherLocation: new Setting<GeoLocation>(weatherLocationItem),
-  temperatureUnit: new Setting<boolean>(temperatureUnitItem),
-  colorTheme: new Setting<ColorTheme>(colorThemeItem),
-  displayPreferences: new Setting<DisplayPreferences>(displayPreferencesItem, withShippedElements),
-  background: new Setting<string>(backgroundItem),
-  backgroundBrightness: new Setting<number>(backgroundBrightnessItem),
-  backgroundMediaType: new Setting<BackgroundMediaType>(backgroundMediaTypeItem),
-  backgroundMediaVersion: new Setting<number>(backgroundMediaVersionItem),
-  userName: new Setting<string>(userNameItem),
-  widgets: new Setting<Widget[]>(widgetsItem, withShippedWidgets),
-  widgetOrder: new Setting<string[]>(widgetOrderItem, withShippedWidgetIds),
-  scanLinesMode: new Setting<ScanLinesMode>(scanLinesModeItem),
-  tabTitle: new Setting<string>(tabTitleItem),
-  tabFavicon: new Setting<string>(tabFaviconItem),
-  playSounds: new Setting<boolean>(playSoundsItem)
+  bookmarks: new Setting({
+    item: bookmarksItem,
+    schema: z.array(bookmarkSchema)
+  }),
+  categoryOrder: new Setting({
+    item: categoryOrderItem,
+    schema: z.array(z.string())
+  }),
+  collapsedCategories: new Setting({
+    item: collapsedCategoriesItem,
+    schema: z.record(z.string(), z.boolean())
+  }),
+  customCategories: new Setting({
+    item: customCategoriesItem,
+    schema: z.array(z.string())
+  }),
+  searchEngines: new Setting({
+    item: searchEnginesItem,
+    schema: z.array(searchEngineSchema)
+  }),
+  activeSearchEngine: new Setting({
+    item: activeSearchEngineItem,
+    schema: z.string()
+  }),
+  weatherLocation: new Setting({
+    item: weatherLocationItem,
+    schema: geoLocationSchema
+  }),
+  temperatureUnit: new Setting({
+    item: temperatureUnitItem,
+    schema: z.boolean()
+  }),
+  colorTheme: new Setting({
+    item: colorThemeItem,
+    schema: z.enum(ColorTheme)
+  }),
+  displayPreferences: new Setting({
+    item: displayPreferencesItem,
+    schema: displayPreferencesSchema,
+    normalize: withShippedElements
+  }),
+  background: new Setting({
+    item: backgroundItem,
+    schema: z.string()
+  }),
+  backgroundBrightness: new Setting({
+    item: backgroundBrightnessItem,
+    schema: z.number()
+  }),
+  backgroundMediaType: new Setting({
+    item: backgroundMediaTypeItem,
+    schema: z.enum(BackgroundMediaType)
+  }),
+  backgroundMediaVersion: new Setting({
+    item: backgroundMediaVersionItem,
+    schema: z.number()
+  }),
+  userName: new Setting({
+    item: userNameItem,
+    schema: z.string()
+  }),
+  widgets: new Setting({
+    item: widgetsItem,
+    schema: z.array(widgetSchema),
+    normalize: withShippedWidgets
+  }),
+  widgetOrder: new Setting({
+    item: widgetOrderItem,
+    schema: z.array(z.string()),
+    normalize: withShippedWidgetIds
+  }),
+  scanLinesMode: new Setting({
+    item: scanLinesModeItem,
+    schema: z.enum(ScanLinesMode)
+  }),
+  tabTitle: new Setting({
+    item: tabTitleItem,
+    schema: z.string()
+  }),
+  tabFavicon: new Setting({
+    item: tabFaviconItem,
+    schema: z.string()
+  }),
+  playSounds: new Setting({
+    item: playSoundsItem,
+    schema: z.boolean()
+  })
 };
 
 export async function loadSettings(): Promise<void> {
   await Promise.all(Object.values(settings).map(setting => setting.load()));
 }
 
-export const allSettings: Record<string, { current: unknown }> = settings;
+/** A setting with its type forgotten, for the code that walks all of them without knowing any. */
+export type AnySetting = {
+  current: unknown;
+  readonly schema: z.ZodType;
+};
+
+export const allSettings: Record<string, AnySetting> = settings;

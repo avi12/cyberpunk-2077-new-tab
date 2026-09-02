@@ -1,7 +1,7 @@
 <script lang="ts">
   import iconDownload from "@/assets/icons/download.svg?raw";
   import { dropZone } from "@/lib/drop-zone";
-  import { downloadFile, exportSettings, importSettings, SETTINGS_FILE_NAME } from "@/lib/settings-file";
+  import { downloadFile, exportSettings, importSettings, INVALID_SETTINGS_FILE, SETTINGS_FILE_NAME } from "@/lib/settings-file";
   import Modal from "./Modal.svelte";
   import iconTriangleAlert from "@/assets/icons/triangle-alert.svg?raw";
   import iconUpload from "@/assets/icons/upload.svg?raw";
@@ -28,12 +28,29 @@
     }
   });
 
+  /** What the file was wrong about, when it says so - "invalid" on its own names nothing to fix. */
+  function report(e: unknown) {
+    error = e instanceof Error ? e.message : INVALID_SETTINGS_FILE;
+  }
+
   async function importFrom(file: File) {
     try {
       importSettings(await file.text());
       window.location.reload();
-    } catch {
-      error = "Invalid settings file";
+    } catch (e) {
+      report(e);
+    }
+  }
+
+  function saveToFile() {
+    try {
+      downloadFile({
+        name: SETTINGS_FILE_NAME,
+        contents: exportSettings(),
+        type: "application/json"
+      });
+    } catch (e) {
+      report(e);
     }
   }
 
@@ -99,9 +116,6 @@
           <span class="drop-zone__hint">or click to pick one</span>
         </label>
       {/if}
-      {#if error}
-        <p class="cyber-error">{error}</p>
-      {/if}
       <button
         class="cyber-button cyber-button--ghost cyber-button--block"
         onclick={() => {
@@ -116,11 +130,7 @@
     <div class="stack">
       <button
         class="cyber-button cyber-button--cyan system__action"
-        onclick={() => downloadFile({
-          name: SETTINGS_FILE_NAME,
-          contents: exportSettings(),
-          type: "application/json"
-        })}
+        onclick={saveToFile}
         type="button">
         {@html iconDownload}
         Export Settings
@@ -138,6 +148,10 @@
         <span class="drop-zone__hint">or click to import one</span>
       </button>
     </div>
+  {/if}
+
+  {#if error}
+    <p class="cyber-error">{error}</p>
   {/if}
 </Modal>
 
