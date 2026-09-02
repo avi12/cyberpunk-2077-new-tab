@@ -1,4 +1,4 @@
-import type { GeoLocation } from "./storage/defaults";
+import type { GeoLocation } from "./storage/schema";
 import { z } from "./zod";
 
 const POSITION_MAX_AGE_MS = 120_000;

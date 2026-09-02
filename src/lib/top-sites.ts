@@ -1,7 +1,7 @@
 import { sendMessage } from "./messaging";
-import type { Bookmark } from "./storage/defaults";
 import { SEEDED_CATEGORY } from "./storage/defaults";
 import { bookmarksItem, bookmarksSeededItem } from "./storage/items";
+import type { Bookmark } from "./storage/schema";
 
 const DOMAIN_ICONS: [string, string][] = [
   ["youtube", "Video"],

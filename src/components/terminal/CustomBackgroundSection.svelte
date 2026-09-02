@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { BACKGROUND_COLORS, BACKGROUND_IMAGES, BackgroundMediaType, DEFAULT_BACKGROUND } from "@/lib/storage/defaults";
+  import { BackgroundMediaType } from "@/lib/storage/schema";
+  import { BACKGROUND_COLORS, BACKGROUND_IMAGES, DEFAULT_BACKGROUND } from "@/lib/storage/defaults";
   import { CACHED_PREFIX, clearMedia, MediaSlot, saveMedia } from "@/lib/storage/media-store";
   import { dropZone } from "@/lib/drop-zone";
   import { fetchBlob } from "@/lib/cors-proxy";

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { WidgetConfig } from "@/lib/storage/defaults";
+  import type { WidgetConfig } from "@/lib/storage/schema";
   import iconFileText from "@/assets/icons/file-text.svg?raw";
   import iconSave from "@/assets/icons/save.svg?raw";
   import { untrack } from "svelte";

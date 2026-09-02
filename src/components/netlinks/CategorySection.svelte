@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Bookmark } from "@/lib/storage/defaults";
+  import type { Bookmark } from "@/lib/storage/schema";
   import BookmarkCard from "./BookmarkCard.svelte";
   import iconChevronDown from "@/assets/icons/chevron-down.svg?raw";
   import iconChevronRight from "@/assets/icons/chevron-right.svg?raw";

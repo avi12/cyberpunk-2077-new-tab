@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { BackgroundMediaType, BASE_BACKGROUND_COLOR } from "@/lib/storage/defaults";
+  import { BackgroundMediaType } from "@/lib/storage/schema";
+  import { BASE_BACKGROUND_COLOR } from "@/lib/storage/defaults";
   import { CACHED_PREFIX, loadMedia, MediaSlot } from "@/lib/storage/media-store";
   import { settings } from "@/lib/storage/settings.svelte";
 

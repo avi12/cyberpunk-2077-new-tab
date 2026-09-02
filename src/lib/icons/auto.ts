@@ -1,5 +1,5 @@
 import { hostLabel, hostOf } from "../link";
-import { BookmarkCategory } from "../storage/defaults";
+import { BookmarkCategory } from "../storage/schema";
 import type { IconName } from "./choices";
 
 /**

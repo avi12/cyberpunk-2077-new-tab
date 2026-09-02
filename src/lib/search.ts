@@ -1,6 +1,7 @@
 import { sendMessage } from "./messaging";
-import { DEFAULT_SEARCH_ENGINES, SearchEngineId } from "./storage/defaults";
-import type { SearchEngine } from "./storage/defaults";
+import { DEFAULT_SEARCH_ENGINES } from "./storage/defaults";
+import { SearchEngineId } from "./storage/schema";
+import type { SearchEngine } from "./storage/schema";
 
 export const SCAN_DELAY_MS = 800;
 

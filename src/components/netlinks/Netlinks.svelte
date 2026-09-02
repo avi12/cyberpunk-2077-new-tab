@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { Bookmark } from "@/lib/storage/defaults";
+  import type { Bookmark } from "@/lib/storage/schema";
   import { addCategory, deleteCategory, normalizeName, renameCategory, toggleCollapsed } from "@/lib/categories";
-  import { BookmarkCategory } from "@/lib/storage/defaults";
+  import { BookmarkCategory } from "@/lib/storage/schema";
   import BookmarkForm from "./BookmarkForm.svelte";
   import CategorySection from "./CategorySection.svelte";
   import ContextMenu from "./ContextMenu.svelte";

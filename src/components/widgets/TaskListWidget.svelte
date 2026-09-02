@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Task, WidgetConfig } from "@/lib/storage/defaults";
+  import type { Task, WidgetConfig } from "@/lib/storage/schema";
   import iconClipboardList from "@/assets/icons/clipboard-list.svg?raw";
   import { GLITCH_LONG_MS } from "@/lib/glitch.svelte";
   import iconPlus from "@/assets/icons/plus.svg?raw";

@@ -1,13 +1,3 @@
-import type {
-  BackgroundMediaType,
-  Bookmark,
-  ColorTheme,
-  DisplayPreferences,
-  GeoLocation,
-  ScanLinesMode,
-  SearchEngine,
-  Widget
-} from "./defaults";
 import { DEFAULT_DISPLAY_PREFERENCES, DEFAULT_WIDGET_ORDER, DEFAULT_WIDGETS } from "./defaults";
 import {
   activeSearchEngineItem,
@@ -32,6 +22,17 @@ import {
   widgetOrderItem,
   widgetsItem
 } from "./items";
+import type {
+  BackgroundMediaType,
+  Bookmark,
+  ColorTheme,
+  DisplayPreferences,
+  GeoLocation,
+  ScanLinesMode,
+  SearchEngine,
+  Widget
+} from "./schema";
+import { displayPreferencesSchema } from "./schema";
 import type { WxtStorageItem } from "wxt/utils/storage";
 
 type StorageItem<TValue> = WxtStorageItem<TValue, Record<string, unknown>>;
@@ -74,13 +75,13 @@ function withShippedWidgets(stored: Widget[]): Widget[] {
 
 /**
  * An element added to the page after the reader last saved has no answer stored for it, and an
- * absent answer is not "hidden" - it is the default the element ships with.
+ * absent answer is not "hidden" - it is the default the element ships with. Filling those in is what
+ * the schema's per-element defaults already do, so reading is a parse.
  */
 function withShippedElements(stored: DisplayPreferences): DisplayPreferences {
-  return {
-    ...DEFAULT_DISPLAY_PREFERENCES,
-    ...stored
-  };
+  const parsed = displayPreferencesSchema.safeParse(stored);
+
+  return parsed.success ? parsed.data : DEFAULT_DISPLAY_PREFERENCES;
 }
 
 function withShippedWidgetIds(stored: string[]): string[] {

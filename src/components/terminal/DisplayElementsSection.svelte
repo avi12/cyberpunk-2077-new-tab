@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DisplayPreferences } from "@/lib/storage/defaults";
+  import type { DisplayPreferences } from "@/lib/storage/schema";
   import iconEye from "@/assets/icons/eye.svg?raw";
   import iconEyeOff from "@/assets/icons/eye-off.svg?raw";
   import { GLITCH_SHORT_MS } from "@/lib/glitch.svelte";

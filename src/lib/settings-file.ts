@@ -1,5 +1,6 @@
-import { BackgroundMediaType, DEFAULT_BACKGROUND } from "./storage/defaults";
+import { DEFAULT_BACKGROUND } from "./storage/defaults";
 import { CACHED_PREFIX } from "./storage/media-store";
+import { BackgroundMediaType } from "./storage/schema";
 import { allSettings, settings } from "./storage/settings.svelte";
 import { z } from "./zod";
 

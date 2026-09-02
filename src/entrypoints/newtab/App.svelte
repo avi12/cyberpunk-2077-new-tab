@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { DisplayPreferences } from "@/lib/storage/defaults";
-  import { ColorTheme, ScanLinesMode } from "@/lib/storage/defaults";
+  import type { DisplayPreferences } from "@/lib/storage/schema";
+  import { ColorTheme, ScanLinesMode } from "@/lib/storage/schema";
   import { applyTabFavicon, applyTabTitle } from "@/lib/tab-identity";
   import AboutModal from "@/components/modals/AboutModal.svelte";
   import Background from "@/components/Background.svelte";

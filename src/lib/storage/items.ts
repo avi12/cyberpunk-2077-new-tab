@@ -1,14 +1,4 @@
-import type {
-  Bookmark,
-  ColorTheme,
-  DisplayPreferences,
-  GeoLocation,
-  ScanLinesMode,
-  SearchEngine,
-  Widget
-} from "./defaults";
 import {
-  BackgroundMediaType,
   DEFAULT_BACKGROUND,
   DEFAULT_BACKGROUND_BRIGHTNESS,
   DEFAULT_BOOKMARKS,
@@ -24,9 +14,18 @@ import {
   DEFAULT_USER_NAME,
   DEFAULT_WEATHER_LOCATION,
   DEFAULT_WIDGET_ORDER,
-  DEFAULT_WIDGETS,
-  SearchEngineId
+  DEFAULT_WIDGETS
 } from "./defaults";
+import type {
+  Bookmark,
+  ColorTheme,
+  DisplayPreferences,
+  GeoLocation,
+  ScanLinesMode,
+  SearchEngine,
+  Widget
+} from "./schema";
+import { BackgroundMediaType, SearchEngineId } from "./schema";
 import { storage } from "#imports";
 
 export const bookmarksItem = storage.defineItem<Bookmark[]>("local:bookmarks", { fallback: DEFAULT_BOOKMARKS });

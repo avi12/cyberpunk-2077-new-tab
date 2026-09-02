@@ -11,7 +11,7 @@
 </script>
 
 <script lang="ts">
-  import type { Bookmark } from "@/lib/storage/defaults";
+  import type { Bookmark } from "@/lib/storage/schema";
   import { blipOnHover } from "@/lib/sound";
   import iconGripVertical from "@/assets/icons/grip-vertical.svg?raw";
   import { iconByName } from "@/lib/icons/choices";

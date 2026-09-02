@@ -1,102 +1,23 @@
-export type Bookmark = {
-  id: string;
-  title: string;
-  url: string;
-  category: string;
-  icon: string;
-};
+import type {
+  Bookmark,
+  DisplayPreferences,
+  GeoLocation,
+  SearchEngine,
+  Widget
+} from "./schema";
+import {
+  BookmarkCategory,
+  ColorTheme,
+  displayPreferencesSchema,
+  ScanLinesMode,
+  SearchEngineId,
+  WidgetType
+} from "./schema";
 
-export type SearchEngine = {
-  id: string;
-  name: string;
-  url: string;
-  placeholder: string;
-};
-
-export type GeoLocation = {
-  name: string;
-  latitude: number;
-  longitude: number;
-};
-
-export type Task = {
-  id: string;
-  text: string;
-  completed: boolean;
-};
-
-export enum WidgetType {
-  weather = "weather",
-  scratchPad = "scratchpad",
-  taskList = "tasklist",
-  rss = "rss"
-}
-
-export type WidgetConfig = {
-  location?: GeoLocation;
-  temperatureUnit?: boolean;
-  showDate?: boolean;
-  content?: string;
-  tasks?: Task[];
-  feedUrl?: string;
-  maxItems?: number;
-};
-
-export type Widget = {
-  id: string;
-  type: WidgetType;
-  enabled: boolean;
-  config: WidgetConfig;
-};
-
-export type DisplayPreferences = {
-  showGreeting: boolean;
-  showTime: boolean;
-  showDate: boolean;
-  showSearchBar: boolean;
-  showQuotes: boolean;
-  showJourneys: boolean;
-  showNetlinks: boolean;
-  showWidgets: boolean;
-};
-
-export enum ColorTheme {
-  cyberpunk2077 = "cyberpunk2077",
-  edgerunners = "edgerunners",
-  cyberNinja = "cyberninja"
-}
-
-export enum ScanLinesMode {
-  default = "default",
-  belowUi = "belowUI",
-  none = "none"
-}
-
-export enum BackgroundMediaType {
-  none = "none",
-  image = "image",
-  video = "video"
-}
-
-export enum SearchEngineId {
-  browserDefault = "default",
-  google = "google",
-  bing = "bing",
-  duckDuckGo = "duck",
-  chatGpt = "ai",
-  perplexity = "ai2",
-  brave = "brave",
-  braveAi = "brave2",
-  braveResearch = "brave3"
-}
-
-export enum BookmarkCategory {
-  daily = "daily",
-  work = "work",
-  entertainment = "entertainment",
-  social = "social",
-  other = "other"
-}
+/**
+ * What every setting starts at, and the fixed lists the panels pick from. The shapes themselves live
+ * in `schema.ts` - this file only ever names a value one of them can take.
+ */
 
 export type SelectOption<TValue extends string> = {
   value: TValue;
@@ -221,16 +142,8 @@ export const DEFAULT_WIDGETS: Widget[] = [
 
 export const DEFAULT_WIDGET_ORDER = DEFAULT_WIDGETS.map(widget => widget.id);
 
-export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = {
-  showGreeting: true,
-  showTime: true,
-  showDate: true,
-  showSearchBar: true,
-  showQuotes: true,
-  showJourneys: true,
-  showNetlinks: true,
-  showWidgets: true
-};
+/** Each element's default is the one the schema fills a missing answer with. */
+export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = displayPreferencesSchema.parse({});
 
 /* What the page paints under an image or a video, so a solid colour is in effect either way. */
 export const BASE_BACKGROUND_COLOR = "#000c14";

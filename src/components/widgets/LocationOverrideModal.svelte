@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { GeoLocation } from "@/lib/storage/defaults";
+  import type { GeoLocation } from "@/lib/storage/schema";
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
   import Modal from "@/components/modals/Modal.svelte";
   import { z } from "@/lib/zod";

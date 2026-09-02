@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { Widget, WidgetConfig } from "@/lib/storage/defaults";
-  import { WidgetType } from "@/lib/storage/defaults";
+  import type { Widget, WidgetConfig } from "@/lib/storage/schema";
+  import { WidgetType } from "@/lib/storage/schema";
   import iconGrip from "@/assets/icons/grip.svg?raw";
   import RssWidget from "./RssWidget.svelte";
   import ScratchPadWidget from "./ScratchPadWidget.svelte";

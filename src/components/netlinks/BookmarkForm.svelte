@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Bookmark } from "@/lib/storage/defaults";
+  import type { Bookmark } from "@/lib/storage/schema";
   import { normalizeUrl, resolveTitle } from "@/lib/link";
   import { pickIcon } from "@/lib/icons/auto";
   import iconSparkles from "@/assets/icons/sparkles.svg?raw";

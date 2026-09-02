@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { GeoLocation, WidgetConfig } from "@/lib/storage/defaults";
+  import type { GeoLocation, WidgetConfig } from "@/lib/storage/schema";
   import type { WeatherReading } from "@/lib/weather";
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";

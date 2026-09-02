@@ -1,4 +1,4 @@
-import type { GeoLocation } from "./storage/defaults";
+import type { GeoLocation } from "./storage/schema";
 import { z } from "./zod";
 import iconCloudLightning from "@/assets/icons/cloud-lightning.svg?raw";
 import iconCloudRain from "@/assets/icons/cloud-rain.svg?raw";

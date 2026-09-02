@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Bookmark } from "@/lib/storage/defaults";
+  import type { Bookmark } from "@/lib/storage/schema";
   import iconCopy from "@/assets/icons/copy.svg?raw";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import { GLITCH_LONG_MS, Glitch } from "@/lib/glitch.svelte";

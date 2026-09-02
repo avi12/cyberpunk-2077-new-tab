@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { WidgetConfig } from "@/lib/storage/defaults";
+  import type { WidgetConfig } from "@/lib/storage/schema";
   import iconChevronDown from "@/assets/icons/chevron-down.svg?raw";
   import iconChevronUp from "@/assets/icons/chevron-up.svg?raw";
   import { readProxied } from "@/lib/cors-proxy";

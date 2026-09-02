@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DisplayPreferences } from "@/lib/storage/defaults";
+  import type { DisplayPreferences } from "@/lib/storage/schema";
   import { BACKGROUND_IMAGES, COLOR_THEMES, SCAN_LINES_MODES } from "@/lib/storage/defaults";
   import CustomBackgroundSection from "./terminal/CustomBackgroundSection.svelte";
   import DisplayElementsSection from "./terminal/DisplayElementsSection.svelte";
