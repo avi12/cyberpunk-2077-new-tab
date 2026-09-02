@@ -29,7 +29,8 @@ function exportableBackground(value: string): string {
   return value.startsWith(CACHED_PREFIX) ? DEFAULT_BACKGROUND : value;
 }
 
-export function exportSettings(): string {
+/** Every setting as one object - what a file holds, and what the browser account holds. */
+export function settingsSnapshot(): Record<string, unknown> {
   const snapshot: Record<string, unknown> = {};
   for (const [key, setting] of Object.entries(allSettings)) {
     snapshot[key] = setting.current;
@@ -40,8 +41,13 @@ export function exportSettings(): string {
     ? BackgroundMediaType.image
     : settings.backgroundMediaType.current;
 
-  // The same check the import runs, so a file this page writes is one it will take back.
-  return JSON.stringify(snapshotSchema.parse(snapshot), null, 2);
+  // The same check the import runs, so what this page writes is what it will take back.
+  return snapshotSchema.parse(snapshot);
+}
+
+/** A file is indented: it is the copy a reader may open. */
+export function exportSettings(): string {
+  return JSON.stringify(settingsSnapshot(), null, 2);
 }
 
 function readJson(json: string): unknown {

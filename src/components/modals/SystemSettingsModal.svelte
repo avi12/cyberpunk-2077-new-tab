@@ -1,10 +1,15 @@
 <script lang="ts">
-  import iconDownload from "@/assets/icons/download.svg?raw";
-  import { dropZone } from "@/lib/drop-zone";
+  import { backupTakenAtMs, dropBackup, keepBackup, restoreBackup } from "@/lib/settings-sync";
   import { downloadFile, exportSettings, importSettings, INVALID_SETTINGS_FILE, SETTINGS_FILE_NAME } from "@/lib/settings-file";
-  import Modal from "./Modal.svelte";
+  import { dropZone } from "@/lib/drop-zone";
+  import { formatTimestamp } from "@/lib/time";
+  import iconCloud from "@/assets/icons/cloud.svg?raw";
+  import iconDownload from "@/assets/icons/download.svg?raw";
+  import iconSave from "@/assets/icons/save.svg?raw";
+  import iconTrash2 from "@/assets/icons/trash2.svg?raw";
   import iconTriangleAlert from "@/assets/icons/triangle-alert.svg?raw";
   import iconUpload from "@/assets/icons/upload.svg?raw";
+  import Modal from "./Modal.svelte";
 
   const {
     isOpen,
@@ -15,20 +20,39 @@
   } = $props();
 
   const SETTINGS_ACCEPT = ".json,application/json";
+  const NOTHING_BACKED_UP = "Nothing backed up yet";
 
   let isConfirmingImport = $state(false);
+  let isConfirmingRestore = $state(false);
+  let isConfirmingDelete = $state(false);
+  let isWorking = $state(false);
   let waitingFile = $state<File | null>(null);
+  let backupAtMs = $state<number | null>(null);
   let error = $state("");
+
+  const backupState = $derived.by(() => {
+    if (backupAtMs === null) {
+      return NOTHING_BACKED_UP;
+    }
+
+    return `Backed up ${formatTimestamp(backupAtMs)}`;
+  });
 
   $effect(() => {
     if (!isOpen) {
       isConfirmingImport = false;
+      isConfirmingRestore = false;
+      isConfirmingDelete = false;
       waitingFile = null;
       error = "";
+
+      return;
     }
+
+    void backupTakenAtMs().then(takenAt => (backupAtMs = takenAt));
   });
 
-  /** What the file was wrong about, when it says so - "invalid" on its own names nothing to fix. */
+  /** What went wrong, in the words that named it - "invalid" on its own says nothing to fix. */
   function report(e: unknown) {
     error = e instanceof Error ? e.message : INVALID_SETTINGS_FILE;
   }
@@ -37,18 +61,6 @@
     try {
       await importSettings(await file.text());
       window.location.reload();
-    } catch (e) {
-      report(e);
-    }
-  }
-
-  function saveToFile() {
-    try {
-      downloadFile({
-        name: SETTINGS_FILE_NAME,
-        contents: exportSettings(),
-        type: "application/json"
-      });
     } catch (e) {
       report(e);
     }
@@ -80,15 +92,66 @@
     error = "";
     isConfirmingImport = true;
   }
+
+  function saveToFile() {
+    try {
+      downloadFile({
+        name: SETTINGS_FILE_NAME,
+        contents: exportSettings(),
+        type: "application/json"
+      });
+    } catch (e) {
+      report(e);
+    }
+  }
+
+  async function backUp() {
+    isWorking = true;
+    try {
+      backupAtMs = await keepBackup();
+      error = "";
+    } catch (e) {
+      report(e);
+    } finally {
+      isWorking = false;
+    }
+  }
+
+  async function restoreFromBackup() {
+    isWorking = true;
+    try {
+      await restoreBackup();
+      window.location.reload();
+    } catch (e) {
+      report(e);
+      isWorking = false;
+    }
+  }
+
+  async function forgetBackup() {
+    await dropBackup();
+    backupAtMs = null;
+    isConfirmingDelete = false;
+  }
 </script>
+
+{#snippet overwriteWarning()}
+  <p class="system__warning">
+    {@html iconTriangleAlert}
+    This will overwrite your current settings!
+  </p>
+{/snippet}
+
+{#snippet cancel(onCancel: () => void)}
+  <button class="cyber-button cyber-button--ghost cyber-button--block" onclick={onCancel} type="button">
+    Cancel
+  </button>
+{/snippet}
 
 <Modal {isOpen} {onClose} title="System Settings">
   {#if isConfirmingImport}
     <div class="stack">
-      <p class="system__warning">
-        {@html iconTriangleAlert}
-        This will overwrite your current settings!
-      </p>
+      {@render overwriteWarning()}
       <input
         id="settings-import"
         class="visually-hidden"
@@ -116,15 +179,24 @@
           <span class="drop-zone__hint">or click to pick one</span>
         </label>
       {/if}
+      {@render cancel(() => {
+        isConfirmingImport = false;
+        waitingFile = null;
+      })}
+    </div>
+  {:else if isConfirmingRestore}
+    <div class="stack">
+      {@render overwriteWarning()}
+      <p class="system__note">{backupState}</p>
       <button
-        class="cyber-button cyber-button--ghost cyber-button--block"
-        onclick={() => {
-          isConfirmingImport = false;
-          waitingFile = null;
-        }}
+        class="cyber-button cyber-button--primary system__action"
+        disabled={isWorking}
+        onclick={() => void restoreFromBackup()}
         type="button">
-        Cancel
+        {@html iconCloud}
+        Restore it
       </button>
+      {@render cancel(() => (isConfirmingRestore = false))}
     </div>
   {:else}
     <div class="stack">
@@ -147,6 +219,52 @@
         <span>Drop a settings file here</span>
         <span class="drop-zone__hint">or click to import one</span>
       </button>
+
+      <section class="system__backup">
+        <h3 class="cyber-label">Browser account</h3>
+        <p class="system__note">{backupState}</p>
+        <button
+          class="cyber-button cyber-button--muted system__action"
+          disabled={isWorking}
+          onclick={() => void backUp()}
+          type="button">
+          {@html iconSave}
+          Back up there now
+        </button>
+        {#if backupAtMs !== null}
+          <div class="system__row">
+            {#if isConfirmingDelete}
+              <button
+                class="cyber-button cyber-button--danger cyber-button--grow"
+                onclick={() => void forgetBackup()}
+                type="button">
+                Delete it for good
+              </button>
+              <button
+                class="cyber-button cyber-button--ghost cyber-button--grow"
+                onclick={() => (isConfirmingDelete = false)}
+                type="button">
+                Keep it
+              </button>
+            {:else}
+              <button
+                class="cyber-button cyber-button--ghost cyber-button--grow"
+                onclick={() => (isConfirmingRestore = true)}
+                type="button">
+                Restore
+              </button>
+              <button
+                class="cyber-button cyber-button--danger system__delete"
+                aria-label="Delete the backup"
+                onclick={() => (isConfirmingDelete = true)}
+                type="button">
+                {@html iconTrash2}
+              </button>
+            {/if}
+          </div>
+        {/if}
+        <p class="system__note">Rides the browser's own sync, so a reinstall or another machine picks it up</p>
+      </section>
     </div>
   {/if}
 
@@ -180,6 +298,38 @@
     :global(svg) {
       width: 20px;
       height: 20px;
+    }
+  }
+
+  /* The other place a snapshot can go, kept apart from the file half above it. */
+  .system__backup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--cp-outline);
+  }
+
+  .system__note {
+    color: var(--cp-text-dim);
+    font-family: var(--cp-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  .system__row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .system__delete {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+
+    :global(svg) {
+      width: 16px;
+      height: 16px;
     }
   }
 

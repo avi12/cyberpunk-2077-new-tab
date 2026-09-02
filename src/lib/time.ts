@@ -15,6 +15,16 @@ const DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
   day: "numeric"
 });
 
+/** A moment that has already passed, spelled out: the reader's locale decides how much of it shows. */
+const TIMESTAMP_FORMAT = new Intl.DateTimeFormat(undefined, {
+  dateStyle: "medium",
+  timeStyle: "short"
+});
+
+export function formatTimestamp(atMs: number): string {
+  return TIMESTAMP_FORMAT.format(atMs);
+}
+
 export function currentTime(): string {
   return TIME_FORMAT.format(new Date());
 }

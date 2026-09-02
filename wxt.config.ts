@@ -13,6 +13,13 @@ const IDENTITY_PERMISSIONS = ["identity", "identity.email"];
 const JOURNEYS_PERMISSIONS = ["nativeMessaging"];
 
 /**
+ * Firefox ties `storage.sync` to the add-on's own id: a build without one has no account area to
+ * write to, so the backup in System Settings needs this declared rather than assigned at listing
+ * time. Chromium pins its id with `key` below instead.
+ */
+const FIREFOX_ID = "cyberpunk-2077-new-tab@avi12.com";
+
+/**
  * Declaring the public key pins the Chromium extension id - the same one unpacked, packed as a CRX,
  * or installed from a store. The companion app has to name an origin it will talk to, and without
  * this that origin would be a hash of whatever folder the extension was loaded from. The private
@@ -34,7 +41,8 @@ export default defineConfig({
     // absent - the API is not there to be called, and the read alone would kill the worker.
     // `search` runs the browser's own default engine for the "Default" search option; `topSites`
     // seeds the netlinks on first run; `geolocation` backs the "USE MY LOCATION" button in the
-    // weather/world-clock location override; `storage` holds every setting; `identity` +
+    // weather/world-clock location override; `storage` holds every setting, local and the backup in
+    // the browser account alike; `identity` +
     // `identity.email` name the greeting after the signed-in account. No host permissions -
     // open-meteo, timeapi, allorigins, bigdatacloud and Google's userinfo endpoint all answer with
     // `Access-Control-Allow-Origin: *`.
@@ -46,10 +54,18 @@ export default defineConfig({
       "unlimitedStorage",
       ...(browser === "firefox" ? [] : IDENTITY_PERMISSIONS)
     ],
-    ...(browser === "firefox" ? {} : {
-      key: publicKey,
-      optional_permissions: JOURNEYS_PERMISSIONS
-    }),
+    ...(browser === "firefox"
+      ? {
+        browser_specific_settings: {
+          gecko: {
+            id: FIREFOX_ID
+          }
+        }
+      }
+      : {
+        key: publicKey,
+        optional_permissions: JOURNEYS_PERMISSIONS
+      }),
     author: {
       email: "avi6106@gmail.com"
     },
