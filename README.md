@@ -44,7 +44,7 @@ Six on Chrome, four on Firefox, and each backs one feature:
 | `search`         | the "Default" search option runs the browser's own configured engine     |
 | `topSites`       | seeds the netlinks grid on first run                                     |
 | `geolocation`    | the weather's location, whenever it is following this device             |
-| `storage`        | every setting                                                           |
+| `storage`        | every setting, and the backup you can keep in your browser account       |
 | `identity`       | "USE BROWSER ACCOUNT" names the greeting after the signed-in account     |
 | `identity.email` | that address is the only name any browser API will hand over             |
 
@@ -62,6 +62,9 @@ loaded from, and the Journeys companion has to name an origin that would then di
 machine. `pnpm key:generate` mints `keys/chrome.pem` (git-ignored; it signs release CRXs and nothing
 else) and writes the public half to `companion/extension-identity.json`, which is the one place both
 the manifest and the companion read it from.
+
+Firefox has an id of its own in `browser_specific_settings`, for a different reason: it keys
+`storage.sync` to the add-on id, so a build without one has no account area to back settings up to.
 
 ### Copilot Journeys (Edge on Windows)
 
@@ -130,7 +133,9 @@ src/
     newtab/                the page itself
   lib/
     icons/                 lucide path data (generated), the <svg> wrapper, the 40-icon picker list
-    storage/               defaults -> wxt/storage items -> a rune-backed settings store
+    storage/               zod schemas -> defaults -> wxt/storage items -> a rune-backed store
+    settings-file.ts       the settings snapshot, out to a file and back
+    settings-sync.ts       the same snapshot, kept in the browser account instead
     sortable.ts            one pointer-driven reorder action, shared by all three drag lists
     sound.ts               the hover sound - one you bring, or a synthesised blip
     ...                    time, quotes, weather, geolocation, colour, search, top-sites, glitch
@@ -159,10 +164,21 @@ companion/                 the paid Store app that reads Edge's journeys (its ow
 - **Netlinks seed from `chrome.topSites`** on first run instead of six hardcoded example bookmarks.
   Sites keep the lucide-glyph look via a domain-to-icon table rather than fetching real favicons.
 - **Closed value sets are enums** (`ColorTheme`, `ScanLinesMode`, `WidgetType`, `BackgroundMediaType`,
-  `SearchEngineId`, `BookmarkCategory`), and their string values are the persisted contract.
+  `SearchEngineId`, `BookmarkCategory`), and their string values are the persisted contract. They sit
+  in `lib/storage/schema.ts` beside the zod schema of every stored shape, which is where the types
+  come from too - so the check an imported file has to pass is the one the compiler already enforces,
+  never a second description of it. Import is all or nothing and names the key it choked on, and
+  display preferences carry their defaults in the schema, so a file that predates an element still
+  reads and that element comes back on.
 - **Storage is `wxt/storage`**, so it is async; `lib/storage/settings.svelte.ts` wraps it in runes so
   components still read and write synchronously. The tab title is mirrored into `localStorage` purely
   as a paint-time cache, since extension storage cannot answer before the first frame.
+- **Settings back up to the browser account.** The original could only write a file. System Settings
+  still exports one, and now also puts the same snapshot in `storage.sync` on request, so a reinstall
+  or a second machine picks it up with nothing to carry. That area holds about 100KB, and 8KB per
+  value, so the snapshot goes in as numbered slices with one record saying how many there are and
+  when they were taken. Only ever on request: a mirror that followed every change would spend the
+  area, and the browser's hourly write allowance, on typing in the scratch pad.
 - **The weather follows the device by default.** The original shipped San Francisco's coordinates
   under the name "Night City" and only ever moved if you typed new ones. Here the widget reads the
   device position through the extension's own `geolocation` permission on each load and stores
