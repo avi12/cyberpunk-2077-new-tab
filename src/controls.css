@@ -68,13 +68,6 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .cyber-dialog,
-  .cyber-dialog::backdrop {
-    transition: none;
-  }
-}
-
 .cyber-dialog--warning {
   border-color: var(--cp-secondary);
 }
@@ -296,12 +289,6 @@
 
 .drop-zone[data-dropping] .drop-zone__hint {
   color: inherit;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .drop-zone {
-    transition: none;
-  }
 }
 
 /* ---------- Widget cards ---------- */

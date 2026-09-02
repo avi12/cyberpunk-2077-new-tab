@@ -440,12 +440,6 @@ textarea {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .cyberpunk-tooltip {
-    transition: none;
-  }
-}
-
 /* ---------- Glitch effects ---------- */
 
 /*
@@ -995,26 +989,34 @@ textarea {
   }
 }
 
+/*
+ * One rule, rather than a list of the things that move.
+ *
+ * The list this replaces had to be extended by hand every time anything gained an animation, and
+ * had already fallen two behind - a spinner that scales when pressed and the container's
+ * `transition: all` both moved straight through it. A universal rule cannot fall behind. It is also
+ * the one place `!important` earns its keep here: `*` loses to every other selector in this sheet,
+ * and to Svelte's scoped ones by more still, and it has to outrank the transitions a drag writes
+ * inline as well.
+ *
+ * Durations rather than `none`, because `allow-discrete` needs a duration to hand a popover or a
+ * dialog its open and close - at 1ms they arrive whole instead of not at all.
+ */
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-delay: 0ms !important;
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  /* A view transition's pseudo-elements are not in the tree, so `*` never reaches them. */
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {
-    animation: none;
-  }
-
-  .glitch,
-  .glitch-1,
-  .glitch-2,
-  .greeting,
-  .task-pulse,
-  .task-glitch,
-  .scanning-effect::after,
-  .scanning-text,
-  .pulse,
-  .hover-glitch:hover,
-  .hover-glitch-host:hover .hover-glitch,
-  .quote-hover:hover,
-  .glitch-border:hover::before {
     animation: none;
   }
 }

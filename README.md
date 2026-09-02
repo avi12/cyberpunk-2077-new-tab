@@ -11,6 +11,7 @@ matching the original's visuals while replacing its React/Tailwind/dnd-kit stack
 ## Getting started
 
 ```bash
+cp .env.example .env.local   # then fill in VITE_GOOGLE_CLIENT_ID
 pnpm install
 pnpm ext:dev          # Chrome, with HMR (interactive terminal)
 pnpm ext:dev:hmr      # same loop, detached - survives a closed terminal, CDP on :9223
@@ -20,6 +21,11 @@ pnpm ext:zip          # store-ready zip
 pnpm icons:generate   # re-render src/public/icon/*.png from scripts/cyberpunk-logo.ico
 pnpm key:generate     # mint keys/chrome.pem once, and write the permanent extension id
 ```
+
+`.env.local` holds one value, the OAuth client id behind [the greeting's name button](#google-account-name),
+and it is the same in every build - the extension id is pinned, so one client covers dev and the
+store alike. `.env.example` says what to register it against. Everything else the extension needs is
+in the repo.
 
 `ext:dev:hmr` exists because `wxt` shuts down when its stdin closes, which kills the browser the
 moment a detached run rebuilds. It holds that pipe open, so an edit hot-updates the open tab and the
@@ -123,7 +129,12 @@ opens Google's account chooser and Google answers with the real `given_name`. Th
 that needs no `oauth2` manifest key - the key Edge has never supported - and Firefox implements it
 too, so for the first time all three browsers answer the same way.
 
-`response_type=id_token` is what keeps it to one file. The name arrives inside the token, so there is
+The client id lives in `.env.local` as `VITE_GOOGLE_CLIENT_ID` rather than in the source. It is
+public either way - every `VITE_*` value is inlined into the bundle - but the client is registered
+against a fixed pair of redirect URIs, which makes it a property of the deployment, and `src/env.d.ts`
+types the key so a typo is a build error rather than an `any`.
+
+`response_type=id_token` is what keeps the rest to one file. The name arrives inside the token, so there is
 no authorization code to exchange, no client secret to bundle, and no access token to store, refresh
 or revoke: the token is checked against the request's `nonce`, read for one claim, and dropped.
 Nothing but the name is kept, and only if you press Save. The manifest asks for `identity` and not
@@ -163,6 +174,18 @@ scripts/
   generate-key.mjs         mints the keypair behind the permanent extension id
 companion/                 the paid Store app that reads Edge's journeys (its own README)
 ```
+
+### Reduced motion
+
+The page is built out of things that move: labels tear, borders glitch, a headline breathes, a
+panel grows out of its button. A reader who has asked their system for less motion gets none of it.
+
+One rule in `app.css` does that, under `prefers-reduced-motion: reduce`, rather than a list of the
+selectors that animate - a list has to be extended every time something new moves, and had already
+fallen behind. Animations and transitions are cut to a millisecond rather than removed outright, so
+a popover and a dialog still get the discrete transition that opens and closes them; they simply
+arrive whole. The drag reorder makes the same check in JavaScript and drops a card straight into
+its slot.
 
 ### How it differs from the original
 

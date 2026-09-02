@@ -93,13 +93,6 @@
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .section__summary::after,
-    .section::details-content {
-      transition: none;
-    }
-  }
-
   .section__badge {
     color: var(--cp-secondary);
     font-family: var(--cp-mono);

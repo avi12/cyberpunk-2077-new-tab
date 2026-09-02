@@ -162,12 +162,6 @@
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .terminal__popup {
-      transition: none;
-    }
-  }
-
   .terminal__title {
     margin-bottom: 1rem;
     color: var(--cp-accent);

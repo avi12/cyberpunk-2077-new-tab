@@ -365,10 +365,6 @@
 
     &:hover .rss-title {
       animation: 10000ms linear infinite scroll-text;
-
-      @media (prefers-reduced-motion: reduce) {
-        animation: none;
-      }
     }
   }
 

@@ -234,10 +234,4 @@
       opacity: 35%;
     }
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    .link-card__action.is-working {
-      animation: none;
-    }
-  }
 </style>
