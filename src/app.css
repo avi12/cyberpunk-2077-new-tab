@@ -27,6 +27,13 @@ body {
   margin: 0;
   background-color: #000c14;
   font-family: system-ui, "Segoe UI", roboto, helvetica, arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+
+  /*
+   * Every digit the page draws is the same width, declared once here rather than at each of the
+   * places that draw one. A clock whose minute is 11 must not be narrower than one whose minute is
+   * 08, and the same goes for a temperature, a coordinate, a percentage or a count.
+   */
+  font-variant-numeric: tabular-nums;
 }
 
 button,
