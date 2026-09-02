@@ -58,13 +58,17 @@
 
 <menu style:left="{x}px" style:top="{y}px" class="context-menu" class:context-menu-glitch={glitch.active}>
   <li>
-    <button class="context-menu__item" onclick={() => run(() => window.open(bookmark.url, "_blank"))} type="button" use:menuSounds>
+    <button
+      class="context-menu__item menu-select"
+      onclick={() => run(() => window.open(bookmark.url, "_blank"))}
+      type="button"
+      use:menuSounds>
       {@html iconExternalLink}
       New Tab
     </button>
   </li>
   <li>
-    <button class="context-menu__item" onclick={() => run(() => void copyLink())} type="button" use:menuSounds>
+    <button class="context-menu__item menu-select" onclick={() => run(() => void copyLink())} type="button" use:menuSounds>
       {@html iconCopy}
       Copy Link
     </button>
@@ -85,7 +89,11 @@
     backdrop-filter: blur(4px);
   }
 
+  /* A row that already ends at the menu's border needs neither the bleed nor the trailing rule. */
   .context-menu__item {
+    --cp-select-bleed: 0px;
+    --cp-select-tail: 0px;
+
     display: flex;
     gap: 0.5rem;
     align-items: center;
@@ -96,11 +104,6 @@
     font-size: 0.875rem;
     line-height: 1.25rem;
     text-align: left;
-
-    &:hover {
-      background: var(--cp-surface-2);
-      color: var(--cp-primary);
-    }
 
     :global(svg) {
       width: 14px;
