@@ -63,8 +63,13 @@ class Setting<TValue> {
   }
 
   set current(value: TValue) {
+    void this.set(value);
+  }
+
+  /** The write behind `current`, for a caller that cannot move on until storage has the value. */
+  async set(value: TValue): Promise<void> {
     this.#value = value;
-    void this.item.setValue(value);
+    await this.item.setValue(value);
   }
 
   async load(): Promise<void> {
@@ -198,6 +203,7 @@ export async function loadSettings(): Promise<void> {
 export type AnySetting = {
   current: unknown;
   readonly schema: z.ZodType;
+  set(value: unknown): Promise<void>;
 };
 
 export const allSettings: Record<string, AnySetting> = settings;

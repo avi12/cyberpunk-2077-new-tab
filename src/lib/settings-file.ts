@@ -61,20 +61,20 @@ function problem(error: z.ZodError): Error {
 
 /**
  * All or nothing: the whole file is checked before a single setting moves, so a bad key leaves the
- * page as it was rather than half imported.
+ * page as it was rather than half imported. It resolves once every value is in storage, because the
+ * page reloads on the other side of this call and a write still in flight would not survive it.
  */
-export function importSettings(json: string): void {
+export async function importSettings(json: string): Promise<void> {
   const parsed = snapshotSchema.safeParse(readJson(json));
   if (!parsed.success) {
     throw problem(parsed.error);
   }
 
-  for (const [key, setting] of Object.entries(allSettings)) {
-    const value = parsed.data[key];
-    if (value !== undefined) {
-      setting.current = value;
-    }
-  }
+  const arriving = Object.entries(allSettings)
+    .filter(([key]) => parsed.data[key] !== undefined)
+    .map(([key, setting]) => setting.set(parsed.data[key]));
+
+  await Promise.all(arriving);
 }
 
 export function downloadFile({ name, contents, type }: {

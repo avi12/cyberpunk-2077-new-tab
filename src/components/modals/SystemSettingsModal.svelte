@@ -35,7 +35,7 @@
 
   async function importFrom(file: File) {
     try {
-      importSettings(await file.text());
+      await importSettings(await file.text());
       window.location.reload();
     } catch (e) {
       report(e);
