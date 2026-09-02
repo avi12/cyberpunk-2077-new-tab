@@ -4,7 +4,6 @@
   import { BookmarkCategory } from "@/lib/storage/schema";
   import BookmarkForm from "./BookmarkForm.svelte";
   import CategorySection from "./CategorySection.svelte";
-  import ContextMenu from "./ContextMenu.svelte";
   import Modal from "@/components/modals/Modal.svelte";
   import { pickCategory } from "@/lib/icons/auto";
   import NameForm from "./NameForm.svelte";
@@ -27,7 +26,6 @@
   let renameDraft = $state("");
   let isAddingCategory = $state(false);
   let newCategoryName = $state("");
-  let contextMenu = $state<{ x: number; y: number; bookmark: Bookmark } | null>(null);
   let pendingDelete = $state<string | null>(null);
 
   const categories = $derived(settings.categoryOrder.current);
@@ -166,18 +164,6 @@
     pendingDelete = null;
   }
 
-  function onBookmarkContextMenu(e: MouseEvent, bookmark: Bookmark) {
-    e.preventDefault();
-    if (isEditing) {
-      return;
-    }
-
-    contextMenu = {
-      x: e.clientX,
-      y: e.clientY,
-      bookmark
-    };
-  }
 </script>
 
 {#snippet linkForm(category: string)}
@@ -263,7 +249,6 @@
               bookmarkToEdit = null;
               formCategory = name;
             }}
-            {onBookmarkContextMenu}
             onBookmarkMove={moveBookmark}
             onBookmarkOrderChange={change => {
               const inCategory = bookmarksIn(change.category);
@@ -320,14 +305,6 @@
     </div>
   {/if}
 </nav>
-
-{#if contextMenu}
-  <ContextMenu
-    bookmark={contextMenu.bookmark}
-    onClose={() => (contextMenu = null)}
-    x={contextMenu.x}
-    y={contextMenu.y} />
-{/if}
 
 <Modal isOpen={pendingDelete !== null} onClose={() => (pendingDelete = null)} variant="warning">
   <div class="warning__heading">

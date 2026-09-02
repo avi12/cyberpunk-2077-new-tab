@@ -29,7 +29,6 @@
     onDeleteBookmark,
     onEditBookmark,
     onOpenBookmark,
-    onBookmarkContextMenu
   }: {
     category: string;
     bookmarks: Bookmark[];
@@ -53,7 +52,6 @@
     onDeleteBookmark: (id: string) => void;
     onEditBookmark: (bookmark: Bookmark) => void;
     onOpenBookmark: (url: string) => void;
-    onBookmarkContextMenu: (e: MouseEvent, bookmark: Bookmark) => void;
   } = $props();
 
   const EDIT_CATEGORY_LABEL = "Edit category";
@@ -124,7 +122,6 @@
           <BookmarkCard
             {bookmark}
             {isEditing}
-            onContextMenu={onBookmarkContextMenu}
             onDelete={onDeleteBookmark}
             onEdit={onEditBookmark}
             onOpen={onOpenBookmark} />

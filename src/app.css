@@ -465,85 +465,6 @@ textarea {
   }
 }
 
-/*
- * What the tear alone could never say: that this row is the selected one. The game answers a cursor
- * by wiping a block of the accent in from the left and dropping the label to near-black on top of
- * it, and takes it away again the instant the cursor leaves - there is no exit animation to watch.
- * Holding the transitions inside the hovered state is what buys that: entering animates, leaving
- * snaps.
- *
- * The colours are the theme's own, so Cyber Ninja fills red and Edgerunners green without a second
- * rule. Two knobs: how far the block bleeds past the label, and how long the rule that trails it
- * runs. A full-width row sets both to zero, because it already ends at a border - and must write
- * that zero as `0px`, since a bare `0` is a number, and a number inside the `calc()` below makes
- * the whole declaration invalid rather than merely wrong.
- */
-.menu-select {
-  --cp-select-bleed: 0.4em;
-  --cp-select-tail: 14px;
-  --cp-select-chamfer: 6px;
-
-  position: relative;
-  isolation: isolate;
-
-  &::before,
-  &::after {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    background: var(--cp-accent-vivid);
-    scale: 0 1;
-    transform-origin: left;
-  }
-
-  /* Chamfered off the bottom right, the way every panel in this page is. */
-  &::before {
-    inset: 0 calc(-1 * var(--cp-select-bleed));
-    clip-path:
-      polygon(
-        0 0,
-        100% 0,
-        100% calc(100% - var(--cp-select-chamfer)),
-        calc(100% - var(--cp-select-chamfer)) 100%,
-        0 100%
-      );
-  }
-
-  /*
-   * The rule leaves from the exact point the cut corner leaves the block's right edge, so the two
-   * read as one shape. Both read the chamfer from the same place; a rule sitting at the bottom
-   * instead dangles under the notch.
-   */
-  &::after {
-    inset: calc(100% - var(--cp-select-chamfer)) calc(-1 * (var(--cp-select-bleed) + var(--cp-select-tail))) auto auto;
-    width: var(--cp-select-tail);
-    height: 2px;
-  }
-
-  /*
-   * The label's own hover, or the card's - whichever is the row the cursor is actually on.
-   *
-   * The colour is not transitioned. Fading or stepping it partway through the wipe leaves a light
-   * label sitting on yellow for as long as that takes, which reads as a contrast bug; flipping it
-   * on the first frame instead hides the label in the dark it was already on, and the block brings
-   * it back as it crosses. The game keeps its label lit the whole way, but that wants a second dark
-   * copy clipped to the wipe, and a row carrying an icon as well has nowhere to put one.
-   */
-  &:is(:hover, :hover > &) {
-    color: var(--cp-on-accent);
-
-    &::before {
-      transition: scale 100ms cubic-bezier(0.2, 0, 0, 1);
-      scale: 1 1;
-    }
-
-    &::after {
-      transition: scale 80ms linear 100ms;
-      scale: 1 1;
-    }
-  }
-}
-
 /* Default and Cyber Ninja share this shape; Edgerunners cycles a third colour and needs its own. */
 @keyframes hover-glitch {
   0% {
@@ -976,55 +897,6 @@ textarea {
 
 /* ---------- Bookmark context menu ---------- */
 
-.context-menu-glitch {
-  animation: 90ms infinite context-menu-glitch;
-}
-
-@keyframes context-menu-glitch {
-  0% {
-    border-color: #00ffff;
-    filter: hue-rotate(0deg) brightness(1);
-    scale: 1;
-    translate: 0;
-  }
-
-  20% {
-    border-color: #ff0090;
-    filter: hue-rotate(90deg) brightness(1.2);
-    scale: 1.05;
-    translate: -3px 3px;
-  }
-
-  40% {
-    border-color: #f9f002;
-    filter: hue-rotate(180deg) brightness(0.8);
-    scale: 0.95;
-    translate: 3px -3px;
-  }
-
-  60% {
-    border-color: #00ffff;
-    filter: hue-rotate(270deg) brightness(1.1);
-    scale: 1.02;
-    translate: -2px -2px;
-  }
-
-  80% {
-    border-color: #ff0090;
-    filter: hue-rotate(360deg) brightness(0.9);
-    scale: 0.98;
-    translate: 2px 2px;
-  }
-
-  100% {
-    border-color: #00ffff;
-    opacity: 0%;
-    filter: hue-rotate(0deg) brightness(1);
-    scale: 1;
-    translate: 0;
-  }
-}
-
 /* ---------- Greeting & quote glow ---------- */
 
 .greeting {
@@ -1130,7 +1002,6 @@ textarea {
   .greeting,
   .task-pulse,
   .task-glitch,
-  .context-menu-glitch,
   .scanning-effect::after,
   .scanning-text,
   .pulse,
@@ -1138,17 +1009,5 @@ textarea {
   .quote-hover:hover,
   .glitch-border:hover::before {
     animation: none;
-  }
-
-  /*
-   * The fill stays - it is which row is selected, not decoration - but it arrives without the wipe.
-   */
-  .menu-select:is(:hover, :hover > .menu-select) {
-    transition: none;
-
-    &::before,
-    &::after {
-      transition: none;
-    }
   }
 }

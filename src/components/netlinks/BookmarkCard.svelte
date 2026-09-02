@@ -25,14 +25,12 @@
     onDelete,
     onEdit,
     onOpen,
-    onContextMenu
   }: {
     bookmark: Bookmark;
     isEditing: boolean;
     onDelete: (id: string) => void;
     onEdit: (bookmark: Bookmark) => void;
     onOpen: (url: string) => void;
-    onContextMenu: (e: MouseEvent, bookmark: Bookmark) => void;
   } = $props();
 
   const EDIT_LABEL = "Edit bookmark";
@@ -70,7 +68,6 @@
     href={bookmark.url}
     onauxclick={onAuxClick}
     onclick={onClick}
-    oncontextmenu={e => onContextMenu(e, bookmark)}
     ondragstart={onDragStart}
     use:menuSounds>
     <span class="card__icon">{@html iconByName(bookmark.icon || "Default")}</span>
