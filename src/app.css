@@ -447,11 +447,17 @@ textarea {
 }
 
 /* ---------- Glitch effects ---------- */
+
+/*
+ * The game's menu tears the label for two or three frames, along x only, and is done inside about
+ * 130ms. What was here ran two and a half times that and jittered on y as well, which reads as a
+ * signal problem rather than as a cursor arriving.
+ */
 .hover-glitch {
   position: relative;
 
   &:hover {
-    animation: 300ms steps(2, end) hover-glitch;
+    animation: 130ms steps(2, end) hover-glitch;
 
     .edgerunners & {
       animation-name: edgerunners-hover-glitch;
@@ -468,17 +474,17 @@ textarea {
 
   25% {
     text-shadow: -2px 2px var(--cp-glitch-a), 2px -2px var(--cp-glitch-b);
-    translate: 1px 1px;
+    translate: 1px;
   }
 
   50% {
     text-shadow: 2px -2px var(--cp-glitch-a), -2px 2px var(--cp-glitch-b);
-    translate: -1px -1px;
+    translate: -1px;
   }
 
   75% {
     text-shadow: -2px -2px var(--cp-glitch-a), 2px 2px var(--cp-glitch-b);
-    translate: 1px -1px;
+    translate: 1px;
   }
 
   100% {
@@ -495,17 +501,17 @@ textarea {
 
   25% {
     text-shadow: -2px 2px #10b981, 2px -2px #8b5cf6;
-    translate: 1px 1px;
+    translate: 1px;
   }
 
   50% {
     text-shadow: 2px -2px #00ffff, -2px 2px #10b981;
-    translate: -1px -1px;
+    translate: -1px;
   }
 
   75% {
     text-shadow: -2px -2px #8b5cf6, 2px 2px #10b981;
-    translate: 1px -1px;
+    translate: 1px;
   }
 
   100% {
