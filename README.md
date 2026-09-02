@@ -89,12 +89,18 @@ actually came out at, remembered at the width it was measured, and moves nothing
 
 ### Hover sounds
 
-A card answers the cursor with the short metallic tick Night City's menus use. Nothing is loaded for
-it: the blip is two oscillators built on the spot, one modulating the other at an interval no
-instrument would pick, so it comes out mechanical rather than musical - and a little different every
-time, which is what stops a row of cards from sounding like a machine gun. The terminal panel turns
-it off, and the first blip waits for the page's first click, because a page nobody has touched is not
-allowed to make a sound.
+A card answers the cursor. Out of the box that answer is synthesised, not loaded: two oscillators
+built on the spot, one modulating the other at an interval no instrument would pick, so it comes out
+mechanical rather than musical - and a little different every time, which is what stops a row of
+cards from sounding like a machine gun.
+
+Drop an audio file on the terminal panel's Sound section and that plays instead. It is decoded once
+when you pick it - a file the browser cannot read is refused there rather than failing silently on a
+hover - and then kept in IndexedDB beside a custom background, in your browser only. Nothing is
+bundled with the extension, so whatever you want a card to sound like is yours to bring.
+
+The first sound of a page waits for its first click either way: a page nobody has touched is not
+allowed to make one.
 
 ### Browser account name
 
@@ -126,7 +132,7 @@ src/
     icons/                 lucide path data (generated), the <svg> wrapper, the 40-icon picker list
     storage/               defaults -> wxt/storage items -> a rune-backed settings store
     sortable.ts            one pointer-driven reorder action, shared by all three drag lists
-    sound.ts               the hover blip, synthesised rather than loaded
+    sound.ts               the hover sound - one you bring, or a synthesised blip
     ...                    time, quotes, weather, geolocation, colour, search, top-sites, glitch
   components/
     netlinks/ widgets/ terminal/ modals/ journeys/
