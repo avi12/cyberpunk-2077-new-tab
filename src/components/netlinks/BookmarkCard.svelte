@@ -62,7 +62,7 @@
 
 <li class="card-slot view-item" data-sortable-id={bookmark.id}>
   <a
-    class="card glitch-border"
+    class="card glitch-border hover-glitch-host"
     class:is-editing={isEditing}
     draggable={!isEditing}
     href={bookmark.url}
