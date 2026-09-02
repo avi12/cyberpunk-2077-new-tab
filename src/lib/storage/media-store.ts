@@ -1,24 +1,30 @@
 /**
- * Custom background image/video blobs live in IndexedDB, not extension storage: they are tens of
- * megabytes and `storage.local` is neither meant for nor sized for binary data. The `background`
- * setting then holds the sentinel `cached:image` / `cached:video` instead of a URL.
+ * Everything the reader brings in themselves lives in IndexedDB rather than extension storage: a
+ * background runs to tens of megabytes, and `storage.local` is neither meant for nor sized for
+ * binary data. The setting that points at one holds a sentinel - `cached:image` - instead of a URL.
  *
- * The database name, version and single record id match the original extension, so an existing
- * user's uploaded background survives the rebuild.
+ * One record per slot, and a slot's id is the record's key, so it is the persisted contract. The
+ * background keeps the id the original extension used, so an existing user's upload survives the
+ * rebuild.
  */
 
 const DB_NAME = "terminal-startpage";
 const DB_VERSION = 1;
 const STORE_NAME = "media";
 
-const MEDIA_ID = "background-media";
+export enum MediaSlot {
+  background = "background-media",
+  hoverSound = "hover-sound"
+}
 
 export const CACHED_PREFIX = "cached:";
 
-type MediaRecord = {
-  id: string;
+export type MediaRecord = {
+  id: MediaSlot;
   blob: Blob;
   type: string;
+  /** What the file was called when it came in, which is the only way to name it back at the reader. */
+  name?: string;
   timestamp: number;
 };
 
@@ -57,29 +63,39 @@ async function runRequest<TResult>(
   });
 }
 
-export async function saveBackgroundMedia(blob: Blob, type: string): Promise<void> {
+export async function saveMedia({ slot, blob, type, name }: {
+  slot: MediaSlot;
+  blob: Blob;
+  type: string;
+  name?: string;
+}): Promise<void> {
   const record: MediaRecord = {
-    id: MEDIA_ID,
+    id: slot,
     blob,
     type,
+    name,
     timestamp: Date.now()
   };
   await runRequest("readwrite", store => store.put(record));
 }
 
-export async function loadBackgroundMedia(): Promise<Blob | null> {
-  const record: MediaRecord | undefined = await runRequest("readonly", store => store.get(MEDIA_ID));
+export async function loadMedia(slot: MediaSlot): Promise<MediaRecord | null> {
+  const record: MediaRecord | undefined = await runRequest("readonly", store => store.get(slot));
   if (!record?.blob) {
     return null;
   }
 
+  // An older record can carry a typeless blob; the type it was saved under is the one to hand back.
   if (!record.blob.type && record.type) {
-    return new Blob([record.blob], { type: record.type });
+    return {
+      ...record,
+      blob: new Blob([record.blob], { type: record.type })
+    };
   }
 
-  return record.blob;
+  return record;
 }
 
-export async function clearBackgroundMedia(): Promise<void> {
-  await runRequest("readwrite", store => store.delete(MEDIA_ID));
+export async function clearMedia(slot: MediaSlot): Promise<void> {
+  await runRequest("readwrite", store => store.delete(slot));
 }

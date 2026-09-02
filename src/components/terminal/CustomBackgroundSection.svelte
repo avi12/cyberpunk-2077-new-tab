@@ -1,6 +1,6 @@
 <script lang="ts">
   import { BACKGROUND_COLORS, BACKGROUND_IMAGES, BackgroundMediaType, DEFAULT_BACKGROUND } from "@/lib/storage/defaults";
-  import { CACHED_PREFIX, clearBackgroundMedia, saveBackgroundMedia } from "@/lib/storage/media-store";
+  import { CACHED_PREFIX, clearMedia, MediaSlot, saveMedia } from "@/lib/storage/media-store";
   import { dropZone } from "@/lib/drop-zone";
   import { fetchBlob } from "@/lib/cors-proxy";
   import iconImage from "@/assets/icons/image.svg?raw";
@@ -54,7 +54,11 @@
     kind: UploadableMedia;
   }) {
     try {
-      await saveBackgroundMedia(blob, kind);
+      await saveMedia({
+        slot: MediaSlot.background,
+        blob,
+        type: kind
+      });
     } catch {
       // Out of quota - keeping the previous background is the safe outcome
       error = "No room left to store that one";
@@ -106,7 +110,7 @@
   }
 
   async function clearCustom() {
-    await clearBackgroundMedia();
+    await clearMedia(MediaSlot.background);
     settings.backgroundMediaType.current = BackgroundMediaType.none;
     settings.background.current = DEFAULT_BACKGROUND;
   }

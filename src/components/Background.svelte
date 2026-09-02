@@ -1,6 +1,6 @@
 <script lang="ts">
   import { BackgroundMediaType, BASE_BACKGROUND_COLOR } from "@/lib/storage/defaults";
-  import { CACHED_PREFIX, loadBackgroundMedia } from "@/lib/storage/media-store";
+  import { CACHED_PREFIX, loadMedia, MediaSlot } from "@/lib/storage/media-store";
   import { settings } from "@/lib/storage/settings.svelte";
 
   const VIDEO_LOAD_TIMEOUT_MS = 15_000;
@@ -42,12 +42,12 @@
     let isRevoked = false;
     let url: string | null = null;
 
-    void loadBackgroundMedia().then(blob => {
-      if (isRevoked || !blob) {
+    void loadMedia(MediaSlot.background).then(media => {
+      if (isRevoked || !media) {
         return;
       }
 
-      url = URL.createObjectURL(blob);
+      url = URL.createObjectURL(media.blob);
       objectUrl = url;
     });
 
