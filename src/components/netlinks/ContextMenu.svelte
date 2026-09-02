@@ -3,6 +3,7 @@
   import iconCopy from "@/assets/icons/copy.svg?raw";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import { GLITCH_LONG_MS, Glitch } from "@/lib/glitch.svelte";
+  import { menuSounds } from "@/lib/sound";
 
   const {
     x,
@@ -57,13 +58,13 @@
 
 <menu style:left="{x}px" style:top="{y}px" class="context-menu" class:context-menu-glitch={glitch.active}>
   <li>
-    <button class="context-menu__item" onclick={() => run(() => window.open(bookmark.url, "_blank"))} type="button">
+    <button class="context-menu__item" onclick={() => run(() => window.open(bookmark.url, "_blank"))} type="button" use:menuSounds>
       {@html iconExternalLink}
       New Tab
     </button>
   </li>
   <li>
-    <button class="context-menu__item" onclick={() => run(() => void copyLink())} type="button">
+    <button class="context-menu__item" onclick={() => run(() => void copyLink())} type="button" use:menuSounds>
       {@html iconCopy}
       Copy Link
     </button>

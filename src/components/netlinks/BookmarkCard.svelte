@@ -12,7 +12,7 @@
 
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/schema";
-  import { blipOnHover } from "@/lib/sound";
+  import { menuSounds } from "@/lib/sound";
   import iconGripVertical from "@/assets/icons/grip-vertical.svg?raw";
   import { iconByName } from "@/lib/icons/choices";
   import iconSquarePen from "@/assets/icons/square-pen.svg?raw";
@@ -72,7 +72,7 @@
     onclick={onClick}
     oncontextmenu={e => onContextMenu(e, bookmark)}
     ondragstart={onDragStart}
-    use:blipOnHover>
+    use:menuSounds>
     <span class="card__icon">{@html iconByName(bookmark.icon || "Default")}</span>
     <span class="card__title hover-glitch">{bookmark.title}</span>
   </a>
