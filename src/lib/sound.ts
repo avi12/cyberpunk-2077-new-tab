@@ -147,7 +147,7 @@ function playSynth(audio: AudioContext): void {
   strike.start(startedAt);
 }
 
-export function playBlip(): void {
+function playBlip(): void {
   if (!settings.playSounds.current) {
     return;
   }
