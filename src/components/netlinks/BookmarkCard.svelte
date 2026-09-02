@@ -74,7 +74,7 @@
     ondragstart={onDragStart}
     use:menuSounds>
     <span class="card__icon">{@html iconByName(bookmark.icon || "Default")}</span>
-    <span class="card__title menu-select hover-glitch">{bookmark.title}</span>
+    <span class="card__title hover-glitch">{bookmark.title}</span>
   </a>
 
   {#if isEditing}

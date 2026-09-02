@@ -37,7 +37,7 @@
 </script>
 
 <article class="journey glitch-border" use:menuSounds>
-  <h3 class="journey__title menu-select hover-glitch" use:tooltip={journey.contextReason}>{journey.title}</h3>
+  <h3 class="journey__title hover-glitch" use:tooltip={journey.contextReason}>{journey.title}</h3>
   <p class="journey__summary">{journey.summary}</p>
 
   <ul class="journey__sources">
@@ -65,13 +65,11 @@
 
 <style>
   .journey {
-    --journey-padding: 0.875rem;
-
     display: flex;
     flex-direction: column;
     gap: 0.625rem;
     height: 100%;
-    padding: var(--journey-padding);
+    padding: 0.875rem;
     border: 1px solid var(--cp-outline);
     background: var(--cp-surface);
     transition: border-color 200ms;
@@ -81,15 +79,7 @@
     }
   }
 
-  /*
-   * A title that already spans the card is a row, not a label: the fill runs out to the card's own
-   * edges - reading the padding from the one place it is set - and there is no room, nor any need,
-   * for a rule trailing off it.
-   */
   .journey__title {
-    --cp-select-bleed: var(--journey-padding);
-    --cp-select-tail: 0px;
-
     color: var(--cp-accent);
     font-family: var(--cp-mono);
     font-size: 0.9375rem;
