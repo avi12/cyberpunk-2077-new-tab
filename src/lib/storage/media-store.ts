@@ -13,8 +13,7 @@ const DB_VERSION = 1;
 const STORE_NAME = "media";
 
 export enum MediaSlot {
-  background = "background-media",
-  hoverSound = "hover-sound"
+  background = "background-media"
 }
 
 export const CACHED_PREFIX = "cached:";

@@ -1,4 +1,3 @@
-import { clearMedia, loadMedia, MediaSlot, saveMedia } from "./storage/media-store";
 import { settings } from "./storage/settings.svelte";
 
 /**
@@ -6,8 +5,7 @@ import { settings } from "./storage/settings.svelte";
  *
  * Two voices, taken off the game's own menu and rebuilt from oscillators. Nothing here is CDPR's
  * audio - the numbers below are measurements of it, and an extension that ships no sample cannot
- * ship anyone's sample. A reader who wants the real thing brings their own file, which is decoded
- * once and played as it is in place of the hover tick.
+ * ship anyone's sample.
  *
  * The measurements, from `ui_menu_hover` (hash 435721760) and `ui_menu_onpress` (698798840):
  *
@@ -106,17 +104,8 @@ const PRESS_TAIL_GAIN = 0.1;
 /** One buffer of noise, long enough for whichever of the two voices asks for it. */
 const NOISE_MS = 120;
 
-/** What the picker takes, and so what a drop on its zone takes too. */
-export const HOVER_SOUND_ACCEPT = "audio/*";
-
-/** A file that arrived without a name of its own still has to be named back at the reader. */
-const UNNAMED_SOUND = "custom sound";
-
 let context: AudioContext | null = null;
 let hiss: AudioBuffer | null = null;
-let sample: AudioBuffer | null = null;
-let isSampleAsked = false;
-let playingSample: AudioBufferSourceNode | null = null;
 let lastPlayedMs = 0;
 
 /**
@@ -147,29 +136,6 @@ function hissBuffer(audio: AudioContext): AudioBuffer {
   hiss.getChannelData(0).set(Float32Array.from({ length }, () => Math.random() * 2 - 1));
 
   return hiss;
-}
-
-/** Asked for once. The store is the whole of the choice, so there is no setting to disagree with it. */
-async function ensureSample(audio: AudioContext): Promise<void> {
-  if (isSampleAsked) {
-    return;
-  }
-
-  isSampleAsked = true;
-  const media = await loadMedia(MediaSlot.hoverSound);
-  if (!media) {
-    return;
-  }
-
-  sample = await audio.decodeAudioData(await media.blob.arrayBuffer()).catch(() => null);
-}
-
-/** One at a time: a cursor down a column would otherwise stack every card it passes. */
-function playSample(audio: AudioContext, buffer: AudioBuffer): void {
-  playingSample?.stop();
-  playingSample = new AudioBufferSourceNode(audio, { buffer });
-  playingSample.connect(audio.destination);
-  playingSample.start();
 }
 
 /**
@@ -284,23 +250,12 @@ function onHover(): void {
   }
 
   lastPlayedMs = now;
-  // The first hover of a page is the built-in tick; the file is decoded in time for the second.
-  void ensureSample(audio);
-
-  if (sample) {
-    playSample(audio, sample);
-
-    return;
-  }
-
   playTick(audio);
 }
 
 /**
  * No repeat guard: a press cannot machine-gun the way a cursor crossing a grid can, and the guard
  * would swallow it anyway - the hover that brought the cursor here fired milliseconds ago.
- *
- * A brought-in file stands in for the tick, not for the press: it is the hover sound, by name.
  */
 function onPress(): void {
   const audio = audioForSound();
@@ -313,48 +268,10 @@ function onPress(): void {
  * The panel's own preview. A click is exactly the activation a context waits for, so unlike a
  * hover it is worth waiting on the wake-up before playing.
  */
-export async function previewBlip(): Promise<void> {
+export async function previewTick(): Promise<void> {
   context ??= new AudioContext();
   await context.resume();
   onHover();
-}
-
-/**
- * Decoded before it is kept, because a file the browser cannot read would fail on hover, where
- * there is nothing to say so with. Answers whether it was one.
- */
-export async function keepHoverSound(file: File): Promise<boolean> {
-  context ??= new AudioContext();
-  const decoded = await context.decodeAudioData(await file.arrayBuffer()).catch(() => null);
-  if (!decoded) {
-    return false;
-  }
-
-  await saveMedia({
-    slot: MediaSlot.hoverSound,
-    blob: file,
-    type: file.type,
-    name: file.name
-  });
-  sample = decoded;
-  isSampleAsked = true;
-
-  return true;
-}
-
-export async function dropHoverSound(): Promise<void> {
-  await clearMedia(MediaSlot.hoverSound);
-  sample = null;
-  isSampleAsked = true;
-}
-
-export async function hoverSoundName(): Promise<string | null> {
-  const media = await loadMedia(MediaSlot.hoverSound);
-  if (!media) {
-    return null;
-  }
-
-  return media.name || UNNAMED_SOUND;
 }
 
 /** On focus as well as on pointer, so a keyboard hears the same page a mouse does. */

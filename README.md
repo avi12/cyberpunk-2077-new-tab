@@ -92,32 +92,46 @@ actually came out at, remembered at the width it was measured, and moves nothing
 
 ### Hover sounds
 
-A card answers the cursor. Out of the box that answer is synthesised, not loaded: two oscillators
-built on the spot, one modulating the other at an interval no instrument would pick, so it comes out
-mechanical rather than musical - and a little different every time, which is what stops a row of
-cards from sounding like a machine gun.
+A card answers the cursor with the game's own menu, synthesised rather than sampled. `ui_menu_hover`
+is 68ms with no attack in it at all: 145Hz carries 60% of the energy, a pair at 5672Hz and 5906Hz
+carries the rest, and the 234Hz gap between those two beats about four times across the sound, which
+is the shimmer you hear. `ui_menu_onpress`, which a click gets, is the opposite - no low end
+whatsoever, an inharmonic cluster from 2.4kHz to 3.9kHz, and a noise tail that outlasts the tone.
 
-Drop an audio file on the terminal panel's Sound section and that plays instead. It is decoded once
-when you pick it - a file the browser cannot read is refused there rather than failing silently on a
-hover - and then kept in IndexedDB beside a custom background, in your browser only. Nothing is
-bundled with the extension, so whatever you want a card to sound like is yours to bring.
+Both are oscillators and a table of frequencies. Every number was measured off the game's files and
+none of the audio is shipped: it is CDPR's, and a handful of sines is not. Rendered back through the
+same Web Audio graph, each partial lands within 1dB of the original's.
+
+The section in the terminal panel is a switch, not a mixer. Sounds are on or off.
 
 The first sound of a page waits for its first click either way: a page nobody has touched is not
 allowed to make one.
 
-### Browser account name
+### Google account name
 
 No browser API hands over a name:
 [`identity.getProfileUserInfo`](https://developer.chrome.com/docs/extensions/reference/api/identity#method-getProfileUserInfo)
 answers with an email address and an account id, and that is the whole of it - the Chromium team has
 [said the same](https://groups.google.com/a/chromium.org/g/chromium-extensions/c/QN_wvxn5Aiw) about
-reading the profile name. Chrome's OAuth route would give the account's real `given_name`, but it
-needs an `oauth2` key in the manifest, which Edge does not support, and an OAuth client that can only
-be created by hand in the Google Cloud console.
+reading the profile name. Reading a name back out of the address only works when the address happens
+to hold one: `jane.doe@...` does, `cyberwolf99@...` does not, and no amount of splitting and
+capitalising fixes the second case.
 
-So the name is read out of the address instead, minus the digits people add to claim one that was
-taken: `jane.doe@...` becomes `Jane Doe`, `avi6106@...` becomes `Avi`. A local part that is nothing
-but digits is left as it is, and a browser with no signed-in account says so.
+So "Use Google account" asks instead.
+[`identity.launchWebAuthFlow`](https://developer.chrome.com/docs/extensions/reference/api/identity#method-launchWebAuthFlow)
+opens Google's account chooser and Google answers with the real `given_name`. This is the OAuth door
+that needs no `oauth2` manifest key - the key Edge has never supported - and Firefox implements it
+too, so for the first time all three browsers answer the same way.
+
+`response_type=id_token` is what keeps it to one file. The name arrives inside the token, so there is
+no authorization code to exchange, no client secret to bundle, and no access token to store, refresh
+or revoke: the token is checked against the request's `nonce`, read for one claim, and dropped.
+Nothing but the name is kept, and only if you press Save. The manifest asks for `identity` and not
+`identity.email`, so the install shows no "know your email address" warning.
+
+The button fills the field and leaves it selected - a `given_name` is a first name, and if you would
+rather be called something else it is one keystroke away. The greeting is still `V` until you save
+something.
 
 No host permissions: open-meteo, timeapi, allorigins and bigdatacloud all answer with
 `Access-Control-Allow-Origin: *`, and an extension page follows ordinary CORS.
@@ -137,7 +151,7 @@ src/
     settings-file.ts       the settings snapshot, out to a file and back
     settings-sync.ts       the same snapshot, kept in the browser account instead
     sortable.ts            one pointer-driven reorder action, shared by all three drag lists
-    sound.ts               the hover sound - one you bring, or a synthesised blip
+    sound.ts               the menu's hover tick and press, synthesised from measurements
     ...                    time, quotes, weather, geolocation, colour, search, top-sites, glitch
   components/
     netlinks/ widgets/ terminal/ modals/ journeys/
