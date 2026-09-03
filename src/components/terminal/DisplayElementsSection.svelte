@@ -3,14 +3,12 @@
   import iconEye from "@/assets/icons/eye.svg?raw";
   import iconEyeOff from "@/assets/icons/eye-off.svg?raw";
   import { GLITCH_SHORT_MS } from "@/lib/glitch.svelte";
-  import { HAS_JOURNEYS } from "@/lib/journeys/platform";
+  import { IS_EDGE } from "@/lib/companion/platform";
   import PanelSection from "./PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
   import { withViewTransition } from "@/lib/view-transition";
 
   const { onElementGlitch }: { onElementGlitch: (key: keyof DisplayPreferences | null) => void } = $props();
-
-  const JOURNEYS_KEY: keyof DisplayPreferences = "showJourneys";
 
   const DISPLAY_ELEMENTS: { key: keyof DisplayPreferences; label: string }[] = [
     {
@@ -34,8 +32,8 @@
       label: "Quotes"
     },
     {
-      key: "showJourneys",
-      label: "Journeys"
+      key: "showCopilot",
+      label: "Copilot"
     },
     {
       key: "showNetlinks",
@@ -47,8 +45,10 @@
     }
   ];
 
-  /** Journeys are Edge's, so the switch that hides them only exists in Edge. */
-  const elements = DISPLAY_ELEMENTS.filter(({ key }) => HAS_JOURNEYS || key !== JOURNEYS_KEY);
+  /** Journeys and tips are Edge's, so the switch that hides them only exists in Edge. */
+  const EDGE_KEYS: (keyof DisplayPreferences)[] = ["showCopilot"];
+
+  const elements = DISPLAY_ELEMENTS.filter(({ key }) => IS_EDGE || !EDGE_KEYS.includes(key));
 
   function commit({ key, isVisible }: {
     key: keyof DisplayPreferences;

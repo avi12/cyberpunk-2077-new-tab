@@ -27,6 +27,10 @@ import type {
 } from "./schema";
 import { BackgroundMediaType, SearchEngineId } from "./schema";
 import { storage } from "#imports";
+import type { WxtStorageItem } from "wxt/utils/storage";
+
+/** One stored value as `defineItem` hands it back, for the code that is given one to read or write. */
+export type StorageItem<TValue> = WxtStorageItem<TValue, Record<string, unknown>>;
 
 export const bookmarksItem = storage.defineItem<Bookmark[]>("local:bookmarks", { fallback: DEFAULT_BOOKMARKS });
 
@@ -75,17 +79,22 @@ export const playSoundsItem = storage.defineItem<boolean>("local:playSounds", { 
 export const bookmarksSeededItem = storage.defineItem<boolean>("local:bookmarksSeeded", { fallback: false });
 
 /**
- * Not a setting: the last answer Edge's journeys bridge gave. Reading it afresh means snapshotting a
- * database that runs to tens of megabytes and takes a quarter of a second, which is long enough to
- * see, so the answer outlives the browser session - otherwise the first new tab after every restart
- * is the slow one. It holds the host's words verbatim; the cards are rebuilt and revalidated on
- * every read, so an expired one never comes back from here.
+ * Not a setting: the last answer the companion app gave about one family of cards. Reading journeys
+ * afresh means snapshotting a database that runs to tens of megabytes and takes a quarter of a
+ * second, which is long enough to see, so the answer outlives the browser session - otherwise the
+ * first new tab after every restart is the slow one. It holds the app's words verbatim; the cards
+ * are rebuilt and revalidated on every read, so an expired journey never comes back from here and
+ * the three tips on show move on with the day.
  */
-type JourneysSnapshot = {
+export type CompanionSnapshot = {
   fetchedAtMs: number;
   raw: unknown[];
 };
 
-export const journeysSnapshotItem = storage.defineItem<JourneysSnapshot | null>("local:journeysSnapshot", {
+export const journeysSnapshotItem = storage.defineItem<CompanionSnapshot | null>("local:journeysSnapshot", {
+  fallback: null
+});
+
+export const tipsSnapshotItem = storage.defineItem<CompanionSnapshot | null>("local:tipsSnapshot", {
   fallback: null
 });

@@ -272,7 +272,8 @@ textarea {
 ::view-transition-group(clock),
 ::view-transition-group(search),
 ::view-transition-group(quote),
-::view-transition-group(journeys),
+::view-transition-group(companion),
+::view-transition-group(copilot),
 ::view-transition-group(netlinks),
 ::view-transition-group(match-element) {
   z-index: 10;
@@ -324,10 +325,6 @@ textarea {
 
 .quote {
   view-transition-name: quote;
-}
-
-.journeys {
-  view-transition-name: journeys;
 }
 
 .netlinks {

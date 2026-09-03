@@ -23,6 +23,7 @@ import {
   widgetOrderItem,
   widgetsItem
 } from "./items";
+import type { StorageItem } from "./items";
 import type { DisplayPreferences, Widget } from "./schema";
 import {
   bookmarkSchema,
@@ -32,10 +33,6 @@ import {
   widgetSchema
 } from "./schema";
 import { BackgroundMediaType, ColorTheme, ScanLinesMode } from "./schema";
-import type { WxtStorageItem } from "wxt/utils/storage";
-
-type StorageItem<TValue> = WxtStorageItem<TValue, Record<string, unknown>>;
-
 /**
  * One setting: where it is kept, what shape it may take, and how a stored answer is brought up to
  * date with what this build ships. The schema is what a settings file is checked against, so the

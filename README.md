@@ -57,8 +57,8 @@ Six on Chrome, four on Firefox, and each backs one feature:
 The last two are Chrome-only: Firefox exposes the `identity` namespace without
 `getProfileUserInfo`, so its manifest omits both and the button reports no account.
 
-`nativeMessaging` is **optional** and Chromium-only: it is asked for only if you turn on Copilot
-Journeys, so everyone else installs without ever seeing the prompt.
+`nativeMessaging` is **optional** and Chromium-only: it is asked for only if you link the companion
+that reads Copilot Journeys and tips, so everyone else installs without ever seeing the prompt.
 
 ### Permanent extension id
 
@@ -95,6 +95,23 @@ page as it opens rather than dropping in afterwards: placeholder cards hold the 
 will occupy, so nothing below the section moves when they arrive. The first tab guesses that row
 from type metrics and grows into the difference; every tab after it reserves the row the cards
 actually came out at, remembered at the width it was measured, and moves nothing at all.
+
+### Copilot tips (Edge on Windows)
+
+The second card family on Edge's own new tab, and structurally the opposite of a journey: not
+generated for you, but one catalogue of about 130 prompt ideas that Microsoft ships to everybody and
+Edge caches under the same profile. The companion reads that file too - a `JSON.parse` rather than a
+database snapshot - and the section is the same one the journeys use, with the tip's category where
+a journey lists the sites it was drawn from.
+
+Edge deals three tips from three different categories and moves on to another three on every call,
+reshuffling when the browser restarts, so which ones you see depends on how many tabs you opened.
+Here the same deal is made once a day: three categories from the day's place in the catalogue, and
+one tip further into each category every time the categories have all been through, which walks the
+whole catalogue without ever repeating a category within a day.
+
+Both families come through the one app, so the one line about reaching it is shared: it sits above
+both sections, said once, and neither section appears until it has something to show.
 
 ### Hover sounds
 
@@ -159,9 +176,12 @@ src/
   app.css                  reset, theme tokens, cross-component effects (glitch, scan lines, tooltip)
   controls.css             shared control primitives (dialogs, inputs, buttons, option tiles)
   entrypoints/
-    background.ts          topSites + default-engine search, over @webext-core/messaging
+    background.ts          topSites, default-engine search, the companion call - @webext-core/messaging
     newtab/                the page itself
   lib/
+    companion/             the app the two Copilot card families are read through, and the page's state
+    journeys/              Edge's generated cards: their shape, and where they exist at all
+    tips/                  Edge's cached prompt catalogue, and the day's three out of it
     icons/                 lucide path data (generated), the <svg> wrapper, the 40-icon picker list
     storage/               zod schemas -> defaults -> wxt/storage items -> a rune-backed store
     settings-file.ts       the settings snapshot, out to a file and back
@@ -170,14 +190,14 @@ src/
     sound.ts               the menu's hover tick and press, synthesised from measurements
     ...                    time, quotes, weather, geolocation, colour, search, top-sites, glitch
   components/
-    netlinks/ widgets/ terminal/ modals/ journeys/
+    companion/ journeys/ tips/ netlinks/ widgets/ terminal/ modals/
   public/
     icon/                  the toolbar/store PNGs and the terminal glyph the tab favicon uses
 scripts/
   cyberpunk-logo.ico       the brand mark, the one source every icon size is scaled from
   generate-icons.mjs       renders src/public/icon/*.png from cyberpunk-logo.ico
   generate-key.mjs         mints the keypair behind the permanent extension id
-companion/                 the paid Store app that reads Edge's journeys (its own README)
+companion/                 the paid Store app that reads Edge's journeys and tips (its own README)
 ```
 
 ### Reduced motion

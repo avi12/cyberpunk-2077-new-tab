@@ -1,4 +1,4 @@
-import { readNativeJourneys } from "@/lib/journeys/native";
+import { readCompanionRecords } from "@/lib/companion/native";
 import { onMessage } from "@/lib/messaging";
 import { defineBackground } from "#imports";
 
@@ -12,7 +12,7 @@ export default defineBackground(() => {
     }));
   });
 
-  onMessage("readJourneys", async () => readNativeJourneys());
+  onMessage("readCompanion", async ({ data }) => readCompanionRecords(data));
 
   onMessage("searchWithDefaultEngine", ({ data }) => {
     void browser.search.query({

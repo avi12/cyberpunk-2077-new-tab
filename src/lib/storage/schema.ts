@@ -127,7 +127,7 @@ export const displayPreferencesSchema = z.object({
   showDate: z.boolean().default(true),
   showSearchBar: z.boolean().default(true),
   showQuotes: z.boolean().default(true),
-  showJourneys: z.boolean().default(true),
+  showCopilot: z.boolean().default(true),
   showNetlinks: z.boolean().default(true),
   showWidgets: z.boolean().default(true)
 });

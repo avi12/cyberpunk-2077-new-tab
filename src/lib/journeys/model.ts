@@ -1,14 +1,6 @@
+import { MAX_CARDS } from "@/lib/companion/bridge";
+import { validRecords } from "@/lib/companion/model";
 import { z } from "@/lib/zod";
-
-/** Edge shows three at a time; a snapshot usually holds a few more, ranked. */
-export const MAX_JOURNEYS = 3;
-
-/**
- * Copilot's web app throws away every query parameter it is handed - `q`, `prompt`, `text`, a hash,
- * on every path - and lands on its own front page, so a prompt cannot travel in the link. It goes on
- * the clipboard instead, and the person pastes it into the box that is waiting for them.
- */
-export const COPILOT_URL = "https://copilot.microsoft.com/";
 
 /**
  * Edge writes fractional seconds at whatever precision it happens to have ("...:29.2Z"), which no
@@ -52,31 +44,23 @@ function isLive({ card, nowMs }: {
 }
 
 /**
- * The bridge's answer is untrusted input, so every card is validated on its own: a malformed or
- * expired one is skipped rather than failing the whole snapshot. Edge ranks its own cards and this
- * keeps that order, taking the highest scoring three.
+ * A card that has expired is dropped along with the malformed ones. Edge ranks its own cards and
+ * this keeps that order, taking the highest scoring three - a snapshot usually holds a few more.
  */
 export function parseJourneys({ raw, nowMs }: {
   raw: unknown;
   nowMs: number;
 }): Journey[] {
-  const entries = z.array(z.unknown()).safeParse(raw);
-  if (!entries.success) {
-    return [];
-  }
-
-  const cards: Journey[] = [];
-  for (const entry of entries.data) {
-    const card = journeySchema.safeParse(entry);
-    if (card.success && isLive({
-      card: card.data,
+  return validRecords({
+    raw,
+    schema: journeySchema
+  })
+    .filter(card => isLive({
+      card,
       nowMs
-    })) {
-      cards.push(card.data);
-    }
-  }
-
-  return cards.sort((first, second) => second.rankScore - first.rankScore).slice(0, MAX_JOURNEYS);
+    }))
+    .sort((first, second) => second.rankScore - first.rankScore)
+    .slice(0, MAX_CARDS);
 }
 
 /** The card's own prompt: the first is the one Edge itself sends when its card is clicked. */

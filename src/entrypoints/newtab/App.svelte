@@ -8,9 +8,10 @@
   import iconCog from "@/assets/icons/cog.svg?raw";
   import { greeting } from "@/lib/time";
   import IdentityModal from "@/components/modals/IdentityModal.svelte";
-  import { HAS_JOURNEYS } from "@/lib/journeys/platform";
+  import CompanionSetup from "@/components/companion/CompanionSetup.svelte";
+  import Copilot from "@/components/companion/Copilot.svelte";
+  import { IS_EDGE } from "@/lib/companion/platform";
   import iconInfo from "@/assets/icons/info.svg?raw";
-  import Journeys from "@/components/journeys/Journeys.svelte";
   import { loadSettings, settings } from "@/lib/storage/settings.svelte";
   import Netlinks from "@/components/netlinks/Netlinks.svelte";
   import Quote from "@/components/Quote.svelte";
@@ -33,6 +34,9 @@
   let greetingTick = $state(0);
 
   const preferences = $derived(settings.displayPreferences.current);
+
+  /** Both card families come through the one app, so the one line about reaching it is shared. */
+  const usesCompanion = $derived(IS_EDGE && preferences.showCopilot);
   const greetingText = $derived.by(() => {
     void greetingTick;
 
@@ -121,8 +125,12 @@
       <Quote glitching={glitchingElement === "showQuotes"} isPending={!isReady} />
     {/if}
 
-    {#if HAS_JOURNEYS && preferences.showJourneys}
-      <Journeys glitching={glitchingElement === "showJourneys"} />
+    {#if usesCompanion}
+      <CompanionSetup />
+    {/if}
+
+    {#if usesCompanion}
+      <Copilot glitching={glitchingElement === "showCopilot"} />
     {/if}
 
     {#if preferences.showNetlinks}

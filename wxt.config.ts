@@ -2,12 +2,12 @@ import extensionIdentity from "./companion/extension-identity.json";
 import { defineConfig } from "wxt";
 
 /**
- * Copilot Journeys are read through the companion app over native messaging, and only Edge on
- * Windows or macOS has any to read. Optional rather than granted up front, so the prompt only ever
- * appears for the people the feature exists for - everyone else installs without it, and Firefox
- * never sees it at all.
+ * Copilot Journeys and Copilot tips are read through the companion app over native messaging, and
+ * only Edge files either of them under a profile. Optional rather than granted up front, so the
+ * prompt only ever appears for the people the feature exists for - everyone else installs without
+ * it, and Firefox never sees it at all.
  */
-const JOURNEYS_PERMISSIONS = ["nativeMessaging"];
+const COMPANION_PERMISSIONS = ["nativeMessaging"];
 
 /**
  * Firefox ties `storage.sync` to the add-on's own id: a build without one has no account area to
@@ -62,7 +62,7 @@ export default defineConfig({
       }
       : {
         key: publicKey,
-        optional_permissions: JOURNEYS_PERMISSIONS
+        optional_permissions: COMPANION_PERMISSIONS
       }),
     author: {
       email: "avi6106@gmail.com"
