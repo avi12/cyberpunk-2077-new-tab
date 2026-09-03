@@ -87,7 +87,7 @@
   }
 </script>
 
-<form class="link-card" novalidate onsubmit={e => void submit(e)}>
+<form class="link-card cyber-glass" novalidate onsubmit={e => void submit(e)}>
   <label class="visually-hidden" for="link-url">URL</label>
   <input
     id="link-url"
@@ -150,7 +150,6 @@
     min-height: 100px;
     padding: 0.5rem;
     border: 2px solid var(--cp-accent);
-    background: var(--cp-surface);
   }
 
   .link-card__field {

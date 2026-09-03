@@ -297,7 +297,10 @@
           variant="primary"
           bind:value={newCategoryName} />
       {:else}
-        <button class="netlinks__add-button" onclick={() => (isAddingCategory = true)} type="button">
+        <button
+          class="netlinks__add-button cyber-glass"
+          onclick={() => (isAddingCategory = true)}
+          type="button">
           {@html iconPlus}
           ADD CATEGORY
         </button>
@@ -419,7 +422,7 @@
     font-family: var(--cp-mono);
 
     &:hover {
-      background: var(--cp-surface-2);
+      background: color-mix(in sRGB, var(--cp-surface-2) 88%, transparent);
     }
 
     :global(svg) {

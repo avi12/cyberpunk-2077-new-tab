@@ -132,7 +132,10 @@
           {#if isAddingLink}
             {@render linkForm(category)}
           {:else}
-            <button class="category__add" onclick={() => onAddBookmark(category)} type="button">
+            <button
+              class="category__add cyber-glass"
+              onclick={() => onAddBookmark(category)}
+              type="button">
               {@html iconPlus}
               ADD LINK
             </button>
@@ -247,7 +250,7 @@
 
     &:hover {
       border-color: var(--cp-accent);
-      background: var(--cp-surface-2);
+      background: color-mix(in sRGB, var(--cp-surface-2) 88%, transparent);
       color: var(--cp-accent);
     }
 

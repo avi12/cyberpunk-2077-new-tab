@@ -354,6 +354,14 @@
   }
 }
 
+/* The tiles that sit in the netlinks grid without a card behind them. Laid over the wallpaper
+   rather than punched through it: enough of the surface to read a label on, and the city behind it
+   blurred so it never competes with one. */
+.cyber-glass {
+  background: color-mix(in sRGB, var(--cp-surface) 82%, transparent);
+  backdrop-filter: blur(14px);
+}
+
 /* ---------- Layout helpers used by more than one component ---------- */
 
 .stack {
