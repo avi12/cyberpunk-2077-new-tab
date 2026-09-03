@@ -3,9 +3,7 @@
   import iconFingerprint from "@/assets/icons/fingerprint.svg?raw";
   import Modal from "./Modal.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
-  import iconSquarePen from "@/assets/icons/square-pen.svg?raw";
-  import { tooltip } from "@/lib/tooltip";
-  import { tick } from "svelte";
+  import { DEFAULT_USER_NAME } from "@/lib/storage/defaults";
 
   const {
     isOpen,
@@ -15,25 +13,23 @@
     onClose: () => void;
   } = $props();
 
-  const EDIT_LABEL = "Edit name";
-
-  let draft = $state(settings.userName.current);
-  let isEditing = $state(false);
+  /**
+   * The field holds what is being typed; the setting holds what the page greets by. They part ways
+   * for exactly as long as the field is empty - a name being retyped passes through nothing at all,
+   * and the greeting answers that with the default rather than with "Evening, ".
+   */
+  let name = $state(settings.userName.current);
   let error = $state("");
-  let elName = $state<HTMLInputElement>();
 
   $effect(() => {
     if (isOpen) {
-      draft = settings.userName.current;
-      isEditing = false;
+      name = settings.userName.current;
       error = "";
     }
   });
 
-  async function startEditing() {
-    isEditing = true;
-    await tick();
-    elName?.select();
+  function rename() {
+    settings.userName.current = name.trim() || DEFAULT_USER_NAME;
   }
 
   async function fillFromGoogle() {
@@ -51,40 +47,25 @@
     }
 
     error = "";
-    draft = googleName;
-  }
-
-  function save(e: SubmitEvent) {
-    e.preventDefault();
-    settings.userName.current = draft.trim() || settings.userName.current;
-    onClose();
+    name = googleName;
+    rename();
   }
 </script>
 
+<!--
+  `method="dialog"` rather than a submit handler: there is nothing to commit, so Enter and the button
+  both mean "done", and the platform closes the dialog for them.
+-->
 <Modal {isOpen} {onClose} title="Identity Override">
-  <form class="stack" onsubmit={save}>
-    <div class="identity__field">
-      {#if isEditing}
-        <label class="visually-hidden" for="identity-name">Your name</label>
-        <input
-          bind:this={elName}
-          id="identity-name"
-          class="cyber-input identity__box"
-          placeholder="Enter your name"
-          type="text"
-          bind:value={draft} />
-      {:else}
-        <p class="cyber-input identity__box">{draft}</p>
-        <button
-          class="identity__edit"
-          aria-label={EDIT_LABEL}
-          onclick={() => void startEditing()}
-          type="button"
-          use:tooltip={EDIT_LABEL}>
-          {@html iconSquarePen}
-        </button>
-      {/if}
-    </div>
+  <form class="stack" method="dialog">
+    <label class="visually-hidden" for="identity-name">Your name</label>
+    <input
+      id="identity-name"
+      class="cyber-input"
+      oninput={rename}
+      placeholder="Enter your name"
+      type="text"
+      bind:value={name} />
 
     <button
       class="cyber-button cyber-button--ghost identity__from-google"
@@ -98,34 +79,11 @@
       <p class="cyber-error">{error}</p>
     {/if}
 
-    <div class="row">
-      <button class="cyber-button cyber-button--primary cyber-button--grow" type="submit">Save</button>
-      <button class="cyber-button cyber-button--ghost" onclick={onClose} type="button">Cancel</button>
-    </div>
+    <button class="cyber-button cyber-button--primary" type="submit">Close</button>
   </form>
 </Modal>
 
 <style>
-  .identity__field {
-    position: relative;
-  }
-
-  .identity__box {
-    padding-right: 2.25rem;
-  }
-
-  .identity__edit {
-    position: absolute;
-    top: 50%;
-    right: 0.5rem;
-    color: var(--cp-primary);
-    translate: 0 -50%;
-
-    &:hover {
-      color: var(--cp-accent);
-    }
-  }
-
   .identity__from-google {
     display: flex;
     gap: 0.5rem;
@@ -135,7 +93,6 @@
     font-size: 0.875rem;
   }
 
-  .identity__edit :global(svg),
   .identity__from-google :global(svg) {
     width: 16px;
     height: 16px;

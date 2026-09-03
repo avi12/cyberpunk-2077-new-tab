@@ -142,13 +142,12 @@ both keys, so a typo is a build error rather than an `any`.
 
 What is deliberately absent is storage. The grant buys one claim: the ID token is checked against the
 request's `nonce` and read for `given_name`, the access token is handed straight back to Google's
-revoke endpoint, and neither is written anywhere. Nothing but the name is kept, and only if you press
-Save. The manifest asks for `identity` and not `identity.email`, so the install shows no "know your
+revoke endpoint, and neither is written anywhere. Nothing but the name is kept. The manifest asks for `identity` and not `identity.email`, so the install shows no "know your
 email address" warning.
 
-The button fills the field and leaves it selected - a `given_name` is a first name, and if you would
-rather be called something else it is one keystroke away. The greeting is still `V` until you save
-something.
+The button fills the field - a `given_name` is a first name, and if you would rather be called
+something else it is one keystroke away. There is nothing to save: the field is the setting, and the
+greeting follows it as you type, falling back to `V` while it stands empty.
 
 No host permissions: open-meteo, timeapi, allorigins and bigdatacloud all answer with
 `Access-Control-Allow-Origin: *`, and an extension page follows ordinary CORS.
