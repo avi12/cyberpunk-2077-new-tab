@@ -250,16 +250,38 @@ export async function previewTick(): Promise<void> {
   onHover();
 }
 
-/** On focus as well as on pointer, so a keyboard hears the same page a mouse does. */
+/**
+ * A keyboard should hear the page a mouse hears, and nothing else should.
+ *
+ * `:focus-visible` is the browser's own answer to which of those a focus is: set when the user
+ * tabbed here, unset when focus merely landed - restored after a dialog closes, moved by script, or
+ * dragged along by the click that is already playing its own sound.
+ *
+ * `focusin` rather than `focus` because it bubbles, and the thing a keyboard reaches is not always
+ * the thing this is attached to - a bookmark card is itself the link, but a journey card is an
+ * article whose sources are. Ignoring a `relatedTarget` from inside makes it the pointer's twin:
+ * `pointerenter` speaks when the cursor crosses into the card and stays quiet while it wanders
+ * around inside, and so does this.
+ */
 export function menuSounds(node: HTMLElement) {
+  function onFocusIn(e: FocusEvent) {
+    if (e.relatedTarget instanceof Node && node.contains(e.relatedTarget)) {
+      return;
+    }
+
+    if (node.matches(":focus-visible, :has(:focus-visible)")) {
+      onHover();
+    }
+  }
+
   node.addEventListener("pointerenter", onHover);
-  node.addEventListener("focus", onHover);
+  node.addEventListener("focusin", onFocusIn);
   node.addEventListener("pointerdown", onClick);
 
   return {
     destroy() {
       node.removeEventListener("pointerenter", onHover);
-      node.removeEventListener("focus", onHover);
+      node.removeEventListener("focusin", onFocusIn);
       node.removeEventListener("pointerdown", onClick);
     }
   };
