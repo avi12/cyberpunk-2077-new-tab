@@ -13,6 +13,7 @@
   import { IS_EDGE } from "@/lib/companion/platform";
   import iconInfo from "@/assets/icons/info.svg?raw";
   import { loadSettings, settings } from "@/lib/storage/settings.svelte";
+  import { menuSounds } from "@/lib/sound";
   import Netlinks from "@/components/netlinks/Netlinks.svelte";
   import Quote from "@/components/Quote.svelte";
   import SearchBar from "@/components/SearchBar.svelte";
@@ -76,7 +77,8 @@
 <div
   class="cyberpunk-container"
   class:cyberninja={settings.colorTheme.current === ColorTheme.cyberNinja}
-  class:edgerunners={settings.colorTheme.current === ColorTheme.edgerunners}>
+  class:edgerunners={settings.colorTheme.current === ColorTheme.edgerunners}
+  {@attach menuSounds}>
   {#if settings.scanLinesMode.current !== ScanLinesMode.none}
     <div
       class:scan-lines={settings.scanLinesMode.current === ScanLinesMode.default}

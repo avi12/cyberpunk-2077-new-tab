@@ -251,45 +251,97 @@ export async function previewTick(): Promise<void> {
 }
 
 /**
- * A keyboard should hear the page a mouse hears, and nothing else should.
- *
- * `:focus-visible` is the browser's own answer to which of those a focus is: set when the user
- * tabbed here, unset when focus merely landed - restored after a dialog closes, moved by script, or
- * dragged along by the click that is already playing its own sound.
- *
- * `focusin` rather than `focus` because it bubbles, and the thing a keyboard reaches is not always
- * the thing this is attached to - a bookmark card is itself the link, but a journey card is an
- * article whose sources are. Ignoring a `relatedTarget` from inside makes it the pointer's twin:
- * `pointerenter` speaks when the cursor crosses into the card and stays quiet while it wanders
- * around inside, and so does this.
- *
- * Muted rather than silenced: where the thing this is attached to cannot be activated - a netlink
- * being rearranged is a handle, not a link - nothing is listening in the first place.
+ * The page's own arrow: what everything that cannot be aimed at wears. Only the reticle is themed,
+ * so this is read once and holds for the life of the page.
  */
-export function menuSounds({ isMuted = false }: { isMuted?: boolean } = {}) {
-  return (node: HTMLElement) => {
-    if (isMuted) {
+let restingCursor = "";
+
+/** Whether the page is offering this element the reticle rather than the arrow. */
+function isAimed(element: Element): boolean {
+  restingCursor ||= getComputedStyle(document.documentElement).cursor;
+
+  return getComputedStyle(element).cursor !== restingCursor;
+}
+
+/**
+ * The control under the pointer, or nothing at all.
+ *
+ * The reticle is declared on the control and inherited by whatever it is made of, so the outermost
+ * element still wearing it is the control itself - which is what makes a button with an icon and a
+ * label one thing to speak for rather than three. An element without it can hold nothing that has
+ * it, so the common case of crossing empty page costs one lookup.
+ */
+function aimedControl(target: EventTarget | null): Element | null {
+  let element = target instanceof Element ? target : null;
+  if (!element || !isAimed(element)) {
+    return null;
+  }
+
+  while (element.parentElement && isAimed(element.parentElement)) {
+    element = element.parentElement;
+  }
+
+  return element;
+}
+
+/**
+ * What the page says back to the cursor, said once for the whole page.
+ *
+ * What speaks is whatever the page is offering the reticle to, which is one rule in `app.css` and
+ * the exceptions written beside it - a disabled control, or a netlink being rearranged rather than
+ * opened, drops back to the arrow. Reading the answer off the cursor is what keeps the two in step:
+ * a list of selectors here would be a second opinion about which things are aimable, and it would
+ * be the one that goes stale.
+ *
+ * `:focus-visible` extends it to the keyboard, and only to the keyboard: it is the browser's own
+ * answer to whether the user tabbed here or focus merely landed - restored after a dialog closes,
+ * moved by script, or dragged along by the click that is already playing its own sound.
+ */
+export function menuSounds(node: HTMLElement) {
+  /** What the pointer is inside, so crossing a button's padding onto its label says nothing new. */
+  let elAimed: Element | null = null;
+
+  function onPointerOver(e: PointerEvent) {
+    const aimed = aimedControl(e.target);
+    if (aimed === elAimed) {
       return;
     }
 
-    function onFocusIn(e: FocusEvent) {
-      if (e.relatedTarget instanceof Node && node.contains(e.relatedTarget)) {
-        return;
-      }
+    elAimed = aimed;
 
-      if (node.matches(":focus-visible, :has(:focus-visible)")) {
-        onHover();
-      }
+    if (aimed) {
+      onHover();
     }
+  }
 
-    node.addEventListener("pointerenter", onHover);
-    node.addEventListener("focusin", onFocusIn);
-    node.addEventListener("pointerdown", onClick);
+  /** Leaving the window, which is the one exit no `pointerover` arrives to describe. */
+  function onPointerOut(e: PointerEvent) {
+    if (!e.relatedTarget) {
+      elAimed = null;
+    }
+  }
 
-    return () => {
-      node.removeEventListener("pointerenter", onHover);
-      node.removeEventListener("focusin", onFocusIn);
-      node.removeEventListener("pointerdown", onClick);
-    };
+  function onPointerDown(e: PointerEvent) {
+    if (aimedControl(e.target)) {
+      onClick();
+    }
+  }
+
+  function onFocusIn(e: FocusEvent) {
+    if (e.target instanceof Element && e.target.matches(":focus-visible") && aimedControl(e.target)) {
+      onHover();
+    }
+  }
+
+  node.addEventListener("pointerover", onPointerOver);
+  node.addEventListener("pointerout", onPointerOut);
+  node.addEventListener("pointerdown", onPointerDown);
+  node.addEventListener("focusin", onFocusIn);
+
+  return () => {
+    node.removeEventListener("pointerover", onPointerOver);
+    node.removeEventListener("pointerout", onPointerOut);
+    node.removeEventListener("pointerdown", onPointerDown);
+    node.removeEventListener("focusin", onFocusIn);
   };
 }

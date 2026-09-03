@@ -2,7 +2,6 @@
   import iconChevronRight from "@/assets/icons/chevron-right.svg?raw";
   import { COPILOT_KINDS } from "@/lib/companion/copilot";
   import type { CopilotKind } from "@/lib/companion/copilot";
-  import { menuSounds } from "@/lib/sound";
   import type { Snippet } from "svelte";
   import { tooltip } from "@/lib/tooltip";
 
@@ -34,7 +33,7 @@
   }
 </script>
 
-<article class="card glitch-border" {@attach menuSounds()}>
+<article class="card glitch-border">
   <p class="card__kind">
     {@html COPILOT_KINDS[kind].icon}
     {COPILOT_KINDS[kind].label}

@@ -12,7 +12,6 @@
 
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/schema";
-  import { menuSounds } from "@/lib/sound";
   import iconGripVertical from "@/assets/icons/grip-vertical.svg?raw";
   import { iconByName } from "@/lib/icons/choices";
   import iconSquarePen from "@/assets/icons/square-pen.svg?raw";
@@ -64,7 +63,6 @@
   <a
     class="card glitch-border hover-glitch-host"
     class:is-editing={isEditing}
-    {@attach menuSounds({ isMuted: isEditing })}
     draggable={!isEditing}
     href={bookmark.url}
     onauxclick={onAuxClick}
@@ -118,12 +116,16 @@
       border-color: var(--cp-accent);
     }
 
+    /*
+     * In edit mode the card is a drag handle rather than a link: its text must not be selectable
+     * under the pointer, and there is nothing to aim at, so it drops back to the page's arrow -
+     * which is also what keeps it quiet, since the reticle is what decides what makes a sound.
+     */
     &.is-editing {
+      cursor: var(--cp-cursor);
       user-select: none;
     }
   }
-
-  /* In edit mode the card is a drag handle, so the text must not be selectable under the pointer. */
 
   .card-slot:global(.sortable-dragging) .card {
     border-color: var(--cp-accent);
