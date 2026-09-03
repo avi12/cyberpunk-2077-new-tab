@@ -1,9 +1,6 @@
 import extensionIdentity from "./companion/extension-identity.json";
 import { defineConfig } from "wxt";
 
-/** Chrome-only: Firefox's `identity` has no `getProfileUserInfo`. */
-const IDENTITY_PERMISSIONS = ["identity", "identity.email"];
-
 /**
  * Copilot Journeys are read through the companion app over native messaging, and only Edge on
  * Windows or macOS has any to read. Optional rather than granted up front, so the prompt only ever
@@ -42,17 +39,18 @@ export default defineConfig({
     // `search` runs the browser's own default engine for the "Default" search option; `topSites`
     // seeds the netlinks on first run; `geolocation` backs the "USE MY LOCATION" button in the
     // weather/world-clock location override; `storage` holds every setting, local and the backup in
-    // the browser account alike; `identity` +
-    // `identity.email` name the greeting after the signed-in account. No host permissions -
-    // open-meteo, timeapi, allorigins, bigdatacloud and Google's userinfo endpoint all answer with
-    // `Access-Control-Allow-Origin: *`.
+    // the browser account alike; `identity` is the greeting's "Use Google account" button, and it
+    // is `launchWebAuthFlow` alone - no `identity.email`, so no "know your email address" warning,
+    // and no `oauth2` key, which Edge would not honour anyway. No host permissions - open-meteo,
+    // timeapi, allorigins and bigdatacloud all answer with `Access-Control-Allow-Origin: *`, and
+    // Google's authorize page is opened in a window rather than fetched.
     permissions: [
       "search",
       "topSites",
       "geolocation",
       "storage",
       "unlimitedStorage",
-      ...(browser === "firefox" ? [] : IDENTITY_PERMISSIONS)
+      "identity"
     ],
     ...(browser === "firefox"
       ? {

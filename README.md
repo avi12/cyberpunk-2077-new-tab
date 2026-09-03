@@ -11,7 +11,7 @@ matching the original's visuals while replacing its React/Tailwind/dnd-kit stack
 ## Getting started
 
 ```bash
-cp .env.example .env.local   # then fill in VITE_GOOGLE_CLIENT_ID
+cp .env.example .env         # then fill in the two VITE_GOOGLE_* keys
 pnpm install
 pnpm ext:dev          # Chrome, with HMR (interactive terminal)
 pnpm ext:dev:hmr      # same loop, detached - survives a closed terminal, CDP on :9223
@@ -22,7 +22,7 @@ pnpm icons:generate   # re-render src/public/icon/*.png from scripts/cyberpunk-l
 pnpm key:generate     # mint keys/chrome.pem once, and write the permanent extension id
 ```
 
-`.env.local` holds one value, the OAuth client id behind [the greeting's name button](#google-account-name),
+`.env` holds the OAuth client behind [the greeting's name button](#google-account-name),
 and it is the same in every build - the extension id is pinned, so one client covers dev and the
 store alike. `.env.example` says what to register it against. Everything else the extension needs is
 in the repo.
@@ -129,16 +129,22 @@ opens Google's account chooser and Google answers with the real `given_name`. Th
 that needs no `oauth2` manifest key - the key Edge has never supported - and Firefox implements it
 too, so for the first time all three browsers answer the same way.
 
-The client id lives in `.env.local` as `VITE_GOOGLE_CLIENT_ID` rather than in the source. It is
-public either way - every `VITE_*` value is inlined into the bundle - but the client is registered
-against a fixed pair of redirect URIs, which makes it a property of the deployment, and `src/env.d.ts`
-types the key so a typo is a build error rather than an `any`.
+On top of it runs the flow [RFC 8252](https://datatracker.ietf.org/doc/html/rfc8252) and OAuth 2.1
+ask for: authorization code with PKCE, `state` against CSRF, `nonce` against a replayed ID token. The
+code is redeemed at the token endpoint over TLS, which is what lets the ID token be read without
+verifying its signature - one arriving through a redirect fragment would have to be.
 
-`response_type=id_token` is what keeps the rest to one file. The name arrives inside the token, so there is
-no authorization code to exchange, no client secret to bundle, and no access token to store, refresh
-or revoke: the token is checked against the request's `nonce`, read for one claim, and dropped.
-Nothing but the name is kept, and only if you press Save. The manifest asks for `identity` and not
-`identity.email`, so the install shows no "know your email address" warning.
+`VITE_GOOGLE_CLIENT_ID` and `VITE_GOOGLE_CLIENT_SECRET` live in `.env`, and both are inlined
+into the bundle. That is inherent rather than sloppy: an extension is a public client, and Google's
+Web application type requires the secret at the token endpoint even alongside PKCE. What binds the
+flow is the pair of redirect URIs, which only this extension can be sent to. `src/env.d.ts` types
+both keys, so a typo is a build error rather than an `any`.
+
+What is deliberately absent is storage. The grant buys one claim: the ID token is checked against the
+request's `nonce` and read for `given_name`, the access token is handed straight back to Google's
+revoke endpoint, and neither is written anywhere. Nothing but the name is kept, and only if you press
+Save. The manifest asks for `identity` and not `identity.email`, so the install shows no "know your
+email address" warning.
 
 The button fills the field and leaves it selected - a `given_name` is a first name, and if you would
 rather be called something else it is one keystroke away. The greeting is still `V` until you save

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { browserAccountName } from "@/lib/identity";
+  import { googleAccountName, isGoogleAccountConfigured } from "@/lib/identity";
   import iconFingerprint from "@/assets/icons/fingerprint.svg?raw";
   import Modal from "./Modal.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -36,16 +36,22 @@
     elName?.select();
   }
 
-  async function fillFromBrowser() {
-    const name = await browserAccountName();
-    if (!name) {
-      error = "No account is signed in to this browser";
+  async function fillFromGoogle() {
+    if (!isGoogleAccountConfigured) {
+      error = "Google sign-in isn't set up in this build";
+
+      return;
+    }
+
+    const googleName = await googleAccountName();
+    if (!googleName) {
+      error = "No name came back from that account";
 
       return;
     }
 
     error = "";
-    draft = name;
+    draft = googleName;
   }
 
   function save(e: SubmitEvent) {
@@ -81,11 +87,11 @@
     </div>
 
     <button
-      class="cyber-button cyber-button--ghost identity__from-browser"
-      onclick={() => void fillFromBrowser()}
+      class="cyber-button cyber-button--ghost identity__from-google"
+      onclick={() => void fillFromGoogle()}
       type="button">
       {@html iconFingerprint}
-      Use browser account
+      Use Google account
     </button>
 
     {#if error}
@@ -120,7 +126,7 @@
     }
   }
 
-  .identity__from-browser {
+  .identity__from-google {
     display: flex;
     gap: 0.5rem;
     justify-content: center;
@@ -130,7 +136,7 @@
   }
 
   .identity__edit :global(svg),
-  .identity__from-browser :global(svg) {
+  .identity__from-google :global(svg) {
     width: 16px;
     height: 16px;
   }
