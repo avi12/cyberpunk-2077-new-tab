@@ -1,10 +1,4 @@
-import type {
-  Bookmark,
-  DisplayPreferences,
-  GeoLocation,
-  SearchEngine,
-  Widget
-} from "./schema";
+import type { Bookmark, GeoLocation, SearchEngine, Widget } from "./schema";
 import {
   BookmarkCategory,
   ColorTheme,
@@ -143,7 +137,7 @@ export const DEFAULT_WIDGETS: Widget[] = [
 export const DEFAULT_WIDGET_ORDER = DEFAULT_WIDGETS.map(widget => widget.id);
 
 /** Each element's default is the one the schema fills a missing answer with. */
-export const DEFAULT_DISPLAY_PREFERENCES: DisplayPreferences = displayPreferencesSchema.parse({});
+export const DEFAULT_DISPLAY_PREFERENCES = displayPreferencesSchema.parse({});
 
 /* What the page paints under an image or a video, so a solid colour is in effect either way. */
 export const BASE_BACKGROUND_COLOR = "#000c14";
