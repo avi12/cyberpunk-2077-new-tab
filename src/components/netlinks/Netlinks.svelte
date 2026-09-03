@@ -335,7 +335,7 @@
   .netlinks {
     display: block;
     width: 100%;
-    max-width: 64rem;
+    max-width: var(--cp-column);
     margin: 0 auto;
     margin-bottom: 2rem;
   }

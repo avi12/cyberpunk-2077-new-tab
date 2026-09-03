@@ -11,6 +11,9 @@
    * nothing is fetched from a font CDN.
    */
   --cp-mono: ui-monospace, sfmono-regular, menlo, monaco, consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* How wide the page's stacked sections run - the netlinks, and either family of Copilot cards. */
+  --cp-column: 64rem;
 }
 
 /* ---------- Dialogs ---------- */
