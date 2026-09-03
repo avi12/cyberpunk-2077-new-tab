@@ -3,30 +3,30 @@ import { settings } from "./storage/settings.svelte";
 /**
  * What a card says back to the cursor.
  *
- * Two voices, taken off the game's own menu and rebuilt from oscillators. Nothing here is CDPR's
- * audio - the numbers below are measurements of it, and an extension that ships no sample cannot
- * ship anyone's sample.
+ * Two voices, taken off the game's own menu and rebuilt from oscillators and filtered noise.
+ * Nothing here is CDPR's audio - the numbers below are measurements of it, and an extension that
+ * ships no sample cannot ship anyone's sample.
  *
- * The measurements, from `ui_menu_hover` (hash 435721760) and `ui_menu_onpress` (698798840):
+ * The pair is the mouse's pair: `ui_menu_hover` (hash 435721760) and `ui_menu_mouse_click`
+ * (142422666). The game also has `ui_menu_onpress`, which is the gamepad and keyboard answer to the
+ * same row and a longer, more tonal sound; a page driven by a pointer should say what the game says
+ * to a pointer.
  *
  * The tick is 68ms and hollow - 145Hz carrying 60% of the energy, a pair at 5672Hz and 5906Hz
  * carrying the rest, and almost nothing in between. The 234Hz gap between the two highs beats
  * about four times across the sound, and that beating is the shimmer. It swells over 12ms rather
  * than striking, so there is no transient in it at all.
  *
- * The press is the opposite sound: no low end whatsoever, a dense inharmonic cluster between
- * 2.4kHz and 3.9kHz that rises in 18ms and is 30dB down by 55ms, and then a noise tail that
- * outlasts the tone. Its spectral flatness climbs from 0.11 in the body to 0.6 in the tail, which
- * is the tone handing over to the hiss.
+ * The click is barely a note at all: 31ms of hash with a spectral flatness of 0.72, flat from 2kHz
+ * to the top of the band and falling away below 1kHz, with only an eighth of its energy under
+ * 1.5kHz. It has no decay - it comes up over about 6ms and then simply stops. In the game it sits
+ * roughly 10dB above the hover, because a click is an event and a hover is weather.
  */
 
 const MS_PER_SECOND = 1000;
 
 /** A cursor crossing a corner touches two cards in a frame; one of them is the sound. */
 const REPEAT_GUARD_MS = 55;
-
-/** `exponentialRampToValueAtTime` cannot reach zero, so silence is the quietest audible step. */
-const SILENCE = 0.0001;
 
 /**
  * The measured balance, as amplitudes relative to the loudest partial. Faithful rather than
@@ -67,39 +67,25 @@ const TICK_HASH_HZ = 2000;
 const TICK_HASH_Q = 0.5;
 const TICK_HASH_GAIN = 0.16;
 
-const PRESS_PARTIALS = [
-  {
-    hertz: 2926.3,
-    gain: 1
-  },
-  {
-    hertz: 2433.1,
-    gain: 0.42
-  },
-  {
-    hertz: 2493.7,
-    gain: 0.38
-  },
-  {
-    hertz: 3929.9,
-    gain: 0.31
-  },
-  {
-    hertz: 3092.8,
-    gain: 0.22
-  }
-];
-const PRESS_MS = 106;
-const PRESS_ATTACK_MS = 18;
-const PRESS_RELEASE_MS = 38;
-const PRESS_GAIN = 0.07;
+/**
+ * One highpass over noise, because that is all the measurement supports - adding a second band on
+ * top only fitted worse. The Q is what makes the shape: at 1.0 the corner's own resonance fills
+ * 500Hz-2kHz, which is the plateau the original has there, and the 12dB/octave skirt below it lands
+ * the two bottom octaves within half a dB. All six octaves come out within 2.6dB, mean 1.4dB.
+ */
+const CLICK_MS = 31;
+const CLICK_ATTACK_MS = 6;
+const CLICK_RELEASE_MS = 3;
+const CLICK_HZ = 540;
+const CLICK_Q = 1;
 
-/** The hiss the cluster hands over to, and the band it lives in. */
-const PRESS_TAIL_MS = 60;
-const PRESS_TAIL_DELAY_MS = 46;
-const PRESS_TAIL_HZ = 6000;
-const PRESS_TAIL_Q = 1.4;
-const PRESS_TAIL_GAIN = 0.1;
+/**
+ * The one number here that is a judgement rather than a measurement. In the bank the click sits
+ * 9.7dB over the hover, but a bank level is not what a player hears - the game mixes both through a
+ * UI bus this page does not have, and copying the raw ratio puts every click at -3.9dBFS. 6dB keeps
+ * the click the louder, deliberate sound of the two with headroom left over.
+ */
+const CLICK_GAIN = 0.28;
 
 /** One buffer of noise, long enough for whichever of the two voices asks for it. */
 const NOISE_MS = 120;
@@ -125,7 +111,7 @@ function runningContext(): AudioContext | null {
   return null;
 }
 
-/** The same hiss every time it is asked for: both beds are an envelope over it, not a new noise. */
+/** The same hiss every time it is asked for: both voices are an envelope over it, not a new noise. */
 function hissBuffer(audio: AudioContext): AudioBuffer {
   if (hiss) {
     return hiss;
@@ -139,24 +125,17 @@ function hissBuffer(audio: AudioContext): AudioBuffer {
 }
 
 /**
- * Both voices are the same thing at different settings: a handful of sines that fade in together,
- * hold, and fade out together. Linear ramps rather than exponential ones, because what was measured
- * is a swell and a release, not a decay. Answers the envelope, so a caller can hang its own bed of
- * noise under the same shape.
+ * Both voices are the same shape at different settings: fade in, hold, fade out. Linear ramps rather
+ * than exponential ones, because what was measured is a swell and a release, not a decay.
  */
-function playPartials({
+function envelopeFor({
   audio,
-  partials,
   totalMs,
   attackMs,
   releaseMs,
   gain
 }: {
   audio: AudioContext;
-  partials: {
-    hertz: number;
-    gain: number;
-  }[];
   totalMs: number;
   attackMs: number;
   releaseMs: number;
@@ -171,30 +150,30 @@ function playPartials({
   output.gain.linearRampToValueAtTime(0, endsAt);
   output.connect(audio.destination);
 
-  for (const partial of partials) {
-    const voice = new OscillatorNode(audio, {
-      type: "sine",
-      frequency: partial.hertz
-    });
-    voice.connect(new GainNode(audio, { gain: partial.gain })).connect(output);
-    voice.start(startedAt);
-    voice.stop(endsAt);
-  }
-
   return output;
 }
 
 function playTick(audio: AudioContext): void {
-  const envelope = playPartials({
+  const startedAt = audio.currentTime;
+  const endsAt = startedAt + TICK_MS / MS_PER_SECOND;
+  const envelope = envelopeFor({
     audio,
-    partials: TICK_PARTIALS,
     totalMs: TICK_MS,
     attackMs: TICK_ATTACK_MS,
     releaseMs: TICK_RELEASE_MS,
     gain: TICK_GAIN
   });
 
-  const startedAt = audio.currentTime;
+  for (const partial of TICK_PARTIALS) {
+    const voice = new OscillatorNode(audio, {
+      type: "sine",
+      frequency: partial.hertz
+    });
+    voice.connect(new GainNode(audio, { gain: partial.gain })).connect(envelope);
+    voice.start(startedAt);
+    voice.stop(endsAt);
+  }
+
   const bed = new AudioBufferSourceNode(audio, { buffer: hissBuffer(audio) });
   const band = new BiquadFilterNode(audio, {
     type: "bandpass",
@@ -203,31 +182,28 @@ function playTick(audio: AudioContext): void {
   });
   bed.connect(band).connect(new GainNode(audio, { gain: TICK_HASH_GAIN })).connect(envelope);
   bed.start(startedAt);
-  bed.stop(startedAt + TICK_MS / MS_PER_SECOND);
+  bed.stop(endsAt);
 }
 
-function playPress(audio: AudioContext): void {
-  playPartials({
+function playClick(audio: AudioContext): void {
+  const startedAt = audio.currentTime;
+  const envelope = envelopeFor({
     audio,
-    partials: PRESS_PARTIALS,
-    totalMs: PRESS_MS,
-    attackMs: PRESS_ATTACK_MS,
-    releaseMs: PRESS_RELEASE_MS,
-    gain: PRESS_GAIN
+    totalMs: CLICK_MS,
+    attackMs: CLICK_ATTACK_MS,
+    releaseMs: CLICK_RELEASE_MS,
+    gain: CLICK_GAIN
   });
 
-  const startedAt = audio.currentTime + PRESS_TAIL_DELAY_MS / MS_PER_SECOND;
-  const tail = new AudioBufferSourceNode(audio, { buffer: hissBuffer(audio) });
-  const band = new BiquadFilterNode(audio, {
-    type: "bandpass",
-    frequency: PRESS_TAIL_HZ,
-    Q: PRESS_TAIL_Q
+  const burst = new AudioBufferSourceNode(audio, { buffer: hissBuffer(audio) });
+  const corner = new BiquadFilterNode(audio, {
+    type: "highpass",
+    frequency: CLICK_HZ,
+    Q: CLICK_Q
   });
-  const fade = new GainNode(audio, { gain: PRESS_TAIL_GAIN });
-  fade.gain.exponentialRampToValueAtTime(SILENCE, startedAt + PRESS_TAIL_MS / MS_PER_SECOND);
-  tail.connect(band).connect(fade).connect(audio.destination);
-  tail.start(startedAt);
-  tail.stop(startedAt + PRESS_TAIL_MS / MS_PER_SECOND);
+  burst.connect(corner).connect(envelope);
+  burst.start(startedAt);
+  burst.stop(startedAt + CLICK_MS / MS_PER_SECOND);
 }
 
 function audioForSound(): AudioContext | null {
@@ -254,13 +230,13 @@ function onHover(): void {
 }
 
 /**
- * No repeat guard: a press cannot machine-gun the way a cursor crossing a grid can, and the guard
+ * No repeat guard: a click cannot machine-gun the way a cursor crossing a grid can, and the guard
  * would swallow it anyway - the hover that brought the cursor here fired milliseconds ago.
  */
-function onPress(): void {
+function onClick(): void {
   const audio = audioForSound();
   if (audio) {
-    playPress(audio);
+    playClick(audio);
   }
 }
 
@@ -278,13 +254,13 @@ export async function previewTick(): Promise<void> {
 export function menuSounds(node: HTMLElement) {
   node.addEventListener("pointerenter", onHover);
   node.addEventListener("focus", onHover);
-  node.addEventListener("pointerdown", onPress);
+  node.addEventListener("pointerdown", onClick);
 
   return {
     destroy() {
       node.removeEventListener("pointerenter", onHover);
       node.removeEventListener("focus", onHover);
-      node.removeEventListener("pointerdown", onPress);
+      node.removeEventListener("pointerdown", onClick);
     }
   };
 }
