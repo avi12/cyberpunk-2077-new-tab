@@ -59,7 +59,6 @@ type Board = {
   right: number;
   bottom: number;
   columnGap: number;
-  rowGap: number;
   slots: Slot[];
   /** The trailing cell holding no item - where one appended to this container would land. */
   spare: Slot | null;
@@ -92,6 +91,14 @@ const SETTLE_EASE = "cubic-bezier(0.34, 1.35, 0.5, 1)";
 
 const LIFTED_Z_INDEX = "999";
 const SHIELD_Z_INDEX = "998";
+
+/**
+ * Every cell that is not the lifted one, raised over the add tile for the length of the drag. A
+ * translated cell paints as if it were positioned, and the tile is the last child - so a tile
+ * crossing the row on its way to another cell would otherwise cross over the cards rather than
+ * under them.
+ */
+const SLOT_Z_INDEX = "1";
 
 /** Every mounted container, by group, so a lift can measure the ones it might be dropped into. */
 const GROUPS = new Map<string, Set<Member>>();
@@ -165,7 +172,6 @@ function measure(member: Member): Board {
     right: rect.right,
     bottom: rect.bottom,
     columnGap: parseFloat(style.columnGap) || 0,
-    rowGap: parseFloat(style.rowGap) || 0,
     slots,
     spare,
     ids: slots.map(slot => slot.id),
@@ -174,8 +180,13 @@ function measure(member: Member): Board {
 }
 
 /**
- * Where a list one item longer would put its last cell: along the row while it fits, and at the
- * start of a new one when it does not. It is what the add tile steps into as the grid grows.
+ * Where a list one item longer would put its last cell, and nothing at all when that cell would be
+ * a row the board has not got.
+ *
+ * A grid does not reflow while a card is only visiting it - the cells are translated, and the box
+ * around them is the one the layout reserved for the row count it actually has. So the row below
+ * the last one is not on the page, and anything sent into it lands on whatever sits under the list
+ * rather than in it.
  */
 function cellAfter(board: Board): Position | null {
   const last = board.spare ?? board.slots.at(-1);
@@ -184,16 +195,13 @@ function cellAfter(board: Board): Position | null {
   }
 
   const left = last.left + last.width + board.columnGap;
-  if (left + last.width <= board.right + 1) {
-    return {
-      left,
-      top: last.top
-    };
+  if (left + last.width > board.right + 1) {
+    return null;
   }
 
   return {
-    left: board.left,
-    top: last.top + last.height + board.rowGap
+    left,
+    top: last.top
   };
 }
 
@@ -383,19 +391,31 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
 
   /** The same gap in a list the item is only visiting: everything from `before` steps along one. */
   function openGap(board: Board, before: number) {
-    const after = cellAfter(board);
     for (const [index, slot] of board.slots.entries()) {
-      const landing = index < before ? slot : board.slots[index + 1] ?? board.spare ?? after;
+      const landing = index < before ? slot : board.slots[index + 1] ?? board.spare;
       if (landing) {
         slideTo(slot, landing);
       }
     }
 
-    // The list is one longer while the card is over it, so its tile steps on too - onto a new row
-    // when the one it is on has no room left.
-    if (board.spare && after) {
-      slideTo(board.spare, after);
+    if (!board.spare) {
+      return;
     }
+
+    /*
+     * The list is one longer while the card is over it, so its tile steps along too - or steps
+     * aside, where the row it is on is full and the row it would step into is not on the page yet.
+     * The tile is somewhere to put a link rather than a link, so it is the one cell that can give
+     * way instead of being pushed off the end of the list.
+     */
+    const after = cellAfter(board);
+    if (!after) {
+      board.spare.element.style.opacity = "0";
+
+      return;
+    }
+
+    slideTo(board.spare, after);
   }
 
   function releaseBoard(board: Board) {
@@ -409,6 +429,7 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
 
     if (board.spare) {
       board.spare.element.style.translate = "";
+      board.spare.element.style.opacity = "";
     }
   }
 
@@ -425,6 +446,7 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     document.body.style.userSelect = "none";
 
     const slide = isReduced ? "none" : `translate ${SIBLING_SLIDE_MS}ms ${SLIDE_EASE}`;
+    const step = isReduced ? "none" : `${slide}, opacity ${SIBLING_SLIDE_MS}ms ${SLIDE_EASE}`;
     for (const board of boards) {
       for (const slot of board.slots) {
         const { style } = slot.element;
@@ -436,11 +458,13 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
         }
 
         style.transition = slide;
+        style.zIndex = SLOT_Z_INDEX;
       }
 
-      // The add tile is a cell like any other, so it slides between them like any other.
+      // The add tile is a cell like any other, so it slides between them like any other - and it is
+      // the only one that ever fades, so it is the only one whose transition says opacity.
       if (board.spare) {
-        board.spare.element.style.transition = slide;
+        board.spare.element.style.transition = step;
       }
     }
   }
@@ -527,6 +551,7 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
       if (board.spare) {
         board.spare.element.style.transition = "";
         board.spare.element.style.translate = "";
+        board.spare.element.style.opacity = "";
       }
     }
 
