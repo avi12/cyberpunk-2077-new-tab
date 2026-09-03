@@ -5,6 +5,10 @@
    * The shell every modal in the app shares. A real `<dialog>` opened with `showModal()`, so Escape,
    * the backdrop and focus containment come from the platform rather than from hand-rolled listeners
    * the way the original did it.
+   *
+   * `closedby="any"` is what dismisses it on a backdrop click. Comparing an event target against the
+   * dialog cannot do that job: a dialog with padding reports itself as the target for clicks on its
+   * own inner edge too, so the frame around the content used to close it.
    */
   const {
     isOpen,
@@ -35,12 +39,6 @@
       elDialog.close();
     }
   });
-
-  function onDialogClick(e: MouseEvent) {
-    if (e.target === elDialog) {
-      onClose();
-    }
-  }
 </script>
 
 <dialog
@@ -48,7 +46,7 @@
   class="cyber-dialog"
   class:cyber-dialog--warning={variant === "warning"}
   aria-labelledby={labelledBy}
-  onclick={onDialogClick}
+  closedby="any"
   onclose={onClose}>
   {#if title}
     <h2 class="cyber-dialog__title">{title}</h2>
