@@ -262,27 +262,34 @@ export async function previewTick(): Promise<void> {
  * article whose sources are. Ignoring a `relatedTarget` from inside makes it the pointer's twin:
  * `pointerenter` speaks when the cursor crosses into the card and stays quiet while it wanders
  * around inside, and so does this.
+ *
+ * Muted rather than silenced: where the thing this is attached to cannot be activated - a netlink
+ * being rearranged is a handle, not a link - nothing is listening in the first place.
  */
-export function menuSounds(node: HTMLElement) {
-  function onFocusIn(e: FocusEvent) {
-    if (e.relatedTarget instanceof Node && node.contains(e.relatedTarget)) {
+export function menuSounds({ isMuted = false }: { isMuted?: boolean } = {}) {
+  return (node: HTMLElement) => {
+    if (isMuted) {
       return;
     }
 
-    if (node.matches(":focus-visible, :has(:focus-visible)")) {
-      onHover();
+    function onFocusIn(e: FocusEvent) {
+      if (e.relatedTarget instanceof Node && node.contains(e.relatedTarget)) {
+        return;
+      }
+
+      if (node.matches(":focus-visible, :has(:focus-visible)")) {
+        onHover();
+      }
     }
-  }
 
-  node.addEventListener("pointerenter", onHover);
-  node.addEventListener("focusin", onFocusIn);
-  node.addEventListener("pointerdown", onClick);
+    node.addEventListener("pointerenter", onHover);
+    node.addEventListener("focusin", onFocusIn);
+    node.addEventListener("pointerdown", onClick);
 
-  return {
-    destroy() {
+    return () => {
       node.removeEventListener("pointerenter", onHover);
       node.removeEventListener("focusin", onFocusIn);
       node.removeEventListener("pointerdown", onClick);
-    }
+    };
   };
 }

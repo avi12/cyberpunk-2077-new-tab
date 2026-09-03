@@ -64,12 +64,12 @@
   <a
     class="card glitch-border hover-glitch-host"
     class:is-editing={isEditing}
+    {@attach menuSounds({ isMuted: isEditing })}
     draggable={!isEditing}
     href={bookmark.url}
     onauxclick={onAuxClick}
     onclick={onClick}
-    ondragstart={onDragStart}
-    use:menuSounds>
+    ondragstart={onDragStart}>
     <span class="card__icon">{@html iconByName(bookmark.icon || "Default")}</span>
     <span class="card__title hover-glitch">{bookmark.title}</span>
   </a>

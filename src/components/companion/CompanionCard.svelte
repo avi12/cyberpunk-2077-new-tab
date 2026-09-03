@@ -34,7 +34,7 @@
   }
 </script>
 
-<article class="card glitch-border" use:menuSounds>
+<article class="card glitch-border" {@attach menuSounds()}>
   <p class="card__kind">
     {@html COPILOT_KINDS[kind].icon}
     {COPILOT_KINDS[kind].label}
