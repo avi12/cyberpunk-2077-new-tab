@@ -5,7 +5,6 @@
   import { isHexColor } from "@/lib/color";
   import { settings } from "@/lib/storage/settings.svelte";
 
-  const VIDEO_LOAD_TIMEOUT_MS = 15_000;
   const PERCENT = 100;
 
   let objectUrl = $state<string | null>(null);
@@ -62,16 +61,6 @@
         URL.revokeObjectURL(url);
       }
     };
-  });
-
-  $effect(() => {
-    if (!isVideo || !objectUrl) {
-      return;
-    }
-
-    const timer = setTimeout(() => (isVideoReady = false), VIDEO_LOAD_TIMEOUT_MS);
-
-    return () => clearTimeout(timer);
   });
 </script>
 
