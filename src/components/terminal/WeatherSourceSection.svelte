@@ -1,6 +1,6 @@
 <script lang="ts">
   import PanelSection from "./PanelSection.svelte";
-  import { requestGoogleWeatherAccess } from "@/lib/weather/google";
+  import { hasGoogleWeatherAccess, requestGoogleWeatherAccess } from "@/lib/weather/google";
   import { settings } from "@/lib/storage/settings.svelte";
   import iconSquare from "@/assets/icons/square.svg?raw";
   import iconSquareCheck from "@/assets/icons/square-check.svg?raw";
@@ -34,6 +34,24 @@
 
     settings.weatherSource.current = WeatherSourceId.google;
   }
+
+  /**
+   * A site allowed here can be taken back in the browser's own settings, which tells this page
+   * nothing. Reading the permission back is what stops the switch claiming a source the widget
+   * quietly stopped using, since the reading itself has been falling through to open-meteo ever
+   * since the site went.
+   */
+  async function matchGrantedSite() {
+    if (!isOn || await hasGoogleWeatherAccess()) {
+      return;
+    }
+
+    settings.weatherSource.current = WeatherSourceId.openMeteo;
+  }
+
+  $effect(() => {
+    void matchGrantedSite();
+  });
 </script>
 
 <PanelSection title="Weather Source">

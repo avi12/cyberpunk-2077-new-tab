@@ -31,7 +31,7 @@ const GOOGLE_WEATHER_ACCESS: AccessRequest = {
   origins: [`${new URL(SEARCH_URL).origin}/*`]
 };
 
-async function hasGoogleWeatherAccess(): Promise<boolean> {
+export async function hasGoogleWeatherAccess(): Promise<boolean> {
   return hasAccess(GOOGLE_WEATHER_ACCESS);
 }
 
