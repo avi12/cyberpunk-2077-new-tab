@@ -180,7 +180,8 @@
       bind:value={query} />
 
     <button class="search__submit" class:search__submit--failed={isScanFailed} type="submit">
-      <span class:is-hidden={isAnswering}>SCAN</span>
+      <!-- Kept in flow for the button's width, but out of the name once something speaks over it. -->
+      <span class:is-hidden={isAnswering} aria-hidden={isAnswering}>SCAN</span>
       {#if isScanning}
         <span class="search__overlay scanning-text">SCANNING...</span>
       {:else if isScanFailed}
