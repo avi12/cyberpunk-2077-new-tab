@@ -56,18 +56,21 @@ function nameFromUrl(url: string) {
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
+/** A document from `DOMParser` is inert: it runs no script and loads no subresource. */
+function titleOf(html: string) {
+  const { title } = new DOMParser().parseFromString(html, "text/html");
+  const [name] = title.trim().split(TITLE_TAGLINE_PATTERN);
+
+  return (name || title).trim().slice(0, MAX_TITLE_LENGTH);
+}
+
 async function fetchPageTitle(url: string) {
-  const body = await readProxied({
+  const html = await readProxied({
     url,
     timeoutMs: TITLE_TIMEOUT_MS
   });
 
-  // A document from `DOMParser` is inert: it runs no script and loads no subresource.
-  const page = new DOMParser().parseFromString(body, "text/html");
-
-  const [name] = page.title.trim().split(TITLE_TAGLINE_PATTERN);
-
-  return (name || page.title).trim().slice(0, MAX_TITLE_LENGTH);
+  return titleOf(html);
 }
 
 /** The page's own title when it can be read, and the host name when it can't. */

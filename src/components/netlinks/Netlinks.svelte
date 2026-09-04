@@ -32,18 +32,19 @@
   const byCategory = $derived.by(() => {
     const groups: Record<string, Bookmark[]> = {};
     for (const bookmark of settings.bookmarks.current) {
-      const key = bookmark.category || BookmarkCategory.other;
+      const key = categoryOf(bookmark);
       groups[key] ??= [];
       groups[key].push(bookmark);
     }
 
     return groups;
   });
-  const visibleCategories = $derived(categories.filter(name => isEditing || (byCategory[name]?.length ?? 0) > 0));
+  const visibleCategories = $derived(categories.filter(name => isEditing || bookmarksIn(name).length > 0));
   /** Only links the tables recognise, that would land somewhere else, in a section that still exists. */
   const misfiled = $derived(settings.bookmarks.current.filter(bookmark => filedCategory(bookmark) !== null));
+  const isEverythingFiled = $derived(misfiled.length === 0);
   const sortLabel = $derived.by(() => {
-    if (misfiled.length === 0) {
+    if (isEverythingFiled) {
       return "Every link already sits in the section that fits it";
     }
 
@@ -54,8 +55,12 @@
       return 0;
     }
 
-    return byCategory[pendingDelete]?.length ?? 0;
+    return bookmarksIn(pendingDelete).length;
   });
+
+  function categoryOf(bookmark: Bookmark) {
+    return bookmark.category || BookmarkCategory.other;
+  }
 
   /** Where the tables would file a link, or null when they would leave it exactly where it is. */
   function filedCategory(bookmark: Bookmark) {
@@ -63,7 +68,7 @@
       url: bookmark.url,
       title: bookmark.title
     });
-    if (!category || !categories.includes(category) || category === (bookmark.category || BookmarkCategory.other)) {
+    if (!category || !categories.includes(category) || category === categoryOf(bookmark)) {
       return null;
     }
 
@@ -72,7 +77,7 @@
 
   /** A category's own bookmarks, in the order the array already holds them. */
   function bookmarksIn(category: string) {
-    return settings.bookmarks.current.filter(bookmark => (bookmark.category || BookmarkCategory.other) === category);
+    return byCategory[category] ?? [];
   }
 
   /** Rewrite one category, leaving every other category's bookmarks exactly where they were. */
@@ -81,7 +86,7 @@
     bookmarks: Bookmark[];
   }) {
     settings.bookmarks.current = [
-      ...settings.bookmarks.current.filter(bookmark => (bookmark.category || BookmarkCategory.other) !== category),
+      ...settings.bookmarks.current.filter(bookmark => categoryOf(bookmark) !== category),
       ...bookmarks
     ];
   }
@@ -107,6 +112,25 @@
     });
   }
 
+  function applyBookmarkOrder({ category, ids }: {
+    category: string;
+    ids: string[];
+  }) {
+    const inCategory = bookmarksIn(category);
+
+    writeCategory({
+      category,
+      bookmarks: ids
+        .map(id => inCategory.find(bookmark => bookmark.id === id))
+        .filter(bookmark => bookmark !== undefined)
+    });
+  }
+
+  function reorderCategories(next: string[]) {
+    // Only the visible subset is dragged; hidden categories keep their place at the end.
+    settings.categoryOrder.current = [...next, ...categories.filter(name => !next.includes(name))];
+  }
+
   function sortIntoCategories() {
     withViewTransition(() => {
       settings.bookmarks.current = settings.bookmarks.current.map(bookmark => {
@@ -123,6 +147,37 @@
   function closeForm() {
     formCategory = null;
     bookmarkToEdit = null;
+  }
+
+  function openLinkForm(category: string) {
+    bookmarkToEdit = null;
+    formCategory = category;
+  }
+
+  function saveBookmark(draft: Omit<Bookmark, "id">) {
+    if (bookmarkToEdit) {
+      const id = bookmarkToEdit.id;
+      settings.bookmarks.current = settings.bookmarks.current.map(bookmark =>
+        (bookmark.id === id ? {
+          ...bookmark,
+          ...draft
+        } : bookmark));
+    } else {
+      settings.bookmarks.current = [
+        ...settings.bookmarks.current,
+        {
+          id: Date.now().toString(),
+          ...draft
+        }
+      ];
+    }
+
+    closeForm();
+  }
+
+  function startRename(category: string) {
+    renamingCategory = category;
+    renameDraft = category;
   }
 
   function confirmRename() {
@@ -145,8 +200,23 @@
     renamingCategory = null;
   }
 
+  function closeAddCategory() {
+    newCategoryName = "";
+    isAddingCategory = false;
+  }
+
+  function confirmAddCategory() {
+    const name = normalizeName(newCategoryName);
+    if (!name || categories.includes(name)) {
+      return;
+    }
+
+    addCategory(name);
+    closeAddCategory();
+  }
+
   function requestDeleteCategory(category: string) {
-    if ((byCategory[category]?.length ?? 0) > 0) {
+    if (bookmarksIn(category).length > 0) {
       pendingDelete = category;
 
       return;
@@ -172,26 +242,7 @@
       {bookmarkToEdit}
       {category}
       onCancel={closeForm}
-      onSubmit={draft => {
-        if (bookmarkToEdit) {
-          const id = bookmarkToEdit.id;
-          settings.bookmarks.current = settings.bookmarks.current.map(bookmark =>
-            (bookmark.id === id ? {
-              ...bookmark,
-              ...draft
-            } : bookmark));
-        } else {
-          settings.bookmarks.current = [
-            ...settings.bookmarks.current,
-            {
-              id: Date.now().toString(),
-              ...draft
-            }
-          ];
-        }
-
-        closeForm();
-      }} />
+      onSubmit={saveBookmark} />
   {/key}
 {/snippet}
 
@@ -202,7 +253,7 @@
       {#if isEditing}
         <button
           class="netlinks__sort"
-          disabled={misfiled.length === 0}
+          disabled={isEverythingFiled}
           onclick={sortIntoCategories}
           type="button"
           use:tooltip={sortLabel}>SORT</button>
@@ -238,35 +289,20 @@
             bind:value={renameDraft} />
         {:else}
           <CategorySection
-            bookmarks={byCategory[category] ?? []}
+            bookmarks={bookmarksIn(category)}
             {category}
             editingBookmarkId={bookmarkToEdit?.id ?? null}
             isAddingLink={formCategory === category}
             isCollapsed={settings.collapsedCategories.current[category] ?? false}
             {isEditing}
             {linkForm}
-            onAddBookmark={name => {
-              bookmarkToEdit = null;
-              formCategory = name;
-            }}
+            onAddBookmark={openLinkForm}
             onBookmarkMove={moveBookmark}
-            onBookmarkOrderChange={change => {
-              const inCategory = bookmarksIn(change.category);
-
-              writeCategory({
-                category: change.category,
-                bookmarks: change.ids
-                  .map(id => inCategory.find(bookmark => bookmark.id === id))
-                  .filter(bookmark => bookmark !== undefined)
-              });
-            }}
+            onBookmarkOrderChange={applyBookmarkOrder}
             onDeleteBookmark={id => (settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.id !== id))}
             onDeleteCategory={requestDeleteCategory}
             onEditBookmark={bookmark => (bookmarkToEdit = bookmark)}
-            onEditCategory={name => {
-              renamingCategory = name;
-              renameDraft = name;
-            }}
+            onEditCategory={startRename}
             onOpenBookmark={url => (window.location.href = url)}
             onToggleCollapse={name => withViewTransition(() => toggleCollapsed(name))} />
         {/if}
@@ -280,20 +316,8 @@
         <NameForm
           confirmLabel="ADD"
           heading="ADD NEW CATEGORY"
-          onCancel={() => {
-            newCategoryName = "";
-            isAddingCategory = false;
-          }}
-          onConfirm={() => {
-            const name = normalizeName(newCategoryName);
-            if (!name || categories.includes(name)) {
-              return;
-            }
-
-            addCategory(name);
-            newCategoryName = "";
-            isAddingCategory = false;
-          }}
+          onCancel={closeAddCategory}
+          onConfirm={confirmAddCategory}
           variant="primary"
           bind:value={newCategoryName} />
       {:else}

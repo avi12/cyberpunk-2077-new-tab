@@ -15,13 +15,15 @@
     onCancel: () => void;
   } = $props();
 
+  const isCyan = $derived(variant === "cyan");
+
   function onSubmit(e: SubmitEvent) {
     e.preventDefault();
     onConfirm();
   }
 </script>
 
-<form class="name-form" class:name-form--cyan={variant === "cyan"} onsubmit={onSubmit}>
+<form class="name-form" class:name-form--cyan={isCyan} onsubmit={onSubmit}>
   <h3 class="name-form__heading">{heading}</h3>
   <div class="row">
     <label class="visually-hidden" for="category-name">{heading}</label>
@@ -29,8 +31,8 @@
     <input id="category-name" class="cyber-input" autofocus placeholder="Category name" type="text" bind:value />
     <button
       class="cyber-button"
-      class:cyber-button--cyan={variant === "cyan"}
-      class:cyber-button--primary={variant === "primary"}
+      class:cyber-button--cyan={isCyan}
+      class:cyber-button--primary={!isCyan}
       type="submit">
       {confirmLabel}
     </button>

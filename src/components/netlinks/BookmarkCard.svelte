@@ -48,13 +48,11 @@
   }
 
   function onClick(e: MouseEvent) {
+    e.preventDefault();
     if (isEditing) {
-      e.preventDefault();
-
       return;
     }
 
-    e.preventDefault();
     onOpen(bookmark.url);
   }
 </script>

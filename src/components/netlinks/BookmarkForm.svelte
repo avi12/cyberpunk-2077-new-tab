@@ -23,7 +23,8 @@
   const CANCEL_LABEL = "Discard";
   const FETCH_TITLE_LABEL = "Fetch the title from the link";
   const SCANNING_PLACEHOLDER = "SCANNING";
-  const TITLE_PLACEHOLDER = "Title";
+  const TITLE_LABEL = "Title";
+  const URL_LABEL = "URL";
 
   let title = $state(untrack(() => bookmarkToEdit?.title ?? ""));
   let url = $state(untrack(() => bookmarkToEdit?.url ?? ""));
@@ -38,9 +39,16 @@
     title,
     category
   }));
-  const submitLabel = $derived(bookmarkToEdit ? "Save link" : "Add link");
+  const submitLabel = $derived.by(() => {
+    if (bookmarkToEdit) {
+      return "Save link";
+    }
+
+    return "Add link";
+  });
+  const isUrlBlank = $derived(!url.trim());
   /** The form suppresses the browser's own required bubble, so the field has to say it itself. */
-  const isUrlMissing = $derived(hasTriedSubmit && !url.trim());
+  const isUrlMissing = $derived(hasTriedSubmit && isUrlBlank);
 
   function focusUrl(elField: HTMLInputElement) {
     elUrl = elField;
@@ -68,7 +76,7 @@
     }
 
     hasTriedSubmit = true;
-    if (!url.trim()) {
+    if (isUrlBlank) {
       elUrl?.focus();
 
       return;
@@ -88,7 +96,7 @@
 </script>
 
 <form class="link-card cyber-glass" novalidate onsubmit={e => void submit(e)}>
-  <label class="visually-hidden" for="link-url">URL</label>
+  <label class="visually-hidden" for="link-url">{URL_LABEL}</label>
   <input
     id="link-url"
     class="link-card__field"
@@ -96,17 +104,17 @@
     {@attach focusUrl}
     aria-invalid={isUrlMissing}
     onkeydown={onKeyDown}
-    placeholder="URL"
+    placeholder={URL_LABEL}
     required
     type="text"
     bind:value={url} />
 
-  <label class="visually-hidden" for="link-title">Title</label>
+  <label class="visually-hidden" for="link-title">{TITLE_LABEL}</label>
   <input
     id="link-title"
     class="link-card__field link-card__field--title"
     onkeydown={onKeyDown}
-    placeholder={isResolving ? SCANNING_PLACEHOLDER : TITLE_PLACEHOLDER}
+    placeholder={isResolving ? SCANNING_PLACEHOLDER : TITLE_LABEL}
     type="text"
     bind:value={title} />
 
@@ -115,7 +123,7 @@
       class="link-card__action link-card__action--fetch"
       class:is-working={isResolving}
       aria-label={FETCH_TITLE_LABEL}
-      disabled={!url.trim() || isResolving}
+      disabled={isUrlBlank || isResolving}
       onclick={() => void readTitle()}
       type="button">
       {@html iconSparkles}

@@ -5,13 +5,11 @@
   const {
     label,
     selected,
-    onSelect,
-    showNames = false
+    onSelect
   }: {
     label: string;
     selected: string;
     onSelect: (name: string) => void;
-    showNames?: boolean;
   } = $props();
 
   const panelId = $props.id();
@@ -32,9 +30,8 @@
     id={panelId}
     style:position-anchor={anchorName}
     class="picker__panel"
-    class:picker__panel--wide={showNames}
     popover="auto">
-    <ul class="picker__grid scrollbar-cyberpunk" class:picker__grid--tall={showNames}>
+    <ul class="picker__grid scrollbar-cyberpunk">
       {#each ICON_CHOICES as choice (choice.name)}
         <li>
           <button
@@ -48,9 +45,6 @@
             type="button"
             use:tooltip={choice.name}>
             <span class="picker__icon">{@html choice.svg}</span>
-            {#if showNames}
-              <span class="picker__name">{choice.name}</span>
-            {/if}
           </button>
         </li>
       {/each}
@@ -96,10 +90,6 @@
     position-area: bottom span-right;
   }
 
-  .picker__panel--wide {
-    width: 20rem;
-  }
-
   .picker__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -110,15 +100,9 @@
     padding-right: 0.5rem;
   }
 
-  .picker__grid--tall {
-    height: 16rem;
-    max-height: none;
-  }
-
   .picker__option {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
     align-items: center;
     width: 100%;
     padding: 0.5rem;
@@ -136,12 +120,5 @@
 
   .picker__icon {
     color: var(--cp-primary);
-  }
-
-  .picker__name {
-    color: var(--cp-text);
-    font-family: var(--cp-mono);
-    font-size: 0.75rem;
-    line-height: 1rem;
   }
 </style>

@@ -30,7 +30,7 @@ export type SortableMove = {
   toIndex: number;
 };
 
-export type SortableOptions = {
+type SortableOptions = {
   ids: string[];
   onReorder: (ids: string[]) => void;
   /** Containers naming the same group hand items to each other. */
@@ -655,8 +655,12 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     }
 
     const child = e.target.closest(`[${ID_ATTRIBUTE}]`);
-    const id = child instanceof HTMLElement && child.parentElement === node && child.getAttribute(ID_ATTRIBUTE);
-    if (!id || !(child instanceof HTMLElement)) {
+    if (!(child instanceof HTMLElement) || child.parentElement !== node) {
+      return;
+    }
+
+    const id = child.getAttribute(ID_ATTRIBUTE);
+    if (!id) {
       return;
     }
 
