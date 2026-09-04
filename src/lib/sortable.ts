@@ -1,5 +1,6 @@
 import { insertionIndex, reorderedIds } from "./reorder";
 import type { SlotCenter } from "./reorder";
+import { withViewTransition } from "./view-transition";
 import { tick } from "svelte";
 
 /**
@@ -489,31 +490,58 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     lowerBranch();
   }
 
-  async function commit(isCancelled: boolean) {
-    if (!isCancelled && source && target) {
-      if (target === source) {
-        current.onReorder(
-          reorderedIds({
-            ids: source.ids,
-            fromIndex,
-            toIndex
-          })
-        );
-      } else {
-        current.onMove?.({
-          id: draggedId,
-          fromKey: source.key,
-          toKey: target.key,
+  function reportDrop({ from, to }: {
+    from: Board;
+    to: Board;
+  }) {
+    if (to === from) {
+      current.onReorder(
+        reorderedIds({
+          ids: from.ids,
+          fromIndex,
           toIndex
-        });
-      }
+        })
+      );
+
+      return;
+    }
+
+    current.onMove?.({
+      id: draggedId,
+      fromKey: from.key,
+      toKey: to.key,
+      toIndex
+    });
+  }
+
+  /**
+   * The new order and the removal of the drag's offsets are one visual change, so they are made
+   * inside one view transition: a list that loses its last row would otherwise close the gap in a
+   * single frame and take everything under it up with it.
+   */
+  async function commit(isCancelled: boolean) {
+    if (isCancelled || !source || !target) {
+      clearStyles();
+      isDragging = false;
+
+      return;
+    }
+
+    const from = source;
+    const to = target;
+    await withViewTransition(async () => {
+      reportDrop({
+        from,
+        to
+      });
 
       // Let the reordered list render before the inline offsets go, so the two land in one frame.
       await tick();
-    }
-
-    clearStyles();
-    isDragging = false;
+      clearStyles();
+      // The drag is over once the order is on the page; the transition is only how it got there, and
+      // a drag starting during it measures a DOM that is already in its final places.
+      isDragging = false;
+    });
   }
 
   function landingSlot(isCancelled: boolean): Slot | null {

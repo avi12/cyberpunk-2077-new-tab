@@ -1,12 +1,20 @@
-/** Resolves once the transition has settled, so a caller can wait for the layout to stop moving. */
-export function withViewTransition(mutate: () => void) {
+/**
+ * Resolves once the transition has settled, so a caller can wait for the layout to stop moving.
+ *
+ * `mutate` may be async, and is awaited before the new state is captured: a change that only lands
+ * after Svelte has flushed - a reordered list, offsets cleared off the items it moved - is part of
+ * the same visual change as the one that started it.
+ */
+export async function withViewTransition(mutate: () => unknown) {
   if (!document.startViewTransition) {
-    mutate();
+    await mutate();
 
-    return Promise.resolve();
+    return;
   }
 
-  const transition = document.startViewTransition(mutate);
+  const transition = document.startViewTransition(async () => {
+    await mutate();
+  });
 
   /*
    * A browser runs one transition at a time, and a second one starting skips the first: `finished`
@@ -16,5 +24,5 @@ export function withViewTransition(mutate: () => void) {
    */
   void transition.ready.catch(() => undefined);
 
-  return transition.finished;
+  await transition.finished;
 }
