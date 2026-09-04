@@ -4,18 +4,6 @@
  * every one of them is used from more than one component.
  */
 
-.cyberpunk-container {
-  /*
-   * The original loaded Share Tech Mono but never referenced it - `font-mono` resolved to Tailwind's
-   * default stack, which is what actually rendered. Same stack here, so the type is identical and
-   * nothing is fetched from a font CDN.
-   */
-  --cp-mono: ui-monospace, sfmono-regular, menlo, monaco, consolas, "Liberation Mono", "Courier New", monospace;
-
-  /* How wide the page's stacked sections run - the netlinks, and either family of Copilot cards. */
-  --cp-column: 64rem;
-}
-
 /* ---------- Dialogs ---------- */
 
 /*
@@ -238,10 +226,12 @@
 }
 
 /* The image/video pair uses cyan rather than pink for its selected state. */
-.option-button--cyan[aria-pressed="true"],
-.option-button--cyan[aria-pressed="true"]:hover {
-  background: var(--cp-primary);
-  color: var(--cp-on-accent);
+.option-button--cyan[aria-pressed="true"] {
+  &,
+  &:hover {
+    background: var(--cp-primary);
+    color: var(--cp-on-accent);
+  }
 }
 
 /* ---------- Drop zones ---------- */

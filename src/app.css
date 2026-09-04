@@ -14,8 +14,40 @@
   box-sizing: border-box;
 }
 
+/*
+ * The constants the page needs above the themed container: the scrollbar and the body sit outside
+ * it, a tooltip is a popover appended to the body, and a view transition's pseudo-elements hang off
+ * the root. The raw neon triad is the same in all three themes, so `.cyberpunk-container` points its
+ * own tokens at these rather than restating the values.
+ */
+:root {
+  --cp-bg: #000c14;
+  --cp-neon-cyan: #00ffff;
+  --cp-neon-magenta: #ff0090;
+  --cp-neon-yellow: #f9f002;
+  --cp-ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /*
+   * The page replaces the system cursor outright, as the original does: a cyan arrow over everything,
+   * and a neon plus reticle over anything interactive. Only the reticle is themed - the arrow is the
+   * same in all three themes.
+   *
+   * The arrow is declared once, on the root, and reaches the page by inheritance. Setting it on
+   * every element instead re-claimed it for a button's own icon and label, leaving the reticle only
+   * over the padding around them. Inheritance follows the DOM tree, so a dialog or a popover in the
+   * top layer still takes the cursor of the markup it sits in.
+   *
+   * Both are drawn twice, a dark stroke under the bright one: the reticle is the accent colour, and
+   * the accent is also what fills a pressed button, where a single-colour cursor disappeared.
+   */
+  --cp-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' stroke='%2300ffff'%3E%3C/path%3E%3C/svg%3E") 0 0, auto;
+  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23f9f002'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
+
+  cursor: var(--cp-cursor);
+}
+
 html {
-  scrollbar-color: #00ffff #000c14;
+  scrollbar-color: var(--cp-neon-cyan) var(--cp-bg);
   scrollbar-width: thin;
   line-height: 1.15;
   tab-size: 4;
@@ -25,7 +57,7 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background-color: #000c14;
+  background-color: var(--cp-bg);
   font-family: system-ui, "Segoe UI", roboto, helvetica, arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
 
   /*
@@ -81,12 +113,22 @@ svg {
 }
 
 /*
- * Theme tokens. `cyberpunk2077` is the base set; the two alternates redefine only what differs, so
- * a colour has exactly one definition per theme and none is repeated across rules.
+ * Theme tokens, and the two type/layout constants that live with them. `cyberpunk2077` is the base
+ * set; the two alternates redefine only what differs, so a colour has exactly one definition per
+ * theme and none is repeated across rules.
  */
 .cyberpunk-container {
+  /*
+   * The original loaded Share Tech Mono but never referenced it - `font-mono` resolved to Tailwind's
+   * default stack, which is what actually rendered. Same stack here, so the type is identical and
+   * nothing is fetched from a font CDN.
+   */
+  --cp-mono: ui-monospace, sfmono-regular, menlo, monaco, consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* How wide the page's stacked sections run - the netlinks, and either family of Copilot cards. */
+  --cp-column: 64rem;
+
   /* Structural colours - identical in all three themes. */
-  --cp-bg: #000c14;
   --cp-on-accent: #000000;
   --cp-text: #ffffff;
   --cp-danger: #7f1d1d;
@@ -108,16 +150,20 @@ svg {
   --cp-text-dimmer: #9ca3af;
   --cp-text-faint: #6b7280;
 
-  /* Raw neon used by the glitch/scan effects - deliberately not the Tailwind palette. */
-  --cp-glitch-a: #ff0090;
-  --cp-glitch-b: #00ffff;
-  --cp-glitch-c: #f9f002;
-  --cp-accent-vivid: #f9f002;
-  --cp-greeting-glow: #f9f002;
-  --cp-quote-glow: #00ffff;
-  --cp-pulse: #00ffff;
-  --cp-slider-fill: #ec4899;
-  --cp-slider-thumb: #22d3ee;
+  /*
+   * Raw neon used by the glitch/scan effects - deliberately not the Tailwind palette. The tokens
+   * below it hold the same colour as one of these in every theme, so they are aliases rather than
+   * repeated values, and an alternate theme only has to re-point the one they follow.
+   */
+  --cp-glitch-a: var(--cp-neon-magenta);
+  --cp-glitch-b: var(--cp-neon-cyan);
+  --cp-accent-vivid: var(--cp-neon-yellow);
+  --cp-pulse: var(--cp-neon-cyan);
+  --cp-glitch-c: var(--cp-accent-vivid);
+  --cp-greeting-glow: var(--cp-accent-vivid);
+  --cp-quote-glow: var(--cp-pulse);
+  --cp-slider-fill: var(--cp-secondary);
+  --cp-slider-thumb: var(--cp-primary);
 
   position: relative;
   overflow: hidden;
@@ -143,12 +189,8 @@ svg {
   --cp-text-dimmer: #d1d5db;
   --cp-text-faint: #9ca3af;
   --cp-glitch-a: #ef4444;
-  --cp-glitch-c: #ef4444;
   --cp-accent-vivid: #ef4444;
-  --cp-greeting-glow: #ef4444;
-  --cp-quote-glow: #ef4444;
   --cp-pulse: #ef4444;
-  --cp-slider-fill: #ef4444;
   --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23ef4444'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
 }
 
@@ -166,34 +208,10 @@ svg {
   --cp-text-dimmer: #d1d5db;
   --cp-text-faint: #9ca3af;
   --cp-glitch-a: #8b5cf6;
-  --cp-glitch-c: #10b981;
   --cp-accent-vivid: #10b981;
-  --cp-greeting-glow: #10b981;
-  --cp-quote-glow: #10b981;
   --cp-pulse: #10b981;
-  --cp-slider-fill: #8b5cf6;
   --cp-slider-thumb: #10b981;
   --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%2310b981'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
-}
-
-/*
- * The page replaces the system cursor outright, as the original does: a cyan arrow over everything,
- * and a neon plus reticle over anything interactive. Only the reticle is themed - the arrow is the
- * same in all three themes.
- *
- * The arrow is declared once, on the root, and reaches the page by inheritance. Setting it on
- * every element instead re-claimed it for a button's own icon and label, leaving the reticle only
- * over the padding around them. Inheritance follows the DOM tree, so a dialog or a popover in the
- * top layer still takes the cursor of the markup it sits in.
- *
- * Both are drawn twice, a dark stroke under the bright one: the reticle is the accent colour, and
- * the accent is also what fills a pressed button, where a single-colour cursor disappeared.
- */
-:root {
-  --cp-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' stroke='%2300ffff'%3E%3C/path%3E%3C/svg%3E") 0 0, auto;
-  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23f9f002'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
-
-  cursor: var(--cp-cursor);
 }
 
 /*
@@ -222,22 +240,18 @@ textarea {
  * State changes that reflow the page (theme, scan lines, background, edit modes, a completed gig)
  * are wrapped in a view transition. Naming the persistent regions makes them morph between the two
  * states instead of the whole page cross-fading over itself.
+ *
+ * Both halves of the root cross-fade run on the same timing as every group, which is why they share
+ * this rule: the browser blends them with `plus-lighter`, so a symmetric fade sums to exactly one
+ * and a mismatched one does not. Running 200ms out against 260ms in left a window where the two
+ * added up to less than the page - which is the blink the wallpaper picked up on every edit-mode
+ * toggle.
  */
-::view-transition-group(*) {
-  animation-duration: 260ms;
-  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
-}
-
-/*
- * Both halves of the root cross-fade must run for the same time: the browser blends them with
- * `plus-lighter`, so a symmetric fade sums to exactly one and a mismatched one does not. Running
- * 200ms out against 260ms in left a window where the two added up to less than the page - which is
- * the blink the wallpaper picked up on every edit-mode toggle.
- */
+::view-transition-group(*),
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation-duration: 260ms;
-  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  animation-timing-function: var(--cp-ease);
 }
 
 /*
@@ -365,13 +379,13 @@ textarea {
 /* ---------- Scrollbars & selection ---------- */
 
 ::selection {
-  background: rgb(255 0 144 / 70%);
+  background: color-mix(in sRGB, var(--cp-neon-magenta) 70%, transparent);
   color: #ffffff;
   text-shadow: none;
 }
 
 .scrollbar-cyberpunk {
-  scrollbar-color: #00ffff #1a1a1a;
+  scrollbar-color: var(--cp-neon-cyan) #1a1a1a;
   scrollbar-width: thin;
 }
 
@@ -403,7 +417,7 @@ textarea {
   max-width: min(16rem, 100vw - 1rem);
   margin: 0;
   padding: 6px 12px;
-  border: 2px solid rgb(0 255 255 / 80%);
+  border: 2px solid color-mix(in sRGB, var(--cp-neon-cyan) 80%, transparent);
   background-color: rgb(17 24 39 / 95%);
   color: #ffffff;
   font-family: "Courier New", monospace;
@@ -492,22 +506,22 @@ textarea {
 
 @keyframes edgerunners-hover-glitch {
   0% {
-    text-shadow: 2px 2px #8b5cf6, -2px -2px #00ffff;
+    text-shadow: 2px 2px var(--cp-glitch-a), -2px -2px var(--cp-glitch-b);
     translate: 0;
   }
 
   25% {
-    text-shadow: -2px 2px #10b981, 2px -2px #8b5cf6;
+    text-shadow: -2px 2px var(--cp-glitch-c), 2px -2px var(--cp-glitch-a);
     translate: 1px;
   }
 
   50% {
-    text-shadow: 2px -2px #00ffff, -2px 2px #10b981;
+    text-shadow: 2px -2px var(--cp-glitch-b), -2px 2px var(--cp-glitch-c);
     translate: -1px;
   }
 
   75% {
-    text-shadow: -2px -2px #8b5cf6, 2px 2px #10b981;
+    text-shadow: -2px -2px var(--cp-glitch-a), 2px 2px var(--cp-glitch-c);
     translate: 1px;
   }
 
@@ -791,7 +805,7 @@ textarea {
     left: -100%;
     width: 50%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgb(0 255 255 / 20%), transparent);
+    background: linear-gradient(90deg, transparent, color-mix(in sRGB, var(--cp-neon-cyan) 20%, transparent), transparent);
     animation: 2000ms infinite scan;
   }
 }
