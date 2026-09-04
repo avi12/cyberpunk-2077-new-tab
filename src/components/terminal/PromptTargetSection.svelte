@@ -11,16 +11,26 @@
    * name. Every other destination takes the prompt in the link, which no permission governs.
    *
    * Asked here rather than up front, because picking it is the moment it becomes worth having - and
-   * straight out of the press, since a permission prompt needs the gesture that raised it.
+   * straight out of the press, since a permission prompt needs the gesture that raised it. A site
+   * already handed over is never asked about twice.
    */
   async function choose(targetId: PromptTargetId) {
-    settings.promptTarget.current = targetId;
     const siteId = composeSiteFor(targetId);
-    if (!siteId) {
+    if (!siteId || composeAccess.granted[siteId] === true) {
+      settings.promptTarget.current = targetId;
+
       return;
     }
 
-    await composeAccess.allow(siteId).catch(() => false);
+    /*
+     * The pick lands only once the site is actually handed over. Writing it first and asking after
+     * left a refused destination sitting there selected, which is a picker claiming a card will do
+     * something the reader has just said it may not - so a no leaves the previous one chosen, and
+     * nothing has to be remembered to put it back.
+     */
+    if (await composeAccess.allow(siteId)) {
+      settings.promptTarget.current = targetId;
+    }
   }
 </script>
 
