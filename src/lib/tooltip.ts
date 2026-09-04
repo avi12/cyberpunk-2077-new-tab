@@ -13,7 +13,15 @@ let anchorCount = 0;
 
 export function tooltip(node: HTMLElement, text: string) {
   const anchorName = `--tooltip-${(anchorCount += 1)}`;
-  node.style.setProperty("anchor-name", anchorName);
+  /*
+   * Added to whatever the element is already an anchor for, rather than set over it. `anchor-name`
+   * takes a list, and an inline style outranks the stylesheet - so assigning it flat would quietly
+   * steal the anchor from anything else positioned against this element, and the theft shows up as a
+   * popover in the wrong corner rather than as an error.
+   */
+  const existing = getComputedStyle(node).getPropertyValue("anchor-name").trim();
+  const names = existing && existing !== "none" ? `${existing}, ${anchorName}` : anchorName;
+  node.style.setProperty("anchor-name", names);
 
   const elTip = document.createElement("div");
   elTip.className = "cyberpunk-tooltip";
