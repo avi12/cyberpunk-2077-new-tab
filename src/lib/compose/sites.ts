@@ -1,3 +1,5 @@
+import { hasAccess, requestAccess } from "@/lib/permissions";
+
 /**
  * The sites a prompt cannot simply be linked to, and what it takes to finish the job there.
  *
@@ -46,18 +48,13 @@ function composeOrigin(siteId: ComposeSiteId): string {
 /**
  * Asked for on its own and only when it is about to be used, so nobody hands over a site for a
  * destination they never pick. Refusing costs only the sending: the prompt still gets there.
- *
- * A browser that never offered the site throws rather than answers - Firefox is given no optional
- * origins at all, since declaring them there would drag a `strict_min_version` along for a feature
- * those readers cannot reach. Being turned down and having nowhere to ask amount to the same thing,
- * so both read as no and both end up on the clipboard.
  */
 export async function requestComposeAccess(siteId: ComposeSiteId): Promise<boolean> {
-  return browser.permissions.request({ origins: [composeOrigin(siteId)] }).catch(() => false);
+  return requestAccess({ origins: [composeOrigin(siteId)] });
 }
 
 export async function hasComposeAccess(siteId: ComposeSiteId): Promise<boolean> {
-  return browser.permissions.contains({ origins: [composeOrigin(siteId)] }).catch(() => false);
+  return hasAccess({ origins: [composeOrigin(siteId)] });
 }
 
 /** Whether a tab has arrived at a site, by origin, so a redirect within it still counts as there. */
