@@ -12,6 +12,25 @@ export function engineById(id: string): SearchEngine {
 }
 
 /**
+ * The address a form submission would have produced, for the times the form cannot be left to make
+ * it: a destination that has to be opened by the background, or one the reader is told about first.
+ * Written once so a hand-built URL and a submitted form can never disagree about an engine.
+ */
+export function searchUrl({ engine, query }: {
+  engine: SearchEngine;
+  query: string;
+}) {
+  const url = new URL(engine.action);
+  for (const [name, value] of Object.entries(engine.params ?? {})) {
+    url.searchParams.set(name, value);
+  }
+
+  url.searchParams.set(engine.queryParam, query);
+
+  return url.href;
+}
+
+/**
  * The browser's own engine is the one search the page cannot post a form to - there is no URL for it,
  * only an API the worker holds. Everything else is a plain form target, so the form submits itself.
  *

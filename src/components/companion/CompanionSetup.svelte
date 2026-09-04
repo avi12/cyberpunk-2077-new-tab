@@ -1,10 +1,11 @@
 <script lang="ts">
   import { COMPANION_NAME, CompanionState, requestCompanionPermission } from "@/lib/companion/bridge";
   import { companion } from "@/lib/companion/connection.svelte";
-  import { copilotAccess } from "@/lib/companion/copilot-access.svelte";
-  import { requestCopilotAccess } from "@/lib/companion/copilot";
+  import { composeAccess } from "@/lib/compose/access.svelte";
+  import { composeSiteFor, PROMPT_TARGETS } from "@/lib/companion/prompt-target";
   import CompanionNotice from "./CompanionNotice.svelte";
   import { IS_WINDOWS } from "@/lib/companion/platform";
+  import { settings } from "@/lib/storage/settings.svelte";
 
   /**
    * How soon each unsettled state is worth asking about again. Native messaging has no "a host
@@ -25,14 +26,30 @@
    * Reaching the app is one story for both card families, so it is told once, above them - two
    * panels asking for the same permission would be two buttons doing the same thing. It says
    * nothing until a section has actually asked, and nothing again once one has succeeded.
-   */
-  /**
+   *
    * The site is asked for second, and only once the app has answered: nobody should be handing over
    * a site for a feature that has not proved it works on their machine. Which means this panel has
    * one more thing to say after connecting, rather than going quiet.
    */
   const isConnected = $derived(companion.state === CompanionState.connected);
-  const isOfferingSite = $derived(isConnected && copilotAccess.isGranted === false && !copilotAccess.isRefused);
+
+  /** Whatever destination the reader picked, since that is the one a card will be asking. */
+  const targetLabel = $derived(PROMPT_TARGETS[settings.promptTarget.current].label);
+  const siteId = $derived(composeSiteFor(settings.promptTarget.current));
+
+  /**
+   * Offered on an answer and never on a silence: `granted` says nothing at all about a site the
+   * browser has not been asked about yet, and reading that as a no would offer the site to the
+   * people who handed it over long ago. A site the browser refuses to let any extension script is
+   * no better an offer - it would be granted and still not type a word.
+   */
+  const isOfferingSite = $derived.by(() => {
+    if (!isConnected || !siteId) {
+      return false;
+    }
+
+    return composeAccess.granted[siteId] === false && !composeAccess.refused.includes(siteId);
+  });
 
   const isVisible = $derived.by(() => {
     if (!IS_WINDOWS) {
@@ -49,15 +66,19 @@
   /**
    * A browser asked for an origin its loaded manifest has never heard of rejects rather than
    * answering no - which is what an extension that has not been reloaded since it gained one does.
-   * The answer is the same either way, so it is asked for again rather than assumed.
+   * The answer is the same either way, so the offer simply stays up rather than the click breaking.
    */
   async function allowSite() {
-    await requestCopilotAccess().catch(() => false);
-    await copilotAccess.refresh();
+    if (!siteId) {
+      return;
+    }
+
+    await composeAccess.allow(siteId).catch(() => false);
   }
 
+  /** The one read of what is already allowed, since this is the only offer made on the answer. */
   $effect(() => {
-    void copilotAccess.refresh();
+    void composeAccess.refresh();
   });
 
   async function connect() {
@@ -83,9 +104,14 @@
   <div class="setup">
     {#if isOfferingSite}
       <CompanionNotice>
-        Let a card ask Copilot for you, instead of copying the prompt for you to paste
+        Let a card ask {targetLabel} for you, instead of copying the prompt for you to paste
         {#snippet action()}
-          <button class="cyber-button cyber-button--primary" onclick={allowSite} type="button">Allow Copilot site</button>
+          <button
+            class="cyber-button cyber-button--primary"
+            onclick={allowSite}
+            type="button">
+            Allow {targetLabel} site
+          </button>
         {/snippet}
       </CompanionNotice>
     {:else if companion.state === CompanionState.permissionNeeded}

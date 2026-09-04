@@ -10,7 +10,9 @@ import { defineConfig } from "wxt";
 const COMPANION_PERMISSIONS = ["nativeMessaging"];
 
 /**
- * The one site a card's action can type into, so the prompt need not go by way of the clipboard.
+ * The sites a prompt can be finished off at, so it need not go by way of the clipboard. Spelled out
+ * again here, and unavoidably: a manifest is built by Node before any of `src/` is bundled, so
+ * `compose/sites.ts` cannot be the one that says it - only the one that has to agree with it.
  * Optional and never asked for at install: the reader is only offered it once the companion app has
  * actually answered, and a refusal costs only the typing.
  *
@@ -19,7 +21,7 @@ const COMPANION_PERMISSIONS = ["nativeMessaging"];
  * also drag a `strict_min_version` along, since Firefox only learned this key in 128, and lock older
  * readers out of the whole extension over a feature they could never reach.
  */
-const COPILOT_ORIGIN = "https://copilot.microsoft.com/*";
+const COMPOSE_ORIGINS = ["https://copilot.microsoft.com/*", "https://claude.ai/*"];
 
 /**
  * Firefox ties `storage.sync` to the add-on's own id: a build without one has no account area to
@@ -80,7 +82,7 @@ export default defineConfig({
       : {
         key: publicKey,
         optional_permissions: COMPANION_PERMISSIONS,
-        optional_host_permissions: [COPILOT_ORIGIN]
+        optional_host_permissions: COMPOSE_ORIGINS
       }),
     author: {
       email: "avi6106@gmail.com"

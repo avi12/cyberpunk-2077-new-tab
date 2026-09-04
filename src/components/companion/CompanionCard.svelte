@@ -1,12 +1,13 @@
 <script lang="ts">
   import iconChevronRight from "@/assets/icons/chevron-right.svg?raw";
   import { COPILOT_KINDS, COPILOT_URL } from "@/lib/companion/copilot";
-  import { promptUrl } from "@/lib/companion/prompt-target";
-  import { copilotAccess } from "@/lib/companion/copilot-access.svelte";
-  import { ComposeOutcome, sendMessage } from "@/lib/messaging";
+  import { composeSiteFor, promptUrl } from "@/lib/companion/prompt-target";
+  import type { ComposeSiteId } from "@/lib/compose/sites";
   import type { CopilotKind } from "@/lib/companion/copilot";
+  import { handOffPrompt } from "@/lib/compose/deliver";
   import type { Snippet } from "svelte";
   import { settings } from "@/lib/storage/settings.svelte";
+  import { TabDisposition } from "@/lib/messaging";
   import { tooltip } from "@/lib/tooltip";
 
   const { kind, title, hint, summary, actionLabel, prompt, meta }: {
@@ -23,30 +24,32 @@
   } = $props();
 
   /**
-   * Copilot's web app throws away every query parameter it is handed - `q`, `prompt`, `text`, a hash,
-   * on every path - and lands on its own front page, so a prompt cannot travel in the link. With the
-   * site handed over it is typed into the box instead; without, it goes on the clipboard and the
-   * person pastes it themselves, which is what this always did.
+   * Read while the destination is already opening, so each has to fit what happened and what is left
+   * to do into the one line a card has room for.
    */
-  const COPIED_HINT = "Copies the prompt - paste it into Copilot";
+  const COPIED_NOTICE = "Prompt's on your clipboard - paste it when you land";
+  const UNCOPIED_NOTICE = "Couldn't copy the prompt - you'll have to type it there";
+
+  let notice = $state("");
+
+  const targetId = $derived(settings.promptTarget.current);
 
   /**
-   * Every destination but Copilot answers a link carrying the prompt, so the action is simply that
-   * link and the click is left entirely alone: no clipboard, no permission, nothing to refuse.
+   * The site a script has to finish the prompt off at, and nothing for the destinations where
+   * arriving is already asking - those are a plain link, and the click is left entirely alone.
    */
-  const carried = $derived(promptUrl({
-    targetId: settings.promptTarget.current,
+  const siteId = $derived(composeSiteFor(targetId));
+
+  /**
+   * One address for the link and the hand-off alike, so a middle-click cannot land anywhere a plain
+   * click would not. Copilot throws away every query parameter it is handed - `q`, `prompt`, `text`,
+   * a hash, on every path - so nothing of the prompt can travel in its link, and its front page is
+   * the whole of the address.
+   */
+  const destination = $derived(promptUrl({
+    targetId,
     prompt
-  }));
-
-  /** Nothing to explain when the card does it for you; the hint is for the version that cannot. */
-  const actionHint = $derived.by(() => {
-    if (carried || copilotAccess.canType) {
-      return "";
-    }
-
-    return COPIED_HINT;
-  });
+  }) ?? COPILOT_URL);
 
   /**
    * Deciding here and nowhere else, because a click's default is spent the moment this returns: an
@@ -54,34 +57,30 @@
    * opens a second one.
    */
   function onAction(e: MouseEvent) {
-    if (carried) {
+    if (!siteId) {
       return;
     }
 
-    const isTyping = copilotAccess.canType;
-    if (isTyping) {
-      e.preventDefault();
-    }
-
-    void act(isTyping);
+    e.preventDefault();
+    void handOff(siteId);
   }
 
   /**
-   * The prompt goes on the clipboard either way, so a paste is always there to fall back on - typing
-   * it in is the extra, and one the browser at the far end can still refuse. A refusal is remembered,
-   * so the card stops promising what it turned out not to be able to do.
+   * The site is asked for on the way, so a card is what raises the question, and only for someone
+   * who clicked one. A no costs only the sending: the prompt goes by clipboard and the destination
+   * opens all the same, which is what this always did.
    */
-  async function act(isTyping: boolean) {
-    await navigator.clipboard.writeText(prompt);
-    if (!isTyping) {
-      return;
-    }
-
-    // The background opens the tab, because only it can inject into the one it opened.
-    const outcome = await sendMessage("openCopilotWithPrompt", prompt);
-    if (outcome === ComposeOutcome.refused) {
-      await copilotAccess.recordRefusal();
-    }
+  async function handOff(site: ComposeSiteId) {
+    notice = "";
+    await handOffPrompt({
+      siteId: site,
+      url: destination,
+      prompt,
+      disposition: TabDisposition.new,
+      onCopied(isCopied) {
+        notice = isCopied ? COPIED_NOTICE : UNCOPIED_NOTICE;
+      }
+    });
   }
 </script>
 
@@ -99,14 +98,15 @@
 
   <a
     class="card__action"
-    href={carried ?? COPILOT_URL}
+    href={destination}
     onclick={onAction}
     rel="noopener noreferrer"
-    target="_blank"
-    use:tooltip={actionHint}>
+    target="_blank">
     {actionLabel}
     {@html iconChevronRight}
   </a>
+
+  <p class="card__notice" role="status">{notice}</p>
 </article>
 
 <style>
@@ -201,6 +201,18 @@
 
     &:hover {
       background: var(--cp-secondary-hi);
+    }
+  }
+
+  /* Under the action rather than over it, so what was clickable a moment ago is not covered up. */
+  .card__notice {
+    color: var(--cp-accent);
+    font-family: var(--cp-mono);
+    font-size: 0.75rem;
+    line-height: 1.125rem;
+
+    &:empty {
+      display: none;
     }
   }
 </style>

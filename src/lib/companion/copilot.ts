@@ -2,6 +2,7 @@ import type { CompanionRead } from "./bridge";
 import { CompanionState, MAX_CARDS } from "./bridge";
 import iconMap from "@/assets/icons/map.svg?raw";
 import iconSparkles from "@/assets/icons/sparkles.svg?raw";
+import { COMPOSE_SITES, ComposeSiteId } from "@/lib/compose/sites";
 import { readJourneys } from "@/lib/journeys/bridge";
 import type { Journey } from "@/lib/journeys/model";
 import { readTips } from "@/lib/tips/bridge";
@@ -19,29 +20,8 @@ export enum CopilotKind {
   tip = "tip"
 }
 
-/** Where a card sends the reader, and - as a pattern - the site it may be allowed to type into. */
-export const COPILOT_URL = "https://copilot.microsoft.com/";
-
-/*
- * `wxt.config.ts` spells this pattern again in `optional_host_permissions`, and has to: a manifest is
- * built by Node before any of this is bundled, and this module reaches icons through Vite. The same
- * split the companion's own permission lives with.
- */
-const COPILOT_ORIGIN = `${COPILOT_URL}*`;
-
-/**
- * Being allowed to type the prompt in is asked for on its own, and only once the app has actually
- * answered: nobody should be asked to hand over a site for a feature that turned out not to work on
- * their machine. Refusing costs only the typing - the card still opens Copilot with the prompt
- * copied, which is what it has always done.
- */
-export async function requestCopilotAccess(): Promise<boolean> {
-  return browser.permissions.request({ origins: [COPILOT_ORIGIN] });
-}
-
-export async function hasCopilotAccess(): Promise<boolean> {
-  return browser.permissions.contains({ origins: [COPILOT_ORIGIN] });
-}
+/** Where a card sends the reader, which the compose table owns because it is also a permission. */
+export const COPILOT_URL = COMPOSE_SITES[ComposeSiteId.copilot].url;
 
 /** What a card of either kind wears: the label and mark Edge puts above its title. */
 export const COPILOT_KINDS = {

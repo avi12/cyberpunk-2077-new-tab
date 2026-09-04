@@ -1,3 +1,4 @@
+import { ComposeSiteId } from "../compose/sites";
 import type { IconName } from "../icons/choices";
 import type { Bookmark, GeoLocation, SearchEngine, Widget } from "./schema";
 import {
@@ -91,6 +92,8 @@ export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
     name: "Claude",
     action: "https://claude.ai/new",
     queryParam: "q",
+    /* Reads the prompt out of the URL and puts it in the box, but leaves the sending to whoever asked. */
+    composeSiteId: ComposeSiteId.claude,
     placeholder: "Think it through with an AI..."
   },
   {

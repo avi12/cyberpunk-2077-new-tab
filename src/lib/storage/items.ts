@@ -1,4 +1,5 @@
 import { DEFAULT_PROMPT_TARGET, type PromptTargetId } from "../companion/prompt-target";
+import type { ComposeSiteId } from "../compose/sites";
 import {
   DEFAULT_BACKGROUND,
   DEFAULT_BACKGROUND_BRIGHTNESS,
@@ -99,9 +100,20 @@ export const tipsSnapshotItem = storage.defineItem<CompanionSnapshot | null>("lo
 });
 
 /**
- * Set once a browser has refused to let the compose script into Copilot at all - Edge answers "the
- * extensions gallery cannot be scripted" however the permission was come by, including from a real
- * toolbar click. Session rather than local, so a browser that stops refusing is believed again after
- * a restart, and so the answer never travels in a settings file to a machine it is not true on.
+ * The sites a browser has refused to let the compose script into at all - Edge answers "the
+ * extensions gallery cannot be scripted" for Copilot however the permission was come by, including
+ * from a real toolbar click. Session rather than local, so a browser that stops refusing is believed
+ * again after a restart, and so the answer never travels in a settings file to a machine it is not
+ * true on.
  */
-export const copilotTypingRefusedItem = storage.defineItem<boolean>("session:copilotTypingRefused", { fallback: false });
+export const composeRefusalsItem = storage.defineItem<ComposeSiteId[]>("session:composeRefusals", { fallback: [] });
+
+/** Written by the background, which is the only side that finds out, and only ever adds to the set. */
+export async function rememberComposeRefusal(siteId: ComposeSiteId): Promise<void> {
+  const refused = await composeRefusalsItem.getValue();
+  if (refused.includes(siteId)) {
+    return;
+  }
+
+  await composeRefusalsItem.setValue([...refused, siteId]);
+}

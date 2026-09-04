@@ -1,3 +1,4 @@
+import type { ComposeSiteId } from "../compose/sites";
 import { z } from "../zod";
 
 /**
@@ -41,6 +42,7 @@ export enum SearchEngineId {
   bing = "bing",
   duckDuckGo = "duck",
   chatGpt = "ai",
+  claude = "claude",
   perplexity = "ai2",
   brave = "brave",
   braveAi = "brave2",
@@ -82,6 +84,12 @@ export type SearchEngine = {
   queryParam: string;
   /** Anything the engine needs alongside the query, carried as hidden fields. */
   params?: Record<string, string>;
+  /**
+   * Named only by an engine that fills its box on arrival and then waits to be told to send it. It
+   * is what turns a submit into a question about the site, so the last press can be made for the
+   * reader rather than left to them.
+   */
+  composeSiteId?: ComposeSiteId;
   placeholder: string;
 };
 

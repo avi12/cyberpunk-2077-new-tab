@@ -1,3 +1,4 @@
+import type { ComposeSiteId } from "./compose/sites";
 import { defineExtensionMessaging } from "@webext-core/messaging";
 
 type TopSite = {
@@ -33,31 +34,50 @@ export type CompanionResult = {
 };
 
 /**
- * How an attempt to type a prompt into Copilot ended. `refused` is the browser turning the host down
- * outright and is worth remembering; `failed` is anything else - a tab closed before the script got
- * there - and is worth forgetting, since the next click may well work.
+ * How an attempt to finish a prompt off at its destination ended. `refused` is the browser turning
+ * the host down outright and is worth remembering; `failed` is anything else - a tab closed before
+ * the script got there - and is worth forgetting, since the next click may well work.
  */
 export enum ComposeOutcome {
-  typed = "typed",
+  composed = "composed",
   refused = "refused",
   failed = "failed"
 }
+
+/** Whether the reader is going somewhere or being taken there - a card opens, a search follows. */
+export enum TabDisposition {
+  current = "current",
+  new = "new"
+}
+
+/** A prompt that still needs sending once its tab is there, and the site that knows how. */
+export type ComposeRequest = {
+  siteId: ComposeSiteId;
+  prompt: string;
+};
 
 type ProtocolMap = {
   getTopSites(): TopSite[];
   searchWithDefaultEngine(text: string): void;
   readCompanion(request: CompanionRequest): CompanionResult;
   /**
-   * Open Copilot and type this in. Only the background can, since only it may inject - and it says
-   * how that went, which is the only way to find out short of asking a browser to tell the truth
-   * about itself.
+   * Go to a destination, and where `compose` says so, finish the prompt off once there. Only the
+   * background can do the second half, since only it may inject - and it says how that went, which
+   * is the only way to find out short of asking a browser to tell the truth about itself.
+   *
+   * A page navigating its own tab is gone before the answer arrives, which is why a refusal is
+   * remembered here rather than handed back for the caller to remember.
    */
-  openCopilotWithPrompt(prompt: string): ComposeOutcome;
+  openPromptTarget(request: {
+    url: string;
+    disposition: TabDisposition;
+    compose: ComposeRequest | null;
+  }): ComposeOutcome | null;
   /**
    * Asked by the script injected into that tab, and answered by which tab asked - so the prompt is
    * never written anywhere it would have to be cleaned up from, and is only ever collected once.
    */
-  takeCopilotPrompt(): string | null;
+  takeComposeRequest(): ComposeRequest | null;
 };
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

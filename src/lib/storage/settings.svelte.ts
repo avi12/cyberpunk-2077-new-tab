@@ -1,4 +1,4 @@
-import { PromptTargetId } from "../companion/prompt-target";
+import { PromptTargetId, withShippedPromptTarget } from "../companion/prompt-target";
 import { z } from "../zod";
 import { DEFAULT_DISPLAY_PREFERENCES, DEFAULT_WIDGET_ORDER, DEFAULT_WIDGETS } from "./defaults";
 import {
@@ -125,7 +125,8 @@ export const settings = {
   }),
   promptTarget: new Setting({
     item: promptTargetItem,
-    schema: z.enum(PromptTargetId)
+    schema: z.enum(PromptTargetId),
+    normalize: withShippedPromptTarget
   }),
   activeSearchEngine: new Setting({
     item: activeSearchEngineItem,

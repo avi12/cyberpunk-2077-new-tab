@@ -1,29 +1,90 @@
 <script lang="ts">
   import iconChevronDown from "@/assets/icons/chevron-down.svg?raw";
+  import type { ComposeSiteId } from "@/lib/compose/sites";
+  import { composeAccess } from "@/lib/compose/access.svelte";
   import { DEFAULT_SEARCH_ENGINES } from "@/lib/storage/defaults";
-  import { engineById, searchWithBrowserDefault } from "@/lib/search";
+  import { engineById, searchUrl, searchWithBrowserDefault } from "@/lib/search";
+  import { handOffPrompt } from "@/lib/compose/deliver";
   import { settings } from "@/lib/storage/settings.svelte";
+  import { TabDisposition } from "@/lib/messaging";
 
   const { glitching = false }: { glitching?: boolean } = $props();
 
   const ENGINE_POPOVER_ID = "search-engine-list";
   const QUERY_INPUT_ID = "search-query";
 
+  /**
+   * Both are read while the destination is already on its way in, so each has to say what happened
+   * and what is left to do in the one line there is time for.
+   */
+  const COPIED_NOTICE = "Prompt's on your clipboard - paste it in and send it yourself";
+  const UNCOPIED_NOTICE = "Couldn't copy the prompt - opening the site, you'll have to type it in";
+
   let query = $state("");
   let isScanning = $state(false);
+  let notice = $state("");
   const engine = $derived(engineById(settings.activeSearchEngine.current));
 
   /**
-   * Every engine but the browser's own is a form target, so the submit is left alone: the browser
-   * builds the query out of the fields and navigates, which is why an engine needs nothing here but
-   * an action and a field name.
+   * What the browser already allows is only known by asking it, and a submit cannot stop to ask: a
+   * permission prompt needs the press that raised it, and an await in the middle spends it. So the
+   * asking is done up front, and the submit only ever reads the answer.
+   */
+  $effect(() => {
+    void composeAccess.refresh();
+  });
+
+  /**
+   * The whole hand-off - the question about the site, the clipboard it falls back to, the pause that
+   * makes the fallback readable - so it also fails in one place. The scan runs until the page leaves,
+   * which is why it is only ever called off here: nothing came of the hand-off, and a button left on
+   * SCANNING is a search that never went anywhere. A notice already shown stays shown, since a prompt
+   * that reached the clipboard is still on it.
+   */
+  async function handOff(siteId: ComposeSiteId) {
+    isScanning = true;
+    notice = "";
+    const url = searchUrl({
+      engine,
+      query
+    });
+
+    try {
+      await handOffPrompt({
+        siteId,
+        url,
+        prompt: query,
+        disposition: TabDisposition.current,
+        onCopied(isCopied) {
+          notice = isCopied ? COPIED_NOTICE : UNCOPIED_NOTICE;
+        }
+      });
+    } catch {
+      isScanning = false;
+    }
+  }
+
+  /**
+   * Every engine that answers a query on arrival is left to the form: the browser builds the address
+   * out of the fields and navigates, which is why such an engine needs nothing here but an action and
+   * a field name.
    *
-   * The browser's own engine has no URL to post to, only an API the worker holds, so that one is
-   * intercepted - and it is the only search that waits, so it is the only one that shows a scan.
+   * Two of them do not answer on arrival, and each is taken off the form for its own reason. The
+   * browser's own engine has no URL to post to, only an API the worker holds. An engine that fills
+   * its box and then waits needs the last press made on the reader's behalf, which is a script, which
+   * is a question about the site. Both make the reader wait, so both show a scan.
    */
   async function onSubmit(e: SubmitEvent) {
     if (!query.trim()) {
       e.preventDefault();
+
+      return;
+    }
+
+    const { composeSiteId } = engine;
+    if (composeSiteId) {
+      e.preventDefault();
+      await handOff(composeSiteId);
 
       return;
     }
@@ -94,6 +155,8 @@
       {/if}
     </button>
   </form>
+
+  <p class="search__notice" role="status">{notice}</p>
 </search>
 
 <style>
@@ -244,5 +307,23 @@
     display: flex;
     justify-content: center;
     align-items: center;
+  }
+
+  /*
+   * Under the bar rather than inside it, so nothing in the row moves as it appears. It is spoken by
+   * an element that is always there and empty until it has something to say, since a live region
+   * that arrives with its own text is a region nobody hears.
+   */
+  .search__notice {
+    margin: 0;
+    margin-top: 0.5rem;
+    color: var(--cp-accent);
+    font-family: var(--cp-mono);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+
+    &:empty {
+      display: none;
+    }
   }
 </style>
