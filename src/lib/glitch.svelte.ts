@@ -7,11 +7,7 @@ export class Glitch {
   #timer: ReturnType<typeof setTimeout> | undefined;
 
   fire(durationMs: number = GLITCH_SHORT_MS): void {
-    clearTimeout(this.#timer);
-    this.active = true;
-    this.#timer = setTimeout(() => {
-      this.active = false;
-    }, durationMs);
+    this.fireThen(() => undefined, durationMs);
   }
 
   fireThen(then: () => void, durationMs: number = GLITCH_SHORT_MS): void {

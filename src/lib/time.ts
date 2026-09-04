@@ -55,19 +55,22 @@ const AFTERNOON_START_HOUR = 12;
 const EVENING_START_HOUR = 17;
 const NIGHT_START_HOUR = 21;
 
-export function greeting(userName: string): string {
-  const hours = new Date().getHours();
+function timeOfDay(hours: number) {
   if (hours >= MORNING_START_HOUR && hours < AFTERNOON_START_HOUR) {
-    return `Morning, ${userName}`;
+    return "Morning";
   }
 
   if (hours >= AFTERNOON_START_HOUR && hours < EVENING_START_HOUR) {
-    return `Afternoon, ${userName}`;
+    return "Afternoon";
   }
 
   if (hours >= EVENING_START_HOUR && hours < NIGHT_START_HOUR) {
-    return `Evening, ${userName}`;
+    return "Evening";
   }
 
-  return `Night, ${userName}`;
+  return "Night";
+}
+
+export function greeting(userName: string): string {
+  return `${timeOfDay(new Date().getHours())}, ${userName}`;
 }

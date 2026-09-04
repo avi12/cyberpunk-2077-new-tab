@@ -36,22 +36,20 @@ export function tooltip(node: HTMLElement, text: string) {
     }
   }
 
-  node.addEventListener("pointerenter", show);
-  node.addEventListener("focus", show);
-  node.addEventListener("pointerleave", hide);
-  node.addEventListener("blur", hide);
-  node.addEventListener("click", hide);
+  const listeners = new AbortController();
+  const { signal } = listeners;
+  node.addEventListener("pointerenter", show, { signal });
+  node.addEventListener("focus", show, { signal });
+  node.addEventListener("pointerleave", hide, { signal });
+  node.addEventListener("blur", hide, { signal });
+  node.addEventListener("click", hide, { signal });
 
   return {
     update(next: string) {
       elTip.textContent = next;
     },
     destroy() {
-      node.removeEventListener("pointerenter", show);
-      node.removeEventListener("focus", show);
-      node.removeEventListener("pointerleave", hide);
-      node.removeEventListener("blur", hide);
-      node.removeEventListener("click", hide);
+      listeners.abort();
       elTip.remove();
     }
   };

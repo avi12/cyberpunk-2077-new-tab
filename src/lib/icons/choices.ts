@@ -215,8 +215,11 @@ export const ICON_CHOICES = [
 /** The closed set of stored icon names. */
 export type IconName = (typeof ICON_CHOICES)[number]["name"];
 
-export function iconByName(name: string): string {
-  const choice = ICON_CHOICES.find(entry => entry.name === name);
+/** The first choice doubles as the fallback, so what "no icon picked" looks like is decided once. */
+const DEFAULT_CHOICE = ICON_CHOICES[0];
 
-  return choice ? choice.svg : ICON_CHOICES[0].svg;
+export const DEFAULT_ICON = DEFAULT_CHOICE.name;
+
+export function iconByName(name: string): string {
+  return (ICON_CHOICES.find(entry => entry.name === name) ?? DEFAULT_CHOICE).svg;
 }

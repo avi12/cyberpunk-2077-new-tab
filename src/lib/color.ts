@@ -4,6 +4,28 @@ export function isHexColor(value: string): boolean {
   return HEX_PATTERN.test(value);
 }
 
+function hueOf({ red, green, blue, max, chroma }: {
+  red: number;
+  green: number;
+  blue: number;
+  max: number;
+  chroma: number;
+}) {
+  if (!chroma) {
+    return 0;
+  }
+
+  if (max === red) {
+    return 60 * (((green - blue) / chroma) % 6);
+  }
+
+  if (max === green) {
+    return 60 * ((blue - red) / chroma + 2);
+  }
+
+  return 60 * ((red - green) / chroma + 4);
+}
+
 export function hexToHsv(hex: string): [number, number, number] {
   const digits = hex.replace("#", "");
   const full = digits.length <= 4 ? digits.replace(/./g, digit => digit + digit) : digits;
@@ -13,19 +35,43 @@ export function hexToHsv(hex: string): [number, number, number] {
 
   const max = Math.max(red, green, blue);
   const chroma = max - Math.min(red, green, blue);
-
-  let hue = 0;
-  if (chroma) {
-    if (max === red) {
-      hue = 60 * (((green - blue) / chroma) % 6);
-    } else if (max === green) {
-      hue = 60 * ((blue - red) / chroma + 2);
-    } else {
-      hue = 60 * ((red - green) / chroma + 4);
-    }
-  }
+  const hue = hueOf({
+    red,
+    green,
+    blue,
+    max,
+    chroma
+  });
 
   return [hue < 0 ? hue + 360 : hue, max ? chroma / max : 0, max];
+}
+
+function channelsOf({ hue, chroma, second }: {
+  hue: number;
+  chroma: number;
+  second: number;
+}) {
+  if (hue < 60) {
+    return [chroma, second, 0];
+  }
+
+  if (hue < 120) {
+    return [second, chroma, 0];
+  }
+
+  if (hue < 180) {
+    return [0, chroma, second];
+  }
+
+  if (hue < 240) {
+    return [0, second, chroma];
+  }
+
+  if (hue < 300) {
+    return [second, 0, chroma];
+  }
+
+  return [chroma, 0, second];
 }
 
 export function hsvToHex({ hue, saturation, value }: {
@@ -34,23 +80,12 @@ export function hsvToHex({ hue, saturation, value }: {
   value: number;
 }): string {
   const chroma = value * saturation;
-  const second = chroma * (1 - Math.abs(((hue / 60) % 2) - 1));
   const offset = value - chroma;
-
-  let channels: number[];
-  if (hue < 60) {
-    channels = [chroma, second, 0];
-  } else if (hue < 120) {
-    channels = [second, chroma, 0];
-  } else if (hue < 180) {
-    channels = [0, chroma, second];
-  } else if (hue < 240) {
-    channels = [0, second, chroma];
-  } else if (hue < 300) {
-    channels = [second, 0, chroma];
-  } else {
-    channels = [chroma, 0, second];
-  }
+  const channels = channelsOf({
+    hue,
+    chroma,
+    second: chroma * (1 - Math.abs(((hue / 60) % 2) - 1))
+  });
 
   return `#${channels.map(channel => Math.round((channel + offset) * 255).toString(16).padStart(2, "0")).join("")}`;
 }

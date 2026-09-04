@@ -25,10 +25,6 @@ const snapshotSchema = z.object(
   Object.fromEntries(Object.entries(allSettings).map(([key, setting]) => [key, setting.schema.optional()]))
 );
 
-function exportableBackground(value: string): string {
-  return value.startsWith(CACHED_PREFIX) ? DEFAULT_BACKGROUND : value;
-}
-
 /** Every setting as one object - what a file holds, and what the browser account holds. */
 export function settingsSnapshot(): Record<string, unknown> {
   const snapshot: Record<string, unknown> = {};
@@ -36,10 +32,10 @@ export function settingsSnapshot(): Record<string, unknown> {
     snapshot[key] = setting.current;
   }
 
-  snapshot.background = exportableBackground(settings.background.current);
-  snapshot.backgroundMediaType = settings.background.current.startsWith(CACHED_PREFIX)
-    ? BackgroundMediaType.image
-    : settings.backgroundMediaType.current;
+  const background = settings.background.current;
+  const isCachedBackground = background.startsWith(CACHED_PREFIX);
+  snapshot.background = isCachedBackground ? DEFAULT_BACKGROUND : background;
+  snapshot.backgroundMediaType = isCachedBackground ? BackgroundMediaType.image : settings.backgroundMediaType.current;
 
   // The same check the import runs, so what this page writes is what it will take back.
   return snapshotSchema.parse(snapshot);

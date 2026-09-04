@@ -15,6 +15,8 @@ export type WeatherReading = {
 
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 
+const FORECAST_ERROR_MESSAGE = "Weather API error";
+
 export const WEATHER_REFRESH_MS = 900_000;
 
 /**
@@ -141,11 +143,7 @@ export function formatTemperature({ celsius, isCelsius }: {
   celsius: number;
   isCelsius: boolean;
 }): string {
-  if (isCelsius) {
-    return TEMPERATURE_FORMATS.celsius.format(celsius);
-  }
-
-  return TEMPERATURE_FORMATS.fahrenheit.format(toFahrenheit(celsius));
+  return temperatureFormat(isCelsius).format(isCelsius ? celsius : toFahrenheit(celsius));
 }
 
 /** The unit on its own, for the placeholder shown while the first reading is still in flight. */
@@ -168,12 +166,12 @@ export async function fetchWeather(location: GeoLocation): Promise<WeatherReadin
   const url = `${FORECAST_URL}?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,weather_code`;
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error("Weather API error");
+    throw new Error(FORECAST_ERROR_MESSAGE);
   }
 
   const parsed = forecastSchema.safeParse(await response.json());
   if (!parsed.success) {
-    throw new Error("Weather API error");
+    throw new Error(FORECAST_ERROR_MESSAGE);
   }
 
   const { temperature_2m: temperature, weather_code: weatherCode } = parsed.data.current;

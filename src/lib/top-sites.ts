@@ -1,9 +1,11 @@
+import type { IconName } from "./icons/choices";
+import { hostOf } from "./link";
 import { sendMessage } from "./messaging";
 import { SEEDED_CATEGORY } from "./storage/defaults";
 import { bookmarksItem, bookmarksSeededItem } from "./storage/items";
 import type { Bookmark } from "./storage/schema";
 
-const DOMAIN_ICONS: [string, string][] = [
+const DOMAIN_ICONS: [string, IconName][] = [
   ["youtube", "Video"],
   ["netflix", "Video"],
   ["twitch", "Video"],
@@ -68,20 +70,14 @@ const DOMAIN_ICONS: [string, string][] = [
   ["deliveroo", "Food"]
 ];
 
-const FALLBACK_ICON = "Web";
+const FALLBACK_ICON: IconName = "Web";
 
 function isTwitter(host: string): boolean {
   return host === "x.com" || host.endsWith(".x.com");
 }
 
-function iconForUrl(url: string): string {
-  let host: string;
-  try {
-    host = new URL(url).hostname.toLowerCase();
-  } catch {
-    return FALLBACK_ICON;
-  }
-
+function iconForUrl(url: string) {
+  const host = hostOf(url);
   if (isTwitter(host)) {
     return "Chat";
   }
@@ -91,19 +87,16 @@ function iconForUrl(url: string): string {
   return match ? match[1] : FALLBACK_ICON;
 }
 
-function titleForSite(site: {
+function titleForSite({ title, url }: {
   title: string;
   url: string;
-}): string {
-  if (site.title.trim()) {
-    return site.title.trim();
+}) {
+  const named = title.trim();
+  if (named) {
+    return named;
   }
 
-  try {
-    return new URL(site.url).hostname.replace(/^www\./, "");
-  } catch {
-    return site.url;
-  }
+  return URL.canParse(url) ? hostOf(url) : url;
 }
 
 export async function seedBookmarksFromTopSites(): Promise<Bookmark[] | null> {
@@ -117,14 +110,8 @@ export async function seedBookmarksFromTopSites(): Promise<Bookmark[] | null> {
     return null;
   }
 
-  let sites;
-  try {
-    sites = await sendMessage("getTopSites", undefined);
-  } catch {
-    return null;
-  }
-
-  if (sites.length === 0) {
+  const sites = await sendMessage("getTopSites", undefined).catch(() => null);
+  if (!sites?.length) {
     return null;
   }
 

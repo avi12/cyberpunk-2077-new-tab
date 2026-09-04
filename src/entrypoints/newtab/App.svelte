@@ -129,9 +129,6 @@
 
     {#if usesCompanion}
       <CompanionSetup />
-    {/if}
-
-    {#if usesCompanion}
       <Copilot glitching={glitchingElement === "showCopilot"} />
     {/if}
 
@@ -233,13 +230,12 @@
     letter-spacing: 0.05em;
     transition: opacity 200ms;
 
+    /* Kept in the tree while it glitches out, so the animation has something to play on. */
     &.is-hidden {
       opacity: 0%;
       pointer-events: none;
     }
   }
-
-  /* Kept in the tree while it glitches out, so the animation has something to play on. */
 
   .system-button {
     position: fixed;

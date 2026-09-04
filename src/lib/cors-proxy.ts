@@ -43,10 +43,16 @@ export async function readProxied({ url, timeoutMs = PROXY_TIMEOUT_MS }: {
   url: string;
   timeoutMs?: number;
 }) {
-  return raceProxies({
-    url,
-    timeoutMs
-  }).then(response => response.text()).catch(() => "");
+  try {
+    const response = await raceProxies({
+      url,
+      timeoutMs
+    });
+
+    return await response.text();
+  } catch {
+    return "";
+  }
 }
 
 /**
@@ -62,8 +68,14 @@ export async function fetchBlob({ url, timeoutMs = PROXY_TIMEOUT_MS }: {
     return direct.blob();
   }
 
-  return raceProxies({
-    url,
-    timeoutMs
-  }).then(response => response.blob()).catch(() => null);
+  try {
+    const response = await raceProxies({
+      url,
+      timeoutMs
+    });
+
+    return await response.blob();
+  } catch {
+    return null;
+  }
 }

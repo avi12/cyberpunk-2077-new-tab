@@ -10,7 +10,7 @@
  * it - so for as long as a zone is on screen, the document swallows the drops that miss.
  */
 
-export type DropZoneOptions = {
+type DropZoneOptions = {
   accept: string;
   onFile: (file: File) => void;
 };
@@ -136,10 +136,12 @@ export function dropZone(node: HTMLElement, options: DropZoneOptions) {
     current.onFile(file);
   }
 
-  node.addEventListener("dragenter", onDragEnter);
-  node.addEventListener("dragover", onDragOver);
-  node.addEventListener("dragleave", onDragLeave);
-  node.addEventListener("drop", onDrop);
+  const listeners = new AbortController();
+  const { signal } = listeners;
+  node.addEventListener("dragenter", onDragEnter, { signal });
+  node.addEventListener("dragover", onDragOver, { signal });
+  node.addEventListener("dragleave", onDragLeave, { signal });
+  node.addEventListener("drop", onDrop, { signal });
   watchStrays();
 
   return {
@@ -147,10 +149,7 @@ export function dropZone(node: HTMLElement, options: DropZoneOptions) {
       current = next;
     },
     destroy() {
-      node.removeEventListener("dragenter", onDragEnter);
-      node.removeEventListener("dragover", onDragOver);
-      node.removeEventListener("dragleave", onDragLeave);
-      node.removeEventListener("drop", onDrop);
+      listeners.abort();
       unwatchStrays();
     }
   };

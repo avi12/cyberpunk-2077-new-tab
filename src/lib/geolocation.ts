@@ -6,8 +6,10 @@ const POSITION_TIMEOUT_MS = 8000;
 
 const REVERSE_GEOCODE_URL = "https://api.bigdatacloud.net/data/reverse-geocode-client";
 
+const COORDINATE_DECIMALS = 4;
+
 function round(value: number): number {
-  return Number(value.toFixed(4));
+  return Number(value.toFixed(COORDINATE_DECIMALS));
 }
 
 function currentPosition(): Promise<GeolocationCoordinates | null> {

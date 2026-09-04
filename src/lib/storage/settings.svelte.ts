@@ -26,20 +26,23 @@ import {
 import type { StorageItem } from "./items";
 import type { DisplayPreferences, Widget } from "./schema";
 import {
+  BackgroundMediaType,
   bookmarkSchema,
+  ColorTheme,
   displayPreferencesSchema,
   geoLocationSchema,
   searchEngineSchema,
+  ScanLinesMode,
   widgetSchema
 } from "./schema";
-import { BackgroundMediaType, ColorTheme, ScanLinesMode } from "./schema";
+
 /**
  * One setting: where it is kept, what shape it may take, and how a stored answer is brought up to
  * date with what this build ships. The schema is what a settings file is checked against, so the
  * shape a setting accepts is named once and both the compiler and an import obey it.
  */
 class Setting<TValue> {
-  readonly item: StorageItem<TValue>;
+  readonly #item: StorageItem<TValue>;
   readonly schema: z.ZodType<TValue>;
   readonly #normalize: (stored: TValue) => TValue;
   #value: TValue = $state()!;
@@ -49,7 +52,7 @@ class Setting<TValue> {
     schema: z.ZodType<TValue>;
     normalize?: (stored: TValue) => TValue;
   }) {
-    this.item = item;
+    this.#item = item;
     this.schema = schema;
     this.#normalize = normalize ?? (stored => stored);
     this.#value = item.fallback;
@@ -66,11 +69,11 @@ class Setting<TValue> {
   /** The write behind `current`, for a caller that cannot move on until storage has the value. */
   async set(value: TValue): Promise<void> {
     this.#value = value;
-    await this.item.setValue(value);
+    await this.#item.setValue(value);
   }
 
   async load(): Promise<void> {
-    this.#value = this.#normalize(await this.item.getValue());
+    this.#value = this.#normalize(await this.#item.getValue());
   }
 }
 
@@ -197,7 +200,7 @@ export async function loadSettings(): Promise<void> {
 }
 
 /** A setting with its type forgotten, for the code that walks all of them without knowing any. */
-export type AnySetting = {
+type AnySetting = {
   current: unknown;
   readonly schema: z.ZodType;
   set(value: unknown): Promise<void>;

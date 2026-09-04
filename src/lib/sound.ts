@@ -94,19 +94,24 @@ let context: AudioContext | null = null;
 let hiss: AudioBuffer | null = null;
 let lastPlayedMs = 0;
 
+function audioContext() {
+  context ??= new AudioContext();
+
+  return context;
+}
+
 /**
  * A page nobody has clicked yet is not allowed to make a sound, and a suspended context does not
  * drop what it was asked for - it queues it, and plays the lot at once when it wakes. So the sound
  * is skipped rather than scheduled until the context is actually running.
  */
 function runningContext(): AudioContext | null {
-  context ??= new AudioContext();
-
-  if (context.state === "running") {
-    return context;
+  const audio = audioContext();
+  if (audio.state === "running") {
+    return audio;
   }
 
-  void context.resume();
+  void audio.resume();
 
   return null;
 }
@@ -130,20 +135,19 @@ function hissBuffer(audio: AudioContext): AudioBuffer {
  */
 function envelopeFor({
   audio,
-  totalMs,
+  startedAt,
+  endsAt,
   attackMs,
   releaseMs,
   gain
 }: {
   audio: AudioContext;
-  totalMs: number;
+  startedAt: number;
+  endsAt: number;
   attackMs: number;
   releaseMs: number;
   gain: number;
 }): GainNode {
-  const startedAt = audio.currentTime;
-  const endsAt = startedAt + totalMs / MS_PER_SECOND;
-
   const output = new GainNode(audio, { gain: 0 });
   output.gain.linearRampToValueAtTime(gain, startedAt + attackMs / MS_PER_SECOND);
   output.gain.setValueAtTime(gain, endsAt - releaseMs / MS_PER_SECOND);
@@ -158,7 +162,8 @@ function playTick(audio: AudioContext): void {
   const endsAt = startedAt + TICK_MS / MS_PER_SECOND;
   const envelope = envelopeFor({
     audio,
-    totalMs: TICK_MS,
+    startedAt,
+    endsAt,
     attackMs: TICK_ATTACK_MS,
     releaseMs: TICK_RELEASE_MS,
     gain: TICK_GAIN
@@ -187,9 +192,11 @@ function playTick(audio: AudioContext): void {
 
 function playClick(audio: AudioContext): void {
   const startedAt = audio.currentTime;
+  const endsAt = startedAt + CLICK_MS / MS_PER_SECOND;
   const envelope = envelopeFor({
     audio,
-    totalMs: CLICK_MS,
+    startedAt,
+    endsAt,
     attackMs: CLICK_ATTACK_MS,
     releaseMs: CLICK_RELEASE_MS,
     gain: CLICK_GAIN
@@ -203,7 +210,7 @@ function playClick(audio: AudioContext): void {
   });
   burst.connect(corner).connect(envelope);
   burst.start(startedAt);
-  burst.stop(startedAt + CLICK_MS / MS_PER_SECOND);
+  burst.stop(endsAt);
 }
 
 function audioForSound(): AudioContext | null {
@@ -245,8 +252,7 @@ function onClick(): void {
  * hover it is worth waiting on the wake-up before playing.
  */
 export async function previewTick(): Promise<void> {
-  context ??= new AudioContext();
-  await context.resume();
+  await audioContext().resume();
   onHover();
 }
 
@@ -334,15 +340,12 @@ export function menuSounds(node: HTMLElement) {
     }
   }
 
-  node.addEventListener("pointerover", onPointerOver);
-  node.addEventListener("pointerout", onPointerOut);
-  node.addEventListener("pointerdown", onPointerDown);
-  node.addEventListener("focusin", onFocusIn);
+  const listeners = new AbortController();
+  const { signal } = listeners;
+  node.addEventListener("pointerover", onPointerOver, { signal });
+  node.addEventListener("pointerout", onPointerOut, { signal });
+  node.addEventListener("pointerdown", onPointerDown, { signal });
+  node.addEventListener("focusin", onFocusIn, { signal });
 
-  return () => {
-    node.removeEventListener("pointerover", onPointerOver);
-    node.removeEventListener("pointerout", onPointerOut);
-    node.removeEventListener("pointerdown", onPointerDown);
-    node.removeEventListener("focusin", onFocusIn);
-  };
+  return () => listeners.abort();
 }

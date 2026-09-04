@@ -18,7 +18,7 @@ export enum MediaSlot {
 
 export const CACHED_PREFIX = "cached:";
 
-export type MediaRecord = {
+type MediaRecord = {
   id: MediaSlot;
   blob: Blob;
   type: string;

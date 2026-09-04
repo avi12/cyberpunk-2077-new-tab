@@ -2,22 +2,24 @@
   import { BackgroundMediaType } from "@/lib/storage/schema";
   import { BASE_BACKGROUND_COLOR } from "@/lib/storage/defaults";
   import { CACHED_PREFIX, loadMedia, MediaSlot } from "@/lib/storage/media-store";
+  import { isHexColor } from "@/lib/color";
   import { settings } from "@/lib/storage/settings.svelte";
 
   const VIDEO_LOAD_TIMEOUT_MS = 15_000;
+  const PERCENT = 100;
 
   let objectUrl = $state<string | null>(null);
   let isVideoReady = $state(false);
 
   const background = $derived(settings.background.current);
-  const brightness = $derived(settings.backgroundBrightness.current);
+  const brightnessFilter = $derived(`brightness(${settings.backgroundBrightness.current / PERCENT})`);
   const version = $derived(settings.backgroundMediaVersion.current);
   const isCached = $derived(background.startsWith(CACHED_PREFIX));
   const isVideo = $derived(
     background.startsWith(`${CACHED_PREFIX}${BackgroundMediaType.video}`) ||
     (isCached && settings.backgroundMediaType.current === BackgroundMediaType.video)
   );
-  const isColor = $derived(background.startsWith("#"));
+  const isColor = $derived(isHexColor(background));
   const imageUrl = $derived.by(() => {
     if (isVideo) {
       return null;
@@ -76,7 +78,7 @@
 {#if isVideo && objectUrl}
   {#key objectUrl}
     <video
-      style:filter="brightness({brightness / 100})"
+      style:filter={brightnessFilter}
       style:opacity={isVideoReady ? 1 : 0}
       class="background__video"
       autoplay
@@ -92,7 +94,7 @@
   <div
     style:background-color={isColor ? background : BASE_BACKGROUND_COLOR}
     style:background-image={imageUrl ? `url(${imageUrl})` : "none"}
-    style:filter="brightness({brightness / 100})"
+    style:filter={brightnessFilter}
     class="background__layer"></div>
 {/if}
 

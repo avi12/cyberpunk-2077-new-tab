@@ -1,6 +1,7 @@
 import { hostLabel, hostOf } from "../link";
 import { BookmarkCategory } from "../storage/schema";
 import type { IconName } from "./choices";
+import { DEFAULT_ICON } from "./choices";
 
 /**
  * Niagara Launcher's Anycons decide an app's glyph from the app's store category, with a
@@ -17,8 +18,6 @@ import type { IconName } from "./choices";
  * results. These tables are the local stand-in, and each layer is a table rather than a heuristic
  * for the same reason - a wrong guess is one line to fix.
  */
-
-const DEFAULT_ICON: IconName = "Default";
 
 /** Sites recognised outright, keyed by the registrable label of the host. */
 const SITE_ICONS: Record<string, IconName> = {
@@ -305,7 +304,6 @@ const ICON_CATEGORIES: Partial<Record<IconName, BookmarkCategory>> = {
   Popcorn: BookmarkCategory.entertainment,
   Security: BookmarkCategory.daily,
   Skull: BookmarkCategory.work,
-  Star: BookmarkCategory.daily,
   Terminal: BookmarkCategory.work,
   Video: BookmarkCategory.entertainment,
   Wallet: BookmarkCategory.daily,
@@ -314,11 +312,10 @@ const ICON_CATEGORIES: Partial<Record<IconName, BookmarkCategory>> = {
 
 /** The section a link is filed under has the last word, the way a store category would. */
 const CATEGORY_ICONS: Record<string, IconName> = {
-  daily: "Star",
-  entertainment: "Popcorn",
-  other: "Default",
-  social: "Chat",
-  work: "Work"
+  [BookmarkCategory.daily]: "Star",
+  [BookmarkCategory.entertainment]: "Popcorn",
+  [BookmarkCategory.social]: "Chat",
+  [BookmarkCategory.work]: "Work"
 };
 
 function tokensOf(text: string) {
