@@ -1,11 +1,13 @@
 <script lang="ts">
   import type { GeoLocation } from "@/lib/storage/schema";
-  import type { WeatherReading } from "@/lib/weather";
+  import type { WeatherReading } from "@/lib/weather/model";
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
   import { deviceLocation } from "@/lib/geolocation";
-  import { fetchWeather, formatTemperature, temperatureUnit, WEATHER_REFRESH_MS, weatherIcon } from "@/lib/weather";
+  import { formatTemperature, temperatureUnit, WEATHER_ICONS, WEATHER_REFRESH_MS } from "@/lib/weather/model";
+  import { fetchWeather } from "@/lib/weather/sources";
   import { GLITCH_SHORT_MS, Glitch } from "@/lib/glitch.svelte";
+  import { settings } from "@/lib/storage/settings.svelte";
   import LocationOverrideModal from "./LocationOverrideModal.svelte";
   import WidgetCard from "./WidgetCard.svelte";
   import WidgetLocation from "./WidgetLocation.svelte";
@@ -25,12 +27,16 @@
   const isAutomatic = $derived(!config.location);
   const location = $derived(config.location ?? detected ?? DEFAULT_WEATHER_LOCATION);
   const isCelsius = $derived(config.temperatureUnit !== false);
+  const sourceId = $derived(settings.weatherSource.current);
   const unit = $derived(temperatureUnit(isCelsius));
 
   async function refresh() {
     try {
       isLoading = true;
-      reading = await fetchWeather(location);
+      reading = await fetchWeather({
+        location,
+        sourceId
+      });
       isFailed = false;
     } catch {
       isFailed = true;
@@ -51,6 +57,7 @@
 
   $effect(() => {
     void location;
+    void sourceId;
     void refresh();
     const timer = setInterval(() => {
       void refresh();
@@ -83,7 +90,7 @@
     <WidgetLocation name={location.name} isFailed onEdit={openLocation} />
     <p class="weather__desc weather__desc--error">System offline</p>
   {:else}
-    {@const icon = weatherIcon(reading.weatherCode)}
+    {@const icon = WEATHER_ICONS[reading.condition]}
     {@const temperature = formatTemperature({
       celsius: reading.temperature,
       isCelsius

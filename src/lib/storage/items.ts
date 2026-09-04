@@ -1,5 +1,6 @@
 import { DEFAULT_PROMPT_TARGET, type PromptTargetId } from "../companion/prompt-target";
 import type { ComposeSiteId } from "../compose/sites";
+import { DEFAULT_WEATHER_SOURCE, type WeatherSourceId } from "../weather/sources";
 import {
   DEFAULT_BACKGROUND,
   DEFAULT_BACKGROUND_BRIGHTNESS,
@@ -45,6 +46,8 @@ export const customCategoriesItem = storage.defineItem<string[]>("local:customCa
 export const activeSearchEngineItem = storage.defineItem<string>("local:activeSearchEngine", { fallback: SearchEngineId.browserDefault });
 
 export const weatherLocationItem = storage.defineItem<GeoLocation>("local:weatherLocation", { fallback: DEFAULT_WEATHER_LOCATION });
+
+export const weatherSourceItem = storage.defineItem<WeatherSourceId>("local:weatherSource", { fallback: DEFAULT_WEATHER_SOURCE });
 
 export const temperatureUnitItem = storage.defineItem<boolean>("local:temperatureUnit", { fallback: DEFAULT_TEMPERATURE_UNIT });
 

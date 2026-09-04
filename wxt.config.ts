@@ -24,6 +24,13 @@ const COMPANION_PERMISSIONS = ["nativeMessaging"];
 const COMPOSE_ORIGINS = ["https://copilot.microsoft.com/*", "https://claude.ai/*"];
 
 /**
+ * Google's own weather, read off the search page it draws it on. Optional and asked for only by a
+ * reader who turns it on, so the default install still reaches nothing but the open APIs it always
+ * did - and a refusal costs the widget nothing, since it falls back to the one it was using.
+ */
+const WEATHER_ORIGIN = "https://www.google.com/*";
+
+/**
  * Firefox ties `storage.sync` to the add-on's own id: a build without one has no account area to
  * write to, so the backup in System Settings needs this declared rather than assigned at listing
  * time. Chromium pins its id with `key` below instead.
@@ -51,13 +58,14 @@ export default defineConfig({
     // duplicate the one thing Ctrl+T already does. Nothing may touch `browser.action` while this is
     // absent - the API is not there to be called, and the read alone would kill the worker.
     // `search` runs the browser's own default engine for the "Default" search option; `topSites`
-    // seeds the netlinks on first run; `geolocation` backs the "USE MY LOCATION" button in the
-    // weather/world-clock location override; `storage` holds every setting, local and the backup in
-    // the browser account alike; `identity` is the greeting's "Use Google account" button, and it
-    // is `launchWebAuthFlow` alone - no `identity.email`, so no "know your email address" warning,
-    // and no `oauth2` key, which Edge would not honour anyway. No host permissions - open-meteo,
+    // seeds the netlinks on first run; `storage` holds every setting, local and the backup in the
+    // browser account alike; `identity` is the greeting's "Use Google account" button, and it is
+    // `launchWebAuthFlow` alone - no `identity.email`, so no "know your email address" warning, and
+    // no `oauth2` key, which Edge would not honour anyway. No host permissions - open-meteo,
     // timeapi, allorigins and bigdatacloud all answer with `Access-Control-Allow-Origin: *`, and
     // Google's authorize page is opened in a window rather than fetched.
+    //
+    // Google's weather is asked for at the moment it is used instead.
     permissions: [
       "search",
       "topSites",
@@ -82,7 +90,7 @@ export default defineConfig({
       : {
         key: publicKey,
         optional_permissions: COMPANION_PERMISSIONS,
-        optional_host_permissions: COMPOSE_ORIGINS
+        optional_host_permissions: [...COMPOSE_ORIGINS, WEATHER_ORIGIN]
       }),
     author: {
       email: "avi6106@gmail.com"

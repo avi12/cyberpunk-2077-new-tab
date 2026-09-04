@@ -12,6 +12,7 @@
   import SolidColorsSection from "./terminal/SolidColorsSection.svelte";
   import SoundSection from "./terminal/SoundSection.svelte";
   import TabIdentitySection from "./terminal/TabIdentitySection.svelte";
+  import WeatherSourceSection from "./terminal/WeatherSourceSection.svelte";
 
   const { onElementGlitch }: { onElementGlitch: (key: keyof DisplayPreferences | null) => void } = $props();
 
@@ -35,6 +36,8 @@
     <SoundSection />
 
     <PromptTargetSection />
+
+    <WeatherSourceSection />
 
     <PanelSection title="Scan Lines">
       <OptionGroup
