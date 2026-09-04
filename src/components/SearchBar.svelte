@@ -185,7 +185,7 @@
       {#if isScanning}
         <span class="search__overlay scanning-text">SCANNING...</span>
       {:else if isScanFailed}
-        <span class="search__overlay search__overlay--failed">SCAN FAILED</span>
+        <span class="search__overlay search__overlay--failed">ERROR</span>
       {/if}
     </button>
   </form>
@@ -308,9 +308,9 @@
     overflow: hidden;
 
     /*
-     * "SCANNING..." and "SCAN FAILED" are laid over the label rather than in the flow, so neither
-     * can widen the button itself. They are the same eleven characters; measured at 97px in the mono
-     * face this button uses, and 7rem is that with room to spare. It only matters at the narrow
+     * "SCANNING..." and "ERROR" are laid over the label rather than in the flow, so neither can
+     * widen the button itself. The longest of the three is "SCANNING...", measured at 97px in the
+     * mono face this button uses, and 7rem is that with room to spare. It only matters at the narrow
      * padding.
      */
     min-width: 7rem;
