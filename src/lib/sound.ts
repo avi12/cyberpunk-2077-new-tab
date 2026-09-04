@@ -264,52 +264,53 @@ function isAimed(element: Element): boolean {
 }
 
 /**
- * The control under the pointer, or nothing at all.
+ * The link under the pointer, or nothing at all.
  *
- * The reticle is declared on the control and inherited by whatever it is made of, so the outermost
- * element still wearing it is the control itself - which is what makes a button with an icon and a
- * label one thing to speak for rather than three. An element without it can hold nothing that has
- * it, so the common case of crossing empty page costs one lookup.
+ * Only somewhere to go speaks: a netlink, a source under a Copilot card, the card's own action. A
+ * button is a setting rather than a destination - a section that collapses, an icon in the picker,
+ * a search engine - and settings are quiet.
+ *
+ * `closest` is what makes a link one thing to speak for rather than an icon and a label. The cursor
+ * is then asked whether it is still a link at all, since a netlink being rearranged is a drag
+ * handle written as an anchor, and drops back to the arrow to say so.
  */
-function aimedControl(target: EventTarget | null): Element | null {
-  let element = target instanceof Element ? target : null;
-  if (!element || !isAimed(element)) {
+function aimedLink(target: EventTarget | null) {
+  if (!(target instanceof Element)) {
     return null;
   }
 
-  while (element.parentElement && isAimed(element.parentElement)) {
-    element = element.parentElement;
+  const link = target.closest("a[href]");
+  if (!link || !isAimed(link)) {
+    return null;
   }
 
-  return element;
+  return link;
 }
 
 /**
  * What the page says back to the cursor, said once for the whole page.
  *
- * What speaks is whatever the page is offering the reticle to, which is one rule in `app.css` and
- * the exceptions written beside it - a disabled control, or a netlink being rearranged rather than
- * opened, drops back to the arrow. Reading the answer off the cursor is what keeps the two in step:
- * a list of selectors here would be a second opinion about which things are aimable, and it would
- * be the one that goes stale.
+ * The game's menu ticks under a target, not under every widget in the pause screen, and here a
+ * target is a link. `a[href]` is the whole list, so nothing has to be kept in step by hand as the
+ * page grows.
  *
  * `:focus-visible` extends it to the keyboard, and only to the keyboard: it is the browser's own
  * answer to whether the user tabbed here or focus merely landed - restored after a dialog closes,
  * moved by script, or dragged along by the click that is already playing its own sound.
  */
 export function menuSounds(node: HTMLElement) {
-  /** What the pointer is inside, so crossing a button's padding onto its label says nothing new. */
-  let elAimed: Element | null = null;
+  /** What the pointer is inside, so crossing a link's padding onto its label says nothing new. */
+  let elLink: Element | null = null;
 
   function onPointerOver(e: PointerEvent) {
-    const aimed = aimedControl(e.target);
-    if (aimed === elAimed) {
+    const link = aimedLink(e.target);
+    if (link === elLink) {
       return;
     }
 
-    elAimed = aimed;
+    elLink = link;
 
-    if (aimed) {
+    if (link) {
       onHover();
     }
   }
@@ -317,18 +318,18 @@ export function menuSounds(node: HTMLElement) {
   /** Leaving the window, which is the one exit no `pointerover` arrives to describe. */
   function onPointerOut(e: PointerEvent) {
     if (!e.relatedTarget) {
-      elAimed = null;
+      elLink = null;
     }
   }
 
   function onPointerDown(e: PointerEvent) {
-    if (aimedControl(e.target)) {
+    if (aimedLink(e.target)) {
       onClick();
     }
   }
 
   function onFocusIn(e: FocusEvent) {
-    if (e.target instanceof Element && e.target.matches(":focus-visible") && aimedControl(e.target)) {
+    if (e.target instanceof Element && e.target.matches(":focus-visible") && aimedLink(e.target)) {
       onHover();
     }
   }
