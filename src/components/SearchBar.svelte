@@ -19,7 +19,7 @@
    */
   const COPIED_NOTICE = "Prompt's on your clipboard - paste it in and send it yourself";
   const UNCOPIED_NOTICE = "Couldn't copy the prompt - opening the site, you'll have to type it in";
-  const EMPTY_NOTICE = "Scan failed - nothing to scan";
+  const EMPTY_NOTICE = "Scan failed";
 
   /** Long enough that the scan reads as a scan rather than a flicker on the way to the answer. */
   const EMPTY_SCAN_MS = 1000;
