@@ -185,7 +185,7 @@
       {#if isScanning}
         <span class="search__overlay scanning-text">SCANNING...</span>
       {:else if isScanFailed}
-        <span class="search__overlay">SCAN FAILED</span>
+        <span class="search__overlay search__overlay--failed">SCAN FAILED</span>
       {/if}
     </button>
   </form>
@@ -350,6 +350,42 @@
     display: flex;
     justify-content: center;
     align-items: center;
+  }
+
+  /*
+   * The failure glitches on the text alone. The shared `.glitch` rotates hue, which would carry the
+   * red round with it, and a button that changes colour while it shudders reads as two things going
+   * wrong rather than one - so the background is held and only the letters break up.
+   *
+   * It never settles: the word is the fault rather than a report of one, so there is no rest frame
+   * for it to sit still in. Clipped by the button's own overflow, so the row still cannot move.
+   *
+   * `step-end` because a glitch does not ease: each frame holds until the next one replaces it.
+   */
+  .search__overlay--failed {
+    animation: 320ms step-end infinite failed-glitch;
+  }
+
+  @keyframes failed-glitch {
+    0% {
+      text-shadow: 2px 0 var(--cp-glitch-a), -2px 0 var(--cp-glitch-b);
+      translate: -2px 0;
+    }
+
+    25% {
+      text-shadow: -2px 0 var(--cp-glitch-a), 2px 0 var(--cp-glitch-b);
+      translate: 2px 0;
+    }
+
+    50% {
+      text-shadow: 1px 0 var(--cp-glitch-b), -1px 0 var(--cp-glitch-a);
+      translate: 1px 0;
+    }
+
+    75% {
+      text-shadow: -1px 0 var(--cp-glitch-b), 1px 0 var(--cp-glitch-a);
+      translate: -1px 0;
+    }
   }
 
   /*
