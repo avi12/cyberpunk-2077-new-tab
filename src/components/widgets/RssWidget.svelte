@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { WidgetConfig } from "@/lib/storage/schema";
   import iconChevronDown from "@/assets/icons/chevron-down.svg?raw";
   import iconChevronUp from "@/assets/icons/chevron-up.svg?raw";
   import { readProxied } from "@/lib/cors-proxy";
@@ -8,15 +7,12 @@
   import iconRss from "@/assets/icons/rss.svg?raw";
   import iconSettings from "@/assets/icons/settings.svg?raw";
   import { untrack } from "svelte";
+  import { configSaver } from "./widget.svelte";
+  import type { WidgetProps } from "./widget.svelte";
+  import WidgetCard from "./WidgetCard.svelte";
   import iconWifiOff from "@/assets/icons/wifi-off.svg?raw";
 
-  const {
-    config,
-    onConfigChange
-  }: {
-    config: WidgetConfig;
-    onConfigChange: (patch: WidgetConfig) => void;
-  } = $props();
+  const { config, onConfigChange }: WidgetProps = $props();
 
   type FeedItem = {
     title: string;
@@ -24,7 +20,6 @@
   };
 
   const REFRESH_MS = 900_000;
-  const SAVE_DEBOUNCE_MS = 500;
   const MIN_ITEMS = 1;
   const MAX_ITEMS = 50;
   const DEFAULT_MAX_ITEMS = 10;
@@ -36,8 +31,8 @@
   let isSettingsOpen = $state(false);
   let urlDraft = $state(untrack(() => config.feedUrl ?? ""));
   let countDraft = $state(untrack(() => config.maxItems ?? DEFAULT_MAX_ITEMS));
-  let timer: ReturnType<typeof setTimeout> | undefined;
 
+  const saver = configSaver({ save: patch => onConfigChange(patch) });
   const feedUrl = $derived(config.feedUrl ?? "");
   const maxItems = $derived(config.maxItems ?? DEFAULT_MAX_ITEMS);
 
@@ -88,63 +83,58 @@
       void refresh();
     }, REFRESH_MS);
 
-    return () => {
-      clearInterval(poll);
-      clearTimeout(timer);
-    };
+    return () => clearInterval(poll);
   });
 
   function queueSave() {
-    clearTimeout(timer);
-    timer = setTimeout(() => onConfigChange({
+    saver.queue({
       feedUrl: urlDraft,
       maxItems: countDraft
-    }), SAVE_DEBOUNCE_MS);
+    });
   }
 
   function setCount(value: number) {
     countDraft = Math.max(MIN_ITEMS, Math.min(MAX_ITEMS, value || DEFAULT_MAX_ITEMS));
     queueSave();
   }
+
+  function openSettings() {
+    isSettingsOpen = true;
+  }
 </script>
 
-<article class="widget-card glitch-border">
-  <header class="widget-card__header">
-    <h3 class="widget-card__label">
-      {@html iconRss}
-      RSS Feed
-    </h3>
-    <button
-      class="widget-card__icon-button"
-      aria-label="RSS feed settings"
-      onclick={() => (isSettingsOpen = true)}
-      type="button">
-      {@html iconSettings}
-    </button>
-  </header>
-
+<WidgetCard
+  header={{
+    icon: iconRss,
+    label: "RSS Feed",
+    action: {
+      icon: iconSettings,
+      label: "RSS feed settings",
+      onAct: openSettings
+    }
+  }}>
   {#if !feedUrl}
-    <p class="rss__empty">No feed configured</p>
+    <p class="rss__message rss__message--empty">No feed configured</p>
   {:else if isLoading}
-    <div class="stack--tight rss__skeletons">
+    <div class="rss__skeletons">
       {#each SKELETON_ROWS as i (i)}
         <div class="rss__skeleton pulse"></div>
       {/each}
-      <p class="rss__status">Loading feed...</p>
+      <p class="rss__message rss__message--status">Loading feed...</p>
     </div>
   {:else if isFailed}
     <div class="rss__notice">
       <span class="rss__notice-icon">{@html iconWifiOff}</span>
-      <p class="rss__error">Feed Error</p>
-      <button class="rss__edit" onclick={() => (isSettingsOpen = true)} type="button">
+      <p class="rss__message rss__message--error">Feed Error</p>
+      <button class="rss__edit" onclick={openSettings} type="button">
         {@html iconSettings}
         Edit URL
       </button>
     </div>
   {:else if items.length === 0}
     <div class="rss__notice">
-      <p class="rss__none">No items found</p>
-      <button class="rss__edit rss__edit--cyan" onclick={() => (isSettingsOpen = true)} type="button">
+      <p class="rss__message">No items found</p>
+      <button class="rss__edit rss__edit--cyan" onclick={openSettings} type="button">
         {@html iconSettings}
         Edit URL
       </button>
@@ -161,7 +151,7 @@
       {/each}
     </ul>
   {/if}
-</article>
+</WidgetCard>
 
 <Modal isOpen={isSettingsOpen} onClose={() => (isSettingsOpen = false)} title="RSS Feed Settings">
   <div class="stack">
@@ -211,24 +201,28 @@
 </Modal>
 
 <style>
-  .widget-card__label :global(svg) {
-    width: 20px;
-    height: 20px;
-  }
-
-  .widget-card__icon-button :global(svg) {
-    width: 16px;
-    height: 16px;
-  }
-
-  .rss__empty {
-    padding: 2rem 0;
+  /* The four things a feed can say instead of items, which differ only in colour and placement. */
+  .rss__message {
     color: var(--cp-text-faint);
     font-family: var(--cp-mono);
-    font-style: italic;
     font-size: 0.875rem;
     line-height: 1.25rem;
+  }
+
+  .rss__message--empty {
+    padding: 2rem 0;
+    font-style: italic;
     text-align: center;
+  }
+
+  .rss__message--status {
+    margin-top: 0.5rem;
+    color: var(--cp-primary);
+    text-align: center;
+  }
+
+  .rss__message--error {
+    color: var(--cp-secondary);
   }
 
   .rss__skeletons {
@@ -241,15 +235,6 @@
     height: 1.5rem;
     border: 1px solid var(--cp-outline);
     background: var(--cp-surface-2);
-  }
-
-  .rss__status {
-    margin-top: 0.5rem;
-    color: var(--cp-primary);
-    font-family: var(--cp-mono);
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    text-align: center;
   }
 
   .rss__notice {
@@ -267,20 +252,6 @@
       width: 24px;
       height: 24px;
     }
-  }
-
-  .rss__error {
-    color: var(--cp-secondary);
-    font-family: var(--cp-mono);
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-  }
-
-  .rss__none {
-    color: var(--cp-text-faint);
-    font-family: var(--cp-mono);
-    font-size: 0.875rem;
-    line-height: 1.25rem;
   }
 
   .rss__edit {
@@ -368,9 +339,54 @@
     }
   }
 
-  .spinner-button :global(svg) {
-    width: 14px;
-    height: 14px;
+  /* The number field renders the spinner pair below, so the native control is hidden outright. */
+  [type="number"] {
+    appearance: textfield;
+  }
+
+  .cyber-input--spinner {
+    padding-right: 2rem;
+  }
+
+  .number-input-container {
+    position: relative;
+  }
+
+  .spinner-buttons {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    translate: 0 -50%;
+  }
+
+  .spinner-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+    height: 16px;
+    border: none;
+    background: none;
+    color: var(--cp-neon-cyan);
+    user-select: none;
+    transition: all 200ms;
+
+    :global(svg) {
+      width: 14px;
+      height: 14px;
+    }
+
+    &:hover {
+      color: var(--cp-accent-vivid);
+    }
+
+    &:active {
+      color: #000000;
+      scale: 0.9;
+    }
   }
 
   @keyframes scroll-text {
@@ -382,5 +398,4 @@
       translate: -100%;
     }
   }
-
 </style>

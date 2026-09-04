@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { GeoLocation, WidgetConfig } from "@/lib/storage/schema";
+  import type { GeoLocation } from "@/lib/storage/schema";
   import type { WeatherReading } from "@/lib/weather";
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
@@ -7,16 +7,12 @@
   import { fetchWeather, formatTemperature, temperatureUnit, WEATHER_REFRESH_MS, weatherIcon } from "@/lib/weather";
   import { GLITCH_SHORT_MS, Glitch } from "@/lib/glitch.svelte";
   import LocationOverrideModal from "./LocationOverrideModal.svelte";
+  import WidgetCard from "./WidgetCard.svelte";
   import WidgetLocation from "./WidgetLocation.svelte";
+  import type { WidgetProps } from "./widget.svelte";
   import iconWind from "@/assets/icons/wind.svg?raw";
 
-  const {
-    config,
-    onConfigChange
-  }: {
-    config: WidgetConfig;
-    onConfigChange: (patch: WidgetConfig) => void;
-  } = $props();
+  const { config, onConfigChange }: WidgetProps = $props();
 
   const glitch = new Glitch();
 
@@ -30,23 +26,6 @@
   const location = $derived(config.location ?? detected ?? DEFAULT_WEATHER_LOCATION);
   const isCelsius = $derived(config.temperatureUnit !== false);
   const unit = $derived(temperatureUnit(isCelsius));
-  const temperature = $derived.by(() => {
-    if (!reading) {
-      return "";
-    }
-
-    return formatTemperature({
-      celsius: reading.temperature,
-      isCelsius
-    });
-  });
-  const icon = $derived.by(() => {
-    if (!reading) {
-      return null;
-    }
-
-    return weatherIcon(reading.weatherCode);
-  });
 
   async function refresh() {
     try {
@@ -88,10 +67,10 @@
   }
 </script>
 
-<article class="widget-card glitch-border">
+<WidgetCard>
   {#if isLoading}
     <div class="weather__row">
-      <span class="weather__icon weather__icon--isLoading pulse">{@html iconCloud}</span>
+      <span class="weather__icon weather__icon--loading pulse">{@html iconCloud}</span>
       <p class="weather__temp weather__temp--muted">--{unit}</p>
     </div>
     <WidgetLocation name={location.name} onEdit={openLocation} />
@@ -104,8 +83,13 @@
     <WidgetLocation name={location.name} isFailed onEdit={openLocation} />
     <p class="weather__desc weather__desc--error">System offline</p>
   {:else}
+    {@const icon = weatherIcon(reading.weatherCode)}
+    {@const temperature = formatTemperature({
+      celsius: reading.temperature,
+      isCelsius
+    })}
     <div class="weather__row">
-      <span style:color={icon?.color} class="weather__icon">{@html icon!.svg}</span>
+      <span style:color={icon.color} class="weather__icon">{@html icon.svg}</span>
       <button
         class="weather__temp weather__temp--button"
         class:glitch={glitch.active}
@@ -118,7 +102,7 @@
     <WidgetLocation name={location.name} onEdit={openLocation} />
     <p class="weather__desc">{reading.description}</p>
   {/if}
-</article>
+</WidgetCard>
 
 <LocationOverrideModal
   isFollowingDevice={isAutomatic}
@@ -146,7 +130,7 @@
     height: 32px;
   }
 
-  .weather__icon--isLoading {
+  .weather__icon--loading {
     color: var(--cp-primary);
   }
 

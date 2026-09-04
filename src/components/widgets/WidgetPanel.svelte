@@ -30,18 +30,27 @@
   );
   const isAnyEnabled = $derived(settings.widgets.current.some(widget => widget.enabled));
 
-  function updateWidget(id: string, change: (widget: Widget) => Widget) {
+  function updateWidget({ id, change }: {
+    id: string;
+    change: (widget: Widget) => Widget;
+  }) {
     settings.widgets.current = settings.widgets.current.map(widget => (widget.id === id ? change(widget) : widget));
   }
 
-  function patchConfig(id: string, patch: WidgetConfig) {
-    updateWidget(id, widget => ({
-      ...widget,
-      config: {
-        ...widget.config,
-        ...patch
-      }
-    }));
+  function patchConfig({ id, patch }: {
+    id: string;
+    patch: WidgetConfig;
+  }) {
+    updateWidget({
+      id,
+      change: widget => ({
+        ...widget,
+        config: {
+          ...widget.config,
+          ...patch
+        }
+      })
+    });
   }
 </script>
 

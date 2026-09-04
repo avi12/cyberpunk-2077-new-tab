@@ -89,10 +89,6 @@
   }
 }
 
-.cyber-input--spinner {
-  padding-right: 2rem;
-}
-
 .cyber-label {
   display: block;
   margin-bottom: 0.5rem;
@@ -278,69 +274,9 @@
 
 .drop-zone__hint {
   color: var(--cp-text-dimmer);
-}
 
-.drop-zone[data-dropping] .drop-zone__hint {
-  color: inherit;
-}
-
-/* ---------- Widget cards ---------- */
-
-/* Every widget is the same bordered panel; only the contents differ. */
-.widget-card {
-  padding: 1rem;
-  border: 2px solid var(--cp-primary);
-  background: var(--cp-surface);
-}
-
-.widget-card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.75rem;
-}
-
-.widget-card__label {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  color: var(--cp-primary);
-  font-family: var(--cp-mono);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  text-transform: uppercase;
-}
-
-.widget-card__icon-button {
-  color: var(--cp-primary);
-  transition: color 200ms;
-
-  &:hover {
-    color: var(--cp-primary-hover);
-  }
-}
-
-/* The location line every geo-backed widget shows under its reading. */
-.widget-location {
-  display: flex;
-  gap: 0.25rem;
-  align-items: center;
-  color: var(--cp-primary);
-  font-family: var(--cp-mono);
-  font-size: 0.75rem;
-  line-height: 1rem;
-  text-transform: uppercase;
-
-  &:hover {
-    color: var(--cp-primary-hover);
-  }
-}
-
-.widget-location--edit {
-  color: var(--cp-accent);
-
-  &:hover {
-    color: var(--cp-accent-hi);
+  .drop-zone[data-dropping] & {
+    color: inherit;
   }
 }
 

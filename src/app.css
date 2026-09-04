@@ -827,86 +827,13 @@ textarea {
 @keyframes scanning-text-color {
   0%,
   100% {
-    color: #00ffff;
+    color: var(--cp-neon-cyan);
   }
 
   50% {
-    color: #ff0090;
+    color: var(--cp-neon-magenta);
   }
 }
-
-/* ---------- Gigs (task list) ---------- */
-
-.task-glitch {
-  animation: 200ms infinite task-glitch;
-}
-
-/* Not themed in the original - the completion burst always flashes the base neon triad. */
-@keyframes task-glitch {
-  0% {
-    border-color: #666666;
-    filter: hue-rotate(0deg) brightness(1);
-    scale: 1;
-    translate: 0;
-  }
-
-  25% {
-    border-color: #ff0090;
-    filter: hue-rotate(90deg) brightness(1.2);
-    scale: 1.02;
-    translate: -2px 2px;
-  }
-
-  50% {
-    border-color: #f9f002;
-    filter: hue-rotate(180deg) brightness(0.8);
-    scale: 0.98;
-    translate: 2px -2px;
-  }
-
-  75% {
-    border-color: #00ffff;
-    filter: hue-rotate(270deg) brightness(1.1);
-    scale: 1.01;
-    translate: -1px -1px;
-  }
-
-  100% {
-    border-color: #666666;
-    opacity: 0%;
-    filter: hue-rotate(0deg) brightness(1);
-    scale: 1;
-    translate: 0;
-  }
-}
-
-.task-pulse {
-  animation: 2000ms infinite task-pulse;
-}
-
-@keyframes task-pulse {
-  0% {
-    border-color: var(--cp-pulse);
-    box-shadow: 0 0 color-mix(in sRGB, var(--cp-pulse) 40%, transparent);
-  }
-
-  50% {
-    border-color: var(--cp-pulse);
-    box-shadow: 0 0 0 4px color-mix(in sRGB, var(--cp-pulse) 10%, transparent);
-  }
-
-  100% {
-    border-color: var(--cp-pulse);
-    box-shadow: 0 0 transparent;
-  }
-}
-
-/* While an item is dissolving the scrollbar would jump - collapse it for the 200ms. */
-.task-list-glitching {
-  scrollbar-width: none;
-}
-
-/* ---------- Bookmark context menu ---------- */
 
 /* ---------- Greeting & quote glow ---------- */
 
@@ -942,49 +869,6 @@ textarea {
   position: relative;
   z-index: 999;
   pointer-events: none;
-}
-
-/* ---------- Shared form controls ---------- */
-
-/* Number fields render their own .spinner-button pair, so the native control is hidden outright. */
-[type="number"] {
-  appearance: textfield;
-}
-
-.number-input-container {
-  position: relative;
-}
-
-.spinner-buttons {
-  position: absolute;
-  top: 50%;
-  right: 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  translate: 0 -50%;
-}
-
-.spinner-button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 20px;
-  height: 16px;
-  border: none;
-  background: none;
-  color: #00ffff;
-  user-select: none;
-  transition: all 200ms;
-
-  &:hover {
-    color: var(--cp-accent-vivid);
-  }
-
-  &:active {
-    color: #000000;
-    scale: 0.9;
-  }
 }
 
 /* ---------- Utility classes shared by more than one component ---------- */

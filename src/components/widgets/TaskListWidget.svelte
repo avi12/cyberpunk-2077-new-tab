@@ -1,67 +1,80 @@
 <script lang="ts">
-  import type { Task, WidgetConfig } from "@/lib/storage/schema";
+  import type { Task } from "@/lib/storage/schema";
   import iconClipboardList from "@/assets/icons/clipboard-list.svg?raw";
   import { GLITCH_LONG_MS } from "@/lib/glitch.svelte";
   import iconPlus from "@/assets/icons/plus.svg?raw";
   import iconSquare from "@/assets/icons/square.svg?raw";
   import iconSquareCheck from "@/assets/icons/square-check.svg?raw";
   import { untrack } from "svelte";
+  import { configSaver, counterFormat } from "./widget.svelte";
+  import type { WidgetProps } from "./widget.svelte";
+  import WidgetCard from "./WidgetCard.svelte";
 
-  const {
-    config,
-    onConfigChange
-  }: {
-    config: WidgetConfig;
-    onConfigChange: (patch: WidgetConfig) => void;
-  } = $props();
+  const { config, onConfigChange }: WidgetProps = $props();
 
-  const SAVE_DEBOUNCE_MS = 500;
   const COUNTER_DIGITS = 3;
+  const COUNTER_FORMAT = counterFormat(COUNTER_DIGITS);
 
   let tasks = $state<Task[]>(untrack(() => config.tasks ?? []));
   let idCompleting = $state<string | null>(null);
   let idFocused = $state<string | null>(null);
-  let saveTimer: ReturnType<typeof setTimeout> | undefined;
   let removalTimer: ReturnType<typeof setTimeout> | undefined;
 
-  $effect(() => () => {
-    clearTimeout(saveTimer);
-    clearTimeout(removalTimer);
-  });
+  const saver = configSaver({ save: patch => onConfigChange(patch) });
 
-  function save(next: Task[]) {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => onConfigChange({ tasks: next }), SAVE_DEBOUNCE_MS);
+  $effect(() => () => clearTimeout(removalTimer));
+
+  function addTask() {
+    tasks = [
+      ...tasks,
+      {
+        id: Date.now().toString(),
+        text: "",
+        completed: false
+      }
+    ];
+    saver.queue({ tasks });
+  }
+
+  /** The tick is shown for the length of the glitch, then the gig leaves with it. */
+  function completeTask(id: string) {
+    tasks = tasks.map(item => (item.id === id ? {
+      ...item,
+      completed: true
+    } : item));
+    idCompleting = id;
+    removalTimer = setTimeout(() => {
+      tasks = tasks.filter(item => item.id !== id);
+      saver.queue({ tasks });
+      idCompleting = null;
+    }, GLITCH_LONG_MS);
+  }
+
+  function editTask({ id, text }: {
+    id: string;
+    text: string;
+  }) {
+    tasks = tasks.map(item => (item.id === id ? {
+      ...item,
+      text
+    } : item));
+    saver.queue({ tasks });
   }
 </script>
 
-<article class="widget-card glitch-border">
-  <header class="widget-card__header">
-    <h3 class="widget-card__label">
-      {@html iconClipboardList}
-      GIGS
-    </h3>
-    <div class="tasks__meta">
-      <output class="tasks__count">{tasks.length.toString().padStart(COUNTER_DIGITS, "0")}</output>
-      <button
-        class="widget-card__icon-button"
-        aria-label="Add gig"
-        onclick={() => {
-          tasks = [
-            ...tasks,
-            {
-              id: Date.now().toString(),
-              text: "",
-              completed: false
-            }
-          ];
-          save(tasks);
-        }}
-        type="button">
-        {@html iconPlus}
-      </button>
-    </div>
-  </header>
+<WidgetCard
+  header={{
+    icon: iconClipboardList,
+    label: "GIGS",
+    action: {
+      icon: iconPlus,
+      label: "Add gig",
+      onAct: addTask
+    }
+  }}>
+  {#snippet meta()}
+    <output class="tasks__count">{COUNTER_FORMAT.format(tasks.length)}</output>
+  {/snippet}
 
   {#if tasks.length === 0}
     <p class="tasks__empty">No active gigs</p>
@@ -76,19 +89,7 @@
           <button
             class="tasks__check"
             aria-label="Complete gig"
-            onclick={() => {
-              const { id } = task;
-              tasks = tasks.map(item => (item.id === id ? {
-                ...item,
-                completed: true
-              } : item));
-              idCompleting = id;
-              removalTimer = setTimeout(() => {
-                tasks = tasks.filter(item => item.id !== id);
-                save(tasks);
-                idCompleting = null;
-              }, GLITCH_LONG_MS);
-            }}
+            onclick={() => completeTask(task.id)}
             type="button">
             {@html task.completed && idCompleting === task.id ? iconSquareCheck : iconSquare}
           </button>
@@ -98,39 +99,19 @@
             class="tasks__text scrollbar-cyberpunk"
             onblur={() => (idFocused = null)}
             onfocus={() => (idFocused = task.id)}
-            oninput={e => {
-              const text = e.currentTarget.value;
-              tasks = tasks.map(item => (item.id === task.id ? {
-                ...item,
-                text
-              } : item));
-              save(tasks);
-            }}
+            oninput={e => editTask({
+              id: task.id,
+              text: e.currentTarget.value
+            })}
             rows="1"
             value={task.text}></textarea>
         </li>
       {/each}
     </ul>
   {/if}
-</article>
+</WidgetCard>
 
 <style>
-  .widget-card__label :global(svg) {
-    width: 20px;
-    height: 20px;
-  }
-
-  .widget-card__icon-button :global(svg) {
-    width: 16px;
-    height: 16px;
-  }
-
-  .tasks__meta {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-  }
-
   .tasks__count {
     color: var(--cp-primary);
     font-family: var(--cp-mono);
@@ -157,6 +138,11 @@
     max-height: 240px;
   }
 
+  /* While an item is dissolving the scrollbar would jump - collapse it for the 200ms. */
+  .task-list-glitching {
+    scrollbar-width: none;
+  }
+
   .tasks__item {
     display: flex;
     gap: 0.5rem;
@@ -170,6 +156,14 @@
     &.is-focused {
       border-color: var(--cp-primary);
     }
+  }
+
+  .task-glitch {
+    animation: 200ms infinite task-glitch;
+  }
+
+  .task-pulse {
+    animation: 2000ms infinite task-pulse;
   }
 
   .tasks__check {
@@ -201,5 +195,61 @@
     line-height: 1.4;
     resize: none;
     field-sizing: content;
+  }
+
+  /* Not themed in the original - the completion burst always flashes the base neon triad. */
+  @keyframes task-glitch {
+    0% {
+      border-color: #666666;
+      filter: hue-rotate(0deg) brightness(1);
+      scale: 1;
+      translate: 0;
+    }
+
+    25% {
+      border-color: var(--cp-neon-magenta);
+      filter: hue-rotate(90deg) brightness(1.2);
+      scale: 1.02;
+      translate: -2px 2px;
+    }
+
+    50% {
+      border-color: var(--cp-neon-yellow);
+      filter: hue-rotate(180deg) brightness(0.8);
+      scale: 0.98;
+      translate: 2px -2px;
+    }
+
+    75% {
+      border-color: var(--cp-neon-cyan);
+      filter: hue-rotate(270deg) brightness(1.1);
+      scale: 1.01;
+      translate: -1px -1px;
+    }
+
+    100% {
+      border-color: #666666;
+      opacity: 0%;
+      filter: hue-rotate(0deg) brightness(1);
+      scale: 1;
+      translate: 0;
+    }
+  }
+
+  @keyframes task-pulse {
+    0% {
+      border-color: var(--cp-pulse);
+      box-shadow: 0 0 color-mix(in sRGB, var(--cp-pulse) 40%, transparent);
+    }
+
+    50% {
+      border-color: var(--cp-pulse);
+      box-shadow: 0 0 0 4px color-mix(in sRGB, var(--cp-pulse) 10%, transparent);
+    }
+
+    100% {
+      border-color: var(--cp-pulse);
+      box-shadow: 0 0 transparent;
+    }
   }
 </style>
