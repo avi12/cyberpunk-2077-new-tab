@@ -32,34 +32,11 @@ export function tooltip(node: HTMLElement, text: string) {
   elTip.setAttribute("aria-hidden", "true");
   document.body.append(elTip);
 
-  /**
-   * Whether the thing this button opens is already open. Looked up each time rather than held, since
-   * the popover is often rendered after the action runs.
-   */
-  function isTargetOpen() {
-    const targetId = node.getAttribute("popovertarget");
-    if (!targetId) {
-      return false;
-    }
-
-    return document.getElementById(targetId)?.matches(":popover-open") ?? false;
-  }
-
   function show() {
     // Empty is a caller saying there is nothing worth explaining here, not an empty box to show.
-    if (!elTip.textContent || !elTip.isConnected || elTip.matches(":popover-open")) {
-      return;
+    if (elTip.textContent && elTip.isConnected && !elTip.matches(":popover-open")) {
+      elTip.showPopover();
     }
-
-    /*
-     * A control that has already opened its menu has nothing left to explain - the menu is the
-     * answer, and a hint over it only covers what the reader came to read.
-     */
-    if (isTargetOpen()) {
-      return;
-    }
-
-    elTip.showPopover();
   }
 
   function hide() {

@@ -423,6 +423,18 @@ textarea {
   &:popover-open {
     opacity: 100%;
   }
+
+  /*
+   * A menu opening takes every hint down, and puts it back when the menu closes. A hint explains a
+   * control; once that control has produced the thing it was explaining, the words only cover it up.
+   *
+   * Asked of the root rather than of the trigger, because a tooltip and the menu it should defer to
+   * are unrelated siblings in the top layer - there is no selector that walks from one to the other.
+   * The tooltips exclude themselves, or the first one open would silence the rest.
+   */
+  html:has([popover]:popover-open:not(.cyberpunk-tooltip)) &:popover-open {
+    opacity: 0%;
+  }
 }
 
 /*
