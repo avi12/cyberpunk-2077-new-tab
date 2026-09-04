@@ -1,8 +1,18 @@
+import type { Bookmark } from "./storage/schema";
+import { BookmarkCategory } from "./storage/schema";
 import { settings } from "./storage/settings.svelte";
 
 /** Category names are normalised to lower case, matching how the original stored them. */
 export function normalizeName(name: string): string {
   return name.trim().toLowerCase();
+}
+
+/**
+ * The one answer to which section a link sits in, so renaming and deleting reach every link the
+ * grid shows there: a blank category is filed under `other`, the same place the grid puts it.
+ */
+export function categoryOf(bookmark: Bookmark) {
+  return bookmark.category || BookmarkCategory.other;
 }
 
 export function addCategory(name: string): void {
@@ -20,7 +30,7 @@ export function renameCategory({ from, to }: {
   to: string;
 }): void {
   settings.bookmarks.current = settings.bookmarks.current.map(bookmark =>
-    (bookmark.category === from ? {
+    (categoryOf(bookmark) === from ? {
       ...bookmark,
       category: to
     } : bookmark));
@@ -40,7 +50,7 @@ export function renameCategory({ from, to }: {
 }
 
 export function deleteCategory(name: string): void {
-  settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.category !== name);
+  settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => categoryOf(bookmark) !== name);
   settings.categoryOrder.current = settings.categoryOrder.current.filter(entry => entry !== name);
   settings.customCategories.current = settings.customCategories.current.filter(entry => entry !== name);
 

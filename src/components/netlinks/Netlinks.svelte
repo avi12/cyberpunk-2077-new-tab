@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/schema";
-  import { addCategory, deleteCategory, normalizeName, renameCategory, toggleCollapsed } from "@/lib/categories";
-  import { BookmarkCategory } from "@/lib/storage/schema";
+  import { addCategory, categoryOf, deleteCategory, normalizeName, renameCategory, toggleCollapsed } from "@/lib/categories";
   import BookmarkForm from "./BookmarkForm.svelte";
   import { arrowFocus } from "@/lib/arrow-focus";
   import CategorySection from "./CategorySection.svelte";
@@ -58,10 +57,6 @@
 
     return bookmarksIn(pendingDelete).length;
   });
-
-  function categoryOf(bookmark: Bookmark) {
-    return bookmark.category || BookmarkCategory.other;
-  }
 
   /** Where the tables would file a link, or null when they would leave it exactly where it is. */
   function filedCategory(bookmark: Bookmark) {
