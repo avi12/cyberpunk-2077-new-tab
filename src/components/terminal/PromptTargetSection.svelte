@@ -1,9 +1,29 @@
 <script lang="ts">
+  import { companion } from "@/lib/companion/connection.svelte";
+  import { CompanionState } from "@/lib/companion/bridge";
   import OptionGroup from "@/components/OptionGroup.svelte";
   import { composeAccess } from "@/lib/compose/access.svelte";
   import { composeSiteFor, PROMPT_TARGET_OPTIONS, PromptTargetId } from "@/lib/companion/prompt-target";
   import PanelSection from "./PanelSection.svelte";
+  import { IS_EDGE } from "@/lib/companion/platform";
   import { settings } from "@/lib/storage/settings.svelte";
+
+  /**
+   * Only where the cards it aims exist. Ask With points a Copilot card's action somewhere, and those
+   * cards are Edge's and the companion app's - on any other browser, or before the app is there,
+   * this is a setting for a feature the reader has no way to see.
+   *
+   * An app that is merely stopped still counts. The reader has it; they have quit it, and a section
+   * that vanished the moment they did would be punishing them for using the tray.
+   */
+  const hasCompanion = $derived.by(() => {
+    if (!IS_EDGE) {
+      return false;
+    }
+
+    return companion.state === CompanionState.connected
+      || companion.state === CompanionState.companionNotRunning;
+  });
 
   /**
    * A destination only raises a question when a script has to finish the prompt off at its site, and
@@ -34,11 +54,13 @@
   }
 </script>
 
-<PanelSection title="Ask With">
-  <OptionGroup
-    columns={2}
-    label="Which assistant a card's action asks"
-    onSelect={choose}
-    options={PROMPT_TARGET_OPTIONS}
-    selected={settings.promptTarget.current} />
-</PanelSection>
+{#if hasCompanion}
+  <PanelSection title="Ask With">
+    <OptionGroup
+      columns={2}
+      label="Which assistant a card's action asks"
+      onSelect={choose}
+      options={PROMPT_TARGET_OPTIONS}
+      selected={settings.promptTarget.current} />
+  </PanelSection>
+{/if}
