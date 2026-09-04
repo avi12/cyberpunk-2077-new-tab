@@ -2,12 +2,12 @@
   import { COMPANION_NAME, CompanionState, requestCompanionPermission } from "@/lib/companion/bridge";
   import { companion } from "@/lib/companion/connection.svelte";
   import { composeAccess } from "@/lib/compose/access.svelte";
-  import { requestComposeAccess } from "@/lib/compose/sites";
-  import { withViewTransition } from "@/lib/view-transition";
   import { composeSiteFor, PROMPT_TARGETS } from "@/lib/companion/prompt-target";
   import CompanionNotice from "./CompanionNotice.svelte";
   import { IS_WINDOWS } from "@/lib/companion/platform";
   import { settings } from "@/lib/storage/settings.svelte";
+  import { slide } from "svelte/transition";
+  import { cubicOut } from "svelte/easing";
 
   /**
    * How soon each unsettled state is worth asking about again. Native messaging has no "a host
@@ -19,6 +19,9 @@
    * stretch of silence longer than Chromium's 30-second idle timeout lets it be replaced by one
    * that can reach the app.
    */
+  /** Long enough to read as the section leaving, short enough not to sit in the way of the row. */
+  const COLLAPSE_MS = 220;
+
   const RETRY_MS: Partial<Record<CompanionState, number>> = {
     [CompanionState.companionOffline]: 3000,
     [CompanionState.linking]: 35_000
@@ -66,11 +69,6 @@
   });
 
   /**
-   * The asking and the answer are taken in two steps on purpose. A permission prompt needs the
-   * gesture that raised it, so the request cannot wait for a transition to start; the state it
-   * produces is what removes this whole section, and that is worth animating. `.setup` already
-   * carries the transition name for it.
-   *
    * A browser asked for an origin its loaded manifest has never heard of rejects rather than
    * answering no - which is what an extension that has not been reloaded since it gained one does.
    * That reads as a refusal, so the offer simply stays up rather than the click breaking.
@@ -80,11 +78,7 @@
       return;
     }
 
-    const isGranted = await requestComposeAccess(siteId);
-    await withViewTransition(() => composeAccess.markGranted({
-      siteId,
-      isGranted
-    }));
+    await composeAccess.allow(siteId);
   }
 
   /** The one read of what is already allowed, since this is the only offer made on the answer. */
@@ -92,13 +86,10 @@
     void composeAccess.refresh();
   });
 
-  /** Same two steps, and for the same reason: linking is what takes this section off the page. */
   async function connect() {
-    if (!await requestCompanionPermission()) {
-      return;
+    if (await requestCompanionPermission()) {
+      companion.refresh();
     }
-
-    await withViewTransition(() => companion.refresh());
   }
 
   /** Runs only while something is still missing, and stops itself the moment nothing is. */
@@ -115,7 +106,13 @@
 </script>
 
 {#if isVisible}
-  <div class="setup">
+  <!--
+    The section collapses on its own way out rather than leaving it to the page's view transition.
+    That transition is started by whatever changed the state, and the two changes that remove this
+    one both follow a permission prompt - so the section has to answer for its own exit, and an
+    outro is the one that cannot be skipped.
+  -->
+  <div class="setup" transition:slide={{ duration: COLLAPSE_MS, easing: cubicOut }}>
     {#if isOfferingSite}
       <CompanionNotice>
         Let a card ask {targetLabel} for you, instead of copying the prompt for you to paste
