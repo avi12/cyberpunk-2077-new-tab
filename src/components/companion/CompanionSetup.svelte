@@ -1,6 +1,8 @@
 <script lang="ts">
   import { COMPANION_NAME, CompanionState, requestCompanionPermission } from "@/lib/companion/bridge";
   import { companion } from "@/lib/companion/connection.svelte";
+  import { copilotAccess } from "@/lib/companion/copilot-access.svelte";
+  import { requestCopilotAccess } from "@/lib/companion/copilot";
   import CompanionNotice from "./CompanionNotice.svelte";
   import { IS_WINDOWS } from "@/lib/companion/platform";
 
@@ -24,12 +26,38 @@
    * panels asking for the same permission would be two buttons doing the same thing. It says
    * nothing until a section has actually asked, and nothing again once one has succeeded.
    */
+  /**
+   * The site is asked for second, and only once the app has answered: nobody should be handing over
+   * a site for a feature that has not proved it works on their machine. Which means this panel has
+   * one more thing to say after connecting, rather than going quiet.
+   */
+  const isConnected = $derived(companion.state === CompanionState.connected);
+  const isOfferingSite = $derived(isConnected && copilotAccess.isGranted === false && !copilotAccess.isRefused);
+
   const isVisible = $derived.by(() => {
     if (!IS_WINDOWS) {
       return false;
     }
 
-    return companion.state !== CompanionState.loading && companion.state !== CompanionState.connected;
+    if (companion.state === CompanionState.loading) {
+      return false;
+    }
+
+    return !isConnected || isOfferingSite;
+  });
+
+  /**
+   * A browser asked for an origin its loaded manifest has never heard of rejects rather than
+   * answering no - which is what an extension that has not been reloaded since it gained one does.
+   * The answer is the same either way, so it is asked for again rather than assumed.
+   */
+  async function allowSite() {
+    await requestCopilotAccess().catch(() => false);
+    await copilotAccess.refresh();
+  }
+
+  $effect(() => {
+    void copilotAccess.refresh();
   });
 
   async function connect() {
@@ -53,7 +81,14 @@
 
 {#if isVisible}
   <div class="setup">
-    {#if companion.state === CompanionState.permissionNeeded}
+    {#if isOfferingSite}
+      <CompanionNotice>
+        Let a card ask Copilot for you, instead of copying the prompt for you to paste
+        {#snippet action()}
+          <button class="cyber-button cyber-button--primary" onclick={allowSite} type="button">Allow Copilot site</button>
+        {/snippet}
+      </CompanionNotice>
+    {:else if companion.state === CompanionState.permissionNeeded}
       <CompanionNotice>
         Edge already mapped where your browsing is heading - let the {COMPANION_NAME} read it
         {#snippet action()}

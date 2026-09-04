@@ -32,10 +32,32 @@ export type CompanionResult = {
   records: unknown[];
 };
 
+/**
+ * How an attempt to type a prompt into Copilot ended. `refused` is the browser turning the host down
+ * outright and is worth remembering; `failed` is anything else - a tab closed before the script got
+ * there - and is worth forgetting, since the next click may well work.
+ */
+export enum ComposeOutcome {
+  typed = "typed",
+  refused = "refused",
+  failed = "failed"
+}
+
 type ProtocolMap = {
   getTopSites(): TopSite[];
   searchWithDefaultEngine(text: string): void;
   readCompanion(request: CompanionRequest): CompanionResult;
+  /**
+   * Open Copilot and type this in. Only the background can, since only it may inject - and it says
+   * how that went, which is the only way to find out short of asking a browser to tell the truth
+   * about itself.
+   */
+  openCopilotWithPrompt(prompt: string): ComposeOutcome;
+  /**
+   * Asked by the script injected into that tab, and answered by which tab asked - so the prompt is
+   * never written anywhere it would have to be cleaned up from, and is only ever collected once.
+   */
+  takeCopilotPrompt(): string | null;
 };
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

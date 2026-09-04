@@ -1,3 +1,4 @@
+import { DEFAULT_PROMPT_TARGET, type PromptTargetId } from "../companion/prompt-target";
 import {
   DEFAULT_BACKGROUND,
   DEFAULT_BACKGROUND_BRIGHTNESS,
@@ -96,3 +97,11 @@ export const journeysSnapshotItem = storage.defineItem<CompanionSnapshot | null>
 export const tipsSnapshotItem = storage.defineItem<CompanionSnapshot | null>("local:tipsSnapshot", {
   fallback: null
 });
+
+/**
+ * Set once a browser has refused to let the compose script into Copilot at all - Edge answers "the
+ * extensions gallery cannot be scripted" however the permission was come by, including from a real
+ * toolbar click. Session rather than local, so a browser that stops refusing is believed again after
+ * a restart, and so the answer never travels in a settings file to a machine it is not true on.
+ */
+export const copilotTypingRefusedItem = storage.defineItem<boolean>("session:copilotTypingRefused", { fallback: false });

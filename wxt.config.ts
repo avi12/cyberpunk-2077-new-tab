@@ -10,6 +10,18 @@ import { defineConfig } from "wxt";
 const COMPANION_PERMISSIONS = ["nativeMessaging"];
 
 /**
+ * The one site a card's action can type into, so the prompt need not go by way of the clipboard.
+ * Optional and never asked for at install: the reader is only offered it once the companion app has
+ * actually answered, and a refusal costs only the typing.
+ *
+ * Beside `nativeMessaging` and for the same reason - the offer only ever follows a companion that
+ * answered, and Firefox is never given the permission that lets one answer. Declaring it there would
+ * also drag a `strict_min_version` along, since Firefox only learned this key in 128, and lock older
+ * readers out of the whole extension over a feature they could never reach.
+ */
+const COPILOT_ORIGIN = "https://copilot.microsoft.com/*";
+
+/**
  * Firefox ties `storage.sync` to the add-on's own id: a build without one has no account area to
  * write to, so the backup in System Settings needs this declared rather than assigned at listing
  * time. Chromium pins its id with `key` below instead.
@@ -50,7 +62,12 @@ export default defineConfig({
       "geolocation",
       "storage",
       "unlimitedStorage",
-      "identity"
+      "identity",
+      // Typing a prompt into Copilot, which is a script the background injects into the tab it
+      // opened. Required rather than optional: an API binding is fixed when a context is created,
+      // so a worker that started before the grant could never reach it - the same trap the
+      // companion's own permission documents. It carries no warning of its own; the site does.
+      "scripting"
     ],
     ...(browser === "firefox"
       ? {
@@ -62,7 +79,8 @@ export default defineConfig({
       }
       : {
         key: publicKey,
-        optional_permissions: COMPANION_PERMISSIONS
+        optional_permissions: COMPANION_PERMISSIONS,
+        optional_host_permissions: [COPILOT_ORIGIN]
       }),
     author: {
       email: "avi6106@gmail.com"

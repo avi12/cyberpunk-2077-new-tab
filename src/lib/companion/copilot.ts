@@ -19,6 +19,30 @@ export enum CopilotKind {
   tip = "tip"
 }
 
+/** Where a card sends the reader, and - as a pattern - the site it may be allowed to type into. */
+export const COPILOT_URL = "https://copilot.microsoft.com/";
+
+/*
+ * `wxt.config.ts` spells this pattern again in `optional_host_permissions`, and has to: a manifest is
+ * built by Node before any of this is bundled, and this module reaches icons through Vite. The same
+ * split the companion's own permission lives with.
+ */
+const COPILOT_ORIGIN = `${COPILOT_URL}*`;
+
+/**
+ * Being allowed to type the prompt in is asked for on its own, and only once the app has actually
+ * answered: nobody should be asked to hand over a site for a feature that turned out not to work on
+ * their machine. Refusing costs only the typing - the card still opens Copilot with the prompt
+ * copied, which is what it has always done.
+ */
+export async function requestCopilotAccess(): Promise<boolean> {
+  return browser.permissions.request({ origins: [COPILOT_ORIGIN] });
+}
+
+export async function hasCopilotAccess(): Promise<boolean> {
+  return browser.permissions.contains({ origins: [COPILOT_ORIGIN] });
+}
+
 /** What a card of either kind wears: the label and mark Edge puts above its title. */
 export const COPILOT_KINDS = {
   [CopilotKind.journey]: {

@@ -1,8 +1,12 @@
 <script lang="ts">
   import iconChevronRight from "@/assets/icons/chevron-right.svg?raw";
-  import { COPILOT_KINDS } from "@/lib/companion/copilot";
+  import { COPILOT_KINDS, COPILOT_URL } from "@/lib/companion/copilot";
+  import { promptUrl } from "@/lib/companion/prompt-target";
+  import { copilotAccess } from "@/lib/companion/copilot-access.svelte";
+  import { ComposeOutcome, sendMessage } from "@/lib/messaging";
   import type { CopilotKind } from "@/lib/companion/copilot";
   import type { Snippet } from "svelte";
+  import { settings } from "@/lib/storage/settings.svelte";
   import { tooltip } from "@/lib/tooltip";
 
   const { kind, title, hint, summary, actionLabel, prompt, meta }: {
@@ -20,16 +24,64 @@
 
   /**
    * Copilot's web app throws away every query parameter it is handed - `q`, `prompt`, `text`, a hash,
-   * on every path - and lands on its own front page, so a prompt cannot travel in the link. It goes on
-   * the clipboard instead, and the person pastes it into the box that is waiting for them.
+   * on every path - and lands on its own front page, so a prompt cannot travel in the link. With the
+   * site handed over it is typed into the box instead; without, it goes on the clipboard and the
+   * person pastes it themselves, which is what this always did.
    */
-  const COPILOT_URL = "https://copilot.microsoft.com/";
+  const COPIED_HINT = "Copies the prompt - paste it into Copilot";
 
-  const ACTION_HINT = "Copies the prompt - paste it into Copilot";
+  /**
+   * Every destination but Copilot answers a link carrying the prompt, so the action is simply that
+   * link and the click is left entirely alone: no clipboard, no permission, nothing to refuse.
+   */
+  const carried = $derived(promptUrl({
+    targetId: settings.promptTarget.current,
+    prompt
+  }));
 
-  /** The click opens Copilot; the prompt rides along on the clipboard, since the link cannot carry it. */
-  async function takePrompt() {
+  /** Nothing to explain when the card does it for you; the hint is for the version that cannot. */
+  const actionHint = $derived.by(() => {
+    if (carried || copilotAccess.canType) {
+      return "";
+    }
+
+    return COPIED_HINT;
+  });
+
+  /**
+   * Deciding here and nowhere else, because a click's default is spent the moment this returns: an
+   * `await` before `preventDefault` lets the link open its own tab first, and the background then
+   * opens a second one.
+   */
+  function onAction(e: MouseEvent) {
+    if (carried) {
+      return;
+    }
+
+    const isTyping = copilotAccess.canType;
+    if (isTyping) {
+      e.preventDefault();
+    }
+
+    void act(isTyping);
+  }
+
+  /**
+   * The prompt goes on the clipboard either way, so a paste is always there to fall back on - typing
+   * it in is the extra, and one the browser at the far end can still refuse. A refusal is remembered,
+   * so the card stops promising what it turned out not to be able to do.
+   */
+  async function act(isTyping: boolean) {
     await navigator.clipboard.writeText(prompt);
+    if (!isTyping) {
+      return;
+    }
+
+    // The background opens the tab, because only it can inject into the one it opened.
+    const outcome = await sendMessage("openCopilotWithPrompt", prompt);
+    if (outcome === ComposeOutcome.refused) {
+      await copilotAccess.recordRefusal();
+    }
   }
 </script>
 
@@ -47,11 +99,11 @@
 
   <a
     class="card__action"
-    href={COPILOT_URL}
-    onclick={takePrompt}
+    href={carried ?? COPILOT_URL}
+    onclick={onAction}
     rel="noopener noreferrer"
     target="_blank"
-    use:tooltip={ACTION_HINT}>
+    use:tooltip={actionHint}>
     {actionLabel}
     {@html iconChevronRight}
   </a>

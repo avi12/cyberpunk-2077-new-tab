@@ -25,7 +25,8 @@ export function tooltip(node: HTMLElement, text: string) {
   document.body.append(elTip);
 
   function show() {
-    if (elTip.isConnected && !elTip.matches(":popover-open")) {
+    // Empty is a caller saying there is nothing worth explaining here, not an empty box to show.
+    if (elTip.textContent && elTip.isConnected && !elTip.matches(":popover-open")) {
       elTip.showPopover();
     }
   }
