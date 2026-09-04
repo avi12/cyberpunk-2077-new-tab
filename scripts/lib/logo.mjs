@@ -212,6 +212,13 @@ function samplePixel({ pixels, size, left, top, right, bottom }) {
 }
 
 /**
+ * The Web Store wants 96px of artwork inside a 128px frame, the remaining 16px per side
+ * transparent, so every listing tile carries the same optical weight. Holding one ratio across
+ * every icon set keeps the mark the same size in the toolbar, in the store and in the app list.
+ */
+export const ICON_ARTWORK_RATIO = 96 / 128;
+
+/**
  * Box-filters the mark down to `artworkRatio` of the canvas's shorter side, then centres it on a
  * transparent canvas. The ratio is the padding: it is what keeps the mark the same optical weight
  * across a set of frames that are not all the same shape.

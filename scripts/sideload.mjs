@@ -15,24 +15,31 @@ import webExt from "web-ext";
 
 const DEFAULT_PORT = 9223;
 
+/** The remote debugging port is what lets the chrome-devtools MCP attach to this browser. */
+const BROWSERS = {
+  chromium: {
+    webExtTarget: "chromium",
+    sourceDir: ".output/chrome-mv3",
+    launchArgs: port => [`--remote-debugging-port=${port}`, "--no-first-run", "--no-default-browser-check"]
+  },
+  firefox: {
+    webExtTarget: "firefox-desktop",
+    sourceDir: ".output/firefox-mv3",
+    launchArgs: () => []
+  }
+};
+
 const args = process.argv.slice(2);
-
-function flagValue(name, fallback) {
-  const index = args.indexOf(name);
-
-  return index === -1 ? fallback : args[index + 1];
-}
-
-const firefox = args.includes("--firefox");
-const port = Number(flagValue("--port", DEFAULT_PORT));
-const sourceDir = firefox ? ".output/firefox-mv3" : ".output/chrome-mv3";
+const isFirefox = args.includes("--firefox");
+const iPortFlag = args.indexOf("--port");
+const port = iPortFlag === -1 ? DEFAULT_PORT : Number(args[iPortFlag + 1]);
+const { webExtTarget, sourceDir, launchArgs } = isFirefox ? BROWSERS.firefox : BROWSERS.chromium;
 
 const runner = await webExt.cmd.run(
   {
-    target: [firefox ? "firefox-desktop" : "chromium"],
+    target: [webExtTarget],
     sourceDir,
-    // The remote debugging port is what lets the chrome-devtools MCP attach to this browser.
-    args: firefox ? [] : [`--remote-debugging-port=${port}`, "--no-first-run", "--no-default-browser-check"],
+    args: launchArgs(port),
     noReload: true,
     startUrl: ["about:blank"]
   },
@@ -41,7 +48,7 @@ const runner = await webExt.cmd.run(
 
 console.log(`sideloaded ${sourceDir}`);
 
-if (!firefox) {
+if (!isFirefox) {
   console.log(`devtools protocol: http://127.0.0.1:${port}`);
 }
 

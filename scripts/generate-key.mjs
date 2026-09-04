@@ -14,26 +14,22 @@
  * The public half is not a secret - it ships inside every copy of the built manifest.
  */
 
+import { IDENTITY_PATH, PRIVATE_KEY_PATH } from "./lib/paths.mjs";
 import { createHash, createPublicKey, generateKeyPairSync } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
 
 const RSA_MODULUS_BITS = 2048;
 const ID_ALPHABET_OFFSET = "a".charCodeAt(0);
 const ID_LENGTH = 32;
 const HEX_RADIX = 16;
 
-const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
-const privateKeyPath = join(repoRoot, "keys", "chrome.pem");
-const identityPath = join(repoRoot, "companion", "extension-identity.json");
-
 function mintPrivateKey() {
   const { privateKey } = generateKeyPairSync("rsa", { modulusLength: RSA_MODULUS_BITS });
-  mkdirSync(dirname(privateKeyPath), { recursive: true });
+  mkdirSync(dirname(PRIVATE_KEY_PATH), { recursive: true });
   writeFileSync(
-    privateKeyPath, privateKey.export({
+    PRIVATE_KEY_PATH, privateKey.export({
       type: "pkcs8",
       format: "pem"
     }), "utf8"
@@ -49,12 +45,12 @@ function extensionIdFrom(publicKeyDer) {
   ).join("");
 }
 
-if (process.argv.includes("--force") || !existsSync(privateKeyPath)) {
+if (process.argv.includes("--force") || !existsSync(PRIVATE_KEY_PATH)) {
   mintPrivateKey();
-  console.log(`minted ${privateKeyPath}`);
+  console.log(`minted ${PRIVATE_KEY_PATH}`);
 }
 
-const publicKeyDer = createPublicKey(readFileSync(privateKeyPath, "utf8")).export({
+const publicKeyDer = createPublicKey(readFileSync(PRIVATE_KEY_PATH, "utf8")).export({
   type: "spki",
   format: "der"
 });
@@ -62,8 +58,8 @@ const identity = {
   extensionId: extensionIdFrom(publicKeyDer),
   publicKey: publicKeyDer.toString("base64")
 };
-mkdirSync(dirname(identityPath), { recursive: true });
-writeFileSync(identityPath, `${JSON.stringify(identity, null, 2)}\n`, "utf8");
+mkdirSync(dirname(IDENTITY_PATH), { recursive: true });
+writeFileSync(IDENTITY_PATH, `${JSON.stringify(identity, null, 2)}\n`, "utf8");
 
-console.log(`wrote ${identityPath}`);
+console.log(`wrote ${IDENTITY_PATH}`);
 console.log(`  extension id: ${identity.extensionId}`);
