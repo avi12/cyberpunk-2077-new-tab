@@ -7,7 +7,6 @@ import {
   DEFAULT_DISPLAY_PREFERENCES,
   DEFAULT_PLAY_SOUNDS,
   DEFAULT_SCAN_LINES_MODE,
-  DEFAULT_SEARCH_ENGINES,
   DEFAULT_TAB_FAVICON,
   DEFAULT_TAB_TITLE,
   DEFAULT_TEMPERATURE_UNIT,
@@ -22,7 +21,6 @@ import type {
   DisplayPreferences,
   GeoLocation,
   ScanLinesMode,
-  SearchEngine,
   Widget
 } from "./schema";
 import { BackgroundMediaType, SearchEngineId } from "./schema";
@@ -41,8 +39,6 @@ export const collapsedCategoriesItem = storage.defineItem<Record<string, boolean
 });
 
 export const customCategoriesItem = storage.defineItem<string[]>("local:customCategories", { fallback: [] });
-
-export const searchEnginesItem = storage.defineItem<SearchEngine[]>("local:searchEngines", { fallback: DEFAULT_SEARCH_ENGINES });
 
 export const activeSearchEngineItem = storage.defineItem<string>("local:activeSearchEngine", { fallback: SearchEngineId.browserDefault });
 
@@ -75,6 +71,8 @@ export const tabTitleItem = storage.defineItem<string>("local:tabTitle", { fallb
 export const tabFaviconItem = storage.defineItem<string>("local:tabFavicon", { fallback: DEFAULT_TAB_FAVICON });
 
 export const playSoundsItem = storage.defineItem<boolean>("local:playSounds", { fallback: DEFAULT_PLAY_SOUNDS });
+
+export const promptTargetItem = storage.defineItem<PromptTargetId>("local:promptTarget", { fallback: DEFAULT_PROMPT_TARGET });
 
 export const bookmarksSeededItem = storage.defineItem<boolean>("local:bookmarksSeeded", { fallback: false });
 

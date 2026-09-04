@@ -37,9 +37,11 @@ export enum BackgroundMediaType {
 export enum SearchEngineId {
   browserDefault = "default",
   google = "google",
+  googleAiMode = "google-ai",
   bing = "bing",
   duckDuckGo = "duck",
   chatGpt = "ai",
+  claude = "claude",
   perplexity = "ai2",
   brave = "brave",
   braveAi = "brave2",
@@ -68,14 +70,21 @@ export const bookmarkSchema = z.object({
 
 export type Bookmark = z.infer<typeof bookmarkSchema>;
 
-export const searchEngineSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  url: z.string(),
-  placeholder: z.string()
-});
-
-export type SearchEngine = z.infer<typeof searchEngineSchema>;
+/**
+ * Not a zod schema, unlike everything else here: an engine is shipped with the extension and never
+ * arrives from anywhere, so there is no payload to validate - only a shape to hold the authors to.
+ */
+export type SearchEngine = {
+  id: string;
+  name: string;
+  /** Where the search form posts. Empty for the browser's own engine, which is asked over a message. */
+  action: string;
+  /** The field the query is written into, since not every engine calls it `q`. */
+  queryParam: string;
+  /** Anything the engine needs alongside the query, carried as hidden fields. */
+  params?: Record<string, string>;
+  placeholder: string;
+};
 
 export const geoLocationSchema = z.object({
   name: z.string(),

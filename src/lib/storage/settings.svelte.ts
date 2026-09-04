@@ -1,3 +1,4 @@
+import { PromptTargetId } from "../companion/prompt-target";
 import { z } from "../zod";
 import { DEFAULT_DISPLAY_PREFERENCES, DEFAULT_WIDGET_ORDER, DEFAULT_WIDGETS } from "./defaults";
 import {
@@ -13,8 +14,8 @@ import {
   customCategoriesItem,
   displayPreferencesItem,
   playSoundsItem,
+  promptTargetItem,
   scanLinesModeItem,
-  searchEnginesItem,
   tabFaviconItem,
   tabTitleItem,
   temperatureUnitItem,
@@ -31,7 +32,6 @@ import {
   ColorTheme,
   displayPreferencesSchema,
   geoLocationSchema,
-  searchEngineSchema,
   ScanLinesMode,
   widgetSchema
 } from "./schema";
@@ -122,9 +122,9 @@ export const settings = {
     item: customCategoriesItem,
     schema: z.array(z.string())
   }),
-  searchEngines: new Setting({
-    item: searchEnginesItem,
-    schema: z.array(searchEngineSchema)
+  promptTarget: new Setting({
+    item: promptTargetItem,
+    schema: z.enum(PromptTargetId)
   }),
   activeSearchEngine: new Setting({
     item: activeSearchEngineItem,

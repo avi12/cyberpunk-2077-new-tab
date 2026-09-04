@@ -32,63 +32,96 @@ export const SEEDED_CATEGORY = BookmarkCategory.daily;
 export const DEFAULT_BOOKMARKS: Bookmark[] = [];
 
 /**
- * `default` defers to the browser's own configured engine via `chrome.search`; the rest are plain
- * query-string redirects. Two names carry trailing non-breaking spaces because the original used
- * them to pad the dropdown to a consistent width.
+ * `default` defers to the browser's own configured engine via `chrome.search`; the rest are form
+ * targets the page posts to.
+ *
+ * Each is named the way the product names itself, rather than trimmed to a width. The original
+ * padded two of these with trailing spaces to keep the dropdown steady, which HTML collapsed away
+ * anyway - the picker sizes itself now.
  */
 export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
   {
     id: SearchEngineId.browserDefault,
     name: "Default",
-    url: "chrome-extension-search://",
+    action: "",
+    queryParam: "q",
     placeholder: "Search with default engine..."
   },
   {
     id: SearchEngineId.google,
     name: "Google",
-    url: "https://www.google.com/search?q=",
+    action: "https://www.google.com/search",
+    queryParam: "q",
     placeholder: "Search the Net..."
   },
   {
+    id: SearchEngineId.googleAiMode,
+    name: "Google AI Mode",
+    action: "https://www.google.com/search",
+    queryParam: "q",
+    /* The mode is a parameter on ordinary search rather than a page of its own. */
+    params: {
+      udm: "50"
+    },
+    placeholder: "Search with an AI..."
+  },
+  {
     id: SearchEngineId.bing,
-    name: "Bing  ",
-    url: "https://www.bing.com/search?q=",
+    name: "Bing",
+    action: "https://www.bing.com/search",
+    queryParam: "q",
     placeholder: "Search the Net..."
   },
   {
     id: SearchEngineId.duckDuckGo,
-    name: "DuckDuck",
-    url: "https://duckduckgo.com/?q=",
+    name: "DuckDuckGo",
+    action: "https://duckduckgo.com/",
+    queryParam: "q",
     placeholder: "Search the Net securely..."
   },
   {
     id: SearchEngineId.chatGpt,
     name: "ChatGPT",
-    url: "https://www.chatgpt.com/?q=",
+    action: "https://chatgpt.com/",
+    queryParam: "q",
     placeholder: "Query an AI..."
   },
   {
+    id: SearchEngineId.claude,
+    name: "Claude",
+    action: "https://claude.ai/new",
+    queryParam: "q",
+    placeholder: "Think it through with an AI..."
+  },
+  {
     id: SearchEngineId.perplexity,
-    name: "Perplex",
-    url: "https://www.perplexity.ai/search?q=",
+    name: "Perplexity",
+    action: "https://www.perplexity.ai/search",
+    queryParam: "q",
     placeholder: "Initiate neural search..."
   },
   {
     id: SearchEngineId.brave,
-    name: "Brave ",
-    url: "https://search.brave.com/search?q=",
+    name: "Brave Search",
+    action: "https://search.brave.com/search",
+    queryParam: "q",
     placeholder: "Search the Net securely..."
   },
   {
     id: SearchEngineId.braveAi,
-    name: "BraveAI",
-    url: "https://search.brave.com/ask?q=",
+    name: "Ask Brave",
+    action: "https://search.brave.com/ask",
+    queryParam: "q",
     placeholder: "Query an AI privately..."
   },
   {
     id: SearchEngineId.braveResearch,
-    name: "Research",
-    url: "https://search.brave.com/ask?enable_research=true&q=",
+    name: "Brave Deep Research",
+    action: "https://search.brave.com/ask",
+    queryParam: "q",
+    params: {
+      enable_research: "true"
+    },
     placeholder: "Research with an AI..."
   }
 ];
