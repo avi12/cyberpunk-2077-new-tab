@@ -89,6 +89,7 @@ function deal({ journeys, tips }: {
 const STATE_ORDER = [
   CompanionState.connected,
   CompanionState.companionOffline,
+  CompanionState.companionNotRunning,
   CompanionState.linking,
   CompanionState.permissionNeeded,
   CompanionState.loading

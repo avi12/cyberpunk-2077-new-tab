@@ -24,7 +24,9 @@ export enum CompanionRequest {
 export enum CompanionAnswer {
   read = "read",
   silent = "silent",
-  unbound = "unbound"
+  unbound = "unbound",
+  /** The app is installed - it answered - but it has been quit, so it is not reading anything. */
+  notRunning = "notRunning"
 }
 
 export type CompanionResult = {

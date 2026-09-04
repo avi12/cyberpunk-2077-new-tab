@@ -22,6 +22,8 @@ export enum CompanionState {
   connected = "connected",
   permissionNeeded = "permissionNeeded",
   companionOffline = "companionOffline",
+  /** Installed and answering, but quit from its tray - the one state the reader fixes in a click. */
+  companionNotRunning = "companionNotRunning",
   /** Granted, but the worker that answered predates the grant - see `CompanionAnswer.unbound`. */
   linking = "linking"
 }
@@ -101,6 +103,13 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
   if (!result || result.answer === CompanionAnswer.silent) {
     return {
       state: CompanionState.companionOffline,
+      cards: []
+    };
+  }
+
+  if (result.answer === CompanionAnswer.notRunning) {
+    return {
+      state: CompanionState.companionNotRunning,
       cards: []
     };
   }

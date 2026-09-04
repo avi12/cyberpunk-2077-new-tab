@@ -132,6 +132,10 @@
           <button class="cyber-button cyber-button--primary" onclick={connect} type="button">Link companion</button>
         {/snippet}
       </CompanionNotice>
+    {:else if companion.state === CompanionState.companionNotRunning}
+      <CompanionNotice>
+        {COMPANION_NAME} stopped - start it again and this fills itself in
+      </CompanionNotice>
     {:else if companion.state === CompanionState.linking}
       <CompanionNotice>{COMPANION_NAME} linking - give it a few seconds</CompanionNotice>
     {:else}

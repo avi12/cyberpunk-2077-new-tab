@@ -14,8 +14,17 @@ import { z } from "@/lib/zod";
  */
 const HOST_NAME = "com.avi12.cyberpunk_journeys";
 
-/** The app says whether it managed the read at all; what it read is filed under the name asked for. */
-const answerSchema = z.looseObject({ ok: z.boolean() });
+/**
+ * The app says whether it managed the read at all; what it read is filed under the name asked for.
+ *
+ * `isRunning` is the app telling the difference between the two ways of failing that look alike from
+ * here: it answered, so it is installed, and it says whether the resident half is up. An app older
+ * than the tray never sends it, and a missing marker reads as the silence it always did.
+ */
+const answerSchema = z.looseObject({
+  ok: z.boolean(),
+  isRunning: z.boolean().optional()
+});
 
 /**
  * An app older than the request it was handed answers about journeys whatever it was asked, so a
@@ -37,9 +46,16 @@ export async function readCompanionRecords(request: CompanionRequest): Promise<C
 
   const response = await browser.runtime.sendNativeMessage(HOST_NAME, { kind: request }).catch(() => null);
   const answer = answerSchema.safeParse(response);
-  if (!answer.success || !answer.data.ok) {
+  if (!answer.success) {
     return {
       answer: CompanionAnswer.silent,
+      records: []
+    };
+  }
+
+  if (!answer.data.ok) {
+    return {
+      answer: answer.data.isRunning === false ? CompanionAnswer.notRunning : CompanionAnswer.silent,
       records: []
     };
   }
