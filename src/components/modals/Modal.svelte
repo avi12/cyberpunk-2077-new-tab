@@ -15,14 +15,12 @@
     onClose,
     title,
     variant = "primary",
-    labelledBy,
     children
   }: {
     isOpen: boolean;
     onClose: () => void;
     title?: string;
     variant?: "primary" | "warning";
-    labelledBy?: string;
     children: Snippet;
   } = $props();
 
@@ -45,7 +43,6 @@
   bind:this={elDialog}
   class="cyber-dialog"
   class:cyber-dialog--warning={variant === "warning"}
-  aria-labelledby={labelledBy}
   closedby="any"
   onclose={onClose}>
   {#if title}
@@ -53,3 +50,58 @@
   {/if}
   {@render children()}
 </dialog>
+
+<style>
+  /*
+   * The open and closed states animate in both directions without a line of JavaScript:
+   * `allow-discrete` keeps `display` and `overlay` animatable, and `@starting-style` supplies the
+   * frame the dialog enters from.
+   */
+  .cyber-dialog {
+    width: 100%;
+    max-width: 28rem;
+    padding: 1.5rem;
+    border: 2px solid var(--cp-primary);
+    background: var(--cp-surface);
+    color: var(--cp-text);
+    font-family: var(--cp-mono);
+    opacity: 0%;
+    transition:
+      opacity 160ms var(--cp-ease),
+      scale 160ms var(--cp-ease),
+      display 160ms allow-discrete,
+      overlay 160ms allow-discrete;
+    scale: 0.96;
+
+    &::backdrop {
+      background: rgb(0 0 0 / 0%);
+      transition:
+        background-color 160ms var(--cp-ease),
+        display 160ms allow-discrete,
+        overlay 160ms allow-discrete;
+    }
+  }
+
+  .cyber-dialog--warning {
+    border-color: var(--cp-secondary);
+  }
+
+  /* `open` is `showModal()`'s to set rather than the markup's, so the compiler cannot see it. */
+  .cyber-dialog:global([open]) {
+    @starting-style {
+      opacity: 0%;
+      scale: 0.96;
+    }
+
+    opacity: 100%;
+    scale: 1;
+
+    &::backdrop {
+      @starting-style {
+        background: rgb(0 0 0 / 0%);
+      }
+
+      background: rgb(0 0 0 / 70%);
+    }
+  }
+</style>

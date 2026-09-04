@@ -91,10 +91,10 @@
     align-items: center;
     width: 100%;
     font-size: 0.875rem;
-  }
 
-  .identity__from-google :global(svg) {
-    width: 16px;
-    height: 16px;
+    :global(svg) {
+      width: 16px;
+      height: 16px;
+    }
   }
 </style>

@@ -11,58 +11,6 @@
  * backdrop come from the platform instead of the original's overlay div and key listeners.
  */
 
-/*
- * The open and closed states animate in both directions without a line of JavaScript:
- * `allow-discrete` keeps `display` and `overlay` animatable, and `@starting-style` supplies the
- * frame the dialog enters from.
- */
-.cyber-dialog {
-  width: 100%;
-  max-width: 28rem;
-  padding: 1.5rem;
-  border: 2px solid var(--cp-primary);
-  background: var(--cp-surface);
-  color: var(--cp-text);
-  font-family: var(--cp-mono);
-  opacity: 0%;
-  transition:
-    opacity 160ms cubic-bezier(0.2, 0, 0, 1),
-    scale 160ms cubic-bezier(0.2, 0, 0, 1),
-    display 160ms allow-discrete,
-    overlay 160ms allow-discrete;
-  scale: 0.96;
-
-  &[open] {
-    @starting-style {
-      opacity: 0%;
-      scale: 0.96;
-    }
-
-    opacity: 100%;
-    scale: 1;
-  }
-
-  &::backdrop {
-    background: rgb(0 0 0 / 0%);
-    transition:
-      background-color 160ms cubic-bezier(0.2, 0, 0, 1),
-      display 160ms allow-discrete,
-      overlay 160ms allow-discrete;
-  }
-
-  &[open]::backdrop {
-    @starting-style {
-      background: rgb(0 0 0 / 0%);
-    }
-
-    background: rgb(0 0 0 / 70%);
-  }
-}
-
-.cyber-dialog--warning {
-  border-color: var(--cp-secondary);
-}
-
 .cyber-dialog__title {
   margin-bottom: 1rem;
   color: var(--cp-accent);
@@ -125,16 +73,6 @@
   }
 }
 
-.cyber-button--accent {
-  background: var(--cp-accent);
-  color: var(--cp-on-accent);
-  font-weight: 700;
-
-  &:hover {
-    background: var(--cp-accent-lo);
-  }
-}
-
 .cyber-button--cyan {
   background: var(--cp-primary);
   color: var(--cp-on-accent);
@@ -160,15 +98,6 @@
 
   &:hover {
     background: var(--cp-outline);
-  }
-}
-
-.cyber-button--danger {
-  background: var(--cp-danger);
-  color: var(--cp-text);
-
-  &:hover {
-    background: var(--cp-danger-hover);
   }
 }
 

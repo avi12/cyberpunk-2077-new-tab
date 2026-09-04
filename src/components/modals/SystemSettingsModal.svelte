@@ -232,7 +232,7 @@
           Back up there now
         </button>
         {#if backupAtMs !== null}
-          <div class="system__row">
+          <div class="row">
             {#if isConfirmingDelete}
               <button
                 class="cyber-button cyber-button--danger cyber-button--grow"
@@ -274,6 +274,16 @@
 </Modal>
 
 <style>
+  /* The only danger buttons in the app, so the variant lives here rather than in the shared sheet. */
+  .cyber-button--danger {
+    background: var(--cp-danger);
+    color: var(--cp-text);
+
+    &:hover {
+      background: var(--cp-danger-hover);
+    }
+  }
+
   .system__warning {
     display: flex;
     gap: 0.5rem;
@@ -317,11 +327,6 @@
     line-height: 1rem;
   }
 
-  .system__row {
-    display: flex;
-    gap: 0.5rem;
-  }
-
   .system__delete {
     display: flex;
     align-items: center;
@@ -332,6 +337,4 @@
       height: 16px;
     }
   }
-
-  /* The file input is hidden, so its label carries the button's appearance. */
 </style>

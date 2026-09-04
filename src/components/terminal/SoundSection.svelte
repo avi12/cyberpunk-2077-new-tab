@@ -2,6 +2,7 @@
   import PanelSection from "./PanelSection.svelte";
   import { previewTick } from "@/lib/sound";
   import { settings } from "@/lib/storage/settings.svelte";
+  import ToggleOption from "./ToggleOption.svelte";
   import iconVolume from "@/assets/icons/volume-2.svg?raw";
   import iconVolumeOff from "@/assets/icons/volume-x.svg?raw";
 
@@ -17,26 +18,10 @@
 </script>
 
 <PanelSection title="Sound">
-  <button
-    class="option-button sound__toggle"
-    aria-pressed={isOn}
-    onclick={toggle}
-    type="button">
-    <span>{TOGGLE_LABEL}</span>
-    {@html isOn ? iconVolume : iconVolumeOff}
-  </button>
+  <ToggleOption
+    iconOff={iconVolumeOff}
+    iconOn={iconVolume}
+    {isOn}
+    label={TOGGLE_LABEL}
+    onToggle={toggle} />
 </PanelSection>
-
-<style>
-  .sound__toggle {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-
-    :global(svg) {
-      width: 16px;
-      height: 16px;
-    }
-  }
-</style>

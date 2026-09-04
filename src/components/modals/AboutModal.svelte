@@ -11,14 +11,6 @@
     onClose: () => void;
   } = $props();
 
-  type AboutLink = {
-    href: string;
-    tooltip: string;
-    label: string;
-  };
-
-  const ABOUT_LINKS: AboutLink[] = [];
-
   const SCREENSHOT_LABEL = "Capture screenshot";
   const SCREENSHOT_SCALE = 2;
   const SCREENSHOT_BACKGROUND = "#000c14";
@@ -63,18 +55,8 @@
   </p>
   <p class="about__tagline">Never fade away, samurai</p>
   <div class="about__actions">
-    {#each ABOUT_LINKS as link (link.href)}
-      <a
-        class="about__action"
-        href={link.href}
-        rel="noopener noreferrer"
-        target="_blank"
-        use:tooltip={link.tooltip}>
-        {link.label}
-      </a>
-    {/each}
     <button
-      class="about__action about__action--cyan"
+      class="about__action"
       aria-label={SCREENSHOT_LABEL}
       onclick={() => void capture()}
       type="button"
@@ -110,7 +92,7 @@
     justify-content: center;
     align-items: center;
     padding: 0.5rem 0.75rem;
-    background: var(--cp-accent);
+    background: var(--cp-primary);
     color: var(--cp-on-accent);
 
     :global(svg) {
@@ -119,16 +101,7 @@
     }
 
     &:hover {
-      background: var(--cp-accent-lo);
-    }
-  }
-
-  .about__action--cyan {
-    background: var(--cp-primary);
-
-    &:hover {
       background: var(--cp-primary-hover);
     }
   }
-
 </style>

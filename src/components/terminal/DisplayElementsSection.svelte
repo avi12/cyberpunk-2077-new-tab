@@ -6,6 +6,7 @@
   import { IS_EDGE } from "@/lib/companion/platform";
   import PanelSection from "./PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
+  import ToggleOption from "./ToggleOption.svelte";
   import { withViewTransition } from "@/lib/view-transition";
 
   const { onElementGlitch }: { onElementGlitch: (key: keyof DisplayPreferences | null) => void } = $props();
@@ -104,14 +105,12 @@
   <ul class="elements">
     {#each elements as element (element.key)}
       <li>
-        <button
-          class="option-button elements__toggle"
-          aria-pressed={settings.displayPreferences.current[element.key]}
-          onclick={() => void toggle(element.key)}
-          type="button">
-          <span>{element.label}</span>
-          {@html settings.displayPreferences.current[element.key] ? iconEye : iconEyeOff}
-        </button>
+        <ToggleOption
+          iconOff={iconEyeOff}
+          iconOn={iconEye}
+          isOn={settings.displayPreferences.current[element.key]}
+          label={element.label}
+          onToggle={() => void toggle(element.key)} />
       </li>
     {/each}
   </ul>
@@ -122,17 +121,5 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 0.5rem;
-  }
-
-  .elements__toggle {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-
-    :global(svg) {
-      width: 16px;
-      height: 16px;
-    }
   }
 </style>

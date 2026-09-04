@@ -75,6 +75,7 @@
     right: var(--terminal-corner-inset);
     bottom: var(--terminal-corner-inset);
     z-index: 30;
+    view-transition-name: terminal;
   }
 
   .corner-button {
@@ -130,6 +131,14 @@
       scrollbar-width 0ms var(--terminal-scrollbar-delay, 0ms) allow-discrete,
       display 200ms allow-discrete,
       overlay 200ms allow-discrete;
+
+    /*
+     * Named apart from the button it belongs to, because an open popover is painted in the top
+     * layer rather than inside its own ancestor - which left it in the root snapshot, and so washed
+     * out through every root cross-fade the page ran underneath it. A name of its own makes it a
+     * group, and a group whose two snapshots are the same holds still.
+     */
+    view-transition-name: terminal-panel;
     position-anchor: --terminal-display-button;
     position-try-fallbacks: flip-block;
     interpolate-size: allow-keywords;

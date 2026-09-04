@@ -9,6 +9,8 @@
 
   const FALLBACK_SWATCH = "#00ffff";
   const DEFAULT_CUSTOM_COLOR = "#003333";
+  const HUE_MAX = 360;
+  const DARKNESS_MAX = 100;
 
   let customColor = $state(DEFAULT_CUSTOM_COLOR);
   let isPickerOpen = $state(false);
@@ -25,20 +27,24 @@
   });
 
   $effect(() => {
-    if (isHexColor(background)) {
-      customColor = background;
-      const [nextHue, , value] = hexToHsv(background);
-      hue = nextHue;
-      darkness = Math.round((1 - value) * 100);
+    if (!isHexColor(background)) {
+      return;
     }
+
+    customColor = background;
+    const [nextHue, , value] = hexToHsv(background);
+    hue = nextHue;
+    darkness = Math.round((1 - value) * DARKNESS_MAX);
   });
 
   function applyHex(value: string) {
     const normalized = value.trim().startsWith("#") ? value.trim() : `#${value.trim()}`;
-    if (isHexColor(normalized)) {
-      customColor = normalized;
-      settings.background.current = normalized;
+    if (!isHexColor(normalized)) {
+      return;
     }
+
+    customColor = normalized;
+    settings.background.current = normalized;
   }
 
   function applySliders(next: {
@@ -50,7 +56,7 @@
     applyHex(hsvToHex({
       hue,
       saturation: 1,
-      value: 1 - darkness / 100
+      value: 1 - darkness / DARKNESS_MAX
     }));
   }
 </script>
@@ -80,7 +86,7 @@
           <span>Color Spectrum</span>
           <input
             class="cyber-color-slider"
-            max="360"
+            max={HUE_MAX}
             min="0"
             oninput={e => applySliders({
               hue: Number(e.currentTarget.value),
@@ -93,7 +99,7 @@
           <span class="picker__row"><span>Darkness</span><span>{darkness}%</span></span>
           <input
             class="cyber-darkness-slider"
-            max="100"
+            max={DARKNESS_MAX}
             min="0"
             oninput={e => applySliders({
               hue,
@@ -110,7 +116,7 @@
             maxlength="9"
             onblur={() => applyHex(customColor)}
             onkeydown={e => e.key === "Enter" && applyHex(customColor)}
-            placeholder="#00ffff"
+            placeholder={FALLBACK_SWATCH}
             spellcheck="false"
             type="text"
             bind:value={customColor} />
@@ -133,7 +139,7 @@
   .custom-color-picker {
     margin-top: 0.75rem;
     padding: 0.65rem;
-    border: 1px solid rgb(0 255 255 / 60%);
+    border: 1px solid color-mix(in sRGB, var(--cp-glitch-b) 60%, transparent);
     background: color-mix(in sRGB, var(--cp-surface) 70%, transparent);
   }
 
@@ -169,7 +175,7 @@
 
   .cyber-slider-label {
     display: block;
-    color: #00ffff;
+    color: var(--cp-glitch-b);
     font-family: "Courier New", monospace;
     font-size: 0.7rem;
     text-transform: uppercase;
@@ -181,7 +187,7 @@
     width: 100%;
     height: 1rem;
     margin-top: 0.35rem;
-    border: 1px solid #00ffff;
+    border: 1px solid var(--cp-glitch-b);
     outline: none;
 
     &::-webkit-slider-thumb {
@@ -196,13 +202,16 @@
 
   .cyber-color-slider {
     background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+
+    &::-webkit-slider-thumb {
+      margin-top: 0.75rem;
+    }
   }
 
   .cyber-darkness-slider {
     background: linear-gradient(90deg, #ffffff, #000000);
   }
 
-  .cyber-color-slider::-webkit-slider-thumb,
   .picker__hex {
     display: flex;
     gap: 0.5rem;

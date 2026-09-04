@@ -1,6 +1,6 @@
 <script lang="ts">
   import { BackgroundMediaType } from "@/lib/storage/schema";
-  import { BACKGROUND_COLORS, BACKGROUND_IMAGES, DEFAULT_BACKGROUND } from "@/lib/storage/defaults";
+  import { BACKGROUND_COLORS, BACKGROUND_IMAGES, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND_BRIGHTNESS } from "@/lib/storage/defaults";
   import { CACHED_PREFIX, clearMedia, MediaSlot, saveMedia } from "@/lib/storage/media-store";
   import { dropZone } from "@/lib/drop-zone";
   import { fetchBlob } from "@/lib/cors-proxy";
@@ -17,21 +17,34 @@
   const BRIGHTNESS_MIN = 0;
   const BRIGHTNESS_MAX = 200;
   const BRIGHTNESS_STEP = 5;
-  const BRIGHTNESS_RESET = 100;
 
   const MEDIA_KINDS: Record<UploadableMedia, {
+    value: UploadableMedia;
+    label: string;
     accept: string;
     name: string;
+    icon: string;
+    exampleUrl: string;
   }> = {
     [BackgroundMediaType.image]: {
+      value: BackgroundMediaType.image,
+      label: "Image",
       accept: "image/*",
-      name: "an image"
+      name: "an image",
+      icon: iconImage,
+      exampleUrl: "https://example.com/image.jpg"
     },
     [BackgroundMediaType.video]: {
+      value: BackgroundMediaType.video,
+      label: "Video",
       accept: "video/mp4,video/webm",
-      name: "a video"
+      name: "a video",
+      icon: iconVideo,
+      exampleUrl: "https://example.com/video.mp4"
     }
   };
+
+  const MEDIA_KIND_OPTIONS = Object.values(MEDIA_KINDS);
 
   let mediaKind = $state<UploadableMedia>(BackgroundMediaType.image);
   let urlEntry = $state<string | null>(null);
@@ -39,7 +52,8 @@
   let error = $state("");
 
   const background = $derived(settings.background.current);
-  const accept = $derived(MEDIA_KINDS[mediaKind].accept);
+  const selectedKind = $derived(MEDIA_KINDS[mediaKind]);
+  const accept = $derived(selectedKind.accept);
   const brightness = $derived(settings.backgroundBrightness.current);
   const isCustom = $derived(
     ![...BACKGROUND_COLORS.map(entry => entry.value), ...BACKGROUND_IMAGES.map(entry => entry.value)].includes(background)
@@ -120,22 +134,16 @@
 <PanelSection badge={isCustom ? "Active" : undefined} title="Custom Background">
   <div class="custom">
     <div class="row">
-      <button
-        class="option-button option-button--cyan custom__kind"
-        aria-pressed={mediaKind === BackgroundMediaType.image}
-        onclick={() => (mediaKind = BackgroundMediaType.image)}
-        type="button">
-        {@html iconImage}
-        Image
-      </button>
-      <button
-        class="option-button option-button--cyan custom__kind"
-        aria-pressed={mediaKind === BackgroundMediaType.video}
-        onclick={() => (mediaKind = BackgroundMediaType.video)}
-        type="button">
-        {@html iconVideo}
-        Video
-      </button>
+      {#each MEDIA_KIND_OPTIONS as option (option.value)}
+        <button
+          class="option-button custom__kind"
+          aria-pressed={mediaKind === option.value}
+          onclick={() => (mediaKind = option.value)}
+          type="button">
+          {@html option.icon}
+          {option.label}
+        </button>
+      {/each}
     </div>
 
     <div>
@@ -149,7 +157,7 @@
         aria-label="Boost background brightness"
         max={BRIGHTNESS_MAX}
         min={BRIGHTNESS_MIN}
-        ondblclick={() => (settings.backgroundBrightness.current = BRIGHTNESS_RESET)}
+        ondblclick={() => (settings.backgroundBrightness.current = DEFAULT_BACKGROUND_BRIGHTNESS)}
         oninput={e => (settings.backgroundBrightness.current = Number.parseInt(e.currentTarget.value, 10))}
         step={BRIGHTNESS_STEP}
         type="range"
@@ -169,11 +177,11 @@
             })
           }}>
           {@html iconUpload}
-          <span>Drop {MEDIA_KINDS[mediaKind].name} here</span>
+          <span>Drop {selectedKind.name} here</span>
           <span class="drop-zone__hint">or click to pick one</span>
         </label>
         <button class="custom__button" onclick={() => (urlEntry = "")} type="button">
-          {@html mediaKind === BackgroundMediaType.image ? iconImage : iconVideo}
+          {@html selectedKind.icon}
           Enter URL
         </button>
         {#if isCustom}
@@ -191,7 +199,7 @@
           id="background-url"
           class="cyber-input custom__input"
           autofocus
-          placeholder={mediaKind === BackgroundMediaType.image ? "https://example.com/image.jpg" : "https://example.com/video.mp4"}
+          placeholder={selectedKind.exampleUrl}
           type="url"
           bind:value={urlEntry} />
         <div class="row">
@@ -235,6 +243,12 @@
     gap: 0.25rem;
     justify-content: center;
     align-items: center;
+
+    /* This pair marks its selection in cyan rather than the pink every other option row uses. */
+    &[aria-pressed="true"] {
+      background: var(--cp-primary);
+      color: var(--cp-on-accent);
+    }
 
     :global(svg) {
       width: 14px;
