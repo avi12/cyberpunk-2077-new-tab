@@ -5,11 +5,11 @@
 </script>
 
 <PanelSection title="Tab Title">
-  <div class="identity">
+  <div class="tab-identity">
     <label class="visually-hidden" for="tab-title">Tab title</label>
     <input
       id="tab-title"
-      class="cyber-input identity__input"
+      class="cyber-input tab-identity__input"
       placeholder="Enter tab title..."
       type="text"
       bind:value={settings.tabTitle.current} />
@@ -21,13 +21,13 @@
 </PanelSection>
 
 <style>
-  .identity {
+  .tab-identity {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
 
-  .identity__input {
+  .tab-identity__input {
     font-size: 0.875rem;
     line-height: 1.25rem;
   }
