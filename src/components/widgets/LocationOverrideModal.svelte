@@ -9,7 +9,6 @@
   import { settings } from "@/lib/storage/settings.svelte";
   import { WeatherSourceId } from "@/lib/weather/sources";
   import { z } from "@/lib/zod";
-  import { untrack } from "svelte";
 
   const {
     isOpen,
@@ -55,15 +54,22 @@
     })
   });
 
-  function asDraft(from: GeoLocation) {
+  /**
+   * Empty, not the location already showing. The fields are where a reader says somewhere new, and
+   * a form that opens holding the answer it already has asks nothing.
+   *
+   * The name goes with them, and has to: Google is asked for the weather by name, so coordinates
+   * typed under a name left over from the last place would fetch that place's weather instead.
+   */
+  function emptyDraft() {
     return {
-      name: from.name,
-      latitude: String(from.latitude),
-      longitude: String(from.longitude)
+      name: "",
+      latitude: "",
+      longitude: ""
     };
   }
 
-  let draft = $state(untrack(() => asDraft(location)));
+  let draft = $state(emptyDraft());
   let error = $state("");
   let isEditing = $state(false);
   /** Undefined until the browser has answered - a "not looked yet" is no reason to say anything. */
@@ -98,7 +104,7 @@
       return;
     }
 
-    draft = asDraft(location);
+    draft = emptyDraft();
     error = "";
     isAccessRefused = false;
     isEditing = false;
