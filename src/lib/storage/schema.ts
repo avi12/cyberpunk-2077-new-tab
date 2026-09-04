@@ -41,7 +41,6 @@ export enum SearchEngineId {
   bing = "bing",
   duckDuckGo = "duck",
   chatGpt = "ai",
-  claude = "claude",
   perplexity = "ai2",
   brave = "brave",
   braveAi = "brave2",
@@ -86,13 +85,29 @@ export type SearchEngine = {
   placeholder: string;
 };
 
+/**
+ * A bound belongs to the shape, not to the control that happens to edit it: the input is one way in,
+ * a settings file is another, and only what is written here is checked on both. The controls import
+ * these rather than restating them, so a range cannot mean one thing in the markup and another in
+ * storage.
+ */
+export const LATITUDE_MIN = -90;
+export const LATITUDE_MAX = 90;
+export const LONGITUDE_MIN = -180;
+export const LONGITUDE_MAX = 180;
+
 export const geoLocationSchema = z.object({
   name: z.string(),
-  latitude: z.number(),
-  longitude: z.number()
+  latitude: z.number().min(LATITUDE_MIN).max(LATITUDE_MAX),
+  longitude: z.number().min(LONGITUDE_MIN).max(LONGITUDE_MAX)
 });
 
 export type GeoLocation = z.infer<typeof geoLocationSchema>;
+
+export const BACKGROUND_BRIGHTNESS_MIN = 0;
+export const BACKGROUND_BRIGHTNESS_MAX = 200;
+
+export const backgroundBrightnessSchema = z.number().min(BACKGROUND_BRIGHTNESS_MIN).max(BACKGROUND_BRIGHTNESS_MAX);
 
 const taskSchema = z.object({
   id: z.string(),

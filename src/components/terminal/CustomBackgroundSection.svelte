@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { BackgroundMediaType } from "@/lib/storage/schema";
+  import { BACKGROUND_BRIGHTNESS_MAX, BACKGROUND_BRIGHTNESS_MIN, BackgroundMediaType } from "@/lib/storage/schema";
   import { BACKGROUND_COLORS, BACKGROUND_IMAGES, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND_BRIGHTNESS } from "@/lib/storage/defaults";
   import { CACHED_PREFIX, clearMedia, MediaSlot, saveMedia } from "@/lib/storage/media-store";
   import { dropZone } from "@/lib/drop-zone";
@@ -14,8 +14,6 @@
 
   type UploadableMedia = BackgroundMediaType.image | BackgroundMediaType.video;
 
-  const BRIGHTNESS_MIN = 0;
-  const BRIGHTNESS_MAX = 200;
   const BRIGHTNESS_STEP = 5;
 
   const MEDIA_KINDS: Record<UploadableMedia, {
@@ -152,11 +150,11 @@
         <span class="custom__value">{brightness}%</span>
       </div>
       <input
-        style:--fill="{(brightness / BRIGHTNESS_MAX) * 100}%"
+        style:--fill="{(brightness / BACKGROUND_BRIGHTNESS_MAX) * 100}%"
         class="brightness-slider"
         aria-label="Boost background brightness"
-        max={BRIGHTNESS_MAX}
-        min={BRIGHTNESS_MIN}
+        max={BACKGROUND_BRIGHTNESS_MAX}
+        min={BACKGROUND_BRIGHTNESS_MIN}
         ondblclick={() => (settings.backgroundBrightness.current = DEFAULT_BACKGROUND_BRIGHTNESS)}
         oninput={e => (settings.backgroundBrightness.current = Number.parseInt(e.currentTarget.value, 10))}
         step={BRIGHTNESS_STEP}

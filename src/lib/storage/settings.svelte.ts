@@ -27,6 +27,7 @@ import {
 import type { StorageItem } from "./items";
 import type { DisplayPreferences, Widget } from "./schema";
 import {
+  backgroundBrightnessSchema,
   BackgroundMediaType,
   bookmarkSchema,
   ColorTheme,
@@ -153,7 +154,7 @@ export const settings = {
   }),
   backgroundBrightness: new Setting({
     item: backgroundBrightnessItem,
-    schema: z.number()
+    schema: backgroundBrightnessSchema
   }),
   backgroundMediaType: new Setting({
     item: backgroundMediaTypeItem,

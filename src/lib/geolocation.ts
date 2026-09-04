@@ -8,7 +8,8 @@ const REVERSE_GEOCODE_URL = "https://api.bigdatacloud.net/data/reverse-geocode-c
 
 const COORDINATE_DECIMALS = 4;
 
-function round(value: number): number {
+/** How precise a coordinate is kept, wherever one is written down - the device's or a typed one. */
+export function roundCoordinate(value: number): number {
   return Number(value.toFixed(COORDINATE_DECIMALS));
 }
 
@@ -68,8 +69,8 @@ async function detectLocation(): Promise<GeoLocation | null> {
     return null;
   }
 
-  const latitude = round(coords.latitude);
-  const longitude = round(coords.longitude);
+  const latitude = roundCoordinate(coords.latitude);
+  const longitude = roundCoordinate(coords.longitude);
   const name = await reverseGeocode({
     latitude,
     longitude

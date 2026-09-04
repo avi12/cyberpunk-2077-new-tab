@@ -1,7 +1,9 @@
 <script lang="ts">
   import type { GeoLocation } from "@/lib/storage/schema";
+  import { LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN } from "@/lib/storage/schema";
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
   import Modal from "@/components/modals/Modal.svelte";
+  import { roundCoordinate } from "@/lib/geolocation";
   import { z } from "@/lib/zod";
   import { untrack } from "svelte";
 
@@ -21,10 +23,7 @@
     isFollowingDevice: boolean;
   } = $props();
 
-  const LATITUDE_RANGE = [-90, 90] as const;
-  const LONGITUDE_RANGE = [-180, 180] as const;
   const COORDINATES_ERROR = "Enter valid coordinates";
-  const DECIMALS = 4;
 
   function coordinateSchema({ min, max, label }: {
     min: number;
@@ -40,13 +39,13 @@
 
   const coordinatesSchema = z.object({
     latitude: coordinateSchema({
-      min: LATITUDE_RANGE[0],
-      max: LATITUDE_RANGE[1],
+      min: LATITUDE_MIN,
+      max: LATITUDE_MAX,
       label: "Latitude"
     }),
     longitude: coordinateSchema({
-      min: LONGITUDE_RANGE[0],
-      max: LONGITUDE_RANGE[1],
+      min: LONGITUDE_MIN,
+      max: LONGITUDE_MAX,
       label: "Longitude"
     })
   });
@@ -69,10 +68,6 @@
    */
   const isDeviceLit = $derived(isFollowingDevice && !isEditing);
 
-  function round(value: number): number {
-    return Number(value.toFixed(DECIMALS));
-  }
-
   $effect(() => {
     if (isOpen) {
       draft = asDraft(location);
@@ -93,8 +88,8 @@
       return;
     }
 
-    const latitude = round(parsed.data.latitude);
-    const longitude = round(parsed.data.longitude);
+    const latitude = roundCoordinate(parsed.data.latitude);
+    const longitude = roundCoordinate(parsed.data.longitude);
     onSave({
       name: draft.name.trim() || `${latitude}, ${longitude}`,
       latitude,
