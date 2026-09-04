@@ -1,25 +1,45 @@
 <script lang="ts">
   import type { Widget, WidgetConfig } from "@/lib/storage/schema";
   import { WidgetType } from "@/lib/storage/schema";
+  import type { Component } from "svelte";
   import iconGrip from "@/assets/icons/grip.svg?raw";
   import RssWidget from "./RssWidget.svelte";
   import ScratchPadWidget from "./ScratchPadWidget.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
+  import { slide } from "svelte/transition";
   import iconSettings from "@/assets/icons/settings.svg?raw";
+  import { cubicOut } from "svelte/easing";
   import { sortable } from "@/lib/sortable";
-  import { flip } from "svelte/animate";
   import { withViewTransition } from "@/lib/view-transition";
   import TaskListWidget from "./TaskListWidget.svelte";
   import WeatherWidget from "./WeatherWidget.svelte";
+  import type { WidgetProps } from "./widget.svelte";
 
-  const WIDGET_LABELS: Record<WidgetType, string> = {
-    [WidgetType.weather]: "Weather",
-    [WidgetType.scratchPad]: "Scratch Pad",
-    [WidgetType.taskList]: "Gigs",
-    [WidgetType.rss]: "RSS Feed"
+  /** What a widget type is called in the list, and the view that draws it - named once, together. */
+  const WIDGETS: Record<WidgetType, {
+    label: string;
+    view: Component<WidgetProps>;
+  }> = {
+    [WidgetType.weather]: {
+      label: "Weather",
+      view: WeatherWidget
+    },
+    [WidgetType.scratchPad]: {
+      label: "Scratch Pad",
+      view: ScratchPadWidget
+    },
+    [WidgetType.taskList]: {
+      label: "Gigs",
+      view: TaskListWidget
+    },
+    [WidgetType.rss]: {
+      label: "RSS Feed",
+      view: RssWidget
+    }
   };
 
-  const REORDER_MS = 180;
+  /** Long enough to read as the card opening, short enough that a switch still feels like a switch. */
+  const REVEAL_MS = 180;
 
   let isEditing = $state(false);
 
@@ -82,26 +102,36 @@
       handle: ".widgets__grip",
       onReorder: next => (settings.widgetOrder.current = next)
     }}>
+    <!--
+      The card is the only thing that animates, and it animates its own height inside the flow. That
+      is what keeps the switch above it still and the widgets below it exactly in step: they are not
+      following an animation of their own, they are being pushed by a box that is genuinely growing.
+      Anything that animates the slot instead - a view transition morphing it, `flip` scaling it, a
+      translate - moves the header with it or lets a row cross the card. Entering and leaving edit
+      mode still transitions: that moves the whole column at once.
+    -->
     {#each ordered as widget (widget.id)}
       <li
         class="widgets__slot view-item"
         class:is-disabled={!widget.enabled}
-        data-sortable-id={widget.id}
-        animate:flip={{ duration: REORDER_MS }}>
+        data-sortable-id={widget.id}>
         {#if isEditing}
           <div class="widgets__row">
             <div class="widgets__row-label">
               <span class="widgets__grip">{@html iconGrip}</span>
-              <span class="widgets__name">{WIDGET_LABELS[widget.type]}</span>
+              <span class="widgets__name">{WIDGETS[widget.type].label}</span>
             </div>
             <button
               class="widgets__toggle"
               class:is-on={widget.enabled}
               aria-pressed={widget.enabled}
-              onclick={() => withViewTransition(() => updateWidget(widget.id, current => ({
-                ...current,
-                enabled: !current.enabled
-              })))}
+              onclick={() => updateWidget({
+                id: widget.id,
+                change: current => ({
+                  ...current,
+                  enabled: !current.enabled
+                })
+              })}
               type="button">
               {widget.enabled ? "ON" : "OFF"}
             </button>
@@ -109,15 +139,15 @@
         {/if}
 
         {#if widget.enabled}
-          {#if widget.type === WidgetType.weather}
-            <WeatherWidget config={widget.config} onConfigChange={patch => patchConfig(widget.id, patch)} />
-          {:else if widget.type === WidgetType.scratchPad}
-            <ScratchPadWidget config={widget.config} onConfigChange={patch => patchConfig(widget.id, patch)} />
-          {:else if widget.type === WidgetType.taskList}
-            <TaskListWidget config={widget.config} onConfigChange={patch => patchConfig(widget.id, patch)} />
-          {:else if widget.type === WidgetType.rss}
-            <RssWidget config={widget.config} onConfigChange={patch => patchConfig(widget.id, patch)} />
-          {/if}
+          {@const WidgetView = WIDGETS[widget.type].view}
+          <div transition:slide={{ duration: REVEAL_MS, easing: cubicOut }}>
+            <WidgetView
+              config={widget.config}
+              onConfigChange={patch => patchConfig({
+                id: widget.id,
+                patch
+              })} />
+          </div>
         {/if}
       </li>
     {/each}
