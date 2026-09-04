@@ -67,7 +67,7 @@
 <section class="category view-item">
   <div class="category__header">
     {#if isEditing}
-      <span class="category__grip">{@html iconGrip}</span>
+      <span class="category__grip" aria-hidden="true">{@html iconGrip}</span>
     {/if}
     <h3 class="category__heading">
       <button
@@ -188,7 +188,7 @@
     text-transform: uppercase;
     transition: color 200ms;
 
-    &:hover {
+    &:is(:hover, :focus-visible) {
       color: var(--cp-secondary-hi);
     }
 
@@ -203,6 +203,18 @@
     gap: 0.25rem;
   }
 
+  .category__action {
+    /*
+     * A card lights its own border when focused, but a bare glyph has no box to light - so focus
+     * draws one around it. Only the colour: the page's own reset already gives every button a 2px
+     * outline at a 2px offset and holds it transparent, so this only paints that ring in
+     * whatever colour the control is currently wearing.
+     */
+    &:focus-visible {
+      outline-color: currentColor;
+    }
+  }
+
   .category__action :global(svg) {
     width: 16px;
     height: 16px;
@@ -211,7 +223,7 @@
   .category__action--edit {
     color: var(--cp-primary);
 
-    &:hover {
+    &:is(:hover, :focus-visible) {
       color: var(--cp-primary-hover);
     }
   }
@@ -219,7 +231,7 @@
   .category__action--delete {
     color: var(--cp-secondary);
 
-    &:hover {
+    &:is(:hover, :focus-visible) {
       color: var(--cp-secondary-hi);
     }
   }
@@ -248,7 +260,7 @@
     line-height: 1.25rem;
     transition: background-color 200ms, border-color 200ms, color 200ms;
 
-    &:hover {
+    &:is(:hover, :focus-visible) {
       border-color: var(--cp-accent);
       background: color-mix(in sRGB, var(--cp-surface-2) 88%, transparent);
       color: var(--cp-accent);

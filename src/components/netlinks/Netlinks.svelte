@@ -3,6 +3,7 @@
   import { addCategory, deleteCategory, normalizeName, renameCategory, toggleCollapsed } from "@/lib/categories";
   import { BookmarkCategory } from "@/lib/storage/schema";
   import BookmarkForm from "./BookmarkForm.svelte";
+  import { arrowFocus } from "@/lib/arrow-focus";
   import CategorySection from "./CategorySection.svelte";
   import Modal from "@/components/modals/Modal.svelte";
   import { pickCategory } from "@/lib/icons/auto";
@@ -267,15 +268,12 @@
   </div>
 
   <div
-    class="netlinks__categories"
+    use:arrowFocus
     use:sortable={{
       ids: visibleCategories,
       disabled: !isEditing,
       handle: ".category__grip",
-      onReorder: next => {
-        // Only the visible subset is dragged; hidden categories keep their place at the end.
-        settings.categoryOrder.current = [...next, ...categories.filter(name => !next.includes(name))];
-      }
+      onReorder: reorderCategories
     }}>
     {#each visibleCategories as category (category)}
       <div data-sortable-id={category}>
@@ -396,7 +394,7 @@
     color: var(--cp-primary);
     font-family: var(--cp-mono);
 
-    &:hover:not(:disabled) {
+    &:is(:hover, :focus-visible):not(:disabled) {
       border-color: var(--cp-primary-hover);
       color: var(--cp-primary-hover);
     }
@@ -411,7 +409,7 @@
       opacity: 40%;
     }
 
-    &:hover:not(:disabled) {
+    &:is(:hover, :focus-visible):not(:disabled) {
       border-color: var(--cp-secondary-hi);
       color: var(--cp-secondary-hi);
     }
@@ -420,8 +418,13 @@
   .netlinks__icon-button {
     color: var(--cp-secondary);
 
-    &:hover {
+    &:is(:hover, :focus-visible) {
       color: var(--cp-secondary-hi);
+    }
+
+    /* A bare glyph has no box to light, so focus paints in the ring the page's reset holds ready. */
+    &:focus-visible {
+      outline-color: currentColor;
     }
 
     :global(svg) {
@@ -445,7 +448,7 @@
     color: var(--cp-secondary);
     font-family: var(--cp-mono);
 
-    &:hover {
+    &:is(:hover, :focus-visible) {
       background: color-mix(in sRGB, var(--cp-surface-2) 88%, transparent);
     }
 

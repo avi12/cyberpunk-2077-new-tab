@@ -32,15 +32,22 @@
     onOpen: (url: string) => void;
   } = $props();
 
-  const EDIT_LABEL = "Edit bookmark";
-  const DELETE_LABEL = "Delete bookmark";
+  /*
+   * Named after the link they act on, not after their icon. Tabbing a grid of cards otherwise reads
+   * as "edit bookmark, delete bookmark" over and over with nothing saying which one is in hand, and
+   * the tooltip says the same words as the accessible name rather than a second, shorter story.
+   */
+  const editLabel = $derived(`Edit ${bookmark.title}`);
+  const deleteLabel = $derived(`Delete ${bookmark.title}`);
   const MIDDLE_MOUSE_BUTTON = 1;
 
   function onAuxClick(e: MouseEvent) {
-    if (!isEditing && e.button === MIDDLE_MOUSE_BUTTON) {
-      e.preventDefault();
-      window.open(bookmark.url, "_blank");
+    if (isEditing || e.button !== MIDDLE_MOUSE_BUTTON) {
+      return;
     }
+
+    e.preventDefault();
+    window.open(bookmark.url, "_blank");
   }
 
   function onDragStart(e: DragEvent) {
@@ -66,7 +73,7 @@
     onauxclick={onAuxClick}
     onclick={onClick}
     ondragstart={onDragStart}>
-    <span class="card__icon">{@html iconByName(bookmark.icon || "Default")}</span>
+    <span class="card__icon" aria-hidden="true">{@html iconByName(bookmark.icon)}</span>
     <span class="card__title hover-glitch">{bookmark.title}</span>
   </a>
 
@@ -74,22 +81,22 @@
     <div class="card__actions">
       <button
         class="card__action card__action--edit"
-        aria-label={EDIT_LABEL}
+        aria-label={editLabel}
         onclick={() => onEdit(bookmark)}
         type="button"
-        use:tooltip={EDIT_LABEL}>
+        use:tooltip={editLabel}>
         {@html iconSquarePen}
       </button>
       <button
         class="card__action card__action--delete"
-        aria-label={DELETE_LABEL}
+        aria-label={deleteLabel}
         onclick={() => onDelete(bookmark.id)}
         type="button"
-        use:tooltip={DELETE_LABEL}>
+        use:tooltip={deleteLabel}>
         {@html iconXMark}
       </button>
     </div>
-    <span class="card__grip">{@html iconGripVertical}</span>
+    <span class="card__grip" aria-hidden="true">{@html iconGripVertical}</span>
   {/if}
 </li>
 
@@ -110,14 +117,25 @@
     background: var(--cp-surface);
     text-align: center;
 
-    &:hover {
+    /* Arrow keys move between cards, so a card reached that way answers the way a hovered one does. */
+    &:is(:hover, :focus-visible) {
       border-color: var(--cp-accent);
+    }
+
+    /*
+     * That answer - the lit border and the label's tear - is the whole focus indicator, so the ring
+     * on top of it would be a second one. Transparent rather than `none`, the way every other control
+     * on the page drops its ring, so a forced-colours mode still draws one.
+     */
+    &:focus-visible {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
     }
 
     /*
      * In edit mode the card is a drag handle rather than a link: its text must not be selectable
      * under the pointer, and there is nothing to aim at, so it drops back to the page's arrow -
-     * which is also what keeps it quiet, since the reticle is what decides what makes a sound.
+     * which is also what keeps it quiet, since a link only speaks while it is one.
      */
     &.is-editing {
       cursor: var(--cp-cursor);
@@ -156,6 +174,18 @@
     gap: 0.25rem;
   }
 
+  .card__action {
+    /*
+     * A card lights its own border when focused, but a bare glyph has no box to light - so focus
+     * draws one around it. Only the colour: the page's own reset already gives every button a 2px
+     * outline at a 2px offset and holds it transparent, so this only paints that ring in
+     * whatever colour the control is currently wearing.
+     */
+    &:focus-visible {
+      outline-color: currentColor;
+    }
+  }
+
   .card__action :global(svg) {
     width: 16px;
     height: 16px;
@@ -164,7 +194,7 @@
   .card__action--edit {
     color: var(--cp-primary);
 
-    &:hover {
+    &:is(:hover, :focus-visible) {
       color: var(--cp-primary-hover);
     }
   }
@@ -172,7 +202,7 @@
   .card__action--delete {
     color: var(--cp-secondary);
 
-    &:hover {
+    &:is(:hover, :focus-visible) {
       color: var(--cp-secondary-hi);
     }
   }

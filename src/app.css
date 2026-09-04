@@ -446,19 +446,22 @@ textarea {
  */
 .hover-glitch {
   position: relative;
-}
 
-/*
- * The tear answers the cursor reaching the label. A card is far bigger than the label inside it,
- * though, and what the cursor actually arrives at is the card - so anything can declare itself the
- * host of a label's hover and answer on its behalf, and the whole card tears as one.
- */
-.hover-glitch:hover,
-.hover-glitch-host:hover .hover-glitch {
-  animation: 130ms steps(2, end) hover-glitch;
+  /*
+   * The tear answers the cursor reaching the label. A card is far bigger than the label inside it,
+   * though, and what the cursor actually arrives at is the card - so anything can declare itself the
+   * host of a label's hover and answer on its behalf, and the whole card tears as one.
+   *
+   * A keyboard arrives at the same place by a different route, so the host answers a focus it can
+   * see the same way it answers a cursor.
+   */
+  &:is(:hover, :focus-visible),
+  .hover-glitch-host:is(:hover, :focus-visible) & {
+    animation: 130ms steps(2, end) hover-glitch;
 
-  .edgerunners & {
-    animation-name: edgerunners-hover-glitch;
+    .edgerunners & {
+      animation-name: edgerunners-hover-glitch;
+    }
   }
 }
 
