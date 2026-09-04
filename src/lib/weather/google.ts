@@ -27,7 +27,7 @@ import { z } from "@/lib/zod";
  */
 const SEARCH_URL = "https://www.google.com/search";
 
-const GOOGLE_WEATHER_ACCESS: AccessRequest = {
+export const GOOGLE_WEATHER_ACCESS: AccessRequest = {
   origins: [`${new URL(SEARCH_URL).origin}/*`]
 };
 

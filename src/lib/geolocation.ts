@@ -1,5 +1,5 @@
 import type { AccessRequest } from "./permissions";
-import { hasAccess, requestAccess } from "./permissions";
+import { hasAccess } from "./permissions";
 import type { GeoLocation } from "./storage/schema";
 import { z } from "./zod";
 
@@ -15,17 +15,12 @@ const COORDINATE_DECIMALS = 4;
  * through this one request - the asking and the checking cannot drift apart, and nothing else has
  * to spell the permission out a second time.
  */
-const LOCATION_ACCESS: AccessRequest = {
+export const LOCATION_ACCESS: AccessRequest = {
   permissions: ["geolocation"]
 };
 
 export async function hasLocationAccess(): Promise<boolean> {
   return hasAccess(LOCATION_ACCESS);
-}
-
-/** Only ever called straight out of a click: a permission prompt needs the gesture that asked for it. */
-export async function requestLocationAccess(): Promise<boolean> {
-  return requestAccess(LOCATION_ACCESS);
 }
 
 /** How precise a coordinate is kept, wherever one is written down - the device's or a typed one. */

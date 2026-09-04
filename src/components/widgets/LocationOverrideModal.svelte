@@ -3,7 +3,11 @@
   import { LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN } from "@/lib/storage/schema";
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
   import Modal from "@/components/modals/Modal.svelte";
-  import { hasLocationAccess, requestLocationAccess, roundCoordinate } from "@/lib/geolocation";
+  import { GOOGLE_WEATHER_ACCESS } from "@/lib/weather/google";
+  import { hasLocationAccess, LOCATION_ACCESS, roundCoordinate } from "@/lib/geolocation";
+  import { requestAccess } from "@/lib/permissions";
+  import { settings } from "@/lib/storage/settings.svelte";
+  import { WeatherSourceId } from "@/lib/weather/sources";
   import { z } from "@/lib/zod";
   import { untrack } from "svelte";
 
@@ -101,9 +105,25 @@
   });
 
   /**
-   * The request goes first and nothing is awaited before it: a permission prompt needs the gesture
-   * that asked for it, and an await spends that gesture. A reader who handed the location over in
-   * an earlier session is never asked again, and one who says no keeps the typed coordinates below.
+   * Google answers the weather for a place it can name, so the reading is only as good as the
+   * location - which makes the moment a location is set the moment its site is worth asking for.
+   * Granted, the widget reads Google from here on; refused, it goes on reading open-meteo and the
+   * reader loses nothing they had.
+   */
+  async function useGoogleWeather(isGranted: boolean) {
+    if (!isGranted) {
+      return;
+    }
+
+    settings.weatherSource.current = WeatherSourceId.google;
+  }
+
+  /**
+   * One prompt for the two things this needs, because a gesture is spent by the first await and a
+   * second request would find none left. The device tells us where the reader is; Google names it.
+   *
+   * A reader who handed both over in an earlier session is never asked again, and one who says no
+   * keeps the typed coordinates below.
    */
   async function followDevice() {
     error = "";
@@ -113,17 +133,26 @@
       return;
     }
 
-    const isAllowed = await requestLocationAccess();
+    const isAllowed = await requestAccess({
+      permissions: LOCATION_ACCESS.permissions,
+      origins: GOOGLE_WEATHER_ACCESS.origins
+    });
     isDeviceAllowed = isAllowed;
     isAccessRefused = !isAllowed;
     if (!isAllowed) {
       return;
     }
 
+    await useGoogleWeather(isAllowed);
     onFollowDevice();
   }
 
-  function confirm(e: SubmitEvent) {
+  /**
+   * The site is asked for straight out of the submit, before anything is awaited, and the location is
+   * saved either way: the coordinates are what the reader came to set, and Google is the bonus on
+   * top. Nothing asks for the device here - they have just said where they are by hand.
+   */
+  async function confirm(e: SubmitEvent) {
     e.preventDefault();
     const parsed = coordinatesSchema.safeParse({
       latitude: draft.latitude,
@@ -135,8 +164,10 @@
       return;
     }
 
+    const isGranted = await requestAccess(GOOGLE_WEATHER_ACCESS);
     const latitude = roundCoordinate(parsed.data.latitude);
     const longitude = roundCoordinate(parsed.data.longitude);
+    await useGoogleWeather(isGranted);
     onSave({
       name: draft.name.trim() || `${latitude}, ${longitude}`,
       latitude,
@@ -150,7 +181,7 @@
     <h2 class="cyber-dialog__title location__title">Location Override</h2>
   </header>
 
-  <form class="stack" onfocusin={() => (isEditing = true)} onsubmit={confirm}>
+  <form class="stack" onfocusin={() => (isEditing = true)} onsubmit={e => void confirm(e)}>
     <button
       class="location__sync"
       class:is-active={isDeviceLit}
