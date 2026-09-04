@@ -15,9 +15,6 @@
 
   const SECTION_ID = "copilot";
   const TITLE = "Copilot";
-
-  /** Windows is where both families can be read; a machine with neither has nothing to put here. */
-  const IS_READABLE = JOURNEYS_AVAILABILITY === JourneysAvailability.readable || IS_WINDOWS;
 </script>
 
 <CardSection
@@ -25,7 +22,7 @@
   card={copilotCard}
   {glitching}
   icon={iconBot}
-  isReadable={IS_READABLE}
+  isReadable={IS_WINDOWS}
   read={readCopilot}
   title={TITLE}
   {unavailable} />

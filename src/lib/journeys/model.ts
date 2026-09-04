@@ -1,5 +1,5 @@
 import { MAX_CARDS } from "@/lib/companion/bridge";
-import { validRecords } from "@/lib/companion/model";
+import { nonEmptyTextSchema, validRecords } from "@/lib/companion/model";
 import { z } from "@/lib/zod";
 
 /**
@@ -9,7 +9,7 @@ import { z } from "@/lib/zod";
 const timestampSchema = z.string().refine(value => !Number.isNaN(Date.parse(value)));
 
 const journeySourceSchema = z.object({
-  title: z.string().min(1),
+  title: nonEmptyTextSchema,
   url: z.url()
 });
 
@@ -22,12 +22,12 @@ const journeySourceSchema = z.object({
  * first prompt as present and filters out the navigation and backfill cards that carry none.
  */
 const journeySchema = z.object({
-  id: z.string().min(1),
-  title: z.string().min(1),
-  summary: z.string().min(1),
-  contextReason: z.string().min(1),
-  buttonText: z.string().min(1),
-  copilotPrompts: z.tuple([z.string().min(1)], z.string()),
+  id: nonEmptyTextSchema,
+  title: nonEmptyTextSchema,
+  summary: nonEmptyTextSchema,
+  contextReason: nonEmptyTextSchema,
+  buttonText: nonEmptyTextSchema,
+  copilotPrompts: z.tuple([nonEmptyTextSchema], z.string()),
   sourceInfos: z.tuple([journeySourceSchema], journeySourceSchema),
   rankScore: z.number().default(0),
   validStartTime: timestampSchema,

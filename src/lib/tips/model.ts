@@ -1,9 +1,9 @@
 import { MAX_CARDS } from "@/lib/companion/bridge";
-import { validRecords } from "@/lib/companion/model";
+import { nonEmptyTextSchema, validRecords } from "@/lib/companion/model";
 import { z } from "@/lib/zod";
 
 const MS_PER_MINUTE = 60_000;
-const MS_PER_DAY = 86_400_000;
+export const MS_PER_DAY = 86_400_000;
 
 /**
  * One tip as Edge cached it, narrowed to the fields this page shows or acts on - `z.object` drops
@@ -16,12 +16,12 @@ const MS_PER_DAY = 86_400_000;
  * the other.
  */
 const tipSchema = z.object({
-  id: z.string().min(1),
-  title: z.string().min(1),
-  description: z.string().min(1),
-  prompt: z.string().min(1),
-  cta: z.string().min(1),
-  category: z.string().min(1)
+  id: nonEmptyTextSchema,
+  title: nonEmptyTextSchema,
+  description: nonEmptyTextSchema,
+  prompt: nonEmptyTextSchema,
+  cta: nonEmptyTextSchema,
+  category: nonEmptyTextSchema
 });
 
 export type Tip = z.infer<typeof tipSchema>;

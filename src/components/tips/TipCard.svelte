@@ -24,9 +24,6 @@
 <style>
   .category {
     color: var(--cp-text-dimmer);
-    font-family: var(--cp-mono);
-    font-size: 0.75rem;
-    line-height: 1.125rem;
     letter-spacing: 0.05em;
     text-transform: uppercase;
   }

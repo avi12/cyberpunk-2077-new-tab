@@ -114,11 +114,15 @@
     line-height: 1.3125rem;
   }
 
+  /* The trail's type is the card's to set, whichever family filled it in. */
   .card__meta {
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem 0.5rem;
     margin-top: auto;
+    font-family: var(--cp-mono);
+    font-size: 0.75rem;
+    line-height: 1.125rem;
   }
 
   /* The one thing the card is for, so it carries the theme's brightest weight. */
