@@ -6,7 +6,7 @@
   import type { Snippet } from "svelte";
   import { withViewTransition } from "@/lib/view-transition";
 
-  const { id, title, icon, isReadable, read, card, unavailable, glitching = false }: {
+  const { id, title, icon, isReadable, read, card, unavailable, action, glitching = false }: {
     /** Names the section's view transition, and the row it remembers between tabs. */
     id: string;
     title: string;
@@ -17,6 +17,8 @@
     card: Snippet<[TCard]>;
     /** What the section says where it cannot be read, which is its own to say. */
     unavailable: Snippet;
+    /** A control that belongs to this section rather than to the page, drawn beside its title. */
+    action?: Snippet;
     glitching?: boolean;
   } = $props();
 
@@ -96,10 +98,15 @@
 
 {#if isVisible}
   <section style:view-transition-name={id} class="section" class:glitch={glitching}>
-    <h2 class="section__title">
-      {@html icon}
-      <span class="hover-glitch" data-text={title}>{title}</span>
-    </h2>
+    <div class="section__head">
+      <h2 class="section__title">
+        {@html icon}
+        <span class="hover-glitch" data-text={title}>{title}</span>
+      </h2>
+      {#if action}
+        {@render action()}
+      {/if}
+    </div>
 
     {#if !isReadable}
       {@render unavailable()}
@@ -146,11 +153,17 @@
     margin-bottom: 2rem;
   }
 
+  .section__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
   .section__title {
     display: flex;
     gap: 0.5rem;
     align-items: center;
-    margin-bottom: 1rem;
     color: var(--cp-accent);
     font-family: var(--cp-mono);
     font-size: 1.5rem;

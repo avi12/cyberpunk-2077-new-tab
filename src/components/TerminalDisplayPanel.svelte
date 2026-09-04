@@ -6,7 +6,6 @@
   import iconMonitor from "@/assets/icons/monitor.svg?raw";
   import OptionGroup from "./OptionGroup.svelte";
   import PanelSection from "./terminal/PanelSection.svelte";
-  import PromptTargetSection from "./terminal/PromptTargetSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
   import { withViewTransition } from "@/lib/view-transition";
   import SolidColorsSection from "./terminal/SolidColorsSection.svelte";
@@ -35,7 +34,6 @@
 
     <SoundSection />
 
-    <PromptTargetSection />
 
     <WeatherSourceSection />
 

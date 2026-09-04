@@ -6,6 +6,7 @@
   import type { CopilotCard } from "@/lib/companion/copilot";
   import { CopilotKind, readCopilot } from "@/lib/companion/copilot";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
+  import PromptTargetPicker from "./PromptTargetPicker.svelte";
   import { IS_WINDOWS } from "@/lib/companion/platform";
   import JourneyCard from "@/components/journeys/JourneyCard.svelte";
   import { JOURNEYS_AVAILABILITY, JOURNEYS_SUPPORT_URL, JourneysAvailability } from "@/lib/journeys/platform";
@@ -19,6 +20,7 @@
 
 <CardSection
   id={SECTION_ID}
+  {action}
   card={copilotCard}
   {glitching}
   icon={iconBot}
@@ -26,6 +28,10 @@
   read={readCopilot}
   title={TITLE}
   {unavailable} />
+
+{#snippet action()}
+  <PromptTargetPicker />
+{/snippet}
 
 {#snippet copilotCard(card: CopilotCard)}
   {#if card.kind === CopilotKind.journey}
