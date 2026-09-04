@@ -15,6 +15,9 @@
     onCancel: () => void;
   } = $props();
 
+  /** A rename form and the add form can be open together, so each one labels its own field. */
+  const nameFieldId = $props.id();
+
   const isCyan = $derived(variant === "cyan");
 
   function onSubmit(e: SubmitEvent) {
@@ -26,9 +29,9 @@
 <form class="name-form" class:name-form--cyan={isCyan} onsubmit={onSubmit}>
   <h3 class="name-form__heading">{heading}</h3>
   <div class="row">
-    <label class="visually-hidden" for="category-name">{heading}</label>
+    <label class="visually-hidden" for={nameFieldId}>{heading}</label>
     <!-- svelte-ignore a11y_autofocus -->
-    <input id="category-name" class="cyber-input" autofocus placeholder="Category name" type="text" bind:value />
+    <input id={nameFieldId} class="cyber-input" autofocus placeholder="Category name" type="text" bind:value />
     <button
       class="cyber-button"
       class:cyber-button--cyan={isCyan}

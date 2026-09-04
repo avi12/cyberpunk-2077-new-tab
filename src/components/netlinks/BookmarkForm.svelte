@@ -26,6 +26,11 @@
   const TITLE_LABEL = "Title";
   const URL_LABEL = "URL";
 
+  /** An add form and an edit form can sit in the same grid, so each one labels its own fields. */
+  const instanceId = $props.id();
+  const urlFieldId = `${instanceId}-url`;
+  const titleFieldId = `${instanceId}-title`;
+
   let title = $state(untrack(() => bookmarkToEdit?.title ?? ""));
   let url = $state(untrack(() => bookmarkToEdit?.url ?? ""));
   let isResolving = $state(false);
@@ -96,9 +101,9 @@
 </script>
 
 <form class="link-card cyber-glass" novalidate onsubmit={e => void submit(e)}>
-  <label class="visually-hidden" for="link-url">{URL_LABEL}</label>
+  <label class="visually-hidden" for={urlFieldId}>{URL_LABEL}</label>
   <input
-    id="link-url"
+    id={urlFieldId}
     class="link-card__field"
     class:is-missing={isUrlMissing}
     {@attach focusUrl}
@@ -109,9 +114,9 @@
     type="text"
     bind:value={url} />
 
-  <label class="visually-hidden" for="link-title">{TITLE_LABEL}</label>
+  <label class="visually-hidden" for={titleFieldId}>{TITLE_LABEL}</label>
   <input
-    id="link-title"
+    id={titleFieldId}
     class="link-card__field link-card__field--title"
     onkeydown={onKeyDown}
     placeholder={isResolving ? SCANNING_PLACEHOLDER : TITLE_LABEL}
