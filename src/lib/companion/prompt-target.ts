@@ -6,24 +6,24 @@ import { SearchEngineId } from "@/lib/storage/schema";
 /**
  * Where a card's action hands its prompt.
  *
- * Three kinds of destination, and the reader only ever notices the third. Most answer a prompt
- * carried in their URL the moment they open, and a link is the whole feature. Claude reads the
- * prompt out of the URL but waits to be told to send it. Copilot - where the cards come from -
- * discards every query parameter, so there is nothing to carry it in at all.
+ * Two kinds. Most answer a prompt carried in their URL the moment they open, and a link is the whole
+ * feature. Claude reads the prompt out of the URL but waits to be told to send it, which is the same
+ * problem with a different half missing, and has the same answer: ask for the site, and let a script
+ * press the button. Whichever site that is, `compose/sites.ts` knows how.
  *
- * The last two are the same problem with different halves missing, and the same answer: ask for the
- * site, and let a script press the button. Whichever site that is, `compose/sites.ts` knows how.
+ * Copilot is not among them. It discards every query parameter, so a link cannot carry a prompt
+ * there at all - and Bing's AI mode is Copilot, which is why Bing names no AI mode either.
  *
  * The URLs are not restated here. Each destination names a search engine, and that table already
  * knows where to post and under what field name - the same knowledge either way.
  */
 
 export enum PromptTargetId {
-  copilot = "copilot",
   chatGpt = "chatgpt",
   claude = "claude",
   perplexity = "perplexity",
-  googleAiMode = "google-ai"
+  googleAiMode = "google-ai",
+  askBrave = "brave-ai"
 }
 
 type PromptTarget = {
@@ -35,10 +35,6 @@ type PromptTarget = {
 };
 
 export const PROMPT_TARGETS: Record<PromptTargetId, PromptTarget> = {
-  [PromptTargetId.copilot]: {
-    label: "Copilot",
-    composeSiteId: ComposeSiteId.copilot
-  },
   [PromptTargetId.chatGpt]: {
     label: "ChatGPT",
     engineId: SearchEngineId.chatGpt
@@ -54,15 +50,39 @@ export const PROMPT_TARGETS: Record<PromptTargetId, PromptTarget> = {
   [PromptTargetId.googleAiMode]: {
     label: "Google AI Mode",
     engineId: SearchEngineId.googleAiMode
+  },
+  [PromptTargetId.askBrave]: {
+    label: "Ask Brave",
+    engineId: SearchEngineId.braveAi
   }
 };
 
-/** Copilot, because the cards are Copilot's - a reader who prefers another says so. */
-export const DEFAULT_PROMPT_TARGET = PromptTargetId.copilot;
+/** Where a reader lands who has picked nothing and searches with an engine that has no AI mode. */
+const DEFAULT_PROMPT_TARGET = PromptTargetId.googleAiMode;
 
-/** A target this build no longer offers reads as none, rather than as a destination that is not there. */
-export function withShippedPromptTarget(stored: PromptTargetId): PromptTargetId {
-  return stored in PROMPT_TARGETS ? stored : DEFAULT_PROMPT_TARGET;
+/**
+ * The destination that matches how the reader already searches: Google's reader gets Google AI Mode,
+ * Brave's gets Ask Brave. An engine that is itself an AI mode answers for itself, so picking Ask
+ * Brave in the bar and then asking a card does not send them somewhere else.
+ *
+ * Bing names none. Its AI mode is Copilot, which redirects and drops the query on the way - measured
+ * - so there is nothing to hand a prompt to, and its reader falls back like anyone else's.
+ */
+export function promptTargetForEngine(engineId: string): PromptTargetId {
+  const engine = engineById(engineId);
+  const wanted = engine.aiEngineId ?? engine.id;
+
+  return Object.values(PromptTargetId).find(id => PROMPT_TARGETS[id].engineId === wanted)
+    ?? DEFAULT_PROMPT_TARGET;
+}
+
+/**
+ * A pick this build no longer offers - Copilot, for anyone who chose it while it was on the list -
+ * reads as no pick at all, which puts the reader back on the engine they search with rather than on
+ * some third destination they never asked for.
+ */
+export function withShippedPromptTarget(stored: PromptTargetId | null): PromptTargetId | null {
+  return stored && stored in PROMPT_TARGETS ? stored : null;
 }
 
 export const PROMPT_TARGET_OPTIONS: SelectOption<PromptTargetId>[] =

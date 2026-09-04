@@ -1,6 +1,7 @@
 <script lang="ts">
   import { composeAccess } from "@/lib/compose/access.svelte";
   import { composeSiteFor, PROMPT_TARGET_OPTIONS, PromptTargetId } from "@/lib/companion/prompt-target";
+  import { promptDestination } from "@/lib/companion/prompt-destination";
   import OptionGroup from "@/components/OptionGroup.svelte";
   import iconSettings from "@/assets/icons/settings.svg?raw";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -64,7 +65,7 @@
     label={LABEL}
     onSelect={choose}
     options={PROMPT_TARGET_OPTIONS}
-    selected={settings.promptTarget.current} />
+    selected={promptDestination.targetId} />
 </div>
 
 <style>

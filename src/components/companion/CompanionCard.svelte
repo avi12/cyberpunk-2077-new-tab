@@ -1,7 +1,8 @@
 <script lang="ts">
   import iconChevronRight from "@/assets/icons/chevron-right.svg?raw";
-  import { COPILOT_KINDS, COPILOT_URL } from "@/lib/companion/copilot";
+  import { COPILOT_KINDS } from "@/lib/companion/copilot";
   import { composeSiteFor, promptUrl } from "@/lib/companion/prompt-target";
+  import { promptDestination } from "@/lib/companion/prompt-destination";
   import type { ComposeSiteId } from "@/lib/compose/sites";
   import type { CopilotKind } from "@/lib/companion/copilot";
   import { handOffPrompt } from "@/lib/compose/deliver";
@@ -32,7 +33,7 @@
 
   let notice = $state("");
 
-  const targetId = $derived(settings.promptTarget.current);
+  const targetId = $derived(promptDestination.targetId);
 
   /**
    * The site a script has to finish the prompt off at, and nothing for the destinations where
@@ -42,14 +43,12 @@
 
   /**
    * One address for the link and the hand-off alike, so a middle-click cannot land anywhere a plain
-   * click would not. Copilot throws away every query parameter it is handed - `q`, `prompt`, `text`,
-   * a hash, on every path - so nothing of the prompt can travel in its link, and its front page is
-   * the whole of the address.
+   * click would not. Every destination now carries the prompt in its own URL, so there is always one.
    */
   const destination = $derived(promptUrl({
     targetId,
     prompt
-  }) ?? COPILOT_URL);
+  }) ?? "");
 
   /**
    * Deciding here and nowhere else, because a click's default is spent the moment this returns: an

@@ -3,6 +3,7 @@
   import { companion } from "@/lib/companion/connection.svelte";
   import { composeAccess } from "@/lib/compose/access.svelte";
   import { composeSiteFor, PROMPT_TARGETS } from "@/lib/companion/prompt-target";
+  import { promptDestination } from "@/lib/companion/prompt-destination";
   import CompanionNotice from "./CompanionNotice.svelte";
   import { IS_WINDOWS } from "@/lib/companion/platform";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -39,8 +40,8 @@
   const isConnected = $derived(companion.state === CompanionState.connected);
 
   /** Whatever destination the reader picked, since that is the one a card will be asking. */
-  const targetLabel = $derived(PROMPT_TARGETS[settings.promptTarget.current].label);
-  const siteId = $derived(composeSiteFor(settings.promptTarget.current));
+  const targetLabel = $derived(PROMPT_TARGETS[promptDestination.targetId].label);
+  const siteId = $derived(composeSiteFor(promptDestination.targetId));
 
   /**
    * Offered on an answer and never on a silence: `granted` says nothing at all about a site the

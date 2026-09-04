@@ -127,7 +127,7 @@ export const settings = {
   }),
   promptTarget: new Setting({
     item: promptTargetItem,
-    schema: z.enum(PromptTargetId),
+    schema: z.enum(PromptTargetId).nullable(),
     normalize: withShippedPromptTarget
   }),
   activeSearchEngine: new Setting({

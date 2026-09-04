@@ -2,7 +2,6 @@ import type { CompanionRead } from "./bridge";
 import { CompanionState, MAX_CARDS } from "./bridge";
 import iconMap from "@/assets/icons/map.svg?raw";
 import iconSparkles from "@/assets/icons/sparkles.svg?raw";
-import { COMPOSE_SITES, ComposeSiteId } from "@/lib/compose/sites";
 import { readJourneys } from "@/lib/journeys/bridge";
 import type { Journey } from "@/lib/journeys/model";
 import { readTips } from "@/lib/tips/bridge";
@@ -19,9 +18,6 @@ export enum CopilotKind {
   journey = "journey",
   tip = "tip"
 }
-
-/** Where a card sends the reader, which the compose table owns because it is also a permission. */
-export const COPILOT_URL = COMPOSE_SITES[ComposeSiteId.copilot].url;
 
 /** What a card of either kind wears: the label and mark Edge puts above its title. */
 export const COPILOT_KINDS = {

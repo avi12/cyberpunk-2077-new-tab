@@ -85,6 +85,11 @@ export type SearchEngine = {
   /** Anything the engine needs alongside the query, carried as hidden fields. */
   params?: Record<string, string>;
   /**
+   * The AI mode this engine answers a prompt in, where it has one worth offering. Bing's is Copilot,
+   * which discards the query and cannot be linked to, so it names none and the reader falls back.
+   */
+  aiEngineId?: SearchEngineId;
+  /**
    * Named only by an engine that fills its box on arrival and then waits to be told to send it. It
    * is what turns a submit into a question about the site, so the last press can be made for the
    * reader rather than left to them.

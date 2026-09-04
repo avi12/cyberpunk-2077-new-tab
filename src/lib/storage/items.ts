@@ -1,4 +1,4 @@
-import { DEFAULT_PROMPT_TARGET, type PromptTargetId } from "../companion/prompt-target";
+import type { PromptTargetId } from "../companion/prompt-target";
 import type { ComposeSiteId } from "../compose/sites";
 import { DEFAULT_WEATHER_SOURCE, type WeatherSourceId } from "../weather/sources";
 import {
@@ -77,7 +77,11 @@ export const tabFaviconItem = storage.defineItem<string>("local:tabFavicon", { f
 
 export const playSoundsItem = storage.defineItem<boolean>("local:playSounds", { fallback: DEFAULT_PLAY_SOUNDS });
 
-export const promptTargetItem = storage.defineItem<PromptTargetId>("local:promptTarget", { fallback: DEFAULT_PROMPT_TARGET });
+/**
+ * Nothing stored means the destination follows the engine the reader searches with, rather than a
+ * second setting that can disagree with the first. Only an explicit pick is ever written here.
+ */
+export const promptTargetItem = storage.defineItem<PromptTargetId | null>("local:promptTarget", { fallback: null });
 
 export const bookmarksSeededItem = storage.defineItem<boolean>("local:bookmarksSeeded", { fallback: false });
 

@@ -53,6 +53,7 @@ export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
     name: "Google",
     action: "https://www.google.com/search",
     queryParam: "q",
+    aiEngineId: SearchEngineId.googleAiMode,
     placeholder: "Search the Net..."
   },
   {
@@ -108,6 +109,7 @@ export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
     name: "Brave Search",
     action: "https://search.brave.com/search",
     queryParam: "q",
+    aiEngineId: SearchEngineId.braveAi,
     placeholder: "Search the Net securely..."
   },
   {
