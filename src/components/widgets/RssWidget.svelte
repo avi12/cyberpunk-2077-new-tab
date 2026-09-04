@@ -4,6 +4,8 @@
   import { readProxied } from "@/lib/cors-proxy";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import Modal from "@/components/modals/Modal.svelte";
+  import { parseFeed } from "@/lib/rss/model";
+  import type { FeedItem } from "@/lib/rss/model";
   import iconRss from "@/assets/icons/rss.svg?raw";
   import iconSettings from "@/assets/icons/settings.svg?raw";
   import { untrack } from "svelte";
@@ -13,11 +15,6 @@
   import iconWifiOff from "@/assets/icons/wifi-off.svg?raw";
 
   const { config, onConfigChange }: WidgetProps = $props();
-
-  type FeedItem = {
-    title: string;
-    link: string;
-  };
 
   const REFRESH_MS = 900_000;
   const MIN_ITEMS = 1;
@@ -36,21 +33,6 @@
   const feedUrl = $derived(config.feedUrl ?? "");
   const maxItems = $derived(config.maxItems ?? DEFAULT_MAX_ITEMS);
 
-  function parseFeed(xml: string): FeedItem[] {
-    const document_ = new DOMParser().parseFromString(xml, "text/xml");
-    if (document_.querySelector("parsererror")) {
-      throw new Error("Invalid XML");
-    }
-
-    return [...document_.querySelectorAll("item")]
-      .map(item => ({
-        title: item.querySelector("title")?.textContent?.trim() ?? "",
-        link: item.querySelector("link")?.textContent?.trim() ?? ""
-      }))
-      .filter(item => item.title && item.link)
-      .slice(0, maxItems);
-  }
-
   async function refresh() {
     if (!feedUrl) {
       items = [];
@@ -66,7 +48,10 @@
         throw new Error(`No proxy could read ${feedUrl}`);
       }
 
-      items = parseFeed(feed);
+      items = parseFeed({
+        xml: feed,
+        maxItems
+      });
     } catch {
       isFailed = true;
       items = [];
