@@ -19,6 +19,10 @@
    */
   const COPIED_NOTICE = "Prompt's on your clipboard - paste it in and send it yourself";
   const UNCOPIED_NOTICE = "Couldn't copy the prompt - opening the site, you'll have to type it in";
+  const EMPTY_NOTICE = "Scan failed - nothing to scan";
+
+  /** Long enough that the scan reads as a scan rather than a flicker on the way to the answer. */
+  const EMPTY_SCAN_MS = 1000;
 
   let query = $state("");
   let isScanning = $state(false);
@@ -65,6 +69,28 @@
   }
 
   /**
+   * An empty box still scans. The button is the one moving part on the page, and a press that draws
+   * no answer at all reads as a dead control rather than as an empty query - so it runs the same
+   * scan every other search runs, and then reports what it turned up, which is nothing.
+   */
+  async function scanNothing() {
+    if (isScanning) {
+      return;
+    }
+
+    isScanning = true;
+    notice = "";
+    await new Promise(resolve => setTimeout(resolve, EMPTY_SCAN_MS));
+    isScanning = false;
+    notice = EMPTY_NOTICE;
+  }
+
+  /** A failure is about what was in the box, so it stops being true the moment that changes. */
+  function clearNotice() {
+    notice = "";
+  }
+
+  /**
    * Every engine that answers a query on arrival is left to the form: the browser builds the address
    * out of the fields and navigates, which is why such an engine needs nothing here but an action and
    * a field name.
@@ -77,6 +103,7 @@
   async function onSubmit(e: SubmitEvent) {
     if (!query.trim()) {
       e.preventDefault();
+      await scanNothing();
 
       return;
     }
@@ -144,6 +171,7 @@
       name={engine.queryParam}
       class="search__input"
       class:scanning-effect={isScanning}
+      oninput={clearNotice}
       placeholder={engine.placeholder}
       type="text"
       bind:value={query} />
