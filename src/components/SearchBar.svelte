@@ -19,15 +19,17 @@
    */
   const COPIED_NOTICE = "Prompt's on your clipboard - paste it in and send it yourself";
   const UNCOPIED_NOTICE = "Couldn't copy the prompt - opening the site, you'll have to type it in";
-  const EMPTY_NOTICE = "Scan failed";
-
   /** Long enough that the scan reads as a scan rather than a flicker on the way to the answer. */
   const EMPTY_SCAN_MS = 1000;
 
   let query = $state("");
   let isScanning = $state(false);
+  let isScanFailed = $state(false);
   let notice = $state("");
   const engine = $derived(engineById(settings.activeSearchEngine.current));
+
+  /** Both states speak over the label, so the label steps aside for either. */
+  const isAnswering = $derived(isScanning || isScanFailed);
 
   /**
    * What the browser already allows is only known by asking it, and a submit cannot stop to ask: a
@@ -78,16 +80,17 @@
       return;
     }
 
+
     isScanning = true;
-    notice = "";
+    isScanFailed = false;
     await new Promise(resolve => setTimeout(resolve, EMPTY_SCAN_MS));
     isScanning = false;
-    notice = EMPTY_NOTICE;
+    isScanFailed = true;
   }
 
   /** A failure is about what was in the box, so it stops being true the moment that changes. */
-  function clearNotice() {
-    notice = "";
+  function clearFailure() {
+    isScanFailed = false;
   }
 
   /**
@@ -171,15 +174,17 @@
       name={engine.queryParam}
       class="search__input"
       class:scanning-effect={isScanning}
-      oninput={clearNotice}
+      oninput={clearFailure}
       placeholder={engine.placeholder}
       type="text"
       bind:value={query} />
 
-    <button class="search__submit" type="submit">
-      <span class:is-hidden={isScanning}>SCAN</span>
+    <button class="search__submit" class:search__submit--failed={isScanFailed} type="submit">
+      <span class:is-hidden={isAnswering}>SCAN</span>
       {#if isScanning}
-        <span class="search__scanning scanning-text">SCANNING...</span>
+        <span class="search__overlay scanning-text">SCANNING...</span>
+      {:else if isScanFailed}
+        <span class="search__overlay">SCAN FAILED</span>
       {/if}
     </button>
   </form>
@@ -302,9 +307,10 @@
     overflow: hidden;
 
     /*
-     * "SCANNING..." is laid over the label rather than in the flow, so it cannot widen the button
-     * itself. Measured at 97px in the mono face this button uses; 7rem is that with room to spare,
-     * and it only matters at the narrow padding.
+     * "SCANNING..." and "SCAN FAILED" are laid over the label rather than in the flow, so neither
+     * can widen the button itself. They are the same eleven characters; measured at 97px in the mono
+     * face this button uses, and 7rem is that with room to spare. It only matters at the narrow
+     * padding.
      */
     min-width: 7rem;
     padding: 0 1.5rem;
@@ -322,6 +328,13 @@
       border-color: var(--cp-accent-lo);
       background: var(--cp-accent-lo);
     }
+
+    /* A press that found nothing says so where the press was, and stops looking like a live button. */
+    &.search__submit--failed {
+      border-color: var(--cp-danger);
+      background: var(--cp-danger);
+      color: var(--cp-text);
+    }
   }
 
   /* The label stays in flow so the button keeps its width while "SCANNING..." overlays it. */
@@ -329,7 +342,8 @@
     opacity: 0%;
   }
 
-  .search__scanning {
+  /* Both answers are laid over the label rather than in the flow, so neither widens the button. */
+  .search__overlay {
     position: absolute;
     inset: 0;
     display: flex;
