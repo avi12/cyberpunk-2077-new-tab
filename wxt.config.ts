@@ -10,13 +10,6 @@ import { defineConfig } from "wxt";
 const COMPANION_PERMISSIONS = ["nativeMessaging"];
 
 /**
- * Where the reader is, which only the weather wants and only once they ask it to find them. Optional
- * rather than granted at install: a new tab page that asks for your location before it has drawn
- * anything has asked too early, and a reader who types their city in never needs to be asked at all.
- */
-const LOCATION_PERMISSIONS = ["geolocation"];
-
-/**
  * The sites a prompt can be finished off at, so it need not go by way of the clipboard. Spelled out
  * again here, and unavoidably: a manifest is built by Node before any of `src/` is bundled, so
  * `compose/sites.ts` cannot be the one that says it - only the one that has to agree with it.
@@ -72,7 +65,10 @@ export default defineConfig({
     // timeapi, allorigins and bigdatacloud all answer with `Access-Control-Allow-Origin: *`, and
     // Google's authorize page is opened in a window rather than fetched.
     //
-    // Where the reader is, and Google's weather, are asked for at the moment they are used instead.
+    // Google's weather is asked for at the moment it is used. Where the reader is needs no extension
+    // permission at all: an extension page raises the browser's own location prompt like any origin,
+    // and `geolocation` is one of the permissions Chromium refuses to make optional - declaring it
+    // there produced "only permissions specified in the manifest may be requested" at the click.
     permissions: [
       "search",
       "topSites",
@@ -91,18 +87,11 @@ export default defineConfig({
           gecko: {
             id: FIREFOX_ID
           }
-        },
-        /*
-         * Firefox is offered the location it can act on and nothing else. `optional_host_permissions`
-         * is the key it only learned in 128, and declaring it would pin a `strict_min_version` that
-         * locks older readers out of the whole extension - so Google's weather and the compose sites
-         * are Chromium's, and Firefox falls back to what needs no host at all.
-         */
-        optional_permissions: LOCATION_PERMISSIONS
+        }
       }
       : {
         key: publicKey,
-        optional_permissions: [...COMPANION_PERMISSIONS, ...LOCATION_PERMISSIONS],
+        optional_permissions: COMPANION_PERMISSIONS,
         optional_host_permissions: [...COMPOSE_ORIGINS, WEATHER_ORIGIN]
       }),
     author: {

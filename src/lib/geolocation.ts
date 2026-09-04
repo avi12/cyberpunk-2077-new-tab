@@ -1,26 +1,36 @@
-import type { AccessRequest } from "./permissions";
-import { hasAccess } from "./permissions";
 import type { GeoLocation } from "./storage/schema";
 import { z } from "./zod";
 
 const POSITION_MAX_AGE_MS = 120_000;
 const POSITION_TIMEOUT_MS = 8000;
 
+/**
+ * What a reader who asked outright is given, which has to outlast them reading the browser's prompt
+ * and deciding. The short timeout is for the silent read on load, where nothing is waiting on a
+ * person; racing a human with it is how a granted location arrived after the code had given up.
+ */
+const ASKED_TIMEOUT_MS = 120_000;
+
 const REVERSE_GEOCODE_URL = "https://api.bigdatacloud.net/data/reverse-geocode-client";
 
 const COORDINATE_DECIMALS = 4;
 
 /**
- * The extension does not install with the reader's location, so every read of the device goes
- * through this one request - the asking and the checking cannot drift apart, and nothing else has
- * to spell the permission out a second time.
+ * Whether the browser would hand the position over without asking. The extension declares no
+ * `geolocation` permission - Chromium refuses to make that one optional, and an extension page
+ * raises the ordinary site prompt anyway - so the site's own answer is the only one that matters.
+ *
+ * `prompt` counts as no: a page that reads the device on load would raise that prompt at a moment
+ * the reader asked for nothing.
  */
-export const LOCATION_ACCESS: AccessRequest = {
-  permissions: ["geolocation"]
-};
-
 export async function hasLocationAccess(): Promise<boolean> {
-  return hasAccess(LOCATION_ACCESS);
+  try {
+    const status = await navigator.permissions.query({ name: "geolocation" });
+
+    return status.state === "granted";
+  } catch {
+    return false;
+  }
 }
 
 /** How precise a coordinate is kept, wherever one is written down - the device's or a typed one. */
@@ -28,7 +38,7 @@ export function roundCoordinate(value: number): number {
   return Number(value.toFixed(COORDINATE_DECIMALS));
 }
 
-function currentPosition(): Promise<GeolocationCoordinates | null> {
+function currentPosition(timeoutMs: number): Promise<GeolocationCoordinates | null> {
   return new Promise(resolve => {
     if (!navigator.geolocation) {
       resolve(null);
@@ -41,7 +51,7 @@ function currentPosition(): Promise<GeolocationCoordinates | null> {
       () => resolve(null),
       {
         enableHighAccuracy: false,
-        timeout: POSITION_TIMEOUT_MS,
+        timeout: timeoutMs,
         maximumAge: POSITION_MAX_AGE_MS
       }
     );
@@ -89,7 +99,11 @@ async function detectLocation(): Promise<GeoLocation | null> {
     return null;
   }
 
-  const coords = await currentPosition();
+  return locationFrom(await currentPosition(POSITION_TIMEOUT_MS));
+}
+
+/** Coordinates given a name, or named after themselves where nothing can be found to call them. */
+async function locationFrom(coords: GeolocationCoordinates | null): Promise<GeoLocation | null> {
   if (!coords) {
     return null;
   }
@@ -116,6 +130,16 @@ async function detectLocation(): Promise<GeoLocation | null> {
 let inFlight: Promise<GeoLocation | null> | null = null;
 
 /** Null whenever the device cannot be read - not granted, unavailable, or refused on the spot. */
+/**
+ * The reader asking outright, which is the one moment the prompt belongs: this skips the guard and
+ * lets `getCurrentPosition` raise the browser's own question.
+ */
+export async function askDeviceLocation(): Promise<GeoLocation | null> {
+  inFlight = null;
+
+  return locationFrom(await currentPosition(ASKED_TIMEOUT_MS));
+}
+
 export function deviceLocation(): Promise<GeoLocation | null> {
   inFlight ??= detectLocation().then(fix => {
     if (!fix) {

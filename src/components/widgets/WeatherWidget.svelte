@@ -3,7 +3,7 @@
   import type { WeatherReading } from "@/lib/weather/model";
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
-  import { deviceLocation } from "@/lib/geolocation";
+  import { askDeviceLocation, deviceLocation } from "@/lib/geolocation";
   import { formatTemperature, temperatureUnit, WEATHER_ICONS, WEATHER_REFRESH_MS } from "@/lib/weather/model";
   import { fetchWeather } from "@/lib/weather/sources";
   import { GLITCH_SHORT_MS, Glitch } from "@/lib/glitch.svelte";
@@ -48,11 +48,18 @@
   /**
    * Read again rather than only clear the override: a reader who was already following the device
    * has just allowed the location, and nothing in the config changed for the effect below to notice.
+   *
+   * The modal stays up until there is a fix to show, and hears whether there was one - a device that
+   * answers nothing used to close the panel and leave the old city sitting there, which reads as the
+   * button having done nothing at all.
    */
   async function followDevice() {
     onConfigChange({ location: undefined });
-    isEditingLocation = false;
-    detected = await deviceLocation();
+    const fix = await askDeviceLocation();
+    detected = fix;
+    isEditingLocation = !fix;
+
+    return Boolean(fix);
   }
 
   $effect(() => {
@@ -126,7 +133,7 @@
   isOpen={isEditingLocation}
   {location}
   onClose={() => (isEditingLocation = false)}
-  onFollowDevice={() => void followDevice()}
+  onFollowDevice={followDevice}
   onSave={next => {
     onConfigChange({ location: next });
     isEditingLocation = false;

@@ -4,7 +4,7 @@
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
   import Modal from "@/components/modals/Modal.svelte";
   import { GOOGLE_WEATHER_ACCESS } from "@/lib/weather/google";
-  import { hasLocationAccess, LOCATION_ACCESS, roundCoordinate } from "@/lib/geolocation";
+  import { hasLocationAccess, roundCoordinate } from "@/lib/geolocation";
   import { requestAccess } from "@/lib/permissions";
   import { settings } from "@/lib/storage/settings.svelte";
   import { WeatherSourceId } from "@/lib/weather/sources";
@@ -23,12 +23,12 @@
     location: GeoLocation;
     onSave: (location: GeoLocation) => void;
     onClose: () => void;
-    onFollowDevice: () => void;
+    onFollowDevice: () => Promise<boolean>;
     isFollowingDevice: boolean;
   } = $props();
 
   const COORDINATES_ERROR = "Enter valid coordinates";
-  const ACCESS_REFUSED = "No location access - type your coordinates below instead";
+  const DEVICE_SILENT = "Couldn't get your location - type your coordinates below instead";
 
   function coordinateSchema({ min, max, label }: {
     min: number;
@@ -119,32 +119,25 @@
   }
 
   /**
-   * One prompt for the two things this needs, because a gesture is spent by the first await and a
-   * second request would find none left. The device tells us where the reader is; Google names it.
+   * Pressing this is the reader asking to be asked, so nothing here refuses on their behalf: the
+   * site request goes out, and the device raises its own prompt when the widget reads it.
    *
-   * A reader who handed both over in an earlier session is never asked again, and one who says no
-   * keeps the typed coordinates below.
+   * Only Google's site is asked for. Where the reader is needs no extension permission at all -
+   * `getCurrentPosition` raises the browser's own question, which is the one the button promised.
+   *
+   * A device that answers nothing, whether refused at the prompt or simply silent, leaves the panel
+   * open and says so, rather than closing on a city that never changed.
    */
   async function followDevice() {
     error = "";
-    if (isDeviceAllowed) {
-      onFollowDevice();
-
-      return;
+    if (!isDeviceAllowed) {
+      await useGoogleWeather(await requestAccess(GOOGLE_WEATHER_ACCESS));
     }
 
-    const isAllowed = await requestAccess({
-      permissions: LOCATION_ACCESS.permissions,
-      origins: GOOGLE_WEATHER_ACCESS.origins
-    });
-    isDeviceAllowed = isAllowed;
-    isAccessRefused = !isAllowed;
-    if (!isAllowed) {
-      return;
+    if (!await onFollowDevice()) {
+      isAccessRefused = true;
+      error = DEVICE_SILENT;
     }
-
-    await useGoogleWeather(isAllowed);
-    onFollowDevice();
   }
 
   /**
@@ -194,7 +187,7 @@
       Follow my location
     </button>
     {#if isAccessRefused}
-      <p class="cyber-error" role="alert">{ACCESS_REFUSED}</p>
+      <p class="cyber-error" role="alert">{DEVICE_SILENT}</p>
     {:else}
       <p class="location__caption">Read from this device on every load, and never stored</p>
     {/if}
