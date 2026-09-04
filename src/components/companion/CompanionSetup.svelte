@@ -2,6 +2,8 @@
   import { COMPANION_NAME, CompanionState, requestCompanionPermission } from "@/lib/companion/bridge";
   import { companion } from "@/lib/companion/connection.svelte";
   import { composeAccess } from "@/lib/compose/access.svelte";
+  import { requestComposeAccess } from "@/lib/compose/sites";
+  import { withViewTransition } from "@/lib/view-transition";
   import { composeSiteFor, PROMPT_TARGETS } from "@/lib/companion/prompt-target";
   import CompanionNotice from "./CompanionNotice.svelte";
   import { IS_WINDOWS } from "@/lib/companion/platform";
@@ -64,16 +66,25 @@
   });
 
   /**
+   * The asking and the answer are taken in two steps on purpose. A permission prompt needs the
+   * gesture that raised it, so the request cannot wait for a transition to start; the state it
+   * produces is what removes this whole section, and that is worth animating. `.setup` already
+   * carries the transition name for it.
+   *
    * A browser asked for an origin its loaded manifest has never heard of rejects rather than
    * answering no - which is what an extension that has not been reloaded since it gained one does.
-   * The answer is the same either way, so the offer simply stays up rather than the click breaking.
+   * That reads as a refusal, so the offer simply stays up rather than the click breaking.
    */
   async function allowSite() {
     if (!siteId) {
       return;
     }
 
-    await composeAccess.allow(siteId).catch(() => false);
+    const isGranted = await requestComposeAccess(siteId);
+    await withViewTransition(() => composeAccess.markGranted({
+      siteId,
+      isGranted
+    }));
   }
 
   /** The one read of what is already allowed, since this is the only offer made on the answer. */
@@ -81,10 +92,13 @@
     void composeAccess.refresh();
   });
 
+  /** Same two steps, and for the same reason: linking is what takes this section off the page. */
   async function connect() {
-    if (await requestCompanionPermission()) {
-      companion.refresh();
+    if (!await requestCompanionPermission()) {
+      return;
     }
+
+    await withViewTransition(() => companion.refresh());
   }
 
   /** Runs only while something is still missing, and stops itself the moment nothing is. */

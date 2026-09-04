@@ -35,13 +35,27 @@ class ComposeAccess {
     this.refused = refused;
   }
 
-  /** Only ever called straight out of a click: a permission prompt needs the gesture that asked. */
-  async allow(siteId: ComposeSiteId) {
-    const isGranted = await requestComposeAccess(siteId);
+  /**
+   * Kept apart from the asking so a caller that wants the change animated can put this half, and
+   * only this half, inside a view transition - the asking has to stay on the click's own gesture.
+   */
+  markGranted({ siteId, isGranted }: {
+    siteId: ComposeSiteId;
+    isGranted: boolean;
+  }) {
     this.granted = {
       ...this.granted,
       [siteId]: isGranted
     };
+  }
+
+  /** Only ever called straight out of a click: a permission prompt needs the gesture that asked. */
+  async allow(siteId: ComposeSiteId) {
+    const isGranted = await requestComposeAccess(siteId);
+    this.markGranted({
+      siteId,
+      isGranted
+    });
 
     return isGranted;
   }
