@@ -3,7 +3,7 @@
   import { LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN } from "@/lib/storage/schema";
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
   import Modal from "@/components/modals/Modal.svelte";
-  import { roundCoordinate } from "@/lib/geolocation";
+  import { hasLocationAccess, requestLocationAccess, roundCoordinate } from "@/lib/geolocation";
   import { z } from "@/lib/zod";
   import { untrack } from "svelte";
 
@@ -24,6 +24,7 @@
   } = $props();
 
   const COORDINATES_ERROR = "Enter valid coordinates";
+  const ACCESS_REFUSED = "No location access - type your coordinates below instead";
 
   function coordinateSchema({ min, max, label }: {
     min: number;
@@ -61,20 +62,66 @@
   let draft = $state(untrack(() => asDraft(location)));
   let error = $state("");
   let isEditing = $state(false);
+  /** Undefined until the browser has answered - a "not looked yet" is no reason to say anything. */
+  let isDeviceAllowed = $state<boolean | undefined>();
+  let isAccessRefused = $state(false);
 
   /**
    * Which source is lit: the device until the coordinates are touched, the coordinates from then on.
-   * Both halves stay usable either way.
+   * Both halves stay usable either way. A device that has not handed its location over is not lit
+   * however automatic the widget is, since what it is showing is the fallback and not this reader.
    */
-  const isDeviceLit = $derived(isFollowingDevice && !isEditing);
+  const isDeviceLit = $derived.by(() => {
+    if (isEditing) {
+      return false;
+    }
+
+    if (isDeviceAllowed === false) {
+      return false;
+    }
+
+    return isFollowingDevice;
+  });
+
+  /** Read again on every open, so a permission taken back in the browser's own settings shows here. */
+  $effect(() => {
+    void isOpen;
+    void hasLocationAccess().then(isAllowed => (isDeviceAllowed = isAllowed));
+  });
 
   $effect(() => {
-    if (isOpen) {
-      draft = asDraft(location);
-      error = "";
-      isEditing = false;
+    if (!isOpen) {
+      return;
     }
+
+    draft = asDraft(location);
+    error = "";
+    isAccessRefused = false;
+    isEditing = false;
   });
+
+  /**
+   * The request goes first and nothing is awaited before it: a permission prompt needs the gesture
+   * that asked for it, and an await spends that gesture. A reader who handed the location over in
+   * an earlier session is never asked again, and one who says no keeps the typed coordinates below.
+   */
+  async function followDevice() {
+    error = "";
+    if (isDeviceAllowed) {
+      onFollowDevice();
+
+      return;
+    }
+
+    const isAllowed = await requestLocationAccess();
+    isDeviceAllowed = isAllowed;
+    isAccessRefused = !isAllowed;
+    if (!isAllowed) {
+      return;
+    }
+
+    onFollowDevice();
+  }
 
   function confirm(e: SubmitEvent) {
     e.preventDefault();
@@ -109,16 +156,17 @@
       class:is-active={isDeviceLit}
       class:is-dimmed={!isDeviceLit}
       aria-pressed={isDeviceLit}
-      onclick={() => {
-        error = "";
-        onFollowDevice();
-      }}
+      onclick={followDevice}
       onfocusin={e => e.stopPropagation()}
       type="button">
       {@html iconMapPin}
       Follow my location
     </button>
-    <p class="location__caption">Read from this device on every load, and never stored</p>
+    {#if isAccessRefused}
+      <p class="cyber-error" role="alert">{ACCESS_REFUSED}</p>
+    {:else}
+      <p class="location__caption">Read from this device on every load, and never stored</p>
+    {/if}
 
     <fieldset class="location__fields" class:is-dimmed={isDeviceLit}>
       <legend class="location__legend">Coordinates</legend>

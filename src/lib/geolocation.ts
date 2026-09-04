@@ -1,3 +1,5 @@
+import type { AccessRequest } from "./permissions";
+import { hasAccess, requestAccess } from "./permissions";
 import type { GeoLocation } from "./storage/schema";
 import { z } from "./zod";
 
@@ -7,6 +9,24 @@ const POSITION_TIMEOUT_MS = 8000;
 const REVERSE_GEOCODE_URL = "https://api.bigdatacloud.net/data/reverse-geocode-client";
 
 const COORDINATE_DECIMALS = 4;
+
+/**
+ * The extension does not install with the reader's location, so every read of the device goes
+ * through this one request - the asking and the checking cannot drift apart, and nothing else has
+ * to spell the permission out a second time.
+ */
+const LOCATION_ACCESS: AccessRequest = {
+  permissions: ["geolocation"]
+};
+
+export async function hasLocationAccess(): Promise<boolean> {
+  return hasAccess(LOCATION_ACCESS);
+}
+
+/** Only ever called straight out of a click: a permission prompt needs the gesture that asked for it. */
+export async function requestLocationAccess(): Promise<boolean> {
+  return requestAccess(LOCATION_ACCESS);
+}
 
 /** How precise a coordinate is kept, wherever one is written down - the device's or a typed one. */
 export function roundCoordinate(value: number): number {
@@ -64,6 +84,16 @@ async function reverseGeocode({ latitude, longitude }: {
 }
 
 async function detectLocation(): Promise<GeoLocation | null> {
+  /*
+   * The device is never touched on a hunch. Without the permission `getCurrentPosition` is not a
+   * question the reader ever sees - it is a refusal the browser has already decided on, spent on
+   * page load and paid for with the timeout - so the grant is what says whether there is anything
+   * to ask at all.
+   */
+  if (!await hasLocationAccess()) {
+    return null;
+  }
+
   const coords = await currentPosition();
   if (!coords) {
     return null;
@@ -83,10 +113,22 @@ async function detectLocation(): Promise<GeoLocation | null> {
   };
 }
 
+/**
+ * One reading of the device per page, shared by everything that asks for it. A miss is not kept:
+ * the location can be handed over after the page was drawn, and the read that follows the grant has
+ * to be free to find what the one before it could not.
+ */
 let inFlight: Promise<GeoLocation | null> | null = null;
 
+/** Null whenever the device cannot be read - not granted, unavailable, or refused on the spot. */
 export function deviceLocation(): Promise<GeoLocation | null> {
-  inFlight ??= detectLocation();
+  inFlight ??= detectLocation().then(fix => {
+    if (!fix) {
+      inFlight = null;
+    }
+
+    return fix;
+  });
 
   return inFlight;
 }

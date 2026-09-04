@@ -45,6 +45,16 @@
     }
   }
 
+  /**
+   * Read again rather than only clear the override: a reader who was already following the device
+   * has just allowed the location, and nothing in the config changed for the effect below to notice.
+   */
+  async function followDevice() {
+    onConfigChange({ location: undefined });
+    isEditingLocation = false;
+    detected = await deviceLocation();
+  }
+
   $effect(() => {
     if (!isAutomatic) {
       return;
@@ -116,10 +126,7 @@
   isOpen={isEditingLocation}
   {location}
   onClose={() => (isEditingLocation = false)}
-  onFollowDevice={() => {
-    onConfigChange({ location: undefined });
-    isEditingLocation = false;
-  }}
+  onFollowDevice={() => void followDevice()}
   onSave={next => {
     onConfigChange({ location: next });
     isEditingLocation = false;
