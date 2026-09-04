@@ -357,13 +357,15 @@
    * red round with it, and a button that changes colour while it shudders reads as two things going
    * wrong rather than one - so the background is held and only the letters break up.
    *
-   * It never settles: the word is the fault rather than a report of one, so there is no rest frame
-   * for it to sit still in. Clipped by the button's own overflow, so the row still cannot move.
+   * It breaks up for a moment and then holds still, because a fault that shakes forever stops being
+   * a fault and becomes decoration - the word stays either way. Clipped by the button's own
+   * overflow, so the row cannot move while it does.
    *
-   * `step-end` because a glitch does not ease: each frame holds until the next one replaces it.
+   * `step-end` because a glitch does not ease: each frame holds until the next one replaces it. The
+   * last keyframe is the settled one, and `forwards` is what leaves the letters resting on it.
    */
   .search__overlay--failed {
-    animation: 320ms step-end infinite failed-glitch;
+    animation: 320ms step-end 4 forwards failed-glitch;
   }
 
   @keyframes failed-glitch {
@@ -385,6 +387,11 @@
     75% {
       text-shadow: -1px 0 var(--cp-glitch-b), 1px 0 var(--cp-glitch-a);
       translate: -1px 0;
+    }
+
+    100% {
+      text-shadow: none;
+      translate: 0;
     }
   }
 
