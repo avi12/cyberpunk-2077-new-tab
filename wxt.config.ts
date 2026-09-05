@@ -46,9 +46,12 @@ const PAGE_TEXT_ORIGIN = "<all_urls>";
  * actually answered, and a refusal costs only the typing.
  *
  * Beside `nativeMessaging` and for the same reason - the offer only ever follows a companion that
- * answered, and Firefox is never given the permission that lets one answer. Declaring it there would
- * also drag a `strict_min_version` along, since Firefox only learned this key in 128, and lock older
- * readers out of the whole extension over a feature they could never reach.
+ * answered, and Firefox is never given the permission that lets one answer.
+ *
+ * It used to cost a `strict_min_version` as well, since Firefox only learned this key in 128, and
+ * that was reason enough on its own. `Temporal` has since set the floor at 139 regardless, so that
+ * half of the argument is spent: what keeps these off Firefox now is only that nothing there can
+ * reach them.
  */
 const COMPOSE_ORIGINS = ["https://copilot.microsoft.com/*", "https://claude.ai/*"];
 
@@ -77,6 +80,21 @@ const TIPS_ORIGIN = "https://edge.microsoft.com/*";
  * time. Chromium pins its id with `key` below instead.
  */
 const FIREFOX_ID = "cyberpunk-2077-new-tab@avi12.com";
+
+/**
+ * The oldest build that can run this at all, which `Temporal` decides: the clock, the freshness
+ * checks and every stamp are written against it, and it is a built-in rather than something
+ * bundled, so a browser without it has no polyfill to fall back on and fails at the first tick.
+ *
+ * Chromium 144 and Firefox 139 are where it shipped, per MDN's compatibility data. Opera has no key
+ * of its own and mirrors Chromium, so `minimum_chrome_version` is what holds it out - Opera 129 is
+ * the first built on Chromium 144, which is the number to put on the listing.
+ *
+ * Declared rather than left open because the alternative is an install that looks fine and then
+ * shows no clock: a store that knows the floor offers the reader nothing instead.
+ */
+const MINIMUM_CHROMIUM_VERSION = "144";
+const MINIMUM_FIREFOX_VERSION = "139.0";
 
 /**
  * Declaring the public key pins the Chromium extension id - the same one unpacked, packed as a CRX,
@@ -137,12 +155,14 @@ export default defineConfig({
       ? {
         browser_specific_settings: {
           gecko: {
-            id: FIREFOX_ID
+            id: FIREFOX_ID,
+            strict_min_version: MINIMUM_FIREFOX_VERSION
           }
         }
       }
       : {
         key: publicKey,
+        minimum_chrome_version: MINIMUM_CHROMIUM_VERSION,
         optional_permissions: [...COMPANION_PERMISSIONS, ...TIP_CONTEXT_PERMISSIONS],
         optional_host_permissions: [...COMPOSE_ORIGINS, WEATHER_ORIGIN, TIPS_ORIGIN, PAGE_TEXT_ORIGIN]
       }),
