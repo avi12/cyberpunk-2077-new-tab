@@ -57,7 +57,7 @@
   }
 </script>
 
-<Modal {isOpen} {onClose} title="About">
+<Modal {isOpen} isSelfFocused {onClose} title="About">
   <p class="about__body">
     Cyberpunk 2077 themed start page<br />
     Fully customizable with many dynamic and interactive elements

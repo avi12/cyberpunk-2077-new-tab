@@ -15,12 +15,20 @@
     onClose,
     title,
     variant = "primary",
+    isSelfFocused = false,
     children
   }: {
     isOpen: boolean;
     onClose: () => void;
     title?: string;
     variant?: "primary" | "warning";
+    /**
+     * Where the focus lands on opening. `showModal` gives it to the first control it finds, which is
+     * what a form wants - the reader is here to type - and what a panel whose only control is an
+     * action does not: they arrive with that action lit, ringed and explaining itself, having asked
+     * for none of it. The panel takes it instead, and the reader tabs to what they came for.
+     */
+    isSelfFocused?: boolean;
     children: Snippet;
   } = $props();
 
@@ -33,6 +41,15 @@
 
     if (isOpen && !elDialog.open) {
       elDialog.showModal();
+      /*
+       * Taken back by hand, because the attribute that should say this is ignored: measured in
+       * Chromium 152, an `autofocus` on the dialog itself changes nothing and the first control is
+       * focused anyway. Only a focusable descendant carrying `autofocus` is honoured, and a panel
+       * has no such element to spare. `tabindex="-1"` below is what makes this land.
+       */
+      if (isSelfFocused) {
+        elDialog.focus();
+      }
     } else if (!isOpen && elDialog.open) {
       elDialog.close();
     }
@@ -44,7 +61,8 @@
   class="cyber-dialog"
   class:cyber-dialog--warning={variant === "warning"}
   closedby="any"
-  onclose={onClose}>
+  onclose={onClose}
+  tabindex="-1">
   {#if title}
     <h2 class="cyber-dialog__title">{title}</h2>
   {/if}
@@ -72,6 +90,16 @@
       display 160ms allow-discrete,
       overlay 160ms allow-discrete;
     scale: 0.96;
+
+    /*
+     * The panel takes focus only to keep it off the controls inside, so the ring it earns for that
+     * says nothing about anything. Transparent rather than `none`, the way every control on the page
+     * drops its ring, so a forced-colours mode still draws one.
+     */
+    &:focus {
+      outline: 2px solid transparent;
+      outline-offset: 2px;
+    }
 
     &::backdrop {
       background: rgb(0 0 0 / 0%);
