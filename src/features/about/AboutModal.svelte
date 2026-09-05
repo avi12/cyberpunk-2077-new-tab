@@ -1,6 +1,8 @@
 <script lang="ts">
   import iconCamera from "@/assets/icons/camera.svg?raw";
-  import Modal from "./Modal.svelte";
+  import Modal from "@/ui/Modal.svelte";
+  import { requestAccess } from "@/lib/permissions";
+  import { sendMessage } from "@/lib/messaging";
   import { tooltip } from "@/lib/tooltip";
 
   const {
@@ -12,39 +14,45 @@
   } = $props();
 
   const SCREENSHOT_LABEL = "Capture screenshot";
-  const SCREENSHOT_SCALE = 2;
-  const SCREENSHOT_BACKGROUND = "#000c14";
+
+  /** Long enough for the dialog to be gone from the picture it is asking for. */
   const CLOSE_ANIMATION_MS = 300;
 
+  /**
+   * The browser's own photograph of the tab, rather than a second rendering of the DOM.
+   *
+   * This used to redraw the page into a canvas through `html-to-image`, which is a whole dependency
+   * doing an approximate job: a re-render has to reimplement fonts, blend modes and the blur behind
+   * the panels, and gets to be wrong about any of them. `captureVisibleTab` hands back what the
+   * compositor already drew, so the picture is the page.
+   *
+   * It costs a permission the extension already declares for reading tabs, asked for here rather
+   * than at install, because nobody should hand it over for a button they never press. The request
+   * goes out before anything is awaited - a permission prompt needs the click that raised it - and
+   * the dialog is only dismissed once the answer is in, so a refusal leaves the reader where they
+   * were rather than closing on nothing.
+   */
   async function capture() {
+    const isAllowed = await requestAccess({ origins: ["<all_urls>"] });
+    if (!isAllowed) {
+      return;
+    }
+
     onClose();
+    /* The panel is on screen until its closing animation ends, and it is not part of the page. */
     await new Promise(resolve => setTimeout(resolve, CLOSE_ANIMATION_MS));
 
-    const root = document.documentElement;
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousRootOverflow = root.style.overflow;
-    document.body.style.overflow = "hidden";
-    root.style.overflow = "hidden";
-
-    try {
-      const { toPng } = await import("html-to-image");
-      const dataUrl = await toPng(root, {
-        quality: 1,
-        pixelRatio: SCREENSHOT_SCALE,
-        backgroundColor: SCREENSHOT_BACKGROUND,
-        width: window.innerWidth,
-        height: window.innerHeight
-      });
-      const anchor = document.createElement("a");
-      anchor.download = `Cyberpunk-${Date.now()}.png`;
-      anchor.href = dataUrl;
-      document.body.append(anchor);
-      anchor.click();
-      anchor.remove();
-    } finally {
-      document.body.style.overflow = previousBodyOverflow;
-      root.style.overflow = previousRootOverflow;
+    const png = await sendMessage("captureNewTab", undefined);
+    if (!png) {
+      return;
     }
+
+    const elDownload = document.createElement("a");
+    elDownload.download = `Cyberpunk-${Date.now()}.png`;
+    elDownload.href = png;
+    document.body.append(elDownload);
+    elDownload.click();
+    elDownload.remove();
   }
 </script>
 
