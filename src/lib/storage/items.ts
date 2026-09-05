@@ -146,3 +146,25 @@ export async function rememberComposeRefusal(siteId: ComposeSiteId) {
 
   await composeRefusalsItem.setValue([...refused, siteId]);
 }
+
+/**
+ * What GA4 counts installs by, and the session it groups events into. Both are written on the first
+ * event that is actually reported, so a reader who is never counted leaves neither behind.
+ *
+ * `local:` rather than `sync:`: an id that followed a browser account would count one person twice
+ * over as two installs, and a session is about this machine's last half hour.
+ */
+export const analyticsClientIdItem = storage.defineItem<string | null>("local:analyticsClientId", {
+  fallback: null
+});
+
+export const analyticsSessionItem = storage.defineItem<{
+  sessionId: string;
+  atMs: number;
+} | null>(
+  "local:analyticsSession",
+  { fallback: null }
+);
+
+/** The reader's own no. Absent is consent, which is what an untouched install means. */
+export const analyticsOptOutItem = storage.defineItem<boolean>("local:analyticsOptOut", { fallback: false });

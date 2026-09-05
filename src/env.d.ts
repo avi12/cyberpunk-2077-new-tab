@@ -11,4 +11,6 @@
 interface ImportMetaEnv {
   readonly VITE_GOOGLE_CLIENT_ID: string;
   readonly VITE_GOOGLE_CLIENT_SECRET: string;
+  readonly VITE_GA4_MEASUREMENT_ID: string;
+  readonly VITE_GA4_API_SECRET: string;
 }
