@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { motionDuration } from "@/lib/motion";
   import type { Widget, WidgetConfig } from "@/lib/storage/schema";
   import { WidgetType } from "@/lib/storage/schema";
   import type { Component } from "svelte";
@@ -12,7 +13,7 @@
   import { sortable } from "@/lib/sortable";
   import { withViewTransition } from "@/lib/view-transition";
   import TaskListWidget from "./TaskListWidget.svelte";
-  import WeatherWidget from "./WeatherWidget.svelte";
+  import WeatherWidget from "@/features/weather/WeatherWidget.svelte";
   import type { WidgetProps } from "./widget.svelte";
 
   /** What a widget type is called in the list, and the view that draws it - named once, together. */
@@ -140,7 +141,7 @@
 
         {#if widget.enabled}
           {@const WidgetView = WIDGETS[widget.type].view}
-          <div transition:slide={{ duration: REVEAL_MS, easing: cubicOut }}>
+          <div transition:slide={{ duration: motionDuration(REVEAL_MS), easing: cubicOut }}>
             <WidgetView
               config={widget.config}
               onConfigChange={patch => patchConfig({
@@ -270,10 +271,10 @@
     &.is-on {
       background: var(--cp-secondary);
       color: var(--cp-on-accent);
-    }
-  }
 
-  .widgets__toggle.is-on:hover {
-    background: var(--cp-secondary-hi);
+      &:hover {
+        background: var(--cp-secondary-hi);
+      }
+    }
   }
 </style>

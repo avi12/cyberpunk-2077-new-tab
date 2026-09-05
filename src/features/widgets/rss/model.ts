@@ -1,4 +1,4 @@
-import { nonEmptyTextSchema } from "@/lib/companion/model";
+import { nonEmptyTextSchema } from "@/features/companion/model";
 import { z } from "@/lib/zod";
 
 const INVALID_FEED_MESSAGE = "Feed is not XML";
@@ -48,7 +48,7 @@ function withoutRepeatedLinks(items: FeedItem[]) {
 export function parseFeed({ xml, maxItems }: {
   xml: string;
   maxItems: number;
-}): FeedItem[] {
+}) {
   const feed = new DOMParser().parseFromString(xml, "text/xml");
   if (feed.querySelector("parsererror")) {
     throw new Error(INVALID_FEED_MESSAGE);

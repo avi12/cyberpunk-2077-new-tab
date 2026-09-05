@@ -1,11 +1,11 @@
 <script lang="ts">
   import iconChevronDown from "@/assets/icons/chevron-down.svg?raw";
   import iconChevronUp from "@/assets/icons/chevron-up.svg?raw";
-  import { readProxied } from "@/lib/cors-proxy";
+  import { readProxied } from "./cors-proxy";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
-  import Modal from "@/components/modals/Modal.svelte";
-  import { parseFeed } from "@/lib/rss/model";
-  import type { FeedItem } from "@/lib/rss/model";
+  import Modal from "@/ui/Modal.svelte";
+  import { parseFeed } from "@/features/widgets/rss/model";
+  import type { FeedItem } from "@/features/widgets/rss/model";
   import iconRss from "@/assets/icons/rss.svg?raw";
   import iconSettings from "@/assets/icons/settings.svg?raw";
   import { untrack } from "svelte";
@@ -274,6 +274,16 @@
     max-height: 16rem;
   }
 
+  .rss__item-icon {
+    flex-shrink: 0;
+    color: var(--cp-text-dimmer);
+
+    :global(svg) {
+      width: 12px;
+      height: 12px;
+    }
+  }
+
   .rss__item {
     display: flex;
     gap: 0.5rem;
@@ -290,21 +300,11 @@
     &:hover {
       border-color: var(--cp-primary);
       background: var(--cp-surface-3);
+
+      .rss__item-icon {
+        color: var(--cp-primary);
+      }
     }
-  }
-
-  .rss__item-icon {
-    flex-shrink: 0;
-    color: var(--cp-text-dimmer);
-
-    :global(svg) {
-      width: 12px;
-      height: 12px;
-    }
-  }
-
-  .rss__item:hover .rss__item-icon {
-    color: var(--cp-primary);
   }
 
   .rss-title {

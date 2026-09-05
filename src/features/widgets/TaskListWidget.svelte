@@ -81,6 +81,7 @@
   {:else}
     <ul class="tasks scrollbar-cyberpunk" class:task-list-glitching={idCompleting}>
       {#each tasks as task (task.id)}
+        {@const isTicking = task.completed && idCompleting === task.id}
         <li
           class="tasks__item"
           class:is-focused={idFocused === task.id}
@@ -91,7 +92,7 @@
             aria-label="Complete gig"
             onclick={() => completeTask(task.id)}
             type="button">
-            {@html task.completed && idCompleting === task.id ? iconSquareCheck : iconSquare}
+            {@html isTicking ? iconSquareCheck : iconSquare}
           </button>
           <label class="visually-hidden" for="task-{task.id}">Gig</label>
           <textarea
