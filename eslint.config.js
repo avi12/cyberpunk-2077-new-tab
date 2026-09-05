@@ -254,6 +254,8 @@ export default [
     ".output/",
     ".wxt/",
     ".fallow/",
+    // `svelte:check --tsgo` transpiles every component to disk here before checking it.
+    ".svelte-check/",
     "reference/"
   ]),
   {

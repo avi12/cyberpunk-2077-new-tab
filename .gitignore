@@ -14,3 +14,6 @@ stats.html
 .env.*
 !.env.example
 reference/
+
+# Written by `svelte-check --tsgo`, which type checks transpiled components from disk
+.svelte-check/
