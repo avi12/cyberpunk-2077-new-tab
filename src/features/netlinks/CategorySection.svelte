@@ -27,7 +27,6 @@
     onAddBookmark,
     onDeleteBookmark,
     onEditBookmark,
-    onOpenBookmark,
   }: {
     category: string;
     bookmarks: Bookmark[];
@@ -50,7 +49,6 @@
     onAddBookmark: (category: string) => void;
     onDeleteBookmark: (id: string) => void;
     onEditBookmark: (bookmark: Bookmark) => void;
-    onOpenBookmark: (url: string) => void;
   } = $props();
 
   const EDIT_CATEGORY_LABEL = "Edit category";
@@ -122,8 +120,7 @@
             {bookmark}
             {isEditing}
             onDelete={onDeleteBookmark}
-            onEdit={onEditBookmark}
-            onOpen={onOpenBookmark} />
+            onEdit={onEditBookmark} />
         {/if}
       {/each}
       {#if isEditing}

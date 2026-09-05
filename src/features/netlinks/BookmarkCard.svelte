@@ -22,14 +22,12 @@
     bookmark,
     isEditing,
     onDelete,
-    onEdit,
-    onOpen,
+    onEdit
   }: {
     bookmark: Bookmark;
     isEditing: boolean;
     onDelete: (id: string) => void;
     onEdit: (bookmark: Bookmark) => void;
-    onOpen: (url: string) => void;
   } = $props();
 
   /*
@@ -39,7 +37,6 @@
    */
   const editLabel = $derived(`Edit ${bookmark.title}`);
   const deleteLabel = $derived(`Delete ${bookmark.title}`);
-  const MIDDLE_MOUSE_BUTTON = 1;
 
   /*
    * The form holds a link to this shape on the way in, but storage is older than the form is: a
@@ -59,24 +56,18 @@
 </script>
 
 <li class="card-slot view-item" data-sortable-id={bookmark.id}>
+  <!-- A card is a link, and the browser already knows what to do with one - follow it, open it in a
+       new tab, offer it a context menu - so none of that is written out here. Only while the section
+       is being arranged is it something else, a thing being moved, and only then is the press taken
+       off it. -->
   <a
     class="card glitch-border hover-glitch-host"
     class:is-editing={isEditing}
     draggable={!isEditing}
     href={openableUrl}
-    onauxclick={e => {
-      const isMiddleClick = !isEditing && e.button === MIDDLE_MOUSE_BUTTON;
-      if (!isMiddleClick || !openableUrl) {
-        return;
-      }
-
-      e.preventDefault();
-      window.open(openableUrl, "_blank");
-    }}
     onclick={e => {
-      e.preventDefault();
-      if (!isEditing && openableUrl) {
-        onOpen(openableUrl);
+      if (isEditing) {
+        e.preventDefault();
       }
     }}
     ondragstart={e => e.dataTransfer?.setDragImage(BLANK_DRAG_IMAGE, 0, 0)}>

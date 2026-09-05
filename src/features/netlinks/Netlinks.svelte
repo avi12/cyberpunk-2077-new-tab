@@ -305,7 +305,6 @@
             onDeleteCategory={requestDeleteCategory}
             onEditBookmark={bookmark => (bookmarkToEdit = bookmark)}
             onEditCategory={startRename}
-            onOpenBookmark={url => (window.location.href = url)}
             onToggleCollapse={name => withViewTransition(() => toggleCollapsed(name))} />
         {/if}
       </div>
