@@ -3,6 +3,8 @@
   import type { ComposeSiteId } from "@/features/compose/sites";
   import { composeAccess } from "@/features/compose/access.svelte";
   import { DEFAULT_SEARCH_ENGINES } from "@/lib/storage/defaults";
+  import { AnalyticsEvent, AnalyticsParam } from "@/lib/analytics/definitions";
+  import { reportQuietly } from "@/lib/analytics/report";
   import { engineById, searchUrl, searchWithBrowserDefault } from "./search";
   import { handOffPrompt } from "@/features/compose/deliver";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -104,6 +106,9 @@
 
       return;
     }
+
+    /* Which engine, never what was typed - a query is the reader's and has no business in a report. */
+    reportQuietly(AnalyticsEvent.searchSubmitted, { [AnalyticsParam.engine]: engine.id });
 
     const { composeSiteId } = engine;
     if (composeSiteId) {

@@ -89,6 +89,7 @@
 
     function show() {
       companion.state = result.state;
+      companion.reportLink(result.state);
       cards = result.cards;
     }
 

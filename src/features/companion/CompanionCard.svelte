@@ -5,6 +5,8 @@
   import { promptDestination } from "./prompt-destination";
   import type { ComposeSiteId } from "@/features/compose/sites";
   import type { CopilotKind } from "./copilot";
+  import { AnalyticsEvent, AnalyticsParam } from "@/lib/analytics/definitions";
+  import { reportQuietly } from "@/lib/analytics/report";
   import { handOffPrompt, promptBudgetFor } from "@/features/compose/deliver";
   import type { Snippet } from "svelte";
   import { TabDisposition } from "@/lib/messaging";
@@ -86,6 +88,16 @@
       onCopied(isCopied) {
         notice = isCopied ? COPIED_NOTICE : UNCOPIED_NOTICE;
       }
+    });
+
+    /*
+     * Which kind of card went where, and whether the reader's own context was behind it. The prompt
+     * itself is never reported - what is worth knowing is that a card was used, not what was asked.
+     */
+    reportQuietly(AnalyticsEvent.promptSent, {
+      [AnalyticsParam.cardKind]: kind,
+      [AnalyticsParam.destination]: targetId,
+      [AnalyticsParam.isSuccess]: asked !== prompt
     });
   }
 </script>
