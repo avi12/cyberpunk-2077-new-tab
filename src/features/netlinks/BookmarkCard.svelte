@@ -14,6 +14,7 @@
   import type { Bookmark } from "@/lib/storage/schema";
   import iconGripVertical from "@/assets/icons/grip-vertical.svg?raw";
   import { iconByName } from "@/features/netlinks/icons/choices";
+  import { openableUrlSchema } from "@/lib/url";
   import iconSquarePen from "@/assets/icons/square-pen.svg?raw";
   import { tooltip } from "@/lib/tooltip";
   import iconXMark from "@/assets/icons/x-mark.svg?raw";
@@ -40,6 +41,22 @@
   const editLabel = $derived(`Edit ${bookmark.title}`);
   const deleteLabel = $derived(`Delete ${bookmark.title}`);
   const MIDDLE_MOUSE_BUTTON = 1;
+
+  /*
+   * The form holds a link to this shape on the way in, but storage is older than the form is: a
+   * bookmark saved by an earlier build, or restored from a settings file one exported, arrives typed
+   * as a link and having been asked nothing. A `javascript:` URL in an `href` is the reader's own
+   * page handing a stranger the keys, so the card checks rather than trusts, and one it cannot vouch
+   * for is drawn without a destination instead of carrying an unread one to three places.
+   */
+  const openableUrl = $derived.by(() => {
+    const isOpenable = openableUrlSchema.safeParse(bookmark.url).success;
+    if (!isOpenable) {
+      return undefined;
+    }
+
+    return bookmark.url;
+  });
 </script>
 
 <li class="card-slot view-item" data-sortable-id={bookmark.id}>
@@ -47,20 +64,20 @@
     class="card glitch-border hover-glitch-host"
     class:is-editing={isEditing}
     draggable={!isEditing}
-    href={bookmark.url}
+    href={openableUrl}
     onauxclick={e => {
       const isMiddleClick = !isEditing && e.button === MIDDLE_MOUSE_BUTTON;
-      if (!isMiddleClick) {
+      if (!isMiddleClick || !openableUrl) {
         return;
       }
 
       e.preventDefault();
-      window.open(bookmark.url, "_blank");
+      window.open(openableUrl, "_blank");
     }}
     onclick={e => {
       e.preventDefault();
-      if (!isEditing) {
-        onOpen(bookmark.url);
+      if (!isEditing && openableUrl) {
+        onOpen(openableUrl);
       }
     }}
     ondragstart={e => e.dataTransfer?.setDragImage(BLANK_DRAG_IMAGE, 0, 0)}>

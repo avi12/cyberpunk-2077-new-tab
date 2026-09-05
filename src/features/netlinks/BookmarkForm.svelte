@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/schema";
   import { normalizeUrl, resolveTitle } from "./link";
+  import { openableUrlSchema } from "@/lib/url";
   import { pickIcon } from "@/features/netlinks/icons/auto";
   import iconSparkles from "@/assets/icons/sparkles.svg?raw";
   import iconSquareCheck from "@/assets/icons/square-check.svg?raw";
@@ -51,9 +52,15 @@
 
     return "Add link";
   });
-  const isUrlBlank = $derived(!url.trim());
+  /**
+   * The form is the way into storage, so it is where a link is held to the shape everything openable
+   * is held to. `normalizeUrl` reads `localhost:3000` and `javascript:alert(1)` as already carrying a
+   * scheme and leaves both alone, so a card that could never open, or would open something nobody
+   * asked for, is one blank field and one Enter away without this.
+   */
+  const isUrlOpenable = $derived(openableUrlSchema.safeParse(normalizedUrl).success);
   /** The form suppresses the browser's own required bubble, so the field has to say it itself. */
-  const isUrlMissing = $derived(hasTriedSubmit && isUrlBlank);
+  const isUrlRejected = $derived(hasTriedSubmit && !isUrlOpenable);
 
   function focusUrl(elField: HTMLInputElement) {
     elUrl = elField;
@@ -69,6 +76,10 @@
   }
 
   async function readTitle() {
+    if (!isUrlOpenable || isResolving) {
+      return;
+    }
+
     isResolving = true;
     title = await resolveTitle(normalizedUrl);
     isResolving = false;
@@ -81,7 +92,7 @@
     }
 
     hasTriedSubmit = true;
-    if (isUrlBlank) {
+    if (!isUrlOpenable) {
       elUrl?.focus();
 
       return;
@@ -105,9 +116,9 @@
   <input
     id={urlFieldId}
     class="link-card__field"
-    class:is-missing={isUrlMissing}
+    class:is-rejected={isUrlRejected}
     {@attach focusUrl}
-    aria-invalid={isUrlMissing}
+    aria-invalid={isUrlRejected}
     onkeydown={onKeyDown}
     placeholder={URL_LABEL}
     required
@@ -128,7 +139,7 @@
       class="link-card__action link-card__action--fetch"
       class:is-working={isResolving}
       aria-label={FETCH_TITLE_LABEL}
-      disabled={isUrlBlank || isResolving}
+      disabled={!isUrlOpenable || isResolving}
       onclick={() => void readTitle()}
       type="button">
       {@html iconSparkles}
@@ -183,7 +194,7 @@
       border-color: var(--cp-accent);
     }
 
-    &.is-missing {
+    &.is-rejected {
       border-color: var(--cp-secondary);
 
       &::placeholder {
