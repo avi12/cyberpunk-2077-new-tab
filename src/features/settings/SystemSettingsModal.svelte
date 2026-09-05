@@ -60,7 +60,7 @@
   async function importFrom(file: File) {
     try {
       await importSettings(await file.text());
-      window.location.reload();
+      location.reload();
     } catch (e) {
       report(e);
     }
@@ -121,7 +121,7 @@
     isWorking = true;
     try {
       await restoreBackup();
-      window.location.reload();
+      location.reload();
     } catch (e) {
       report(e);
       isWorking = false;
