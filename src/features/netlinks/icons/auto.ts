@@ -137,7 +137,7 @@ const CLASSES: {
 }[] = [
   {
     icon: "Bot",
-    keywords: ["ai", "gpt", "llm", "chatbot", "copilot", "assistant", "neural", "prompt"]
+    keywords: ["ai", "gpt", "llm", "chatbot", "copilot", "assistant", "neural", "prompt", "gemini"]
   },
   {
     icon: "Code",
@@ -225,7 +225,7 @@ const CLASSES: {
   },
   {
     icon: "Work",
-    keywords: ["work", "office", "task", "project", "team", "calendar", "meeting", "ticket", "crm", "payroll", "recruit"]
+    keywords: ["work", "office", "task", "project", "team", "calendar", "meeting", "ticket", "crm", "payroll", "recruit", "drive"]
   },
   {
     icon: "Design",

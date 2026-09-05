@@ -4,100 +4,19 @@ import { MessageType, sendMessage } from "@/lib/messaging";
 import { SEEDED_CATEGORY } from "@/lib/storage/defaults";
 import { bookmarksItem, bookmarksSeededItem } from "@/lib/storage/items";
 import type { Bookmark } from "@/lib/storage/schema";
+import { openableUrlSchema } from "@/lib/url";
+import { z } from "@/lib/zod";
 
-const DOMAIN_ICONS: [string, IconName][] = [
-  ["youtube", "Video"],
-  ["netflix", "Video"],
-  ["twitch", "Video"],
-  ["primevideo", "Video"],
-  ["disneyplus", "Video"],
-  ["spotify", "Music"],
-  ["soundcloud", "Music"],
-  ["github", "Code"],
-  ["gitlab", "Code"],
-  ["stackoverflow", "Code"],
-  ["codepen", "Code"],
-  ["npmjs", "Code"],
-  ["mail.google", "Mail"],
-  ["gmail", "Mail"],
-  ["outlook", "Mail"],
-  ["proton", "Mail"],
-  ["reddit", "Chat"],
-  ["twitter", "Chat"],
-  ["discord", "Chat"],
-  ["slack", "Chat"],
-  ["whatsapp", "Chat"],
-  ["telegram", "Chat"],
-  ["facebook", "Chat"],
-  ["instagram", "Camera"],
-  ["linkedin", "Work"],
-  ["notion", "Work"],
-  ["atlassian", "Work"],
-  ["jira", "Work"],
-  ["figma", "Design"],
-  ["dribbble", "Design"],
-  ["behance", "Design"],
-  ["amazon", "Shopping"],
-  ["ebay", "Shopping"],
-  ["etsy", "Shopping"],
-  ["aliexpress", "Shopping"],
-  ["paypal", "Money"],
-  ["coinbase", "Money"],
-  ["binance", "Money"],
-  ["chatgpt", "Bot"],
-  ["openai", "Bot"],
-  ["claude", "Bot"],
-  ["perplexity", "Bot"],
-  ["gemini.google", "Bot"],
-  ["huggingface", "Brain"],
-  ["wikipedia", "Brain"],
-  ["news", "News"],
-  ["bbc", "News"],
-  ["cnn", "News"],
-  ["nytimes", "News"],
-  ["medium", "News"],
-  ["substack", "News"],
-  ["maps.google", "Map"],
-  ["steampowered", "Gaming"],
-  ["epicgames", "Gaming"],
-  ["itch.io", "Gaming"],
-  ["drive.google", "Home"],
-  ["dropbox", "Home"],
-  ["booking", "Pin"],
-  ["airbnb", "Pin"],
-  ["ubereats", "Food"],
-  ["doordash", "Food"],
-  ["deliveroo", "Food"]
-];
-
-const FALLBACK_ICON: IconName = "Web";
-
-function isTwitter(host: string) {
-  return host === "x.com" || host.endsWith(".x.com");
-}
-
-function iconForUrl(url: string) {
-  const host = hostOf(url);
-  if (isTwitter(host)) {
-    return "Chat";
-  }
-
-  const match = DOMAIN_ICONS.find(([fragment]) => host.includes(fragment));
-
-  return match ? match[1] : FALLBACK_ICON;
-}
-
-function titleForSite({ title, url }: {
-  title: string;
-  url: string;
-}) {
-  const named = title.trim();
-  if (named) {
-    return named;
-  }
-
-  return URL.canParse(url) ? hostOf(url) : url;
-}
+/**
+ * What a browser calls a top site is not all somewhere a card can go: `chrome://` pages and pinned
+ * search shortcuts share the list, and a link a card carries is held to one shape wherever it comes
+ * from. An entry that fails drops on its own rather than costing the whole seed, which is offered
+ * once and never again.
+ */
+const seedableSiteSchema = z.object({
+  title: z.string(),
+  url: openableUrlSchema
+});
 
 export async function seedBookmarksFromTopSites() {
   if (await bookmarksSeededItem.getValue()) {
@@ -116,13 +35,21 @@ export async function seedBookmarksFromTopSites() {
     return null;
   }
 
-  const bookmarks: Bookmark[] = sites.map((site, i) => ({
-    id: `top-${i}`,
-    title: titleForSite(site),
-    url: site.url,
-    category: SEEDED_CATEGORY,
-    icon: iconForUrl(site.url)
-  }));
+  const bookmarks: Bookmark[] = seedable.map((site, i) => {
+    const title = site.title.trim() || hostOf(site.url);
+
+    return {
+      id: `top-${i}`,
+      title,
+      url: site.url,
+      category: SEEDED_CATEGORY,
+      icon: pickIcon({
+        url: site.url,
+        title,
+        category: SEEDED_CATEGORY
+      })
+    };
+  });
 
   await bookmarksItem.setValue(bookmarks);
 
