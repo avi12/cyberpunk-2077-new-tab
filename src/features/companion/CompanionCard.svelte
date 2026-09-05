@@ -8,7 +8,7 @@
   import { handOffPrompt, promptBudgetFor } from "@/features/compose/deliver";
   import type { Snippet } from "svelte";
   import { TabDisposition } from "@/lib/messaging";
-  import { tipContextFor, withTipContext } from "@/features/tips/context";
+  import { withTipContext } from "@/features/tips/context";
   import { tooltip } from "@/lib/tooltip";
 
   const { kind, title, hint, summary, actionLabel, prompt, meta }: {
@@ -37,7 +37,7 @@
 
   /**
    * The site a script has to finish the prompt off at, and nothing for the destinations where
-   * arriving is already asking - those are a plain link, and the click is left entirely alone.
+   * arriving is already asking - those take the whole prompt in their own address instead.
    */
   const siteId = $derived(composeSiteFor(targetId));
 
@@ -45,20 +45,14 @@
    * One address for the link and the hand-off alike, so a middle-click cannot land anywhere a plain
    * click would not. Every destination now carries the prompt in its own URL, so there is always one.
    *
-   * A tip asking about the reader's own tabs or reading is the one thing this cannot hold, since
-   * that is only true at the moment it is pressed. The href is the question on its own, which is
-   * what a middle-click gets and what the click improves on.
+   * What it cannot hold is the reader's own context, since that is only true at the moment it is
+   * pressed. The href is the question on its own, which is what a middle-click gets and what the
+   * click improves on.
    */
   const destination = $derived(promptUrl({
     targetId,
     prompt
   }));
-
-  /** Whether pressing this has anything to add to the prompt beyond opening the link. */
-  const isAskingAboutReader = $derived(tipContextFor({
-    title,
-    prompt
-  }) !== null);
 
   /**
    * The site is asked for on the way, so a card is what raises the question, and only for someone
@@ -109,6 +103,9 @@
   </ul>
 
   <!--
+    Every press is handed off, because every press has the reader's own context to put in front of
+    the question - the href is the question alone, which is what a middle-click settles for.
+
     The click decides here and nowhere else, because its default is spent the moment the handler
     returns: an `await` before `preventDefault` lets the link open its own tab first, and the
     background then opens a second one.
@@ -117,10 +114,6 @@
     class="card__action"
     href={destination}
     onclick={e => {
-      if (!siteId && !isAskingAboutReader) {
-        return;
-      }
-
       e.preventDefault();
       void handOff(siteId);
     }}

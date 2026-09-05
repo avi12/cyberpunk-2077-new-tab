@@ -8,18 +8,19 @@ import { z } from "@/lib/zod";
 /**
  * Standing in for what Copilot already has.
  *
- * A quarter of Edge's tip catalogue asks about the reader rather than the world - "summarize my
- * recent browsing activity", "which of the hotels in my tabs". Edge marks none of them and does not
- * need to: a tip only ever goes to Copilot, and Copilot inside Edge can see the tabs and the history
- * for itself, so the prompt resolves at the destination.
+ * Edge marks no tip as needing the reader and does not need to: a tip only ever goes to Copilot, and
+ * Copilot inside Edge is handed the open tabs whatever the question is - its live tab resolver takes
+ * a query and a passage context together, not a query that has first been judged to deserve one.
+ * A quarter of the catalogue says so out loud - "summarize my recent browsing activity", "which of
+ * the hotels in my tabs" - and the rest are answered with the same thing behind them.
  *
  * Every destination this extension can reach is outside the browser, so the same prompt arrives with
  * nothing behind it. The answer is to send what Copilot would have looked at, written into the
  * prompt ahead of the question - and what Copilot is looked at is not a list of links but the text
  * of the pages, which `passages.ts` reads and cuts up.
  *
- * That is the reader's browsing leaving their machine, so it is asked for at the moment a card that
- * needs it is pressed, and never before. Refusing costs only the context - the prompt still goes.
+ * That is the reader's browsing leaving their machine, so it is asked for at the moment a card is
+ * pressed, and never before. Refusing costs only the context - the prompt still goes.
  */
 
 /**
@@ -150,14 +151,21 @@ const FOLLOWED_MINIMUM_VISITS = 2;
 const NOT_READING = /[?&](q|query|search_query)=|\/search\b|\/login\b|\/signin\b|\/sign-in\b/i;
 
 /**
- * Which of the reader's own things a card is asking about, or nothing where it asks about the world.
+ * What a card asks about when its wording names none of the three. The tabs, because that is what
+ * Edge has open in front of it: the resolver it hands a question to is the live one, and a page the
+ * reader is looking at now is the likeliest thing a question typed on a new tab is about.
+ */
+const DEFAULT_CONTEXT = TipContext.openTabs;
+
+/**
+ * Which of the reader's own things a card is asking about, or nothing where its wording names none.
  *
  * The title counts as much as the prompt, because Microsoft's own copy disagrees with itself: "Suggest
  * a project from my tabs" sends "Discover project ideas I would love based on my recent browsing",
  * and four others do the same. The card names the tabs, so the tabs are what the reader was promised
  * - and `openTabs` being first in the table is what makes the promise win.
  */
-export function tipContextFor({ title, prompt }: {
+function namedContextFor({ title, prompt }: {
   title: string;
   prompt: string;
 }) {
@@ -173,6 +181,14 @@ export function tipContextFor({ title, prompt }: {
 
 /**
  * Asked for as one thing, because there is only ever the one click to spend: a second
+/**
+ * Whether raising the question could still change anything on this page. A permission already held
+ * raises no dialog at all, so this only ever silences the repeat of a no - which matters now that
+ * every card asks rather than the quarter that name the reader out loud. A new tab is a new page,
+ * and that is where the question fairly comes back.
+ */
+let isWorthAsking = true;
+
  * `permissions.request` issued after this one has been awaited is refused outright, for want of the
  * gesture that paid for the first.
  *
@@ -185,7 +201,7 @@ export function tipContextFor({ title, prompt }: {
  */
 async function requestTipContextAccess(context: TipContext) {
   const listing = CONTEXT_ACCESS[context];
-  const isGranted = await requestAccess({
+  const isGranted = isWorthAsking && await requestAccess({
     ...listing,
     ...PAGE_TEXT_ACCESS
   });
@@ -198,6 +214,8 @@ async function requestTipContextAccess(context: TipContext) {
 
   const [isListing, isReadingPages] = await Promise.all([
     hasAccess(listing),
+  isWorthAsking = false;
+
     hasAccess(PAGE_TEXT_ACCESS)
   ]);
 
@@ -495,6 +513,11 @@ export async function withTipContext({ title, prompt, budget }: {
   if (!access.isListing) {
     return prompt;
   }
+
+  const context = namedContextFor({
+    title,
+    prompt
+  }) ?? DEFAULT_CONTEXT;
 
   const keywords = keywordsOf(`${title} ${prompt}`);
   const pages = await gather({
