@@ -1,5 +1,6 @@
 import { MAX_CARDS } from "@/features/companion/bridge";
 import { nonEmptyTextSchema, validRecords } from "@/features/companion/model";
+import { openableUrlSchema } from "@/lib/url";
 import { z } from "@/lib/zod";
 
 /**
@@ -10,7 +11,7 @@ const timestampSchema = z.string().refine(value => !Number.isNaN(Date.parse(valu
 
 const journeySourceSchema = z.object({
   title: nonEmptyTextSchema,
-  url: z.url()
+  url: openableUrlSchema
 });
 
 /**
@@ -22,6 +23,11 @@ const journeySourceSchema = z.object({
  * first prompt as present and filters out the navigation and backfill cards that carry none.
  */
 const journeySchema = z.object({
+/**
+ * The address goes straight into an `href` on the card, and these records come from a separate
+ * process on the reader's machine, so the scheme is pinned rather than merely parsed: `z.url()`
+ * takes a `javascript:` one as readily as a page.
+ */
   id: nonEmptyTextSchema,
   title: nonEmptyTextSchema,
   summary: nonEmptyTextSchema,

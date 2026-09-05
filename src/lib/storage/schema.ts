@@ -1,4 +1,5 @@
 import type { ComposeSiteId } from "@/features/compose/sites";
+import { openableUrlSchema } from "@/lib/url";
 import { z } from "@/lib/zod";
 
 /**
@@ -60,11 +61,15 @@ export enum BookmarkCategory {
 /**
  * `category` is a plain string rather than the enum: a reader can add sections of their own, and
  * `icon` names a glyph in the picker, which is free to gain and lose names between builds.
+ *
+ * A url is held to the one shape everything openable is held to, which is what a settings file
+ * offering a `javascript:` bookmark runs into - the schema is what an import is checked against.
+ * A bookmark already in storage is not re-read through this, so the shape gates what gets in.
  */
 export const bookmarkSchema = z.object({
   id: z.string(),
   title: z.string(),
-  url: z.string(),
+  url: openableUrlSchema,
   category: z.string(),
   icon: z.string()
 });

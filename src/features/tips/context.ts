@@ -2,6 +2,8 @@ import { bestPassages, textOfPage, textOfTab } from "./passages";
 import type { Passage } from "./passages";
 import type { AccessRequest } from "@/lib/permissions";
 import { hasAccess, requestAccess } from "@/lib/permissions";
+import { openableUrlSchema } from "@/lib/url";
+import { z } from "@/lib/zod";
 
 /**
  * Standing in for what Copilot already has.
@@ -218,8 +220,10 @@ type Reading = {
   passages: Passage[];
 };
 
-function isWorthSending({ url, title }: Visited) {
-  const isPage = url.startsWith("http:") || url.startsWith("https:");
+const worthSendingSchema = z.object({
+  url: openableUrlSchema.refine(url => !NOT_READING.test(url)),
+  title: z.string().trim().min(1)
+});
 
   return isPage && title.trim() !== "" && !NOT_READING.test(url);
 }

@@ -1,16 +1,16 @@
 import { nonEmptyTextSchema } from "@/features/companion/model";
+import { openableUrlSchema } from "@/lib/url";
 import { z } from "@/lib/zod";
 
 const INVALID_FEED_MESSAGE = "Feed is not XML";
 
 /**
  * One story, narrowed to the two fields the widget renders. The link goes straight into an `href`,
- * and `javascript:` is a URL like any other as far as `new URL` is concerned, so the scheme is part
- * of the shape rather than a check the component is trusted to remember.
+ * so it is held to the one shape everything openable is held to.
  */
 const feedItemSchema = z.object({
   title: nonEmptyTextSchema,
-  link: z.httpUrl()
+  link: openableUrlSchema
 });
 
 export type FeedItem = z.infer<typeof feedItemSchema>;
