@@ -158,7 +158,8 @@
       {@html iconInfo}
     </button>
     <p class="footer__text">
-      © 2077 Arasaka Corporation. All rights reserved. Night City License #NC-77-2077
+      © 2077 <a class="footer__author" href="https://avi12.com" rel="noopener noreferrer" target="_blank">Avi</a>. All
+      rights reserved. Night City License #NC-77-2077
     </p>
   </footer>
 </div>
@@ -275,6 +276,16 @@
     font-family: var(--cp-mono);
     font-size: 0.75rem;
     line-height: 1rem;
+  }
+
+  /* The page's reset strips every link back to its surrounding text, so this one says so in colour. */
+  .footer__author {
+    color: var(--cp-primary);
+
+    &:is(:hover, :focus-visible) {
+      color: var(--cp-primary-hover);
+      text-decoration: underline;
+    }
   }
 
   @media (width >= 640px) {
