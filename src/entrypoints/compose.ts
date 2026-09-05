@@ -1,5 +1,5 @@
 import { COMPOSE_SITES } from "@/features/compose/sites";
-import { sendMessage } from "@/lib/messaging";
+import { MessageType, sendMessage } from "@/lib/messaging";
 import { defineUnlistedScript } from "#imports";
 
 /**
@@ -114,7 +114,7 @@ export default defineUnlistedScript({
   /* Named, so what happens here comes back through `executeScript` rather than being guessed at. */
   globalName: "composePrompt",
   async main() {
-    const request = await sendMessage("takeComposeRequest", undefined);
+    const request = await sendMessage(MessageType.takeComposeRequest, undefined);
     if (!request) {
       return "nothing to send";
     }

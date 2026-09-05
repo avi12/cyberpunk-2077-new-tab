@@ -2,7 +2,7 @@
   import iconCamera from "@/assets/icons/camera.svg?raw";
   import Modal from "@/ui/Modal.svelte";
   import { requestAccess } from "@/lib/permissions";
-  import { sendMessage } from "@/lib/messaging";
+  import { sendMessage, MessageType } from "@/lib/messaging";
   import { tooltip } from "@/lib/tooltip";
 
   const {
@@ -42,7 +42,7 @@
     /* The panel is on screen until its closing animation ends, and it is not part of the page. */
     await new Promise(resolve => setTimeout(resolve, CLOSE_ANIMATION_MS));
 
-    const png = await sendMessage("captureNewTab", undefined);
+    const png = await sendMessage(MessageType.captureNewTab, undefined);
     if (!png) {
       return;
     }

@@ -2,7 +2,7 @@ import { readCompanionRecords } from "@/features/companion/native";
 import type { ComposeSiteId } from "@/features/compose/sites";
 import { isAtComposeSite } from "@/features/compose/sites";
 import type { ComposeRequest } from "@/lib/messaging";
-import { ComposeOutcome, onMessage, TabDisposition } from "@/lib/messaging";
+import { ComposeOutcome, MessageType, onMessage, TabDisposition } from "@/lib/messaging";
 import { forgetComposeRefusals, rememberComposeRefusal, reshuffleTips } from "@/lib/storage/items";
 import { defineBackground } from "#imports";
 
@@ -104,7 +104,7 @@ export default defineBackground(() => {
     return attempt.promise;
   }
 
-  onMessage("getTopSites", async () => {
+  onMessage(MessageType.getTopSites, async () => {
     const sites = await browser.topSites.get();
 
     return sites.map(site => ({
@@ -113,14 +113,14 @@ export default defineBackground(() => {
     }));
   });
 
-  onMessage("readCompanion", async ({ data }) => readCompanionRecords(data));
+  onMessage(MessageType.readCompanion, async ({ data }) => readCompanionRecords(data));
 
   /*
    * Awaited rather than fired and forgotten: the browser refuses this when there is no window it
    * considers active, and a page told the search started when it did not is a page that sits on
    * SCANNING forever. Failing the message hands that answer back.
    */
-  onMessage("openPromptTarget", async ({ data, sender }) => {
+  onMessage(MessageType.openPromptTarget, async ({ data, sender }) => {
     const { url, disposition, compose } = data;
     const senderTabId = sender.tab?.id;
 
@@ -144,7 +144,7 @@ export default defineBackground(() => {
     });
   });
 
-  onMessage("takeComposeRequest", ({ sender }) => {
+  onMessage(MessageType.takeComposeRequest, ({ sender }) => {
     const tabId = sender.tab?.id;
     if (tabId === undefined) {
       return null;
@@ -160,9 +160,9 @@ export default defineBackground(() => {
    * Answered here because only the background can: the API belongs to tabs, not to the page that
    * wants the picture. It needs `<all_urls>`, which the page asks the reader for at the press.
    */
-  onMessage("captureNewTab", async () => browser.tabs.captureVisibleTab({ format: "png" }).catch(() => null));
+  onMessage(MessageType.captureNewTab, async () => browser.tabs.captureVisibleTab({ format: "png" }).catch(() => null));
 
-  onMessage("searchWithDefaultEngine", async ({ data }) => {
+  onMessage(MessageType.searchWithDefaultEngine, async ({ data }) => {
     await browser.search.query({
       text: data,
       disposition: "CURRENT_TAB"

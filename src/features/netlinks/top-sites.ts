@@ -1,6 +1,6 @@
 import { hostOf } from "./link";
-import type { IconName } from "@/features/netlinks/icons/choices";
-import { sendMessage } from "@/lib/messaging";
+import { pickIcon } from "@/features/netlinks/icons/auto";
+import { MessageType, sendMessage } from "@/lib/messaging";
 import { SEEDED_CATEGORY } from "@/lib/storage/defaults";
 import { bookmarksItem, bookmarksSeededItem } from "@/lib/storage/items";
 import type { Bookmark } from "@/lib/storage/schema";
@@ -110,8 +110,9 @@ export async function seedBookmarksFromTopSites() {
     return null;
   }
 
-  const sites = await sendMessage("getTopSites", undefined).catch(() => null);
-  if (!sites?.length) {
+  const sites = await sendMessage(MessageType.getTopSites, undefined).catch(() => null);
+  const seedable = sites?.filter(site => seedableSiteSchema.safeParse(site).success) ?? [];
+  if (!seedable.length) {
     return null;
   }
 

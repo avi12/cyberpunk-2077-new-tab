@@ -58,10 +58,23 @@ export type ComposeRequest = {
   prompt: string;
 };
 
+/**
+ * Every question the protocol can be asked. The name is the wire contract between the context that
+ * asks and the one that answers, so it is spelled once here rather than at each end of every call.
+ */
+export enum MessageType {
+  getTopSites = "getTopSites",
+  searchWithDefaultEngine = "searchWithDefaultEngine",
+  readCompanion = "readCompanion",
+  openPromptTarget = "openPromptTarget",
+  takeComposeRequest = "takeComposeRequest",
+  captureNewTab = "captureNewTab"
+}
+
 type ProtocolMap = {
-  getTopSites(): TopSite[];
-  searchWithDefaultEngine(text: string): void;
-  readCompanion(request: CompanionRequest): CompanionResult;
+  [MessageType.getTopSites](): TopSite[];
+  [MessageType.searchWithDefaultEngine](text: string): void;
+  [MessageType.readCompanion](request: CompanionRequest): CompanionResult;
   /**
    * Go to a destination, and where `compose` says so, finish the prompt off once there. Only the
    * background can do the second half, since only it may inject - and it says how that went, which
@@ -70,7 +83,7 @@ type ProtocolMap = {
    * A page navigating its own tab is gone before the answer arrives, which is why a refusal is
    * remembered here rather than handed back for the caller to remember.
    */
-  openPromptTarget(request: {
+  [MessageType.openPromptTarget](request: {
     url: string;
     disposition: TabDisposition;
     compose: ComposeRequest | null;
@@ -79,7 +92,7 @@ type ProtocolMap = {
    * Asked by the script injected into that tab, and answered by which tab asked - so the prompt is
    * never written anywhere it would have to be cleaned up from, and is only ever collected once.
    */
-  takeComposeRequest(): ComposeRequest | null;
+  [MessageType.takeComposeRequest](): ComposeRequest | null;
   /**
    * The page as the browser actually drew it, as a PNG data URL, or null where it would not.
    *
@@ -87,7 +100,7 @@ type ProtocolMap = {
    * itself. What comes back is the compositor's own output rather than a second rendering of the
    * DOM, so the scanlines, the glows and the blur behind the panels are the ones on screen.
    */
-  captureNewTab(): string | null;
+  [MessageType.captureNewTab](): string | null;
 };
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

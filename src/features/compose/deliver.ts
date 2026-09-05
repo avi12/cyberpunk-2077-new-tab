@@ -1,6 +1,6 @@
 import { composeAccess } from "./access.svelte";
 import { COMPOSE_SITES, type ComposeSiteId, isComposerFillable } from "./sites";
-import { sendMessage, TabDisposition } from "@/lib/messaging";
+import { MessageType, sendMessage, TabDisposition } from "@/lib/messaging";
 
 /**
  * Handing a prompt over to a destination, and deciding what carries it there.
@@ -64,7 +64,7 @@ async function openPrompt({ url, disposition }: {
   url: string;
   disposition: TabDisposition;
 }) {
-  await sendMessage("openPromptTarget", {
+  await sendMessage(MessageType.openPromptTarget, {
     url,
     disposition,
     compose: null
@@ -140,7 +140,7 @@ export async function handOffPrompt({ siteId, url, prompt, disposition, onCopied
    */
   const destination = isCarriedByUrl ? url : COMPOSE_SITES[siteId].url;
   if (isAllowed) {
-    await sendMessage("openPromptTarget", {
+    await sendMessage(MessageType.openPromptTarget, {
       url: destination,
       disposition,
       compose: {

@@ -1,4 +1,4 @@
-import { sendMessage } from "@/lib/messaging";
+import { MessageType, sendMessage } from "@/lib/messaging";
 import { DEFAULT_SEARCH_ENGINES } from "@/lib/storage/defaults";
 import type { SearchEngine } from "@/lib/storage/schema";
 
@@ -40,7 +40,7 @@ export function searchUrl({ engine, query }: {
  */
 export async function searchWithBrowserDefault(query: string) {
   try {
-    await sendMessage("searchWithDefaultEngine", query);
+    await sendMessage(MessageType.searchWithDefaultEngine, query);
 
     return true;
   } catch {

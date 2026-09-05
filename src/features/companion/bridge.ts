@@ -1,4 +1,4 @@
-import { CompanionAnswer, type CompanionRequest, sendMessage } from "@/lib/messaging";
+import { CompanionAnswer, type CompanionRequest, MessageType, sendMessage } from "@/lib/messaging";
 import type { CompanionSnapshot, StorageItem } from "@/lib/storage/items";
 import { z } from "@/lib/zod";
 
@@ -107,7 +107,7 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
     };
   }
 
-  const result = await sendMessage("readCompanion", request).catch(() => null);
+  const result = await sendMessage(MessageType.readCompanion, request).catch(() => null);
   if (!result || result.answer === CompanionAnswer.silent) {
     return {
       state: CompanionState.companionOffline,
