@@ -220,6 +220,6 @@ const DEFAULT_CHOICE = ICON_CHOICES[0];
 
 export const DEFAULT_ICON = DEFAULT_CHOICE.name;
 
-export function iconByName(name: string): string {
+export function iconByName(name: string) {
   return (ICON_CHOICES.find(entry => entry.name === name) ?? DEFAULT_CHOICE).svg;
 }

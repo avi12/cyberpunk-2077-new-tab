@@ -1,7 +1,7 @@
-import { hostLabel, hostOf } from "../link";
-import { BookmarkCategory } from "../storage/schema";
 import type { IconName } from "./choices";
 import { DEFAULT_ICON } from "./choices";
+import { hostLabel, hostOf } from "@/features/netlinks/link";
+import { BookmarkCategory } from "@/lib/storage/schema";
 
 /**
  * Niagara Launcher's Anycons decide an app's glyph from the app's store category, with a
@@ -333,7 +333,7 @@ function knows({ tokens, keywords }: {
 function classify({ url, title }: {
   url: string;
   title: string;
-}): IconName | null {
+}) {
   const site = SITE_ICONS[hostLabel(url)];
   if (site) {
     return site;
@@ -352,7 +352,7 @@ export function pickIcon({ url, title, category }: {
   url: string;
   title: string;
   category: string;
-}): IconName {
+}) {
   return classify({
     url,
     title
@@ -363,7 +363,7 @@ export function pickIcon({ url, title, category }: {
 export function pickCategory({ url, title }: {
   url: string;
   title: string;
-}): BookmarkCategory | null {
+}) {
   const icon = classify({
     url,
     title

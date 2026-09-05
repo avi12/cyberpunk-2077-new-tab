@@ -1,4 +1,4 @@
-import { readProxied } from "./cors-proxy";
+import { readProxied } from "@/features/widgets/cors-proxy";
 
 const SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/i;
 const WWW_PATTERN = /^www\./;
@@ -39,7 +39,8 @@ export function hostLabel(url: string) {
     labels.pop();
   }
 
-  if (labels.length > 1 && PUBLIC_SECOND_LEVEL_LABELS.has(labels.at(-1) ?? "")) {
+  const isPublicSuffix = labels.length > 1 && PUBLIC_SECOND_LEVEL_LABELS.has(labels.at(-1) ?? "");
+  if (isPublicSuffix) {
     labels.pop();
   }
 

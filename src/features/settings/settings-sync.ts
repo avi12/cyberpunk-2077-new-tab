@@ -1,5 +1,5 @@
 import { importSettings, settingsSnapshot } from "./settings-file";
-import { z } from "./zod";
+import { z } from "@/lib/zod";
 import { storage } from "#imports";
 
 /**
@@ -39,7 +39,7 @@ function sliceKeys(count: number) {
   return Array.from({ length: count }, (_, index) => sliceKey(index));
 }
 
-function slice(json: string): string[] {
+function slice(json: string) {
   return Array.from(
     { length: Math.ceil(json.length / SLICE_LENGTH) },
     (_, index) => json.slice(index * SLICE_LENGTH, (index + 1) * SLICE_LENGTH)
@@ -50,18 +50,18 @@ function slice(json: string): string[] {
  * The record another machine left, which is another build's idea of what a backup looks like - so it
  * is read the way any other crossing payload is, and an unreadable one counts as no backup at all.
  */
-async function readBackup(): Promise<Backup | null> {
+async function readBackup() {
   const parsed = backupSchema.safeParse(await backupItem.getValue());
 
   return parsed.success ? parsed.data : null;
 }
 
-export async function backupTakenAtMs(): Promise<number | null> {
+export async function backupTakenAtMs() {
   return (await readBackup())?.savedAtMs ?? null;
 }
 
 /** Answers with the moment it was taken, which is the line the panel shows afterwards. */
-export async function keepBackup(): Promise<number> {
+export async function keepBackup() {
   // No indenting: every byte of it counts against the area.
   const json = JSON.stringify(settingsSnapshot());
   if (json.length > MAX_SNAPSHOT_LENGTH) {
@@ -89,22 +89,22 @@ export async function keepBackup(): Promise<number> {
   return savedAtMs;
 }
 
-export async function restoreBackup(): Promise<void> {
+export async function restoreBackup() {
   const backup = await readBackup();
   if (!backup) {
     throw new Error(NO_BACKUP);
   }
 
   const stored = await storage.getItems(sliceKeys(backup.sliceCount));
-  const slices = z.array(z.string()).safeParse(stored.map(({ value }) => value));
-  if (!slices.success) {
+  const parsed = z.array(z.string()).safeParse(stored.map(({ value }) => value));
+  if (!parsed.success) {
     throw new Error(BACKUP_INCOMPLETE);
   }
 
-  await importSettings(slices.data.join(""));
+  await importSettings(parsed.data.join(""));
 }
 
-export async function dropBackup(): Promise<void> {
+export async function dropBackup() {
   const backup = await readBackup();
   await storage.removeItems(sliceKeys(backup?.sliceCount ?? 0));
   await backupItem.removeValue();

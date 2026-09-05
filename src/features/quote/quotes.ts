@@ -1,4 +1,4 @@
-export type Quote = {
+type Quote = {
   text: string;
   author: string;
 };
@@ -296,6 +296,6 @@ const QUOTES: [Quote, ...Quote[]] = [
 ];
 
 /** A fresh quote every time the page opens - the original picked one per mount and kept it. */
-export function randomQuote(): Quote {
+export function randomQuote() {
   return QUOTES[Math.floor(Math.random() * QUOTES.length)] ?? QUOTES[0];
 }

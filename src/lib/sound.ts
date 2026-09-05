@@ -1,4 +1,4 @@
-import { settings } from "./storage/settings.svelte";
+import { settings } from "@/lib/storage/settings.svelte";
 
 /**
  * What a card says back to the cursor.
@@ -105,7 +105,7 @@ function audioContext() {
  * drop what it was asked for - it queues it, and plays the lot at once when it wakes. So the sound
  * is skipped rather than scheduled until the context is actually running.
  */
-function runningContext(): AudioContext | null {
+function runningContext() {
   const audio = audioContext();
   if (audio.state === "running") {
     return audio;
@@ -117,7 +117,7 @@ function runningContext(): AudioContext | null {
 }
 
 /** The same hiss every time it is asked for: both voices are an envelope over it, not a new noise. */
-function hissBuffer(audio: AudioContext): AudioBuffer {
+function hissBuffer(audio: AudioContext) {
   if (hiss) {
     return hiss;
   }
@@ -147,7 +147,7 @@ function envelopeFor({
   attackMs: number;
   releaseMs: number;
   gain: number;
-}): GainNode {
+}) {
   const output = new GainNode(audio, { gain: 0 });
   output.gain.linearRampToValueAtTime(gain, startedAt + attackMs / MS_PER_SECOND);
   output.gain.setValueAtTime(gain, endsAt - releaseMs / MS_PER_SECOND);
@@ -157,7 +157,7 @@ function envelopeFor({
   return output;
 }
 
-function playTick(audio: AudioContext): void {
+function playTick(audio: AudioContext) {
   const startedAt = audio.currentTime;
   const endsAt = startedAt + TICK_MS / MS_PER_SECOND;
   const envelope = envelopeFor({
@@ -190,7 +190,7 @@ function playTick(audio: AudioContext): void {
   bed.stop(endsAt);
 }
 
-function playClick(audio: AudioContext): void {
+function playClick(audio: AudioContext) {
   const startedAt = audio.currentTime;
   const endsAt = startedAt + CLICK_MS / MS_PER_SECOND;
   const envelope = envelopeFor({
@@ -213,7 +213,7 @@ function playClick(audio: AudioContext): void {
   burst.stop(endsAt);
 }
 
-function audioForSound(): AudioContext | null {
+function audioForSound() {
   if (!settings.playSounds.current) {
     return null;
   }
@@ -221,7 +221,7 @@ function audioForSound(): AudioContext | null {
   return runningContext();
 }
 
-function onHover(): void {
+function onHover() {
   const audio = audioForSound();
   if (!audio) {
     return;
@@ -240,7 +240,7 @@ function onHover(): void {
  * No repeat guard: a click cannot machine-gun the way a cursor crossing a grid can, and the guard
  * would swallow it anyway - the hover that brought the cursor here fired milliseconds ago.
  */
-function onClick(): void {
+function onClick() {
   const audio = audioForSound();
   if (audio) {
     playClick(audio);
@@ -251,7 +251,7 @@ function onClick(): void {
  * The panel's own preview. A click is exactly the activation a context waits for, so unlike a
  * hover it is worth waiting on the wake-up before playing.
  */
-export async function previewTick(): Promise<void> {
+export async function previewTick() {
   await audioContext().resume();
   onHover();
 }
@@ -263,7 +263,7 @@ export async function previewTick(): Promise<void> {
 let restingCursor = "";
 
 /** Whether the page is offering this element the reticle rather than the arrow. */
-function isAimed(element: Element): boolean {
+function isAimed(element: Element) {
   restingCursor ||= getComputedStyle(document.documentElement).cursor;
 
   return getComputedStyle(element).cursor !== restingCursor;
@@ -335,7 +335,10 @@ export function menuSounds(node: HTMLElement) {
   }
 
   function onFocusIn(e: FocusEvent) {
-    if (e.target instanceof Element && e.target.matches(":focus-visible") && aimedLink(e.target)) {
+    const isTabbedOntoLink = e.target instanceof Element
+      && e.target.matches(":focus-visible")
+      && Boolean(aimedLink(e.target));
+    if (isTabbedOntoLink) {
       onHover();
     }
   }

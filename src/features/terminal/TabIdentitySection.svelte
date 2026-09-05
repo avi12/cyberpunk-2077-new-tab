@@ -1,6 +1,6 @@
 <script lang="ts">
-  import IconPicker from "@/components/IconPicker.svelte";
-  import PanelSection from "./PanelSection.svelte";
+  import IconPicker from "@/features/netlinks/IconPicker.svelte";
+  import PanelSection from "@/ui/PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
 </script>
 

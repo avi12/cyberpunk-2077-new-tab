@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ICON_CHOICES, iconByName } from "@/lib/icons/choices";
+  import { ICON_CHOICES, iconByName } from "@/features/netlinks/icons/choices";
   import { tooltip } from "@/lib/tooltip";
 
   const {

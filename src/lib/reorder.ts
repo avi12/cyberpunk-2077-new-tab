@@ -13,7 +13,7 @@ export function reorderedIds({ ids, fromIndex, toIndex }: {
   ids: string[];
   fromIndex: number;
   toIndex: number;
-}): string[] {
+}) {
   const draggedId = ids[fromIndex];
   if (draggedId === undefined) {
     return ids;
@@ -32,7 +32,7 @@ export function reorderedIds({ ids, fromIndex, toIndex }: {
 function isBefore({ slot, dragged }: {
   slot: SlotCenter;
   dragged: SlotCenter;
-}): boolean {
+}) {
   const rowTolerance = slot.height / 2;
   if (slot.y < dragged.y - rowTolerance) {
     return true;
@@ -54,7 +54,7 @@ export function insertionIndex({ centers, fromIndex, dragged }: {
   centers: SlotCenter[];
   fromIndex: number;
   dragged: SlotCenter;
-}): number {
+}) {
   let index = 0;
   for (const [position, slot] of centers.entries()) {
     if (position !== fromIndex && isBefore({

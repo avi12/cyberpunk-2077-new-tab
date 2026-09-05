@@ -1,3 +1,4 @@
+import { prefersReducedMotion } from "./motion";
 import { insertionIndex, reorderedIds } from "./reorder";
 import type { SlotCenter } from "./reorder";
 import { withViewTransition } from "./view-transition";
@@ -95,11 +96,7 @@ const SHIELD_Z_INDEX = "998";
 /** Every mounted container, by group, so a lift can measure the ones it might be dropped into. */
 const GROUPS = new Map<string, Set<Member>>();
 
-function prefersReducedMotion(): boolean {
-  return matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function centerOf(slot: Slot): SlotCenter {
+function centerOf(slot: Slot) {
   return {
     x: slot.left + slot.width / 2,
     y: slot.top + slot.height / 2,
@@ -110,7 +107,7 @@ function centerOf(slot: Slot): SlotCenter {
 function slotOf({ id, element }: {
   id: string;
   element: HTMLElement;
-}): Slot | null {
+}) {
   const rect = element.getBoundingClientRect();
   if (rect.width === 0 || rect.height === 0) {
     return null;
@@ -126,7 +123,7 @@ function slotOf({ id, element }: {
   };
 }
 
-function measure(member: Member): Board {
+function measure(member: Member) {
   const slots: Slot[] = [];
   let spare: Slot | null = null;
 
@@ -170,7 +167,7 @@ function measure(member: Member): Board {
 }
 
 /** The nearest element holding every board, so a lifted item is raised only as far as it needs. */
-function commonAncestor(nodes: HTMLElement[]): HTMLElement | null {
+function commonAncestor(nodes: HTMLElement[]) {
   let ancestor: HTMLElement | null = null;
   for (const node of nodes) {
     ancestor ??= node;
@@ -294,13 +291,19 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     elRaised = null;
   }
 
-  function slideTo(slot: Slot, landing: Position) {
+  function slideTo({ slot, landing }: {
+    slot: Slot;
+    landing: Position;
+  }) {
     slot.element.style.translate = `${landing.left - slot.left}px ${landing.top - slot.top}px`;
   }
 
-  function sizeTo(slot: Slot, landing: {
-    width: number;
-    height: number;
+  function sizeTo({ slot, landing }: {
+    slot: Slot;
+    landing: {
+      width: number;
+      height: number;
+    };
   }) {
     slot.element.style.width = `${landing.width}px`;
     slot.element.style.height = `${landing.height}px`;
@@ -323,7 +326,10 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
         continue;
       }
 
-      slideTo(slot, landing);
+      slideTo({
+        slot,
+        landing
+      });
     }
   }
 
@@ -339,16 +345,25 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
         continue;
       }
 
-      slideTo(slot, landing);
+      slideTo({
+        slot,
+        landing
+      });
     }
   }
 
   /** The same gap in a list the item is only visiting: everything from `before` steps along one. */
-  function openGap(board: Board, before: number) {
+  function openGap({ board, before }: {
+    board: Board;
+    before: number;
+  }) {
     for (const [index, slot] of board.slots.entries()) {
       const landing = index < before ? slot : board.slots[index + 1] ?? board.spare;
       if (landing) {
-        slideTo(slot, landing);
+        slideTo({
+          slot,
+          landing
+        });
       }
     }
   }
@@ -405,9 +420,10 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
   function boardAt({ x, y }: {
     x: number;
     y: number;
-  }): Board | null {
+  }) {
     for (const board of boards) {
-      if (x >= board.left && x <= board.right && y >= board.top && y <= board.bottom) {
+      const isInside = x >= board.left && x <= board.right && y >= board.top && y <= board.bottom;
+      if (isInside) {
         return board;
       }
     }
@@ -466,7 +482,10 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
       return;
     }
 
-    openGap(target, next);
+    openGap({
+      board: target,
+      before: next
+    });
   }
 
   function clearStyles() {
@@ -544,7 +563,7 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     });
   }
 
-  function landingSlot(isCancelled: boolean): Slot | null {
+  function landingSlot(isCancelled: boolean) {
     if (!source) {
       return null;
     }
@@ -571,7 +590,10 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
     }
 
     if (isReduced) {
-      slideTo(dragged, landing);
+      slideTo({
+        slot: dragged,
+        landing
+      });
       void commit(isCancelled);
 
       return;
@@ -583,7 +605,10 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
      */
     const isResizing = landing.width !== dragged.width || landing.height !== dragged.height;
     if (isResizing) {
-      sizeTo(dragged, dragged);
+      sizeTo({
+        slot: dragged,
+        landing: dragged
+      });
     }
 
     dragged.element.style.transition = [
@@ -592,10 +617,16 @@ export function sortable(node: HTMLElement, options: SortableOptions) {
       `height ${SETTLE_MS}ms ${SLIDE_EASE}`
     ].join(", ");
     requestAnimationFrame(() => {
-      slideTo(dragged, landing);
+      slideTo({
+        slot: dragged,
+        landing
+      });
 
       if (isResizing) {
-        sizeTo(dragged, landing);
+        sizeTo({
+          slot: dragged,
+          landing
+        });
       }
     });
     setTimeout(() => {

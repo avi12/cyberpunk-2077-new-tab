@@ -1,9 +1,9 @@
-import type { Bookmark } from "./storage/schema";
-import { BookmarkCategory } from "./storage/schema";
-import { settings } from "./storage/settings.svelte";
+import type { Bookmark } from "@/lib/storage/schema";
+import { BookmarkCategory } from "@/lib/storage/schema";
+import { settings } from "@/lib/storage/settings.svelte";
 
 /** Category names are normalised to lower case, matching how the original stored them. */
-export function normalizeName(name: string): string {
+export function normalizeName(name: string) {
   return name.trim().toLowerCase();
 }
 
@@ -15,7 +15,7 @@ export function categoryOf(bookmark: Bookmark) {
   return bookmark.category || BookmarkCategory.other;
 }
 
-export function addCategory(name: string): void {
+export function addCategory(name: string) {
   if (!settings.customCategories.current.includes(name)) {
     settings.customCategories.current = [...settings.customCategories.current, name];
   }
@@ -28,7 +28,7 @@ export function addCategory(name: string): void {
 export function renameCategory({ from, to }: {
   from: string;
   to: string;
-}): void {
+}) {
   settings.bookmarks.current = settings.bookmarks.current.map(bookmark =>
     (categoryOf(bookmark) === from ? {
       ...bookmark,
@@ -49,7 +49,7 @@ export function renameCategory({ from, to }: {
   }
 }
 
-export function deleteCategory(name: string): void {
+export function deleteCategory(name: string) {
   settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => categoryOf(bookmark) !== name);
   settings.categoryOrder.current = settings.categoryOrder.current.filter(entry => entry !== name);
   settings.customCategories.current = settings.customCategories.current.filter(entry => entry !== name);
@@ -60,7 +60,7 @@ export function deleteCategory(name: string): void {
   }
 }
 
-export function toggleCollapsed(name: string): void {
+export function toggleCollapsed(name: string) {
   settings.collapsedCategories.current = {
     ...settings.collapsedCategories.current,
     [name]: !settings.collapsedCategories.current[name]

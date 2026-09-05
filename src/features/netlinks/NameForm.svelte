@@ -19,14 +19,15 @@
   const nameFieldId = $props.id();
 
   const isCyan = $derived(variant === "cyan");
-
-  function onSubmit(e: SubmitEvent) {
-    e.preventDefault();
-    onConfirm();
-  }
 </script>
 
-<form class="name-form" class:name-form--cyan={isCyan} onsubmit={onSubmit}>
+<form
+  class="name-form"
+  class:name-form--cyan={isCyan}
+  onsubmit={e => {
+    e.preventDefault();
+    onConfirm();
+  }}>
   <h3 class="name-form__heading">{heading}</h3>
   <div class="row">
     <label class="visually-hidden" for={nameFieldId}>{heading}</label>

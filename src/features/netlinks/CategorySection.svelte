@@ -213,11 +213,11 @@
     &:focus-visible {
       outline-color: currentColor;
     }
-  }
 
-  .category__action :global(svg) {
-    width: 16px;
-    height: 16px;
+    :global(svg) {
+      width: 16px;
+      height: 16px;
+    }
   }
 
   .category__action--edit {

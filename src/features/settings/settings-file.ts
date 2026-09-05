@@ -1,8 +1,8 @@
-import { DEFAULT_BACKGROUND } from "./storage/defaults";
-import { CACHED_PREFIX } from "./storage/media-store";
-import { BackgroundMediaType } from "./storage/schema";
-import { allSettings, settings } from "./storage/settings.svelte";
-import { z } from "./zod";
+import { DEFAULT_BACKGROUND } from "@/lib/storage/defaults";
+import { CACHED_PREFIX } from "@/lib/storage/media-store";
+import { BackgroundMediaType } from "@/lib/storage/schema";
+import { allSettings, settings } from "@/lib/storage/settings.svelte";
+import { z } from "@/lib/zod";
 
 /**
  * Export and import of the whole settings blob.
@@ -26,7 +26,7 @@ const snapshotSchema = z.object(
 );
 
 /** Every setting as one object - what a file holds, and what the browser account holds. */
-export function settingsSnapshot(): Record<string, unknown> {
+export function settingsSnapshot() {
   const snapshot: Record<string, unknown> = {};
   for (const [key, setting] of Object.entries(allSettings)) {
     snapshot[key] = setting.current;
@@ -42,20 +42,22 @@ export function settingsSnapshot(): Record<string, unknown> {
 }
 
 /** A file is indented: it is the copy a reader may open. */
-export function exportSettings(): string {
+export function exportSettings() {
   return JSON.stringify(settingsSnapshot(), null, 2);
 }
 
-function readJson(json: string): unknown {
+function readJson(json: string) {
   try {
-    return JSON.parse(json);
+    const snapshot: unknown = JSON.parse(json);
+
+    return snapshot;
   } catch {
     throw new Error(INVALID_SETTINGS_FILE);
   }
 }
 
 /** The first thing wrong with the file, named, because "invalid" alone says nothing to fix. */
-function problem(error: z.ZodError): Error {
+function problem(error: z.ZodError) {
   const path = error.issues[0]?.path.join(".");
 
   return new Error(path ? `${INVALID_SETTINGS_FILE} - ${path} does not look right` : INVALID_SETTINGS_FILE);
@@ -66,7 +68,7 @@ function problem(error: z.ZodError): Error {
  * page as it was rather than half imported. It resolves once every value is in storage, because the
  * page reloads on the other side of this call and a write still in flight would not survive it.
  */
-export async function importSettings(json: string): Promise<void> {
+export async function importSettings(json: string) {
   const parsed = snapshotSchema.safeParse(readJson(json));
   if (!parsed.success) {
     throw problem(parsed.error);
@@ -83,7 +85,7 @@ export function downloadFile({ name, contents, type }: {
   name: string;
   contents: BlobPart;
   type: string;
-}): void {
+}) {
   const url = URL.createObjectURL(new Blob([contents], { type }));
   const elAnchor = document.createElement("a");
   elAnchor.href = url;

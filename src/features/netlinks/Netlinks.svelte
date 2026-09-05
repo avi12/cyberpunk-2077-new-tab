@@ -1,11 +1,11 @@
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/schema";
-  import { addCategory, categoryOf, deleteCategory, normalizeName, renameCategory, toggleCollapsed } from "@/lib/categories";
+  import { addCategory, categoryOf, deleteCategory, normalizeName, renameCategory, toggleCollapsed } from "./categories";
   import BookmarkForm from "./BookmarkForm.svelte";
   import { arrowFocus } from "@/lib/arrow-focus";
   import CategorySection from "./CategorySection.svelte";
-  import Modal from "@/components/modals/Modal.svelte";
-  import { pickCategory } from "@/lib/icons/auto";
+  import Modal from "@/ui/Modal.svelte";
+  import { pickCategory } from "@/features/netlinks/icons/auto";
   import NameForm from "./NameForm.svelte";
   import iconPlus from "@/assets/icons/plus.svg?raw";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -64,7 +64,8 @@
       url: bookmark.url,
       title: bookmark.title
     });
-    if (!category || !categories.includes(category) || category === categoryOf(bookmark)) {
+    const isFiledElsewhere = category !== null && categories.includes(category) && category !== categoryOf(bookmark);
+    if (!isFiledElsewhere) {
       return null;
     }
 
@@ -179,7 +180,8 @@
   function confirmRename() {
     const from = renamingCategory;
     const to = normalizeName(renameDraft);
-    if (!from || !to || to === from) {
+    const isNameChanged = from !== null && to !== "" && to !== from;
+    if (!isNameChanged) {
       renamingCategory = null;
 
       return;
@@ -203,7 +205,8 @@
 
   function confirmAddCategory() {
     const name = normalizeName(newCategoryName);
-    if (!name || categories.includes(name)) {
+    const isNameFree = name !== "" && !categories.includes(name);
+    if (!isNameFree) {
       return;
     }
 
@@ -229,7 +232,6 @@
     deleteCategory(pendingDelete);
     pendingDelete = null;
   }
-
 </script>
 
 {#snippet linkForm(category: string)}

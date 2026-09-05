@@ -1,17 +1,17 @@
 <script lang="ts">
   import type { DisplayPreferences } from "@/lib/storage/schema";
   import { BACKGROUND_IMAGES, COLOR_THEMES, SCAN_LINES_MODES } from "@/lib/storage/defaults";
-  import CustomBackgroundSection from "./terminal/CustomBackgroundSection.svelte";
-  import DisplayElementsSection from "./terminal/DisplayElementsSection.svelte";
+  import CustomBackgroundSection from "./CustomBackgroundSection.svelte";
+  import DisplayElementsSection from "./DisplayElementsSection.svelte";
   import iconMonitor from "@/assets/icons/monitor.svg?raw";
-  import OptionGroup from "./OptionGroup.svelte";
-  import PanelSection from "./terminal/PanelSection.svelte";
+  import OptionGroup from "@/ui/OptionGroup.svelte";
+  import PanelSection from "@/ui/PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
   import { withViewTransition } from "@/lib/view-transition";
-  import SolidColorsSection from "./terminal/SolidColorsSection.svelte";
-  import SoundSection from "./terminal/SoundSection.svelte";
-  import TabIdentitySection from "./terminal/TabIdentitySection.svelte";
-  import WeatherSourceSection from "./terminal/WeatherSourceSection.svelte";
+  import SolidColorsSection from "./SolidColorsSection.svelte";
+  import SoundSection from "./SoundSection.svelte";
+  import TabIdentitySection from "./TabIdentitySection.svelte";
+  import WeatherSourceSection from "./WeatherSourceSection.svelte";
 
   const { onElementGlitch }: { onElementGlitch: (key: keyof DisplayPreferences | null) => void } = $props();
 
@@ -33,7 +33,6 @@
     <DisplayElementsSection {onElementGlitch} />
 
     <SoundSection />
-
 
     <WeatherSourceSection />
 

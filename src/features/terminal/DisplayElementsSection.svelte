@@ -3,10 +3,10 @@
   import iconEye from "@/assets/icons/eye.svg?raw";
   import iconEyeOff from "@/assets/icons/eye-off.svg?raw";
   import { GLITCH_SHORT_MS } from "@/lib/glitch.svelte";
-  import { IS_EDGE } from "@/lib/companion/platform";
-  import PanelSection from "./PanelSection.svelte";
+  import { IS_EDGE } from "@/features/companion/platform";
+  import PanelSection from "@/ui/PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
-  import ToggleOption from "./ToggleOption.svelte";
+  import ToggleOption from "@/ui/ToggleOption.svelte";
   import { withViewTransition } from "@/lib/view-transition";
 
   const { onElementGlitch }: { onElementGlitch: (key: keyof DisplayPreferences | null) => void } = $props();

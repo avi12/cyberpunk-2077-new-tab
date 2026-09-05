@@ -1,8 +1,8 @@
 <script lang="ts">
-  import PanelSection from "./PanelSection.svelte";
+  import PanelSection from "@/ui/PanelSection.svelte";
   import { previewTick } from "@/lib/sound";
   import { settings } from "@/lib/storage/settings.svelte";
-  import ToggleOption from "./ToggleOption.svelte";
+  import ToggleOption from "@/ui/ToggleOption.svelte";
   import iconVolume from "@/assets/icons/volume-2.svg?raw";
   import iconVolumeOff from "@/assets/icons/volume-x.svg?raw";
 

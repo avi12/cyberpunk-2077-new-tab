@@ -1,15 +1,15 @@
 <script lang="ts">
-  import { backupTakenAtMs, dropBackup, keepBackup, restoreBackup } from "@/lib/settings-sync";
-  import { downloadFile, exportSettings, importSettings, INVALID_SETTINGS_FILE, SETTINGS_FILE_NAME } from "@/lib/settings-file";
+  import { backupTakenAtMs, dropBackup, keepBackup, restoreBackup } from "./settings-sync";
+  import { downloadFile, exportSettings, importSettings, INVALID_SETTINGS_FILE, SETTINGS_FILE_NAME } from "./settings-file";
   import { dropZone } from "@/lib/drop-zone";
-  import { formatTimestamp } from "@/lib/time";
+  import { formatTimestamp } from "@/features/clock/time";
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import iconDownload from "@/assets/icons/download.svg?raw";
   import iconSave from "@/assets/icons/save.svg?raw";
   import iconTrash2 from "@/assets/icons/trash2.svg?raw";
   import iconTriangleAlert from "@/assets/icons/triangle-alert.svg?raw";
   import iconUpload from "@/assets/icons/upload.svg?raw";
-  import Modal from "./Modal.svelte";
+  import Modal from "@/ui/Modal.svelte";
 
   const {
     isOpen,

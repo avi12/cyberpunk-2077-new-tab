@@ -1,11 +1,11 @@
 <script lang="ts">
-  import PanelSection from "./PanelSection.svelte";
-  import { hasGoogleWeatherAccess, requestGoogleWeatherAccess } from "@/lib/weather/google";
+  import PanelSection from "@/ui/PanelSection.svelte";
+  import { hasGoogleWeatherAccess, requestGoogleWeatherAccess } from "@/features/weather/google";
   import { settings } from "@/lib/storage/settings.svelte";
   import iconSquare from "@/assets/icons/square.svg?raw";
   import iconSquareCheck from "@/assets/icons/square-check.svg?raw";
-  import ToggleOption from "./ToggleOption.svelte";
-  import { WeatherSourceId } from "@/lib/weather/sources";
+  import ToggleOption from "@/ui/ToggleOption.svelte";
+  import { WeatherSourceId } from "@/features/weather/sources";
 
   const TOGGLE_LABEL = "Google weather";
 
@@ -42,7 +42,12 @@
    * since the site went.
    */
   async function matchGrantedSite() {
-    if (!isOn || await hasGoogleWeatherAccess()) {
+    if (!isOn) {
+      return;
+    }
+
+    const isSiteStillGranted = await hasGoogleWeatherAccess();
+    if (isSiteStillGranted) {
       return;
     }
 

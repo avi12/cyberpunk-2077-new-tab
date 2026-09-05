@@ -1,10 +1,10 @@
 <script lang="ts">
   import iconChevronDown from "@/assets/icons/chevron-down.svg?raw";
-  import type { ComposeSiteId } from "@/lib/compose/sites";
-  import { composeAccess } from "@/lib/compose/access.svelte";
+  import type { ComposeSiteId } from "@/features/compose/sites";
+  import { composeAccess } from "@/features/compose/access.svelte";
   import { DEFAULT_SEARCH_ENGINES } from "@/lib/storage/defaults";
-  import { engineById, searchUrl, searchWithBrowserDefault } from "@/lib/search";
-  import { handOffPrompt } from "@/lib/compose/deliver";
+  import { engineById, searchUrl, searchWithBrowserDefault } from "./search";
+  import { handOffPrompt } from "@/features/compose/deliver";
   import { settings } from "@/lib/storage/settings.svelte";
   import { TabDisposition } from "@/lib/messaging";
 
@@ -80,17 +80,11 @@
       return;
     }
 
-
     isScanning = true;
     isScanFailed = false;
     await new Promise(resolve => setTimeout(resolve, EMPTY_SCAN_MS));
     isScanning = false;
     isScanFailed = true;
-  }
-
-  /** A failure is about what was in the box, so it stops being true the moment that changes. */
-  function clearFailure() {
-    isScanFailed = false;
   }
 
   /**
@@ -169,12 +163,13 @@
     {/each}
 
     <label class="visually-hidden" for={QUERY_INPUT_ID}>Search</label>
+    <!-- A failure is about what was in the box, so it stops being true the moment that changes. -->
     <input
       id={QUERY_INPUT_ID}
       name={engine.queryParam}
       class="search__input"
       class:scanning-effect={isScanning}
-      oninput={clearFailure}
+      oninput={() => (isScanFailed = false)}
       placeholder={engine.placeholder}
       type="text"
       bind:value={query} />
@@ -237,17 +232,10 @@
     }
   }
 
-  /* Every name in the one cell, so the button is as wide as the longest whichever is showing. */
-
   /*
    * A popover, so the browser owns opening, Escape and light dismiss - clicking anywhere outside
    * closes it with no listener of our own. Anchor positioning keeps it under its button.
    *
-   * As wide as its widest name, and never narrower than the button it hangs off, so every option
-   * reads on one line.
-   */
-
-  /*
    * The list is as wide as its longest option rather than as wide as the button, which is only ever
    * as wide as the one name it is showing.
    */

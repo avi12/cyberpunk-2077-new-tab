@@ -21,30 +21,30 @@ const TIMESTAMP_FORMAT = new Intl.DateTimeFormat(undefined, {
   timeStyle: "short"
 });
 
-export function formatTimestamp(atMs: number): string {
+export function formatTimestamp(atMs: number) {
   return TIMESTAMP_FORMAT.format(atMs);
 }
 
-export function currentTime(): string {
+export function currentTime() {
   return TIME_FORMAT.format(new Date());
 }
 
-export function currentDate(): string {
+export function currentDate() {
   return DATE_FORMAT.format(new Date());
 }
 
-function pad(value: number): string {
+function pad(value: number) {
   return value.toString().padStart(2, "0");
 }
 
-export function currentDateIso(): string {
+export function currentDateIso() {
   const now = new Date();
 
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
 /** `<time datetime>` is a machine format, so it stays 24-hour whatever the locale reads like. */
-export function currentTimeIso(): string {
+export function currentTimeIso() {
   const now = new Date();
 
   return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
@@ -71,6 +71,6 @@ function timeOfDay(hours: number) {
   return "Night";
 }
 
-export function greeting(userName: string): string {
+export function greeting(userName: string) {
   return `${timeOfDay(new Date().getHours())}, ${userName}`;
 }

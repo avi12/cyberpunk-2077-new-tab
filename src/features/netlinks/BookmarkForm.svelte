@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/schema";
-  import { normalizeUrl, resolveTitle } from "@/lib/link";
-  import { pickIcon } from "@/lib/icons/auto";
+  import { normalizeUrl, resolveTitle } from "./link";
+  import { pickIcon } from "@/features/netlinks/icons/auto";
   import iconSparkles from "@/assets/icons/sparkles.svg?raw";
   import iconSquareCheck from "@/assets/icons/square-check.svg?raw";
   import { untrack } from "svelte";
@@ -182,19 +182,19 @@
     &:focus {
       border-color: var(--cp-accent);
     }
+
+    &.is-missing {
+      border-color: var(--cp-secondary);
+
+      &::placeholder {
+        color: var(--cp-secondary);
+      }
+    }
   }
 
   /* The title field previews the card's own centred title; a URL is long, so it reads from the left. */
   .link-card__field--title {
     text-align: center;
-  }
-
-  .link-card__field.is-missing {
-    border-color: var(--cp-secondary);
-
-    &::placeholder {
-      color: var(--cp-secondary);
-    }
   }
 
   .link-card__actions {
@@ -213,6 +213,10 @@
 
     &:hover:not(:disabled) {
       color: var(--cp-primary-hover);
+    }
+
+    &.is-working {
+      animation: pulse 700ms cubic-bezier(0.2, 0, 0, 1) infinite alternate;
     }
 
     :global(svg) {
@@ -235,10 +239,6 @@
     &:hover:not(:disabled) {
       color: var(--cp-secondary-hi);
     }
-  }
-
-  .link-card__action.is-working {
-    animation: pulse 700ms cubic-bezier(0.2, 0, 0, 1) infinite alternate;
   }
 
   @keyframes pulse {

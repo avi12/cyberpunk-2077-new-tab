@@ -1,6 +1,6 @@
 const HEX_PATTERN = /^#[\da-f]{3,4}(?:[\da-f]{3,4})?$/i;
 
-export function isHexColor(value: string): boolean {
+export function isHexColor(value: string) {
   return HEX_PATTERN.test(value);
 }
 
@@ -26,7 +26,7 @@ function hueOf({ red, green, blue, max, chroma }: {
   return 60 * ((red - green) / chroma + 4);
 }
 
-export function hexToHsv(hex: string): [number, number, number] {
+export function hexToHsv(hex: string) {
   const digits = hex.replace("#", "");
   const full = digits.length <= 4 ? digits.replace(/./g, digit => digit + digit) : digits;
   const red = Number.parseInt(full.slice(0, 2), 16) / 255;
@@ -43,7 +43,7 @@ export function hexToHsv(hex: string): [number, number, number] {
     chroma
   });
 
-  return [hue < 0 ? hue + 360 : hue, max ? chroma / max : 0, max];
+  return [hue < 0 ? hue + 360 : hue, max ? chroma / max : 0, max] as const;
 }
 
 function channelsOf({ hue, chroma, second }: {
@@ -78,7 +78,7 @@ export function hsvToHex({ hue, saturation, value }: {
   hue: number;
   saturation: number;
   value: number;
-}): string {
+}) {
   const chroma = value * saturation;
   const offset = value - chroma;
   const channels = channelsOf({

@@ -1,7 +1,7 @@
 import App from "./App.svelte";
 import "@/app.css";
 import "@/controls.css";
-import { applyCachedTabTitle } from "@/lib/tab-identity";
+import { applyCachedTabTitle } from "@/features/identity/tab-identity";
 import { mount } from "svelte";
 
 applyCachedTabTitle();

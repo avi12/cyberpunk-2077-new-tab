@@ -3,9 +3,9 @@
   import { BACKGROUND_COLORS, BACKGROUND_IMAGES, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND_BRIGHTNESS } from "@/lib/storage/defaults";
   import { CACHED_PREFIX, clearMedia, MediaSlot, saveMedia } from "@/lib/storage/media-store";
   import { dropZone } from "@/lib/drop-zone";
-  import { fetchBlob } from "@/lib/cors-proxy";
+  import { fetchBlob } from "@/features/widgets/cors-proxy";
   import iconImage from "@/assets/icons/image.svg?raw";
-  import PanelSection from "./PanelSection.svelte";
+  import PanelSection from "@/ui/PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
   import iconTrash2 from "@/assets/icons/trash2.svg?raw";
   import iconUpload from "@/assets/icons/upload.svg?raw";
@@ -53,9 +53,11 @@
   const selectedKind = $derived(MEDIA_KINDS[mediaKind]);
   const accept = $derived(selectedKind.accept);
   const brightness = $derived(settings.backgroundBrightness.current);
-  const isCustom = $derived(
-    ![...BACKGROUND_COLORS.map(entry => entry.value), ...BACKGROUND_IMAGES.map(entry => entry.value)].includes(background)
-  );
+  const isCustom = $derived.by(() => {
+    const builtIn = [...BACKGROUND_COLORS, ...BACKGROUND_IMAGES].map(entry => entry.value);
+
+    return !builtIn.includes(background);
+  });
 
   /**
    * Everything the user brings in ends up in the same place: the bytes in IndexedDB, the sentinel in
@@ -347,5 +349,4 @@
       background: var(--cp-slider-thumb);
     }
   }
-
 </style>

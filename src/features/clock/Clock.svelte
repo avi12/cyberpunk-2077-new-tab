@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentDate, currentDateIso, currentTime, currentTimeIso } from "@/lib/time";
+  import { currentDate, currentDateIso, currentTime, currentTimeIso } from "./time";
   import { GLITCH_LONG_MS, Glitch } from "@/lib/glitch.svelte";
 
   const {
@@ -35,7 +35,7 @@
     }, TICK_MS);
     const stutter = setInterval(() => {
       if (Math.random() < RANDOM_GLITCH_CHANCE) {
-        randomGlitch.fire(GLITCH_LONG_MS);
+        randomGlitch.fire({ durationMs: GLITCH_LONG_MS });
       }
     }, RANDOM_GLITCH_INTERVAL_MS);
 
@@ -80,6 +80,11 @@
     font-size: 3.75rem;
     line-height: 1;
     letter-spacing: 0.025em;
+
+    @media (width >= 768px) {
+      font-size: 6rem;
+      line-height: 1;
+    }
   }
 
   /* The two offset copies that make the RGB-split glitch read as a broken display. */
@@ -104,15 +109,8 @@
     line-height: 1.75rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-  }
 
-  @media (width >= 768px) {
-    .clock__time {
-      font-size: 6rem;
-      line-height: 1;
-    }
-
-    .clock__date {
+    @media (width >= 768px) {
       font-size: 1.25rem;
       line-height: 1.75rem;
     }

@@ -1,9 +1,9 @@
-import type { IconName } from "./icons/choices";
 import { hostOf } from "./link";
-import { sendMessage } from "./messaging";
-import { SEEDED_CATEGORY } from "./storage/defaults";
-import { bookmarksItem, bookmarksSeededItem } from "./storage/items";
-import type { Bookmark } from "./storage/schema";
+import type { IconName } from "@/features/netlinks/icons/choices";
+import { sendMessage } from "@/lib/messaging";
+import { SEEDED_CATEGORY } from "@/lib/storage/defaults";
+import { bookmarksItem, bookmarksSeededItem } from "@/lib/storage/items";
+import type { Bookmark } from "@/lib/storage/schema";
 
 const DOMAIN_ICONS: [string, IconName][] = [
   ["youtube", "Video"],
@@ -72,7 +72,7 @@ const DOMAIN_ICONS: [string, IconName][] = [
 
 const FALLBACK_ICON: IconName = "Web";
 
-function isTwitter(host: string): boolean {
+function isTwitter(host: string) {
   return host === "x.com" || host.endsWith(".x.com");
 }
 
@@ -99,7 +99,7 @@ function titleForSite({ title, url }: {
   return URL.canParse(url) ? hostOf(url) : url;
 }
 
-export async function seedBookmarksFromTopSites(): Promise<Bookmark[] | null> {
+export async function seedBookmarksFromTopSites() {
   if (await bookmarksSeededItem.getValue()) {
     return null;
   }

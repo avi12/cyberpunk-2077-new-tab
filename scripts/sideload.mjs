@@ -32,7 +32,8 @@ const BROWSERS = {
 const args = process.argv.slice(2);
 const isFirefox = args.includes("--firefox");
 const iPortFlag = args.indexOf("--port");
-const port = iPortFlag === -1 ? DEFAULT_PORT : Number(args[iPortFlag + 1]);
+const isPortGiven = iPortFlag !== -1;
+const port = isPortGiven ? Number(args[iPortFlag + 1]) : DEFAULT_PORT;
 const { webExtTarget, sourceDir, launchArgs } = isFirefox ? BROWSERS.firefox : BROWSERS.chromium;
 
 const runner = await webExt.cmd.run(

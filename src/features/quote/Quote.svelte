@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { randomQuote } from "@/lib/quotes";
+  import { randomQuote } from "./quotes";
 
   const { glitching = false, isPending = false }: {
     glitching?: boolean;

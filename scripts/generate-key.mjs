@@ -45,7 +45,8 @@ function extensionIdFrom(publicKeyDer) {
   ).join("");
 }
 
-if (process.argv.includes("--force") || !existsSync(PRIVATE_KEY_PATH)) {
+const isMintingNeeded = process.argv.includes("--force") || !existsSync(PRIVATE_KEY_PATH);
+if (isMintingNeeded) {
   mintPrivateKey();
   console.log(`minted ${PRIVATE_KEY_PATH}`);
 }

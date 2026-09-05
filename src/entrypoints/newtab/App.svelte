@@ -1,28 +1,28 @@
 <script lang="ts">
   import type { DisplayPreferences } from "@/lib/storage/schema";
   import { ColorTheme, ScanLinesMode } from "@/lib/storage/schema";
-  import { applyTabFavicon, applyTabTitle } from "@/lib/tab-identity";
-  import AboutModal from "@/components/modals/AboutModal.svelte";
-  import Background from "@/components/Background.svelte";
-  import Clock from "@/components/Clock.svelte";
+  import { applyTabFavicon, applyTabTitle } from "@/features/identity/tab-identity";
+  import AboutModal from "@/features/about/AboutModal.svelte";
+  import Background from "@/features/background/Background.svelte";
+  import Clock from "@/features/clock/Clock.svelte";
   import iconCog from "@/assets/icons/cog.svg?raw";
-  import { greeting } from "@/lib/time";
-  import IdentityModal from "@/components/modals/IdentityModal.svelte";
-  import CompanionSetup from "@/components/companion/CompanionSetup.svelte";
-  import Copilot from "@/components/companion/Copilot.svelte";
-  import { IS_EDGE } from "@/lib/companion/platform";
+  import { greeting } from "@/features/clock/time";
+  import IdentityModal from "@/features/identity/IdentityModal.svelte";
+  import CompanionSetup from "@/features/companion/CompanionSetup.svelte";
+  import Copilot from "@/features/companion/Copilot.svelte";
+  import { IS_EDGE } from "@/features/companion/platform";
   import iconInfo from "@/assets/icons/info.svg?raw";
   import { loadSettings, settings } from "@/lib/storage/settings.svelte";
   import { menuSounds } from "@/lib/sound";
-  import Netlinks from "@/components/netlinks/Netlinks.svelte";
-  import Quote from "@/components/Quote.svelte";
-  import SearchBar from "@/components/SearchBar.svelte";
-  import { seedBookmarksFromTopSites } from "@/lib/top-sites";
+  import Netlinks from "@/features/netlinks/Netlinks.svelte";
+  import Quote from "@/features/quote/Quote.svelte";
+  import SearchBar from "@/features/search/SearchBar.svelte";
+  import { seedBookmarksFromTopSites } from "@/features/netlinks/top-sites";
   import iconSettings from "@/assets/icons/settings.svg?raw";
-  import SystemSettingsModal from "@/components/modals/SystemSettingsModal.svelte";
-  import TerminalDisplayPanel from "@/components/TerminalDisplayPanel.svelte";
+  import SystemSettingsModal from "@/features/settings/SystemSettingsModal.svelte";
+  import TerminalDisplayPanel from "@/features/terminal/TerminalDisplayPanel.svelte";
   import { tooltip } from "@/lib/tooltip";
-  import WidgetPanel from "@/components/widgets/WidgetPanel.svelte";
+  import WidgetPanel from "@/features/widgets/WidgetPanel.svelte";
 
   const GREETING_REFRESH_MS = 60_000;
   const SYSTEM_SETTINGS_LABEL = "System Settings";
@@ -37,7 +37,7 @@
   const preferences = $derived(settings.displayPreferences.current);
 
   /** Both card families come through the one app, so the one line about reaching it is shared. */
-  const usesCompanion = $derived(IS_EDGE && preferences.showCopilot);
+  const isUsingCompanion = $derived(IS_EDGE && preferences.showCopilot);
   const greetingText = $derived.by(() => {
     void greetingTick;
 
@@ -127,7 +127,7 @@
       <Quote glitching={glitchingElement === "showQuotes"} isPending={!isReady} />
     {/if}
 
-    {#if usesCompanion}
+    {#if isUsingCompanion}
       <CompanionSetup />
       <Copilot glitching={glitchingElement === "showCopilot"} />
     {/if}

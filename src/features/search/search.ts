@@ -1,13 +1,13 @@
-import { sendMessage } from "./messaging";
-import { DEFAULT_SEARCH_ENGINES } from "./storage/defaults";
-import type { SearchEngine } from "./storage/schema";
+import { sendMessage } from "@/lib/messaging";
+import { DEFAULT_SEARCH_ENGINES } from "@/lib/storage/defaults";
+import type { SearchEngine } from "@/lib/storage/schema";
 
 /**
  * The engines are shipped, not kept: there is nowhere to edit one, so a stored copy could only ever
  * be a stale one - which is what a list saved before they described a form target became. Only the
  * choice of engine is the reader's, and that is stored on its own as an id.
  */
-export function engineById(id: string): SearchEngine {
+export function engineById(id: string) {
   return DEFAULT_SEARCH_ENGINES.find(engine => engine.id === id) ?? DEFAULT_SEARCH_ENGINES[0];
 }
 

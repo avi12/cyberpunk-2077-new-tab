@@ -99,7 +99,8 @@ export function arrowFocus(node: HTMLElement) {
   }
 
   function onKeyDown(e: KeyboardEvent) {
-    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) {
+    const isModifierHeld = e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
+    if (isModifierHeld) {
       return;
     }
 

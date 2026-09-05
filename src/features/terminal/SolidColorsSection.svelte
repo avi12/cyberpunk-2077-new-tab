@@ -1,8 +1,8 @@
 <script lang="ts">
   import { BACKGROUND_COLORS } from "@/lib/storage/defaults";
   import { hexToHsv, hsvToHex, isHexColor } from "@/lib/color";
-  import OptionGroup from "@/components/OptionGroup.svelte";
-  import PanelSection from "./PanelSection.svelte";
+  import OptionGroup from "@/ui/OptionGroup.svelte";
+  import PanelSection from "@/ui/PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
   import { withViewTransition } from "@/lib/view-transition";
   import iconXMark from "@/assets/icons/x-mark.svg?raw";
@@ -38,7 +38,8 @@
   });
 
   function applyHex(value: string) {
-    const normalized = value.trim().startsWith("#") ? value.trim() : `#${value.trim()}`;
+    const entered = value.trim();
+    const normalized = entered.startsWith("#") ? entered : `#${entered}`;
     if (!isHexColor(normalized)) {
       return;
     }

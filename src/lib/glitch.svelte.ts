@@ -6,20 +6,19 @@ export class Glitch {
   active = $state(false);
   #timer: ReturnType<typeof setTimeout> | undefined;
 
-  fire(durationMs: number = GLITCH_SHORT_MS): void {
-    this.fireThen(() => undefined, durationMs);
-  }
-
-  fireThen(then: () => void, durationMs: number = GLITCH_SHORT_MS): void {
+  fire({ onDone, durationMs = GLITCH_SHORT_MS }: {
+    onDone?: () => void;
+    durationMs?: number;
+  } = {}) {
     clearTimeout(this.#timer);
     this.active = true;
     this.#timer = setTimeout(() => {
       this.active = false;
-      then();
+      onDone?.();
     }, durationMs);
   }
 
-  stop(): void {
+  stop() {
     clearTimeout(this.#timer);
     this.active = false;
   }

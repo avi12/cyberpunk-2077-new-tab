@@ -13,7 +13,7 @@
 <script lang="ts">
   import type { Bookmark } from "@/lib/storage/schema";
   import iconGripVertical from "@/assets/icons/grip-vertical.svg?raw";
-  import { iconByName } from "@/lib/icons/choices";
+  import { iconByName } from "@/features/netlinks/icons/choices";
   import iconSquarePen from "@/assets/icons/square-pen.svg?raw";
   import { tooltip } from "@/lib/tooltip";
   import iconXMark from "@/assets/icons/x-mark.svg?raw";
@@ -40,28 +40,6 @@
   const editLabel = $derived(`Edit ${bookmark.title}`);
   const deleteLabel = $derived(`Delete ${bookmark.title}`);
   const MIDDLE_MOUSE_BUTTON = 1;
-
-  function onAuxClick(e: MouseEvent) {
-    if (isEditing || e.button !== MIDDLE_MOUSE_BUTTON) {
-      return;
-    }
-
-    e.preventDefault();
-    window.open(bookmark.url, "_blank");
-  }
-
-  function onDragStart(e: DragEvent) {
-    e.dataTransfer?.setDragImage(BLANK_DRAG_IMAGE, 0, 0);
-  }
-
-  function onClick(e: MouseEvent) {
-    e.preventDefault();
-    if (isEditing) {
-      return;
-    }
-
-    onOpen(bookmark.url);
-  }
 </script>
 
 <li class="card-slot view-item" data-sortable-id={bookmark.id}>
@@ -70,9 +48,22 @@
     class:is-editing={isEditing}
     draggable={!isEditing}
     href={bookmark.url}
-    onauxclick={onAuxClick}
-    onclick={onClick}
-    ondragstart={onDragStart}>
+    onauxclick={e => {
+      const isMiddleClick = !isEditing && e.button === MIDDLE_MOUSE_BUTTON;
+      if (!isMiddleClick) {
+        return;
+      }
+
+      e.preventDefault();
+      window.open(bookmark.url, "_blank");
+    }}
+    onclick={e => {
+      e.preventDefault();
+      if (!isEditing) {
+        onOpen(bookmark.url);
+      }
+    }}
+    ondragstart={e => e.dataTransfer?.setDragImage(BLANK_DRAG_IMAGE, 0, 0)}>
     <span class="card__icon" aria-hidden="true">{@html iconByName(bookmark.icon)}</span>
     <span class="card__title hover-glitch">{bookmark.title}</span>
   </a>
@@ -184,11 +175,11 @@
     &:focus-visible {
       outline-color: currentColor;
     }
-  }
 
-  .card__action :global(svg) {
-    width: 16px;
-    height: 16px;
+    :global(svg) {
+      width: 16px;
+      height: 16px;
+    }
   }
 
   .card__action--edit {
@@ -219,5 +210,4 @@
       height: 18px;
     }
   }
-
 </style>
