@@ -16,7 +16,7 @@
 
   const { config, onConfigChange }: WidgetProps = $props();
 
-  const REFRESH_MS = 900_000;
+  const REFRESH_MS = Temporal.Duration.from({ minutes: 15 }).total("milliseconds");
   const SKELETON_ROWS = [0, 1, 2];
 
   let items = $state<FeedItem[]>([]);

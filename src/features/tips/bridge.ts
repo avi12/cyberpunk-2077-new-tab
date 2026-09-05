@@ -11,7 +11,7 @@ import { tipsSnapshotItem, tipsTurnItem } from "@/lib/storage/items";
  * are on show is a separate question, answered on every read, and answered from the same cached
  * catalogue either way.
  */
-const REFRESH_MS = 86_400_000;
+const REFRESH_MS = Temporal.Duration.from({ days: 1 }).total("milliseconds");
 
 /**
  * Where the catalogue comes from, in the order worth trying.
@@ -24,7 +24,7 @@ async function readCatalogue(turn: number) {
   const cached = await freshSnapshot({
     snapshot: tipsSnapshotItem,
     refreshMs: REFRESH_MS,
-    nowMs: Date.now()
+    nowMs: Temporal.Now.instant().epochMilliseconds
   });
   if (cached) {
     return {
@@ -39,7 +39,7 @@ async function readCatalogue(turn: number) {
   const fetched = await fetchTipCatalogue();
   if (fetched) {
     await tipsSnapshotItem.setValue({
-      fetchedAtMs: Date.now(),
+      fetchedAtMs: Temporal.Now.instant().epochMilliseconds,
       raw: fetched
     });
 

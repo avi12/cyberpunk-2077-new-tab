@@ -34,7 +34,7 @@ export const weatherReadingSchema = z.object({
 
 export type WeatherReading = z.infer<typeof weatherReadingSchema>;
 
-export const WEATHER_REFRESH_MS = 900_000;
+export const WEATHER_REFRESH_MS = Temporal.Duration.from({ minutes: 15 }).total("milliseconds");
 
 /**
  * The six glyphs the widget draws, one per condition. The set is deliberately coarse - a source with

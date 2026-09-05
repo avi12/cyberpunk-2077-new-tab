@@ -163,7 +163,7 @@
       settings.bookmarks.current = [
         ...settings.bookmarks.current,
         {
-          id: Date.now().toString(),
+          id: Temporal.Now.instant().epochMilliseconds.toString(),
           ...draft
         }
       ];

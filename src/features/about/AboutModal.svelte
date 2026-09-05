@@ -48,7 +48,9 @@
     }
 
     const elDownload = document.createElement("a");
-    elDownload.download = `Cyberpunk-${Date.now()}.png`;
+    /* A colon cannot go in a Windows filename, so the ISO stamp gives its colons up for hyphens. */
+    const stamp = Temporal.Now.plainDateTimeISO().toString({ smallestUnit: "second" }).replaceAll(":", "-");
+    elDownload.download = `Cyberpunk-${stamp}.png`;
     elDownload.href = png;
     document.body.append(elDownload);
     elDownload.click();

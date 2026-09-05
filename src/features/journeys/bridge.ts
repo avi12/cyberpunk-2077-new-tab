@@ -10,7 +10,7 @@ import { journeysSnapshotItem } from "@/lib/storage/items";
  * new tab. One read an hour, cached, is what lets the cards be on the page as it opens rather than
  * arriving after it.
  */
-const REFRESH_MS = 3_600_000;
+const REFRESH_MS = Temporal.Duration.from({ hours: 1 }).total("milliseconds");
 
 /** Cards Edge itself generated, whether they come from this hour's read or the cached one. */
 export async function readJourneys() {

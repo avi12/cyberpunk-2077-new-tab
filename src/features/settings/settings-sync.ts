@@ -70,7 +70,7 @@ export async function keepBackup() {
 
   const previous = await readBackup();
   const slices = slice(json);
-  const savedAtMs = Date.now();
+  const savedAtMs = Temporal.Now.instant().epochMilliseconds;
 
   // The slices land before the record that vouches for them, and the slices a shorter snapshot no
   // longer needs go last, so a write cut short anywhere still reads as one backup or the other.

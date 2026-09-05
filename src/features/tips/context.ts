@@ -138,7 +138,6 @@ const MAX_TABS_READ = 6;
 const MAX_PAGES_FETCHED = 4;
 
 const RECENT_DAYS = 7;
-const MS_PER_DAY = 86_400_000;
 
 /** Read wide and cut down here, since what is worth sending is decided after the browser answers. */
 const HISTORY_SEARCH_LIMIT = 200;
@@ -189,9 +188,9 @@ function namedContextFor({ title, prompt }: {
  * and that is where the question fairly comes back.
  */
 let isWorthAsking = true;
+
 /**
  * Asked for as one thing, because there is only ever the one click to spend: a second
-
  * `permissions.request` issued after this one has been awaited is refused outright, for want of the
  * gesture that paid for the first.
  *
@@ -216,9 +215,9 @@ async function requestTipContextAccess(context: TipContext) {
   }
 
   isWorthAsking = false;
+
   const [isListing, isReadingPages] = await Promise.all([
     hasAccess(listing),
-
     hasAccess(PAGE_TEXT_ACCESS)
   ]);
 
@@ -281,7 +280,8 @@ async function openTabs() {
 async function visitedPages() {
   const visits = await browser.history.search({
     text: "",
-    startTime: Date.now() - RECENT_DAYS * MS_PER_DAY,
+    /* Seven days in the reader's own zone: a week holding a clock change is not seven lots of 24 hours. */
+    startTime: Temporal.Now.zonedDateTimeISO().subtract({ days: RECENT_DAYS }).epochMilliseconds,
     maxResults: HISTORY_SEARCH_LIMIT
   }).catch(() => []);
 

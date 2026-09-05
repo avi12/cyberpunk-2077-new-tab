@@ -82,7 +82,7 @@ export async function saveMedia({ slot, blob, type, name }: {
     blob,
     type,
     name,
-    timestamp: Date.now()
+    timestamp: Temporal.Now.instant().epochMilliseconds
   };
   await runRequest({
     mode: "readwrite",

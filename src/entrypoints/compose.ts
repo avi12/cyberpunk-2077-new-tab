@@ -28,14 +28,15 @@ async function appearing<TFound>({ find, timeoutMs }: {
   find: () => TFound | null;
   timeoutMs: number;
 }) {
-  const deadline = Date.now() + timeoutMs;
+  const deadline = Temporal.Now.instant().add({ milliseconds: timeoutMs });
   for (;;) {
     const found = find();
     if (found) {
       return found;
     }
 
-    if (Date.now() > deadline) {
+    const isPastDeadline = Temporal.Instant.compare(Temporal.Now.instant(), deadline) > 0;
+    if (isPastDeadline) {
       return null;
     }
 

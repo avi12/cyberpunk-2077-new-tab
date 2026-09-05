@@ -22,32 +22,24 @@ const TIMESTAMP_FORMAT = new Intl.DateTimeFormat(undefined, {
 });
 
 export function formatTimestamp(atMs: number) {
-  return TIMESTAMP_FORMAT.format(atMs);
+  return TIMESTAMP_FORMAT.format(Temporal.Instant.fromEpochMilliseconds(atMs));
 }
 
 export function currentTime() {
-  return TIME_FORMAT.format(new Date());
+  return TIME_FORMAT.format(Temporal.Now.plainTimeISO());
 }
 
 export function currentDate() {
-  return DATE_FORMAT.format(new Date());
-}
-
-function pad(value: number) {
-  return value.toString().padStart(2, "0");
+  return DATE_FORMAT.format(Temporal.Now.plainDateISO());
 }
 
 export function currentDateIso() {
-  const now = new Date();
-
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  return Temporal.Now.plainDateISO().toString();
 }
 
 /** `<time datetime>` is a machine format, so it stays 24-hour whatever the locale reads like. */
 export function currentTimeIso() {
-  const now = new Date();
-
-  return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  return Temporal.Now.plainTimeISO().toString({ smallestUnit: "minute" });
 }
 
 const MORNING_START_HOUR = 5;
@@ -72,5 +64,5 @@ function timeOfDay(hours: number) {
 }
 
 export function greeting(userName: string) {
-  return `${timeOfDay(new Date().getHours())}, ${userName}`;
+  return `${timeOfDay(Temporal.Now.plainTimeISO().hour)}, ${userName}`;
 }

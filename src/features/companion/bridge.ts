@@ -91,7 +91,7 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
     };
   }
 
-  const nowMs = Date.now();
+  const nowMs = Temporal.Now.instant().epochMilliseconds;
   const cached = await freshSnapshot({
     snapshot,
     refreshMs,

@@ -34,7 +34,7 @@
     tasks = [
       ...tasks,
       {
-        id: Date.now().toString(),
+        id: Temporal.Now.instant().epochMilliseconds.toString(),
         text: "",
         completed: false
       }

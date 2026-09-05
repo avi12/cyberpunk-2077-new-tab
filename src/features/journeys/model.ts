@@ -6,9 +6,28 @@ import { z } from "@/lib/zod";
 /**
  * Edge writes fractional seconds at whatever precision it happens to have ("...:29.2Z"), which no
  * fixed ISO pattern matches, so the parser is the check.
+ *
+ * `Temporal.Instant` is the stricter of the two readers, and strictness is what is wanted on a
+ * stamp that arrives from another process: one with no zone on the end of it is turned away here
+ * rather than quietly read as the reader's own local time, which would put a card's window out by
+ * however far they sit from UTC. Measured against Edge's own shapes, everything it writes reads
+ * identically to what `Date.parse` made of it.
  */
-const timestampSchema = z.string().refine(value => !Number.isNaN(Date.parse(value)));
+function instantOf(value: string) {
+  try {
+    return Temporal.Instant.from(value);
+  } catch {
+    return null;
+  }
+}
 
+const timestampSchema = z.string().refine(value => instantOf(value) !== null);
+
+/**
+ * The address goes straight into an `href` on the card, and these records come from a separate
+ * process on the reader's machine, so the scheme is pinned rather than merely parsed: `z.url()`
+ * takes a `javascript:` one as readily as a page.
+ */
 const journeySourceSchema = z.object({
   title: nonEmptyTextSchema,
   url: openableUrlSchema
@@ -23,11 +42,6 @@ const journeySourceSchema = z.object({
  * first prompt as present and filters out the navigation and backfill cards that carry none.
  */
 const journeySchema = z.object({
-/**
- * The address goes straight into an `href` on the card, and these records come from a separate
- * process on the reader's machine, so the scheme is pinned rather than merely parsed: `z.url()`
- * takes a `javascript:` one as readily as a page.
- */
   id: nonEmptyTextSchema,
   title: nonEmptyTextSchema,
   summary: nonEmptyTextSchema,
@@ -45,7 +59,13 @@ function isLive({ card, nowMs }: {
   card: Journey;
   nowMs: number;
 }) {
-  return Date.parse(card.validStartTime) <= nowMs && nowMs < Date.parse(card.validEndTime);
+  const start = instantOf(card.validStartTime);
+  const end = instantOf(card.validEndTime);
+  if (!start || !end) {
+    return false;
+  }
+
+  return start.epochMilliseconds <= nowMs && nowMs < end.epochMilliseconds;
 }
 
 /**
