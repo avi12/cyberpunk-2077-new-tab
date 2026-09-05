@@ -10,6 +10,35 @@ import { defineConfig } from "wxt";
 const COMPANION_PERMISSIONS = ["nativeMessaging"];
 
 /**
+ * What a Copilot tip asking about the reader is answered with. A quarter of Edge's catalogue asks
+ * about their own tabs or their own recent reading, and Copilot inside Edge can see both without
+ * asking - every destination this extension can reach cannot, so the context is read here and
+ * written into the prompt.
+ *
+ * Optional, and asked for by the card that needs it rather than at install: this is the reader's
+ * browsing leaving their machine, so nobody hands it over for a card they never press. Chromium
+ * only, beside the companion's own permission and for the same reason - the tips come from the
+ * companion, which only Windows and Edge have, so Firefox has no card that could ever ask.
+ */
+const TIP_CONTEXT_PERMISSIONS = ["tabs", "history"];
+
+/**
+ * Reading the pages themselves, which is the only way to answer the tips that ask about them.
+ *
+ * Reverse engineered from `msedge.dll`: Edge's own context is not a list of links. `PageContext`
+ * carries `url`, `title`, `inner_text`, `tab_screenshot`, `pdf_data` and `page_passages`, and
+ * `HistoryVisitItem` carries `page_title`, `page_url` and `passages` - so Copilot is handed the text
+ * of what the reader read, cut into passages and ranked against the question by
+ * `AnnotationReducerLiveTabResolverRequest { query, passage_context }`. A title cannot answer "pull
+ * the key takeaways"; only the words on the page can.
+ *
+ * Edge has that access by being the browser. An extension has to ask, and this is the heaviest thing
+ * it can ask for - so it is optional, requested by the card that needs it, and refusing drops back to
+ * titles and addresses, which is what the previous build sent.
+ */
+const PAGE_TEXT_ORIGIN = "<all_urls>";
+
+/**
  * The sites a prompt can be finished off at, so it need not go by way of the clipboard. Spelled out
  * again here, and unavoidably: a manifest is built by Node before any of `src/` is bundled, so
  * `compose/sites.ts` cannot be the one that says it - only the one that has to agree with it.
@@ -29,6 +58,18 @@ const COMPOSE_ORIGINS = ["https://copilot.microsoft.com/*", "https://claude.ai/*
  * did - and a refusal costs the widget nothing, since it falls back to the one it was using.
  */
 const WEATHER_ORIGIN = "https://www.google.com/*";
+
+/**
+ * Where Edge itself gets the Copilot tips. Reverse engineered out of `msedge.dll`, which names the
+ * endpoint in one string: Edge fetches this and writes the answer under the profile, which is the
+ * file the companion app has been reading second-hand.
+ *
+ * Asking for it directly is the same read one step earlier - and it is a plain public GET, no
+ * account, no Edge headers, so it works on a machine that has never run Edge. It carries no CORS
+ * headers, so the origin is what makes the fetch possible at all: measured, without it the request
+ * fails outright.
+ */
+const TIPS_ORIGIN = "https://edge.microsoft.com/*";
 
 /**
  * Firefox ties `storage.sync` to the add-on's own id: a build without one has no account area to
@@ -65,10 +106,20 @@ export default defineConfig({
     // timeapi, allorigins and bigdatacloud all answer with `Access-Control-Allow-Origin: *`, and
     // Google's authorize page is opened in a window rather than fetched.
     //
-    // Google's weather is asked for at the moment it is used. Where the reader is needs no extension
-    // permission at all: an extension page raises the browser's own location prompt like any origin,
-    // and `geolocation` is one of the permissions Chromium refuses to make optional - declaring it
-    // there produced "only permissions specified in the manifest may be requested" at the click.
+    // Google's weather is asked for at the moment it is used. Where the reader is, though, is asked
+    // for here, at install, and has to be: `geolocation` is one of the permissions Chromium refuses
+    // to make optional - requesting it produced "only permissions specified in the manifest may be
+    // requested" at the click - so the only two choices are declaring it or going without.
+    //
+    // Going without is what this did, leaning on the prompt an extension page raises like any other
+    // origin. That prompt can be answered "block", and once it has been the browser never raises it
+    // again: the button goes dead for good, with nothing the page can do about it. Declared instead,
+    // Chromium grants it to the extension's own pages outright - measured, `permissions.query` says
+    // `granted` and the read returns a fix with no prompt at any point - which is a location that
+    // works on the first press and cannot be locked out. The cost is one line at install.
+    //
+    // An offscreen document was tried and is not needed: it wants this very permission, and once
+    // this is here the page can read the device itself.
     permissions: [
       "search",
       "topSites",
@@ -79,7 +130,8 @@ export default defineConfig({
       // opened. Required rather than optional: an API binding is fixed when a context is created,
       // so a worker that started before the grant could never reach it - the same trap the
       // companion's own permission documents. It carries no warning of its own; the site does.
-      "scripting"
+      "scripting",
+      "geolocation"
     ],
     ...(browser === "firefox"
       ? {
@@ -91,8 +143,8 @@ export default defineConfig({
       }
       : {
         key: publicKey,
-        optional_permissions: COMPANION_PERMISSIONS,
-        optional_host_permissions: [...COMPOSE_ORIGINS, WEATHER_ORIGIN]
+        optional_permissions: [...COMPANION_PERMISSIONS, ...TIP_CONTEXT_PERMISSIONS],
+        optional_host_permissions: [...COMPOSE_ORIGINS, WEATHER_ORIGIN, TIPS_ORIGIN, PAGE_TEXT_ORIGIN]
       }),
     author: {
       email: "avi6106@gmail.com"
