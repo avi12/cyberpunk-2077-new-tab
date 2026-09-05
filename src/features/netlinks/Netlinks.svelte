@@ -4,6 +4,8 @@
   import BookmarkForm from "./BookmarkForm.svelte";
   import { arrowFocus } from "@/lib/arrow-focus";
   import CategorySection from "./CategorySection.svelte";
+  import iconDownload from "@/assets/icons/download.svg?raw";
+  import { importTopSites } from "./top-sites";
   import Modal from "@/ui/Modal.svelte";
   import { pickCategory } from "@/features/netlinks/icons/auto";
   import NameForm from "./NameForm.svelte";
@@ -29,6 +31,8 @@
   let pendingDelete = $state<string | null>(null);
 
   const categories = $derived(settings.categoryOrder.current);
+  /** A grid with nothing in it is the only place the browser's own list is worth offering. */
+  const isImportOffered = $derived(settings.bookmarks.current.length === 0);
   const byCategory = $derived.by(() => {
     const groups: Record<string, Bookmark[]> = {};
     for (const bookmark of settings.bookmarks.current) {
@@ -305,6 +309,22 @@
     {/each}
   </div>
 
+  {#if isImportOffered}
+    <p class="netlinks__empty">Nothing saved yet - pull in the sites you visit most, or add your own</p>
+    <button
+      class="netlinks__import-button cyber-glass"
+      onclick={async () => {
+        const imported = await importTopSites();
+        if (imported) {
+          settings.bookmarks.current = imported;
+        }
+      }}
+      type="button">
+      {@html iconDownload}
+      IMPORT MOST VISITED
+    </button>
+  {/if}
+
   {#if isEditing}
     <div class="netlinks__add-category">
       {#if isAddingCategory}
@@ -434,7 +454,15 @@
     margin-top: 1rem;
   }
 
-  .netlinks__add-button {
+  .netlinks__empty {
+    margin-bottom: 0.75rem;
+    color: var(--cp-text-dim);
+    font-family: var(--cp-mono);
+    text-align: center;
+  }
+
+  .netlinks__add-button,
+  .netlinks__import-button {
     display: flex;
     gap: 0.5rem;
     justify-content: center;

@@ -18,17 +18,8 @@ const seedableSiteSchema = z.object({
   url: openableUrlSchema
 });
 
-export async function seedBookmarksFromTopSites() {
-  if (await bookmarksSeededItem.getValue()) {
-    return null;
-  }
-
-  await bookmarksSeededItem.setValue(true);
-
-  if ((await bookmarksItem.getValue()).length > 0) {
-    return null;
-  }
-
+/** The netlinks a browser's own list is worth, written where the page will read them back. */
+async function bookmarksFromTopSites() {
   const sites = await sendMessage(MessageType.getTopSites, undefined).catch(() => null);
   const seedable = sites?.filter(site => seedableSiteSchema.safeParse(site).success) ?? [];
   if (!seedable.length) {
@@ -54,4 +45,27 @@ export async function seedBookmarksFromTopSites() {
   await bookmarksItem.setValue(bookmarks);
 
   return bookmarks;
+}
+
+export async function seedBookmarksFromTopSites() {
+  if (await bookmarksSeededItem.getValue()) {
+    return null;
+  }
+
+  await bookmarksSeededItem.setValue(true);
+
+  if ((await bookmarksItem.getValue()).length > 0) {
+    return null;
+  }
+
+  return bookmarksFromTopSites();
+}
+
+/**
+ * The same seed, asked for rather than taken. The automatic one is spent on the first run and never
+ * offered again, so a grid the reader has since emptied has no way of filling itself - and an empty
+ * grid is the only place this is offered from.
+ */
+export async function importTopSites() {
+  return bookmarksFromTopSites();
 }
