@@ -1,9 +1,9 @@
-import { readCompanionRecords } from "@/lib/companion/native";
-import type { ComposeSiteId } from "@/lib/compose/sites";
-import { isAtComposeSite } from "@/lib/compose/sites";
+import { readCompanionRecords } from "@/features/companion/native";
+import type { ComposeSiteId } from "@/features/compose/sites";
+import { isAtComposeSite } from "@/features/compose/sites";
 import type { ComposeRequest } from "@/lib/messaging";
 import { ComposeOutcome, onMessage, TabDisposition } from "@/lib/messaging";
-import { rememberComposeRefusal } from "@/lib/storage/items";
+import { forgetComposeRefusals, rememberComposeRefusal, reshuffleTips } from "@/lib/storage/items";
 import { defineBackground } from "#imports";
 
 /** The built name of the unlisted script, which is its entrypoint file's. */
@@ -13,6 +13,19 @@ const COMPOSE_SCRIPT = "/compose.js";
 const READY_TIMEOUT_MS = 15_000;
 
 export default defineBackground(() => {
+  /*
+   * A host that refuses to be scripted is a fact about the browser that is running, not about the
+   * reader, so it is dropped the moment a new run begins - the local area is the only one Firefox
+   * has, and it would otherwise outlive the browser that found out.
+   */
+  browser.runtime.onStartup.addListener(forgetComposeRefusals);
+
+  /*
+   * Edge starts its tip rotation somewhere new every time it launches, so this does too - otherwise
+   * the first new tab of every session would open on the three the last one closed on.
+   */
+  browser.runtime.onStartup.addListener(reshuffleTips);
+
   /*
    * What each tab this opened is waiting to be told to send. Held here rather than in storage
    * because it belongs to a tab that is being opened right now: it is collected once, by the script
@@ -67,14 +80,16 @@ export default defineBackground(() => {
     }
 
     function onUpdated(updatedId: number, changeInfo: { status?: string }, tab: { url?: string }) {
-      if (updatedId !== tabId || changeInfo.status !== "complete") {
+      const isThisTabFinished = updatedId === tabId && changeInfo.status === "complete";
+      if (!isThisTabFinished) {
         return;
       }
 
-      if (!tab.url || !isAtComposeSite({
+      const isAtDestination = tab.url !== undefined && isAtComposeSite({
         url: tab.url,
         siteId
-      })) {
+      });
+      if (!isAtDestination) {
         return;
       }
 
@@ -109,7 +124,8 @@ export default defineBackground(() => {
     const { url, disposition, compose } = data;
     const senderTabId = sender.tab?.id;
 
-    const tab = disposition === TabDisposition.current && senderTabId !== undefined
+    const isReplacingSenderTab = disposition === TabDisposition.current && senderTabId !== undefined;
+    const tab = isReplacingSenderTab
       ? await browser.tabs.update(senderTabId, { url })
       : await browser.tabs.create({ url });
     if (!compose) {
@@ -139,6 +155,12 @@ export default defineBackground(() => {
 
     return request;
   });
+
+  /*
+   * Answered here because only the background can: the API belongs to tabs, not to the page that
+   * wants the picture. It needs `<all_urls>`, which the page asks the reader for at the press.
+   */
+  onMessage("captureNewTab", async () => browser.tabs.captureVisibleTab({ format: "png" }).catch(() => null));
 
   onMessage("searchWithDefaultEngine", async ({ data }) => {
     await browser.search.query({

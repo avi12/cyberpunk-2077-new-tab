@@ -1,4 +1,4 @@
-import type { ComposeSiteId } from "./compose/sites";
+import type { ComposeSiteId } from "@/features/compose/sites";
 import { defineExtensionMessaging } from "@webext-core/messaging";
 
 type TopSite = {
@@ -29,7 +29,7 @@ export enum CompanionAnswer {
   notRunning = "notRunning"
 }
 
-export type CompanionResult = {
+type CompanionResult = {
   answer: CompanionAnswer;
   /** Raw records of whatever was asked for, and only when the answer is `read`. */
   records: unknown[];
@@ -80,6 +80,14 @@ type ProtocolMap = {
    * never written anywhere it would have to be cleaned up from, and is only ever collected once.
    */
   takeComposeRequest(): ComposeRequest | null;
+  /**
+   * The page as the browser actually drew it, as a PNG data URL, or null where it would not.
+   *
+   * Only the background may ask: `captureVisibleTab` is a tabs API, and a page cannot photograph
+   * itself. What comes back is the compositor's own output rather than a second rendering of the
+   * DOM, so the scanlines, the glows and the blur behind the panels are the ones on screen.
+   */
+  captureNewTab(): string | null;
 };
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

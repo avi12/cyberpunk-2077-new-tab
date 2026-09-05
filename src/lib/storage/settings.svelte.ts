@@ -1,6 +1,3 @@
-import { PromptTargetId, withShippedPromptTarget } from "../companion/prompt-target";
-import { WeatherSourceId, withShippedWeatherSource } from "../weather/sources";
-import { z } from "../zod";
 import { DEFAULT_DISPLAY_PREFERENCES, DEFAULT_WIDGET_ORDER, DEFAULT_WIDGETS } from "./defaults";
 import {
   activeSearchEngineItem,
@@ -38,6 +35,9 @@ import {
   ScanLinesMode,
   widgetSchema
 } from "./schema";
+import { PromptTargetId, withShippedPromptTarget } from "@/features/companion/prompt-target";
+import { WeatherSourceId, withShippedWeatherSource } from "@/features/weather/sources";
+import { z } from "@/lib/zod";
 
 /**
  * One setting: where it is kept, what shape it may take, and how a stored answer is brought up to
@@ -61,7 +61,7 @@ class Setting<TValue> {
     this.#value = item.fallback;
   }
 
-  get current(): TValue {
+  get current() {
     return this.#value;
   }
 
@@ -70,12 +70,12 @@ class Setting<TValue> {
   }
 
   /** The write behind `current`, for a caller that cannot move on until storage has the value. */
-  async set(value: TValue): Promise<void> {
+  async set(value: TValue) {
     this.#value = value;
     await this.#item.setValue(value);
   }
 
-  async load(): Promise<void> {
+  async load() {
     this.#value = this.#normalize(await this.#item.getValue());
   }
 }
@@ -85,7 +85,7 @@ class Setting<TValue> {
  * last saved are appended, and ones that have since been retired are dropped rather than left as
  * empty slots in the panel.
  */
-function withShippedWidgets(stored: Widget[]): Widget[] {
+function withShippedWidgets(stored: Widget[]) {
   const shipped = stored.filter(widget => DEFAULT_WIDGETS.some(({ id }) => id === widget.id));
 
   return [...shipped, ...DEFAULT_WIDGETS.filter(({ id }) => !shipped.some(widget => widget.id === id))];
@@ -96,13 +96,13 @@ function withShippedWidgets(stored: Widget[]): Widget[] {
  * absent answer is not "hidden" - it is the default the element ships with. Filling those in is what
  * the schema's per-element defaults already do, so reading is a parse.
  */
-function withShippedElements(stored: DisplayPreferences): DisplayPreferences {
+function withShippedElements(stored: DisplayPreferences) {
   const parsed = displayPreferencesSchema.safeParse(stored);
 
   return parsed.success ? parsed.data : DEFAULT_DISPLAY_PREFERENCES;
 }
 
-function withShippedWidgetIds(stored: string[]): string[] {
+function withShippedWidgetIds(stored: string[]) {
   const shipped = stored.filter(id => DEFAULT_WIDGET_ORDER.includes(id));
 
   return [...shipped, ...DEFAULT_WIDGET_ORDER.filter(id => !shipped.includes(id))];
@@ -204,7 +204,7 @@ export const settings = {
   })
 };
 
-export async function loadSettings(): Promise<void> {
+export async function loadSettings() {
   await Promise.all(Object.values(settings).map(setting => setting.load()));
 }
 

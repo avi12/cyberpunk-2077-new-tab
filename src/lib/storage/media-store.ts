@@ -29,12 +29,12 @@ type MediaRecord = {
 
 let openDb: IDBDatabase | null = null;
 
-async function getDb(): Promise<IDBDatabase> {
+async function getDb() {
   if (openDb) {
     return openDb;
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onerror = () => reject(request.error);
     request.onsuccess = () => {
@@ -49,13 +49,13 @@ async function getDb(): Promise<IDBDatabase> {
   });
 }
 
-async function runRequest<TResult>(
-  mode: IDBTransactionMode,
-  run: (store: IDBObjectStore) => IDBRequest<TResult>
-): Promise<TResult> {
+async function runRequest<TResult>({ mode, run }: {
+  mode: IDBTransactionMode;
+  run: (store: IDBObjectStore) => IDBRequest<TResult>;
+}) {
   const database = await getDb();
 
-  return new Promise((resolve, reject) => {
+  return new Promise<TResult>((resolve, reject) => {
     const request = run(database.transaction([STORE_NAME], mode).objectStore(STORE_NAME));
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
@@ -67,7 +67,7 @@ export async function saveMedia({ slot, blob, type, name }: {
   blob: Blob;
   type: string;
   name?: string;
-}): Promise<void> {
+}) {
   const record: MediaRecord = {
     id: slot,
     blob,
@@ -75,11 +75,17 @@ export async function saveMedia({ slot, blob, type, name }: {
     name,
     timestamp: Date.now()
   };
-  await runRequest("readwrite", store => store.put(record));
+  await runRequest({
+    mode: "readwrite",
+    run: store => store.put(record)
+  });
 }
 
-export async function loadMedia(slot: MediaSlot): Promise<MediaRecord | null> {
-  const record: MediaRecord | undefined = await runRequest("readonly", store => store.get(slot));
+export async function loadMedia(slot: MediaSlot) {
+  const record: MediaRecord | undefined = await runRequest({
+    mode: "readonly",
+    run: store => store.get(slot)
+  });
   if (!record?.blob) {
     return null;
   }
@@ -95,6 +101,9 @@ export async function loadMedia(slot: MediaSlot): Promise<MediaRecord | null> {
   return record;
 }
 
-export async function clearMedia(slot: MediaSlot): Promise<void> {
-  await runRequest("readwrite", store => store.delete(slot));
+export async function clearMedia(slot: MediaSlot) {
+  await runRequest({
+    mode: "readwrite",
+    run: store => store.delete(slot)
+  });
 }

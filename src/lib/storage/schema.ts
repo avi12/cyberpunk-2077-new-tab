@@ -1,5 +1,5 @@
-import type { ComposeSiteId } from "../compose/sites";
-import { z } from "../zod";
+import type { ComposeSiteId } from "@/features/compose/sites";
+import { z } from "@/lib/zod";
 
 /**
  * The shape of everything this page stores, written once. The types the rest of the app passes

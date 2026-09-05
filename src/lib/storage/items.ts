@@ -1,6 +1,3 @@
-import type { PromptTargetId } from "../companion/prompt-target";
-import type { ComposeSiteId } from "../compose/sites";
-import { DEFAULT_WEATHER_SOURCE, type WeatherSourceId } from "../weather/sources";
 import {
   DEFAULT_BACKGROUND,
   DEFAULT_BACKGROUND_BRIGHTNESS,
@@ -27,6 +24,9 @@ import type {
   Widget
 } from "./schema";
 import { BackgroundMediaType, SearchEngineId } from "./schema";
+import type { PromptTargetId } from "@/features/companion/prompt-target";
+import type { ComposeSiteId } from "@/features/compose/sites";
+import { DEFAULT_WEATHER_SOURCE, type WeatherSourceId } from "@/features/weather/sources";
 import { storage } from "#imports";
 import type { WxtStorageItem } from "wxt/utils/storage";
 
@@ -109,14 +109,36 @@ export const tipsSnapshotItem = storage.defineItem<CompanionSnapshot | null>("lo
 /**
  * The sites a browser has refused to let the compose script into at all - Edge answers "the
  * extensions gallery cannot be scripted" for Copilot however the permission was come by, including
- * from a real toolbar click. Session rather than local, so a browser that stops refusing is believed
- * again after a restart, and so the answer never travels in a settings file to a machine it is not
- * true on.
+ * from a real toolbar click. Local rather than session, because Firefox has no session area and this
+ * ships there too; the background empties it on `runtime.onStartup` instead, so a browser that stops
+ * refusing is believed again after a restart. It is not one of the `settings`, and an export and a
+ * browser-account backup carry only those, so the answer never travels to a machine it is not true
+ * on.
  */
-export const composeRefusalsItem = storage.defineItem<ComposeSiteId[]>("session:composeRefusals", { fallback: [] });
+export const composeRefusalsItem = storage.defineItem<ComposeSiteId[]>("local:composeRefusals", { fallback: [] });
+
+/**
+ * How far round the tip rotation this browser run has got. Edge holds the same count in memory and
+ * starts somewhere new every run, so a reader who restarts does not get the same three tips they
+ * closed the browser on. A page cannot hold it - the next new tab is a different page - so it lives
+ * here.
+ */
+export const tipsTurnItem = storage.defineItem<number>("local:tipsTurn", { fallback: 0 });
+
+/** Far enough round the catalogue that two runs rarely open on the same three. */
+const TIPS_SHUFFLE_RANGE = 10_000;
+
+export async function reshuffleTips() {
+  await tipsTurnItem.setValue(Math.floor(Math.random() * TIPS_SHUFFLE_RANGE));
+}
+
+/** A refusal is only ever true of the browser run that found it out, so a new run starts with none. */
+export async function forgetComposeRefusals() {
+  await composeRefusalsItem.removeValue();
+}
 
 /** Written by the background, which is the only side that finds out, and only ever adds to the set. */
-export async function rememberComposeRefusal(siteId: ComposeSiteId): Promise<void> {
+export async function rememberComposeRefusal(siteId: ComposeSiteId) {
   const refused = await composeRefusalsItem.getValue();
   if (refused.includes(siteId)) {
     return;
