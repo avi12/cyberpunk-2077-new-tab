@@ -162,6 +162,10 @@ export type Widget = z.infer<typeof widgetSchema>;
  * written before an element shipped - in storage, or in a settings file exported by an older build -
  * come back with that element on, because an absent answer is not "hidden", it is what the element
  * ships as.
+ *
+ * Copilot is the one that ships off. It is the only section that has nothing of its own to show -
+ * the cards are read out of Edge, through an app that is a separate download - so a reader who has
+ * neither would otherwise be given a row that can only ever explain itself.
  */
 export const displayPreferencesSchema = z.object({
   showGreeting: z.boolean().default(true),
@@ -169,7 +173,7 @@ export const displayPreferencesSchema = z.object({
   showDate: z.boolean().default(true),
   showSearchBar: z.boolean().default(true),
   showQuotes: z.boolean().default(true),
-  showCopilot: z.boolean().default(true),
+  showCopilot: z.boolean().default(false),
   showNetlinks: z.boolean().default(true),
   showWidgets: z.boolean().default(true)
 });
