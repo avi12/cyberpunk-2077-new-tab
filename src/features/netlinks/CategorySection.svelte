@@ -9,7 +9,6 @@
   import { sortable } from "@/lib/sortable";
   import type { SortableMove } from "@/lib/sortable";
   import iconSquarePen from "@/assets/icons/square-pen.svg?raw";
-  import { tooltip } from "@/lib/tooltip";
   import iconTrash2 from "@/assets/icons/trash2.svg?raw";
 
   const {
@@ -84,17 +83,17 @@
         <button
           class="category__action category__action--edit"
           aria-label={EDIT_CATEGORY_LABEL}
+          data-tooltip={EDIT_CATEGORY_LABEL}
           onclick={() => onEditCategory(category)}
-          type="button"
-          use:tooltip={EDIT_CATEGORY_LABEL}>
+          type="button">
           {@html iconSquarePen}
         </button>
         <button
           class="category__action category__action--delete"
           aria-label={DELETE_CATEGORY_LABEL}
+          data-tooltip={DELETE_CATEGORY_LABEL}
           onclick={() => onDeleteCategory(category)}
-          type="button"
-          use:tooltip={DELETE_CATEGORY_LABEL}>
+          type="button">
           {@html iconTrash2}
         </button>
       </div>

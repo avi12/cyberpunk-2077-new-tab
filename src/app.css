@@ -378,75 +378,82 @@ textarea {
 /* ---------- Tooltip ---------- */
 
 /*
- * Tooltips are popovers in the top layer, positioned against their trigger's `anchor-name` - see
- * lib/tooltip.ts. Nothing in the page can paint over the top layer, which is the whole point: as
- * pseudo-elements these lost to whatever card came next in the DOM.
+ * A hint is the trigger's own `::after`, filled from `data-tooltip`. No element to create, nothing
+ * to keep in step with the control it explains, and nothing to tidy up when that control goes.
+ *
+ * `anchor-scope` is what lets every trigger claim the same anchor name: the name is confined to the
+ * trigger's own subtree, so each `::after` resolves to the element it hangs off rather than to
+ * whichever trigger the page happened to lay out last.
  */
-.cyberpunk-tooltip {
-  /*
-   * The two axes want opposite things, so they are placed by opposite means.
-   *
-   * Block: an `anchor()` inset, not `position-area`, whose alignment is safe by default - it would
-   * slide the tooltip down over its own trigger rather than overflow the top, and a position that
-   * never overflows never fires a fallback. An inset overflows honestly, so `flip-block` runs.
-   *
-   * Inline: `justify-self: anchor-center` between viewport insets, not `left: anchor(center)` with
-   * a `translate`. A translate moves the painted box and not the one overflow is measured against,
-   * so a tooltip on a corner button hung 30px off the side of the screen with nothing to catch it;
-   * anchor-center is measured where it lands and stays inside the viewport on its own.
-   */
-  inset: auto;
-  inset-inline: 0;
-  bottom: calc(anchor(top) + 8px);
-  justify-self: anchor-center;
-  width: max-content;
-  max-width: min(16rem, 100vw - 1rem);
-  margin: 0;
-  padding: 6px 12px;
-  border: 2px solid color-mix(in sRGB, var(--cp-neon-cyan) 80%, transparent);
-  background-color: rgb(17 24 39 / 95%);
-  color: #ffffff;
-  font-family: "Courier New", monospace;
-  font-weight: 400;
-  font-size: 0.75rem;
-  line-height: 1rem;
-  text-transform: uppercase;
-  opacity: 0%;
-  backdrop-filter: blur(4px);
-  pointer-events: none;
-  transition:
-    opacity 200ms,
-    display 200ms allow-discrete,
-    overlay 200ms allow-discrete;
-  position-try-fallbacks: flip-block;
+[data-tooltip] {
+  anchor-name: --tooltip;
+  anchor-scope: --tooltip;
 
-  &:popover-open {
+  &::after {
+    content: attr(data-tooltip);
+
+    /*
+     * Fixed rather than absolute, so the viewport is what it is placed and measured against - which
+     * is what the popover this replaced got for nothing by living in the top layer. Absolute, the
+     * containing block is whatever positioned ancestor the trigger happens to sit in: a card's
+     * little action bar is a few pixels tall, a hint above it overflows that box whatever the room
+     * on screen, and every hint fell to its `block-end` fallback and landed across the card.
+     */
+    position: fixed;
+    width: max-content;
+    max-width: min(16rem, 100vw - 1rem);
+    margin: 8px;
+    padding: 6px 12px;
+    border: 2px solid color-mix(in sRGB, var(--cp-neon-cyan) 80%, transparent);
+    background-color: rgb(17 24 39 / 95%);
+    color: var(--cp-text);
+    font-family: "Courier New", monospace;
+    font-weight: 400;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    text-transform: uppercase;
+    opacity: 0%;
+    backdrop-filter: blur(4px);
+    pointer-events: none;
+    transition: opacity 200ms;
+
+    /*
+     * Above the trigger, and the browser picks the cell that actually fits: below it at a ceiling,
+     * then shifted towards an edge rather than off it. All logical, so it follows the writing
+     * direction on its own.
+     */
+    position-anchor: --tooltip;
+    position-area: block-start;
+    position-try-fallbacks:
+      block-end,
+      block-start span-inline-end,
+      block-start span-inline-start,
+      block-end span-inline-end,
+      block-end span-inline-start;
+  }
+
+  &:is(:hover, :focus-visible)::after {
     opacity: 100%;
   }
 
   /*
-   * A menu opening takes every hint down, and puts it back when the menu closes. A hint explains a
-   * control; once that control has produced the thing it was explaining, the words only cover it up.
-   *
-   * Asked of the root rather than of the trigger, because a tooltip and the menu it should defer to
-   * are unrelated siblings in the top layer - there is no selector that walks from one to the other.
-   * The tooltips exclude themselves, or the first one open would silence the rest.
+   * A control that has just opened its own menu has stopped needing explaining, and the hint would
+   * only sit beside the answer repeating the question.
    */
-  html:has([popover]:popover-open:not(.cyberpunk-tooltip)) &:popover-open {
+  &:has(+ [popover]:popover-open)::after {
     opacity: 0%;
   }
 }
 
 /*
- * Spelt out at the top level rather than nested inside the rule above, which is the shape the
- * documentation shows and which silently does nothing: the entry style is resolved before the
- * tooltip is open, so a rule nested under `:popover-open` does not match, and a transition with
- * nothing to start from does not run - which is why these had never actually faded in.
+ * A hint hangs outside the control it explains, and every card and section carries a
+ * `view-transition-name` - which is a stacking context, so the words from one card were painted
+ * under the card beside it whatever their z-index said. Lifting the one being explained above its
+ * siblings is what the top layer used to do for them.
  */
-@starting-style {
-  .cyberpunk-tooltip:popover-open {
-    opacity: 0%;
-  }
+.view-item:has([data-tooltip]:is(:hover, :focus-visible)) {
+  position: relative;
+  z-index: 1;
 }
 
 /* ---------- Glitch effects ---------- */

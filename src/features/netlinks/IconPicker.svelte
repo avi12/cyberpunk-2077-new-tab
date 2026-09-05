@@ -1,6 +1,5 @@
 <script lang="ts">
   import { ICON_CHOICES, iconByName } from "@/features/netlinks/icons/choices";
-  import { tooltip } from "@/lib/tooltip";
 
   const {
     label,
@@ -39,11 +38,11 @@
             class:is-selected={choice.name === selected}
             aria-label={choice.name}
             aria-pressed={choice.name === selected}
+            data-tooltip={choice.name}
             onclick={() => onSelect(choice.name)}
             popovertarget={panelId}
             popovertargetaction="hide"
-            type="button"
-            use:tooltip={choice.name}>
+            type="button">
             <span class="picker__icon">{@html choice.svg}</span>
           </button>
         </li>

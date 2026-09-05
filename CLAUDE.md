@@ -99,11 +99,10 @@
 
 - Semantic elements only: `<form>` with a submit button over a click handler, `<fieldset>`/`<legend>`
   around a group, visible `<label>`s over placeholders, `<header>`/`<footer>`/`<section>`
-- Overlays belong in the top layer: `<dialog>` with `showModal()`, `popover` for menus and tooltips,
-  positioned with CSS anchor positioning - never a hand-rolled outside-click listener or a z-index
-  ladder
-- Never the `title` attribute - a hint is `use:tooltip` (`src/lib/tooltip.ts`), and the accessible
-  name is `aria-label`
+- Overlays belong in the top layer: `<dialog>` with `showModal()`, `popover` for menus, positioned
+  with CSS anchor positioning - never a hand-rolled outside-click listener or a z-index ladder
+- Never the `title` attribute - a hint is `data-tooltip="..."`, which the `[data-tooltip]` rule in
+  `src/app.css` draws as the trigger's own `::after`, and the accessible name is `aria-label`
 
 # CSS
 

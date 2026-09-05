@@ -5,7 +5,6 @@
   import OptionGroup from "@/ui/OptionGroup.svelte";
   import iconSettings from "@/assets/icons/settings.svg?raw";
   import { settings } from "@/lib/storage/settings.svelte";
-  import { tooltip } from "@/lib/tooltip";
 
   /**
    * Where a card's action hands its prompt, asked beside the cards it decides for rather than in the
@@ -47,9 +46,9 @@
 <button
   class="picker__button"
   aria-label={LABEL}
+  data-tooltip={LABEL}
   popovertarget={PICKER_ID}
-  type="button"
-  use:tooltip={LABEL}>
+  type="button">
   {@html iconSettings}
 </button>
 
@@ -65,7 +64,9 @@
 <style>
   .picker__button {
     color: var(--cp-secondary);
-    anchor-name: --prompt-target-button;
+
+    /* Its own hint anchors here too, and `anchor-name` takes a list rather than the last writer. */
+    anchor-name: --tooltip, --prompt-target-button;
 
     &:is(:hover, :focus-visible) {
       color: var(--cp-secondary-hi);

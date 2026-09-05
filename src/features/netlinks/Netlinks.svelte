@@ -14,7 +14,6 @@
   import type { SortableMove } from "@/lib/sortable";
   import iconSettings from "@/assets/icons/settings.svg?raw";
   import { sortable } from "@/lib/sortable";
-  import { tooltip } from "@/lib/tooltip";
   import iconTriangleAlert from "@/assets/icons/triangle-alert.svg?raw";
   import { withViewTransition } from "@/lib/view-transition";
 
@@ -253,15 +252,19 @@
     <h2 class="netlinks__title"><span class="hover-glitch" data-text="NETLINKS">NETLINKS</span></h2>
     <div class="netlinks__controls">
       {#if isEditing}
+        <!-- Named by the same words the hint shows: a `::after` joins the name of the element it
+             hangs off, so a button named by its own text would be read as "SORT" and then the whole
+             sentence over again. -->
         <button
           class="netlinks__sort"
+          aria-label={sortLabel}
+          data-tooltip={sortLabel}
           disabled={isEverythingFiled}
           onclick={sortIntoCategories}
-          type="button"
-          use:tooltip={sortLabel}>SORT</button>
+          type="button">SORT</button>
         <button class="netlinks__save" onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
       {:else}
-        <button class="netlinks__icon-button" aria-label={EDIT_LABEL} onclick={() => withViewTransition(() => (isEditing = true))} type="button" use:tooltip={EDIT_LABEL}>
+        <button class="netlinks__icon-button" aria-label={EDIT_LABEL} data-tooltip={EDIT_LABEL} onclick={() => withViewTransition(() => (isEditing = true))} type="button">
           {@html iconSettings}
         </button>
       {/if}

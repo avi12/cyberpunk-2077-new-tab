@@ -3,7 +3,6 @@
   import Modal from "@/ui/Modal.svelte";
   import { requestAccess } from "@/lib/permissions";
   import { sendMessage, MessageType } from "@/lib/messaging";
-  import { tooltip } from "@/lib/tooltip";
 
   const {
     isOpen,
@@ -68,9 +67,9 @@
     <button
       class="about__action"
       aria-label={SCREENSHOT_LABEL}
+      data-tooltip={SCREENSHOT_LABEL}
       onclick={() => void capture()}
-      type="button"
-      use:tooltip={SCREENSHOT_LABEL}>
+      type="button">
       {@html iconCamera}
     </button>
   </div>

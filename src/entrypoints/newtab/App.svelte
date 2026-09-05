@@ -21,7 +21,6 @@
   import iconSettings from "@/assets/icons/settings.svg?raw";
   import SystemSettingsModal from "@/features/settings/SystemSettingsModal.svelte";
   import TerminalDisplayPanel from "@/features/terminal/TerminalDisplayPanel.svelte";
-  import { tooltip } from "@/lib/tooltip";
   import WidgetPanel from "@/features/widgets/WidgetPanel.svelte";
 
   const GREETING_REFRESH_MS = 60_000;
@@ -141,9 +140,9 @@
     <button
       class="corner-button"
       aria-label={SYSTEM_SETTINGS_LABEL}
+      data-tooltip={SYSTEM_SETTINGS_LABEL}
       onclick={() => (isSystemOpen = true)}
-      type="button"
-      use:tooltip={SYSTEM_SETTINGS_LABEL}>
+      type="button">
       {@html iconCog}
     </button>
   </div>

@@ -16,7 +16,6 @@
   import { iconByName } from "@/features/netlinks/icons/choices";
   import { openableUrlSchema } from "@/lib/url";
   import iconSquarePen from "@/assets/icons/square-pen.svg?raw";
-  import { tooltip } from "@/lib/tooltip";
   import iconXMark from "@/assets/icons/x-mark.svg?raw";
 
   const {
@@ -90,17 +89,17 @@
       <button
         class="card__action card__action--edit"
         aria-label={editLabel}
+        data-tooltip={editLabel}
         onclick={() => onEdit(bookmark)}
-        type="button"
-        use:tooltip={editLabel}>
+        type="button">
         {@html iconSquarePen}
       </button>
       <button
         class="card__action card__action--delete"
         aria-label={deleteLabel}
+        data-tooltip={deleteLabel}
         onclick={() => onDelete(bookmark.id)}
-        type="button"
-        use:tooltip={deleteLabel}>
+        type="button">
         {@html iconXMark}
       </button>
     </div>

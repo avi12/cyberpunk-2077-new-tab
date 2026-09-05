@@ -11,7 +11,6 @@
   import type { Snippet } from "svelte";
   import { TabDisposition } from "@/lib/messaging";
   import { withTipContext } from "@/features/tips/context";
-  import { tooltip } from "@/lib/tooltip";
 
   const { kind, title, hint, summary, actionLabel, prompt, meta }: {
     /** Which family this is. The heading above says "Copilot" for both, so the card says which. */
@@ -107,7 +106,9 @@
     {@html COPILOT_KINDS[kind].icon}
     {COPILOT_KINDS[kind].label}
   </p>
-  <h3 class="card__title hover-glitch" use:tooltip={hint}>{title}</h3>
+  <!-- Named by the title alone: the hint is drawn as this heading's own `::after`, which would
+       otherwise be read out as part of it. -->
+  <h3 class="card__title hover-glitch" aria-label={title} data-tooltip={hint}>{title}</h3>
   <p class="card__summary">{summary}</p>
 
   <ul class="card__meta">
