@@ -4,6 +4,7 @@ import { isAtComposeSite } from "@/features/compose/sites";
 import type { ComposeRequest } from "@/lib/messaging";
 import { ComposeOutcome, MessageType, onMessage, TabDisposition } from "@/lib/messaging";
 import { forgetComposeRefusals, rememberComposeRefusal, reshuffleTips } from "@/lib/storage/items";
+import { openableUrlSchema } from "@/lib/url";
 import { defineBackground } from "#imports";
 
 /** The built name of the unlisted script, which is its entrypoint file's. */
@@ -122,6 +123,16 @@ export default defineBackground(() => {
    */
   onMessage(MessageType.openPromptTarget, async ({ data, sender }) => {
     const { url, disposition, compose } = data;
+    /*
+     * `tabs.create` is the address bar, and a message is the one way into this worker from outside
+     * it. Every sender is this extension's own today, which is what makes the parse cheap to keep
+     * rather than a reason to drop it.
+     */
+    const isOpenable = openableUrlSchema.safeParse(url).success;
+    if (!isOpenable) {
+      return ComposeOutcome.failed;
+    }
+
     const senderTabId = sender.tab?.id;
 
     const isReplacingSenderTab = disposition === TabDisposition.current && senderTabId !== undefined;
