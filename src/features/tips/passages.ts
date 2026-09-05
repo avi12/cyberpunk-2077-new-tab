@@ -53,7 +53,7 @@ const SENTENCE_BREAK = /(?<=[.!?])\s+/;
 const WHITESPACE = /\s+/;
 
 /** The page world answers this, so what comes back is checked rather than trusted. */
-const injectedText = z.string().max(PAGE_TEXT_LIMIT).catch("");
+const injectedTextSchema = z.string().max(PAGE_TEXT_LIMIT).catch("");
 
 export type Passage = {
   text: string;
@@ -89,7 +89,7 @@ async function injectedTextOf(tabId: number) {
     args: [READABLE_SELECTOR, PAGE_TEXT_LIMIT]
   });
 
-  return injectedText.parse(injection?.result);
+  return injectedTextSchema.parse(injection?.result);
 }
 
 /**
