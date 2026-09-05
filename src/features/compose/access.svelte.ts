@@ -5,9 +5,9 @@ import { composeRefusalsItem } from "@/lib/storage/items";
  * Whether a prompt can be finished off at a site, which decides what submitting does. Two things
  * have to be true: the reader allowed the site, and the browser did not refuse the script outright.
  *
- * The refusal is discovered rather than predicted. Edge blocks every extension from scripting
- * `copilot.microsoft.com` today, but a browser that stops blocking it needs no code change here -
- * the first attempt that succeeds is simply never recorded as a refusal.
+ * The refusal is discovered rather than predicted: a browser or an enterprise policy can refuse
+ * every extension a host however the permission was come by, and trying is the only way to find out.
+ * No host is named here, so one that starts refusing - or stops - needs no code change.
  */
 class ComposeAccess {
   /**

@@ -39,8 +39,8 @@ const TIP_CONTEXT_PERMISSIONS = ["tabs", "history"];
 const PAGE_TEXT_ORIGIN = "<all_urls>";
 
 /**
- * The sites a prompt can be finished off at, so it need not go by way of the clipboard. Spelled out
- * again here, and unavoidably: a manifest is built by Node before any of `src/` is bundled, so
+ * The one site a prompt can be finished off at, so it need not go by way of the clipboard. Spelled
+ * out again here, and unavoidably: a manifest is built by Node before any of `src/` is bundled, so
  * `compose/sites.ts` cannot be the one that says it - only the one that has to agree with it.
  * Optional and never asked for at install: the reader is only offered it once the companion app has
  * actually answered, and a refusal costs only the typing.
@@ -53,7 +53,7 @@ const PAGE_TEXT_ORIGIN = "<all_urls>";
  * half of the argument is spent: what keeps these off Firefox now is only that nothing there can
  * reach them.
  */
-const COMPOSE_ORIGINS = ["https://copilot.microsoft.com/*", "https://claude.ai/*"];
+const COMPOSE_ORIGIN = "https://claude.ai/*";
 
 /**
  * Google's own weather, read off the search page it draws it on. Optional and asked for only by a
@@ -144,7 +144,7 @@ export default defineConfig({
       "storage",
       "unlimitedStorage",
       "identity",
-      // Typing a prompt into Copilot, which is a script the background injects into the tab it
+      // Typing a prompt into Claude, which is a script the background injects into the tab it
       // opened. Required rather than optional: an API binding is fixed when a context is created,
       // so a worker that started before the grant could never reach it - the same trap the
       // companion's own permission documents. It carries no warning of its own; the site does.
@@ -164,7 +164,7 @@ export default defineConfig({
         key: publicKey,
         minimum_chrome_version: MINIMUM_CHROMIUM_VERSION,
         optional_permissions: [...COMPANION_PERMISSIONS, ...TIP_CONTEXT_PERMISSIONS],
-        optional_host_permissions: [...COMPOSE_ORIGINS, WEATHER_ORIGIN, TIPS_ORIGIN, PAGE_TEXT_ORIGIN]
+        optional_host_permissions: [COMPOSE_ORIGIN, WEATHER_ORIGIN, TIPS_ORIGIN, PAGE_TEXT_ORIGIN]
       }),
     author: {
       email: "avi6106@gmail.com"

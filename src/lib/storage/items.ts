@@ -107,9 +107,9 @@ export const tipsSnapshotItem = storage.defineItem<CompanionSnapshot | null>("lo
 });
 
 /**
- * The sites a browser has refused to let the compose script into at all - Edge answers "the
- * extensions gallery cannot be scripted" for Copilot however the permission was come by, including
- * from a real toolbar click. Local rather than session, because Firefox has no session area and this
+ * The sites a browser has refused to let the compose script into at all, which is an answer the
+ * permission cannot buy off: a host a browser or a policy blocks refuses the injection however the
+ * grant was come by. Local rather than session, because Firefox has no session area and this
  * ships there too; the background empties it on `runtime.onStartup` instead, so a browser that stops
  * refusing is believed again after a restart. It is not one of the `settings`, and an export and a
  * browser-account backup carry only those, so the answer never travels to a machine it is not true

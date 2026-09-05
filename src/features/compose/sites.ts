@@ -5,15 +5,14 @@ import { hasAccess, requestAccess } from "@/lib/permissions";
  *
  * Most destinations answer a prompt carried in the URL the moment they open, and those are not here:
  * a link is the whole feature. A site is only listed when arriving is not the same as asking - the
- * box is filled but unsent, or there is no way to fill it by link at all - and finishing means a
- * script pressing the button the reader would have pressed.
+ * box is filled but left unsent - and finishing means a script pressing the button the reader would
+ * have pressed.
  *
  * That script needs the site, which is a permission, which is a question. So the table is the single
  * place that says which destinations raise one.
  */
 
 export enum ComposeSiteId {
-  copilot = "copilot",
   claude = "claude"
 }
 
@@ -37,11 +36,6 @@ type ComposeSite = {
 const CLAUDE_COMPOSER_SELECTOR = "div.ProseMirror[contenteditable=\"true\"]";
 
 export const COMPOSE_SITES: Record<ComposeSiteId, ComposeSite> = {
-  [ComposeSiteId.copilot]: {
-    url: "https://copilot.microsoft.com/",
-    composerSelector: "[data-testid=\"composer-input\"]",
-    submitSelector: "[data-testid=\"submit-button\"]"
-  },
   [ComposeSiteId.claude]: {
     url: "https://claude.ai/new",
     composerSelector: CLAUDE_COMPOSER_SELECTOR,
