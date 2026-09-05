@@ -1,3 +1,5 @@
+import { fetchBytes, fetchText } from "@/lib/fetch";
+
 /**
  * Neither an arbitrary RSS feed nor an arbitrary web page sends `Access-Control-Allow-Origin`, and
  * the extension ships no host permissions, so both read through a public CORS proxy. These are free
@@ -13,28 +15,24 @@ const PROXY_URLS = [
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
 ];
 
-async function readThrough({ proxyUrl, timeoutMs }: {
-  proxyUrl: string;
-  timeoutMs: number;
-}) {
-  const response = await fetch(proxyUrl, { signal: AbortSignal.timeout(timeoutMs) });
-  if (!response.ok) {
-    throw new Error(`${proxyUrl} answered ${response.status}`);
-  }
-
-  return response;
-}
-
-/** The first proxy to answer. Rejects only when every one of them has failed. */
-async function raceProxies({ url, timeoutMs }: {
+/**
+ * The body of the first proxy to answer. `Promise.any` moves past a proxy only for a rejection, so
+ * the null a failed read answers with becomes that rejection; it rejects once every one has failed.
+ */
+async function raceProxies<TBody>({ url, readBody }: {
   url: string;
-  timeoutMs: number;
+  readBody: (proxyUrl: string) => Promise<TBody | null>;
 }) {
   return Promise.any(
-    PROXY_URLS.map(toProxyUrl => readThrough({
-      proxyUrl: toProxyUrl(url),
-      timeoutMs
-    }))
+    PROXY_URLS.map(async toProxyUrl => {
+      const proxyUrl = toProxyUrl(url);
+      const body = await readBody(proxyUrl);
+      if (body === null) {
+        throw new Error(`${proxyUrl} did not answer`);
+      }
+
+      return body;
+    })
   );
 }
 
@@ -43,16 +41,13 @@ export async function readProxied({ url, timeoutMs = PROXY_TIMEOUT_MS }: {
   url: string;
   timeoutMs?: number;
 }) {
-  try {
-    const response = await raceProxies({
-      url,
+  return raceProxies({
+    url,
+    readBody: proxyUrl => fetchText({
+      url: proxyUrl,
       timeoutMs
-    });
-
-    return await response.text();
-  } catch {
-    return "";
-  }
+    })
+  }).catch(() => "");
 }
 
 /**
@@ -63,19 +58,19 @@ export async function fetchBlob({ url, timeoutMs = PROXY_TIMEOUT_MS }: {
   url: string;
   timeoutMs?: number;
 }) {
-  const direct = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) }).catch(() => null);
-  if (direct?.ok) {
-    return direct.blob();
+  const direct = await fetchBytes({
+    url,
+    timeoutMs
+  });
+  if (direct) {
+    return direct;
   }
 
-  try {
-    const response = await raceProxies({
-      url,
+  return raceProxies({
+    url,
+    readBody: proxyUrl => fetchBytes({
+      url: proxyUrl,
       timeoutMs
-    });
-
-    return await response.blob();
-  } catch {
-    return null;
-  }
+    })
+  }).catch(() => null);
 }

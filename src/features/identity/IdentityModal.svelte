@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { googleAccountName, isGoogleAccountConfigured } from "@/lib/identity";
+  import { googleAccountName, isGoogleAccountConfigured } from "./identity";
   import iconFingerprint from "@/assets/icons/fingerprint.svg?raw";
-  import Modal from "./Modal.svelte";
+  import Modal from "@/ui/Modal.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
   import { DEFAULT_USER_NAME } from "@/lib/storage/defaults";
 

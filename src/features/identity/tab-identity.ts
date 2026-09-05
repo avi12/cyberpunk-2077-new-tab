@@ -1,5 +1,5 @@
-import { iconByName } from "./icons/choices";
-import { DEFAULT_TAB_FAVICON, DEFAULT_TAB_TITLE } from "./storage/defaults";
+import { iconByName } from "@/features/netlinks/icons/choices";
+import { DEFAULT_TAB_FAVICON, DEFAULT_TAB_TITLE } from "@/lib/storage/defaults";
 
 const TITLE_CACHE_KEY = "tabTitle";
 
@@ -18,7 +18,7 @@ const FAVICON_STROKE = {
 
 const FAVICON_SIZE = 32;
 
-export function applyCachedTabTitle(): void {
+export function applyCachedTabTitle() {
   try {
     document.title = localStorage.getItem(TITLE_CACHE_KEY) || DEFAULT_TAB_TITLE;
   } catch {
@@ -26,7 +26,7 @@ export function applyCachedTabTitle(): void {
   }
 }
 
-export function applyTabTitle(title: string): void {
+export function applyTabTitle(title: string) {
   document.title = title;
   try {
     localStorage.setItem(TITLE_CACHE_KEY, title);
@@ -49,7 +49,7 @@ function faviconHref(iconName: string) {
   return `data:image/svg+xml,${encodeURIComponent(elIcon.outerHTML)}`;
 }
 
-export function applyTabFavicon(iconName: string): void {
+export function applyTabFavicon(iconName: string) {
   const link = document.querySelector("link[rel='icon']");
   if (!(link instanceof HTMLLinkElement)) {
     return;

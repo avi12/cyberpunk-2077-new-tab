@@ -1,4 +1,5 @@
-import { z } from "./zod";
+import { fetchJson, fetchText } from "@/lib/fetch";
+import { z } from "@/lib/zod";
 import { browser } from "#imports";
 
 /**
@@ -48,6 +49,34 @@ const claimsSchema = z.object({
   name: z.string().optional()
 });
 
+/**
+ * What the token endpoint is sent, spelled the way Google spells it. Naming the shape is what makes
+ * a renamed parameter a type error here rather than a 400 read as a refused sign-in.
+ */
+type TokenExchange = {
+  client_id: string;
+  client_secret: string;
+  code: string;
+  code_verifier: string;
+  redirect_uri: string;
+  grant_type: "authorization_code";
+};
+
+type Revocation = {
+  token: string;
+};
+
+/** Both of Google's endpoints read form-encoded parameters, and `URLSearchParams` is that format. */
+function toFormPost(parameters: TokenExchange | Revocation) {
+  return {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded"
+    },
+    body: new URLSearchParams(parameters)
+  };
+}
+
 function toBase64Url(bytes: Uint8Array) {
   return btoa(String.fromCharCode(...bytes))
     .replaceAll("+", "-")
@@ -79,15 +108,15 @@ function claimsFromIdToken(idToken: string) {
   }
 }
 
-/** Nothing here is kept, so the grant is handed back rather than left open on the account. */
+/**
+ * Nothing here is kept, so the grant is handed back rather than left open on the account. Whether
+ * Google took it back is not this flow's business, so the answer is dropped rather than waited on.
+ */
 function revoke(accessToken: string) {
-  void fetch(REVOKE_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: new URLSearchParams({ token: accessToken })
-  }).catch(() => undefined);
+  void fetchText({
+    url: REVOKE_URL,
+    init: toFormPost({ token: accessToken })
+  });
 }
 
 async function redeem({ code, codeVerifier, redirectUri }: {
@@ -95,34 +124,24 @@ async function redeem({ code, codeVerifier, redirectUri }: {
   codeVerifier: string;
   redirectUri: string;
 }) {
-  const response = await fetch(TOKEN_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: new URLSearchParams({
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      code,
-      code_verifier: codeVerifier,
-      redirect_uri: redirectUri,
-      grant_type: "authorization_code"
-    })
-  }).catch(() => null);
-  if (!response?.ok) {
-    return null;
-  }
+  const exchange: TokenExchange = {
+    client_id: CLIENT_ID,
+    client_secret: CLIENT_SECRET,
+    code,
+    code_verifier: codeVerifier,
+    redirect_uri: redirectUri,
+    grant_type: "authorization_code"
+  };
 
-  const parsed = tokenSchema.safeParse(await response.json().catch(() => null));
-  if (!parsed.success) {
-    return null;
-  }
-
-  return parsed.data;
+  return fetchJson({
+    url: TOKEN_URL,
+    init: toFormPost(exchange),
+    schema: tokenSchema
+  });
 }
 
 /** Null covers every way this ends without a name: a closed window, a refused consent, a bad token. */
-export async function googleAccountName(): Promise<string | null> {
+export async function googleAccountName() {
   const codeVerifier = randomVerifier();
   const state = crypto.randomUUID();
   const nonce = crypto.randomUUID();
@@ -170,11 +189,11 @@ export async function googleAccountName(): Promise<string | null> {
     revoke(tokens.access_token);
   }
 
-  const claims = claimsFromIdToken(tokens.id_token);
+  const parsed = claimsFromIdToken(tokens.id_token);
   // `nonce` ties the token to this request, `aud` ties it to this extension's client.
-  if (!claims?.success || claims.data.nonce !== nonce || claims.data.aud !== CLIENT_ID) {
+  if (!parsed?.success || parsed.data.nonce !== nonce || parsed.data.aud !== CLIENT_ID) {
     return null;
   }
 
-  return claims.data.given_name ?? claims.data.name ?? null;
+  return parsed.data.given_name ?? parsed.data.name ?? null;
 }
