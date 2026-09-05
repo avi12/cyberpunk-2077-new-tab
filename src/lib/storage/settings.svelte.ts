@@ -1,4 +1,4 @@
-import { DEFAULT_DISPLAY_PREFERENCES, DEFAULT_WIDGET_ORDER, DEFAULT_WIDGETS } from "./defaults";
+import { DEFAULT_WIDGET_ORDER, DEFAULT_WIDGETS } from "./defaults";
 import {
   activeSearchEngineItem,
   backgroundBrightnessItem,
@@ -24,7 +24,7 @@ import {
   widgetsItem
 } from "./items";
 import type { StorageItem } from "./items";
-import type { DisplayPreferences, Widget } from "./schema";
+import type { Widget } from "./schema";
 import {
   backgroundBrightnessSchema,
   BackgroundMediaType,
@@ -43,20 +43,28 @@ import { z } from "@/lib/zod";
  * One setting: where it is kept, what shape it may take, and how a stored answer is brought up to
  * date with what this build ships. The schema is what a settings file is checked against, so the
  * shape a setting accepts is named once and both the compiler and an import obey it.
+ *
+ * Storage is read through it too, not only a settings file. What is in there was written by builds
+ * that described these shapes more loosely, and it outlives every one of them, so a stored value is
+ * a claim rather than a value until the shape has agreed with it.
  */
 class Setting<TValue> {
   readonly #item: StorageItem<TValue>;
   readonly schema: z.ZodType<TValue>;
+  readonly #entrySchema: z.ZodType | null;
   readonly #normalize: (stored: TValue) => TValue;
   #value: TValue = $state()!;
 
-  constructor({ item, schema, normalize }: {
+  constructor({ item, schema, entrySchema, normalize }: {
     item: StorageItem<TValue>;
     schema: z.ZodType<TValue>;
+    /** Named by a list, so one entry that no longer reads does not cost the reader the rest. */
+    entrySchema?: z.ZodType;
     normalize?: (stored: TValue) => TValue;
   }) {
     this.#item = item;
     this.schema = schema;
+    this.#entrySchema = entrySchema ?? null;
     this.#normalize = normalize ?? (stored => stored);
     this.#value = item.fallback;
   }
@@ -75,8 +83,57 @@ class Setting<TValue> {
     await this.#item.setValue(value);
   }
 
+  /**
+   * Reading is a parse. Nothing is written back afterwards - the repair stands for this page's life
+   * and the reader's own next edit is what persists it, so a shape this build cannot read is still
+   * there for a later one that can.
+   */
   async load() {
-    this.#value = this.#normalize(await this.#item.getValue());
+    const stored: unknown = await this.#item.getValue();
+    const parsed = this.schema.safeParse(stored);
+
+    this.#value = this.#normalize(parsed.success ? parsed.data : this.#repaired(stored));
+  }
+
+  /**
+   * One entry that no longer reads costs the reader that entry rather than the list it was in: a
+   * single `javascript:` bookmark saved before the address was pinned would otherwise take every
+   * other bookmark down with it. Whatever is left is read through the setting's own shape again,
+   * because a list of survivors is still only a claim until it has been.
+   *
+   * Anything else - a scalar, a list that is not a list at all - is past salvaging, and the fallback
+   * is what a setting means by no answer.
+   */
+  #repaired(stored: unknown) {
+    const entrySchema = this.#entrySchema;
+    const parsedList = z.array(z.unknown()).safeParse(stored);
+    if (!entrySchema || !parsedList.success) {
+      return this.#item.fallback;
+    }
+
+    const kept = parsedList.data.filter(entry => entrySchema.safeParse(entry).success);
+    const parsedKept = this.schema.safeParse(kept);
+
+    return parsedKept.success ? parsedKept.data : this.#item.fallback;
+  }
+}
+
+/**
+ * A setting that is a list. The array is built from the entry's own shape here, so what one entry
+ * looks like is written once and the list cannot come to disagree with the entries in it.
+ */
+class ListSetting<TItem> extends Setting<TItem[]> {
+  constructor({ item, entrySchema, normalize }: {
+    item: StorageItem<TItem[]>;
+    entrySchema: z.ZodType<TItem>;
+    normalize?: (stored: TItem[]) => TItem[];
+  }) {
+    super({
+      item,
+      schema: z.array(entrySchema),
+      entrySchema,
+      normalize
+    });
   }
 }
 
@@ -91,17 +148,6 @@ function withShippedWidgets(stored: Widget[]) {
   return [...shipped, ...DEFAULT_WIDGETS.filter(({ id }) => !shipped.some(widget => widget.id === id))];
 }
 
-/**
- * An element added to the page after the reader last saved has no answer stored for it, and an
- * absent answer is not "hidden" - it is the default the element ships with. Filling those in is what
- * the schema's per-element defaults already do, so reading is a parse.
- */
-function withShippedElements(stored: DisplayPreferences) {
-  const parsed = displayPreferencesSchema.safeParse(stored);
-
-  return parsed.success ? parsed.data : DEFAULT_DISPLAY_PREFERENCES;
-}
-
 function withShippedWidgetIds(stored: string[]) {
   const shipped = stored.filter(id => DEFAULT_WIDGET_ORDER.includes(id));
 
@@ -109,21 +155,21 @@ function withShippedWidgetIds(stored: string[]) {
 }
 
 export const settings = {
-  bookmarks: new Setting({
+  bookmarks: new ListSetting({
     item: bookmarksItem,
-    schema: z.array(bookmarkSchema)
+    entrySchema: bookmarkSchema
   }),
-  categoryOrder: new Setting({
+  categoryOrder: new ListSetting({
     item: categoryOrderItem,
-    schema: z.array(z.string())
+    entrySchema: z.string()
   }),
   collapsedCategories: new Setting({
     item: collapsedCategoriesItem,
     schema: z.record(z.string(), z.boolean())
   }),
-  customCategories: new Setting({
+  customCategories: new ListSetting({
     item: customCategoriesItem,
-    schema: z.array(z.string())
+    entrySchema: z.string()
   }),
   promptTarget: new Setting({
     item: promptTargetItem,
@@ -153,8 +199,7 @@ export const settings = {
   }),
   displayPreferences: new Setting({
     item: displayPreferencesItem,
-    schema: displayPreferencesSchema,
-    normalize: withShippedElements
+    schema: displayPreferencesSchema
   }),
   background: new Setting({
     item: backgroundItem,
@@ -176,14 +221,14 @@ export const settings = {
     item: userNameItem,
     schema: z.string()
   }),
-  widgets: new Setting({
+  widgets: new ListSetting({
     item: widgetsItem,
-    schema: z.array(widgetSchema),
+    entrySchema: widgetSchema,
     normalize: withShippedWidgets
   }),
-  widgetOrder: new Setting({
+  widgetOrder: new ListSetting({
     item: widgetOrderItem,
-    schema: z.array(z.string()),
+    entrySchema: z.string(),
     normalize: withShippedWidgetIds
   }),
   scanLinesMode: new Setting({
