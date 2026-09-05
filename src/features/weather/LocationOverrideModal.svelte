@@ -42,11 +42,14 @@
     max: number;
     label: string;
   }) {
+    const mustBeANumber = `${label} must be a number`;
+    const mustBeInRange = `${label} must be between ${min} and ${max}`;
+
     return z.string()
       .trim()
-      .refine(value => value !== "" && Number.isFinite(Number(value)), `${label} must be a number`)
+      .min(1, mustBeANumber)
       .transform(Number)
-      .refine(value => value >= min && value <= max, `${label} must be between ${min} and ${max}`);
+      .pipe(z.number(mustBeANumber).min(min, mustBeInRange).max(max, mustBeInRange));
   }
 
   const coordinatesSchema = z.object({
