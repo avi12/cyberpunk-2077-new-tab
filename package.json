@@ -38,7 +38,6 @@
     "@stylistic/eslint-plugin": "^5.10.0",
     "@sveltejs/vite-plugin-svelte": "7.3.0",
     "@tsconfig/svelte": "^5.0.8",
-    "@types/chrome": "^0.2.8",
     "@types/node": "^26.4.1",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@wxt-dev/module-svelte": "2.0.5",
