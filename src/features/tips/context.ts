@@ -16,8 +16,8 @@ import { z } from "@/lib/zod";
  *
  * Every destination this extension can reach is outside the browser, so the same prompt arrives with
  * nothing behind it. The answer is to send what Copilot would have looked at, written into the
- * prompt ahead of the question - and what Copilot is looked at is not a list of links but the text
- * of the pages, which `passages.ts` reads and cuts up.
+ * prompt ahead of the question - and what Copilot looked at is not a list of links but the text of
+ * the pages, which `passages.ts` reads and cuts up.
  *
  * That is the reader's browsing leaving their machine, so it is asked for at the moment a card is
  * pressed, and never before. Refusing costs only the context - the prompt still goes.
@@ -183,14 +183,14 @@ function namedContextFor({ title, prompt }: {
 }
 
 /**
- * Asked for as one thing, because there is only ever the one click to spend: a second
-/**
  * Whether raising the question could still change anything on this page. A permission already held
  * raises no dialog at all, so this only ever silences the repeat of a no - which matters now that
  * every card asks rather than the quarter that name the reader out loud. A new tab is a new page,
  * and that is where the question fairly comes back.
  */
 let isWorthAsking = true;
+/**
+ * Asked for as one thing, because there is only ever the one click to spend: a second
 
  * `permissions.request` issued after this one has been awaited is refused outright, for want of the
  * gesture that paid for the first.
@@ -215,9 +215,9 @@ async function requestTipContextAccess(context: TipContext) {
     };
   }
 
+  isWorthAsking = false;
   const [isListing, isReadingPages] = await Promise.all([
     hasAccess(listing),
-  isWorthAsking = false;
 
     hasAccess(PAGE_TEXT_ACCESS)
   ]);
@@ -246,7 +246,8 @@ const worthSendingSchema = z.object({
   title: z.string().trim().min(1)
 });
 
-  return isPage && title.trim() !== "" && !NOT_READING.test(url);
+function isWorthSending(page: Visited) {
+  return worthSendingSchema.safeParse(page).success;
 }
 
 /**
@@ -500,8 +501,8 @@ function blockFrom({ context, readings, budget }: {
  * offered for a prompt that would have fitted in the address.
  *
  * Anything that does not work out - refused, nothing open, a browser that will not answer - returns
- * the prompt untouched. A card that asks about the reader's tabs and is told no still asks its
- * question; it just asks it with nothing behind it, which is what it did before any of this.
+ * the prompt untouched. A card told no still asks its question; it just asks it with nothing behind
+ * it, which is what it did before any of this.
  */
 export async function withTipContext({ title, prompt, budget }: {
   title: string;
@@ -517,6 +518,11 @@ export async function withTipContext({ title, prompt, budget }: {
     title,
     prompt
   }) ?? DEFAULT_CONTEXT;
+
+  const access = await requestTipContextAccess(context);
+  if (!access.isListing) {
+    return prompt;
+  }
 
   const keywords = keywordsOf(`${title} ${prompt}`);
   const pages = await gather({
