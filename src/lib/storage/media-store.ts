@@ -1,3 +1,5 @@
+import { z } from "@/lib/zod";
+
 /**
  * Everything the reader brings in themselves lives in IndexedDB rather than extension storage: a
  * background runs to tens of megabytes, and `storage.local` is neither meant for nor sized for
@@ -18,14 +20,21 @@ export enum MediaSlot {
 
 export const CACHED_PREFIX = "cached:";
 
-type MediaRecord = {
-  id: MediaSlot;
-  blob: Blob;
-  type: string;
+/**
+ * A stored record, on the way back out. Only the blob and the slot it was filed under are insisted
+ * on: the store is the original extension's, and a record older than everything else here is no
+ * reason to hand back nothing.
+ */
+const mediaRecordSchema = z.object({
+  id: z.enum(MediaSlot),
+  blob: z.instanceof(Blob),
+  type: z.string().optional(),
   /** What the file was called when it came in, which is the only way to name it back at the reader. */
-  name?: string;
-  timestamp: number;
-};
+  name: z.string().optional(),
+  timestamp: z.number().optional()
+});
+
+type MediaRecord = z.infer<typeof mediaRecordSchema>;
 
 let openDb: IDBDatabase | null = null;
 
@@ -82,14 +91,17 @@ export async function saveMedia({ slot, blob, type, name }: {
 }
 
 export async function loadMedia(slot: MediaSlot) {
-  const record: MediaRecord | undefined = await runRequest({
-    mode: "readonly",
-    run: store => store.get(slot)
-  });
-  if (!record?.blob) {
+  const parsed = mediaRecordSchema.safeParse(
+    await runRequest<unknown>({
+      mode: "readonly",
+      run: store => store.get(slot)
+    })
+  );
+  if (!parsed.success) {
     return null;
   }
 
+  const record = parsed.data;
   // An older record can carry a typeless blob; the type it was saved under is the one to hand back.
   if (!record.blob.type && record.type) {
     return {
