@@ -2,32 +2,40 @@
   import type { GeoLocation } from "@/lib/storage/schema";
   import { LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN } from "@/lib/storage/schema";
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
-  import Modal from "@/components/modals/Modal.svelte";
-  import { GOOGLE_WEATHER_ACCESS } from "@/lib/weather/google";
-  import { hasLocationAccess, roundCoordinate } from "@/lib/geolocation";
+  import Modal from "@/ui/Modal.svelte";
+  import { GOOGLE_WEATHER_ACCESS, hasGoogleWeatherAccess } from "./google";
+  import { locationAccess, LocationRefusal, roundCoordinate } from "./geolocation";
   import { requestAccess } from "@/lib/permissions";
   import { settings } from "@/lib/storage/settings.svelte";
-  import { WeatherSourceId } from "@/lib/weather/sources";
+  import { WeatherSourceId } from "./sources";
   import { z } from "@/lib/zod";
 
   const {
     isOpen,
-    location,
     onSave,
     onClose,
     onFollowDevice,
     isFollowingDevice
   }: {
     isOpen: boolean;
-    location: GeoLocation;
     onSave: (location: GeoLocation) => void;
     onClose: () => void;
-    onFollowDevice: () => Promise<boolean>;
+    onFollowDevice: () => Promise<LocationRefusal | null>;
     isFollowingDevice: boolean;
   } = $props();
 
   const COORDINATES_ERROR = "Enter valid coordinates";
-  const DEVICE_SILENT = "Couldn't get your location - type your coordinates below instead";
+
+  /**
+   * One sentence per reason, because the advice differs. Being told no is fixed in the browser's
+   * settings and nowhere else; a machine that cannot place itself is fixed by typing, and telling
+   * that reader to look for a prompt sends them after one they were never shown.
+   */
+  const REFUSAL_MESSAGES: Record<LocationRefusal, string> = {
+    [LocationRefusal.blocked]: "This page is blocked from reading your location - allow it in your browser's site settings",
+    [LocationRefusal.unavailable]: "Your device couldn't work out where it is - type your coordinates below instead",
+    [LocationRefusal.timedOut]: "Your device took too long to answer - type your coordinates below instead"
+  };
 
   function coordinateSchema({ min, max, label }: {
     min: number;
@@ -73,8 +81,15 @@
   let error = $state("");
   let isEditing = $state(false);
   /** Undefined until the browser has answered - a "not looked yet" is no reason to say anything. */
-  let isDeviceAllowed = $state<boolean | undefined>();
-  let isAccessRefused = $state(false);
+  let deviceAccess = $state<PermissionState | undefined>();
+  /**
+   * Whether Google's site was already theirs before this panel asked. Read ahead of the press
+   * rather than at it, because checking costs an await and the request underneath needs the gesture
+   * that await would spend.
+   */
+  let isGoogleAllowed = $state<boolean | undefined>();
+  /** Why the last press got nothing, or null when it got somewhere - the caption's slot either way. */
+  let refusal = $state<LocationRefusal | null>(null);
 
   /**
    * Which source is lit: the device until the coordinates are touched, the coordinates from then on.
@@ -86,17 +101,35 @@
       return false;
     }
 
-    if (isDeviceAllowed === false) {
+    if (deviceAccess && deviceAccess !== "granted") {
       return false;
     }
 
     return isFollowingDevice;
   });
 
+  /**
+   * What the panel says under the button. A page the browser has blocked is said so before the press
+   * rather than after: pressing raises no prompt at all there, and a button that looks like it asked
+   * and then quietly failed is the whole complaint.
+   */
+  const deviceNotice = $derived.by(() => {
+    if (refusal) {
+      return REFUSAL_MESSAGES[refusal];
+    }
+
+    if (deviceAccess === "denied") {
+      return REFUSAL_MESSAGES[LocationRefusal.blocked];
+    }
+
+    return "";
+  });
+
   /** Read again on every open, so a permission taken back in the browser's own settings shows here. */
   $effect(() => {
     void isOpen;
-    void hasLocationAccess().then(isAllowed => (isDeviceAllowed = isAllowed));
+    void locationAccess().then(access => (deviceAccess = access));
+    void hasGoogleWeatherAccess().then(isAllowed => (isGoogleAllowed = isAllowed));
   });
 
   $effect(() => {
@@ -106,7 +139,7 @@
 
     draft = emptyDraft();
     error = "";
-    isAccessRefused = false;
+    refusal = null;
     isEditing = false;
   });
 
@@ -115,35 +148,54 @@
    * location - which makes the moment a location is set the moment its site is worth asking for.
    * Granted, the widget reads Google from here on; refused, it goes on reading open-meteo and the
    * reader loses nothing they had.
+   *
+   * Only a site newly handed over moves the source. Somebody who granted it once and then switched
+   * Google off in the panel has already answered this question, and setting a location is not them
+   * changing their mind about it.
    */
-  async function useGoogleWeather(isGranted: boolean) {
-    if (!isGranted) {
+  function useGoogleWeather(isGranted: boolean) {
+    if (!isGranted || isGoogleAllowed) {
       return;
     }
 
+    isGoogleAllowed = true;
     settings.weatherSource.current = WeatherSourceId.google;
   }
 
   /**
-   * Pressing this is the reader asking to be asked, so nothing here refuses on their behalf: the
-   * site request goes out, and the device raises its own prompt when the widget reads it.
+   * Pressing this is the reader asking to be asked, so both questions are put to them, in the order
+   * the button reads: where they are, and then whether Google may answer for it.
    *
-   * Only Google's site is asked for. Where the reader is needs no extension permission at all -
-   * `getCurrentPosition` raises the browser's own question, which is the one the button promised.
+   * The device is started rather than awaited, which is what makes that order possible.
+   * `getCurrentPosition` goes out synchronously, so its prompt is already up, while the press is
+   * still live for the site request underneath it - measured: a request made 6s later is refused
+   * outright with "must be called during a user gesture", and reading a browser prompt takes longer
+   * than that. Awaiting the device first would cost the site the gesture that paid for it.
    *
-   * A device that answers nothing, whether refused at the prompt or simply silent, leaves the panel
-   * open and says so, rather than closing on a city that never changed.
+   * A site already handed over answers instantly and raises nothing, so nobody is asked twice.
+   *
+   * A device that answers nothing leaves the panel open and says which of the three things went
+   * wrong, rather than closing on a city that never changed.
    */
   async function followDevice() {
-    error = "";
-    if (!isDeviceAllowed) {
-      await useGoogleWeather(await requestAccess(GOOGLE_WEATHER_ACCESS));
+    refusal = null;
+    /*
+     * A blocked page never sees a prompt again, so there is nothing here worth spending a press on -
+     * and asking for Google's site on the way would be a dialog raised for a feature that cannot work.
+     */
+    if (deviceAccess === "denied") {
+      return;
     }
 
-    if (!await onFollowDevice()) {
-      isAccessRefused = true;
-      error = DEVICE_SILENT;
+    const located = onFollowDevice();
+    useGoogleWeather(await requestAccess(GOOGLE_WEATHER_ACCESS));
+    refusal = await located;
+    if (refusal) {
+      return;
     }
+
+    /* A location only arrives from a device that granted it, which is the freshest answer there is. */
+    deviceAccess = "granted";
   }
 
   /**
@@ -166,7 +218,7 @@
     const isGranted = await requestAccess(GOOGLE_WEATHER_ACCESS);
     const latitude = roundCoordinate(parsed.data.latitude);
     const longitude = roundCoordinate(parsed.data.longitude);
-    await useGoogleWeather(isGranted);
+    useGoogleWeather(isGranted);
     onSave({
       name: draft.name.trim() || `${latitude}, ${longitude}`,
       latitude,
@@ -186,14 +238,14 @@
       class:is-active={isDeviceLit}
       class:is-dimmed={!isDeviceLit}
       aria-pressed={isDeviceLit}
-      onclick={followDevice}
+      onclick={() => void followDevice()}
       onfocusin={e => e.stopPropagation()}
       type="button">
       {@html iconMapPin}
       Follow my location
     </button>
-    {#if isAccessRefused}
-      <p class="cyber-error" role="alert">{DEVICE_SILENT}</p>
+    {#if deviceNotice}
+      <p class="cyber-error" role="alert">{deviceNotice}</p>
     {:else}
       <p class="location__caption">Read from this device on every load, and never stored</p>
     {/if}

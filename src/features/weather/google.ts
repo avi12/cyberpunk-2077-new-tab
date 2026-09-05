@@ -1,6 +1,6 @@
-import type { WeatherReading } from "./model";
 import { toFahrenheit, WeatherCondition, weatherReadingSchema } from "./model";
-import { nonEmptyTextSchema } from "@/lib/companion/model";
+import { nonEmptyTextSchema } from "@/features/companion/model";
+import { fetchDocument } from "@/lib/fetch";
 import type { AccessRequest } from "@/lib/permissions";
 import { hasAccess, requestAccess } from "@/lib/permissions";
 import type { GeoLocation } from "@/lib/storage/schema";
@@ -31,12 +31,12 @@ export const GOOGLE_WEATHER_ACCESS: AccessRequest = {
   origins: [`${new URL(SEARCH_URL).origin}/*`]
 };
 
-export async function hasGoogleWeatherAccess(): Promise<boolean> {
+export async function hasGoogleWeatherAccess() {
   return hasAccess(GOOGLE_WEATHER_ACCESS);
 }
 
 /** Only ever called straight out of a click: a permission prompt needs the gesture that asked for it. */
-export async function requestGoogleWeatherAccess(): Promise<boolean> {
+export async function requestGoogleWeatherAccess() {
   return requestAccess(GOOGLE_WEATHER_ACCESS);
 }
 
@@ -55,7 +55,7 @@ const SEARCH_LANGUAGE = "en";
  * `hl` pins the answer to English, because the condition arrives as words and the words matched
  * below are English ones.
  */
-function weatherSearchUrl(placeName: string): string {
+function weatherSearchUrl(placeName: string) {
   const url = new URL(SEARCH_URL);
   url.searchParams.set("q", `${WEATHER_QUERY} ${placeName}`);
   url.searchParams.set("hl", SEARCH_LANGUAGE);
@@ -169,7 +169,7 @@ const CONDITION_WORDS: {
  */
 const UNKNOWN_CONDITION = WeatherCondition.cloudy;
 
-function conditionFor(description: string): WeatherCondition {
+function conditionFor(description: string) {
   const phrase = description.toLowerCase();
   for (const { condition, words } of CONDITION_WORDS) {
     if (words.some(word => phrase.includes(word))) {
@@ -196,29 +196,29 @@ function readReading(page: Document) {
     return page.getElementById(id)?.textContent?.trim();
   }
 
-  const block = googleBlockSchema.safeParse({
+  const parsedBlock = googleBlockSchema.safeParse({
     displayed: textOf(WEATHER_BLOCK_IDS.displayed),
     alternate: textOf(WEATHER_BLOCK_IDS.alternate),
     description: textOf(WEATHER_BLOCK_IDS.description)
   });
-  if (!block.success) {
+  if (!parsedBlock.success) {
     return null;
   }
 
-  const { description } = block.data;
-  const reading = weatherReadingSchema.safeParse({
-    temperature: celsiusOf(block.data),
+  const { description } = parsedBlock.data;
+  const parsedReading = weatherReadingSchema.safeParse({
+    temperature: celsiusOf(parsedBlock.data),
     condition: conditionFor(description),
     description
   });
-  if (!reading.success) {
+  if (!parsedReading.success) {
     return null;
   }
 
-  return reading.data;
+  return parsedReading.data;
 }
 
-export async function readGoogleWeather(location: GeoLocation): Promise<WeatherReading | null> {
+export async function readGoogleWeather(location: GeoLocation) {
   const placeName = location.name.trim();
   if (!placeName) {
     return null;
@@ -228,15 +228,16 @@ export async function readGoogleWeather(location: GeoLocation): Promise<WeatherR
     return null;
   }
 
-  const response = await fetch(weatherSearchUrl(placeName), {
-    credentials: "include",
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
-  }).catch(() => null);
-  if (!response?.ok) {
+  const page = await fetchDocument({
+    url: weatherSearchUrl(placeName),
+    init: {
+      credentials: "include"
+    },
+    timeoutMs: REQUEST_TIMEOUT_MS
+  });
+  if (!page) {
     return null;
   }
 
-  const html = await response.text().catch(() => "");
-
-  return readReading(new DOMParser().parseFromString(html, "text/html"));
+  return readReading(page);
 }

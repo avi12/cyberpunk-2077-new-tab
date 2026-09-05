@@ -1,17 +1,17 @@
 <script lang="ts">
   import type { GeoLocation } from "@/lib/storage/schema";
-  import type { WeatherReading } from "@/lib/weather/model";
+  import type { WeatherReading } from "./model";
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
-  import { askDeviceLocation, deviceLocation } from "@/lib/geolocation";
-  import { formatTemperature, temperatureUnit, WEATHER_ICONS, WEATHER_REFRESH_MS } from "@/lib/weather/model";
-  import { fetchWeather } from "@/lib/weather/sources";
-  import { GLITCH_SHORT_MS, Glitch } from "@/lib/glitch.svelte";
+  import { askDeviceLocation, deviceLocation } from "./geolocation";
+  import { formatTemperature, temperatureUnit, WEATHER_ICONS, WEATHER_REFRESH_MS } from "./model";
+  import { fetchWeather } from "./sources";
+  import { Glitch } from "@/lib/glitch.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
   import LocationOverrideModal from "./LocationOverrideModal.svelte";
-  import WidgetCard from "./WidgetCard.svelte";
+  import WidgetCard from "@/features/widgets/WidgetCard.svelte";
   import WidgetLocation from "./WidgetLocation.svelte";
-  import type { WidgetProps } from "./widget.svelte";
+  import type { WidgetProps } from "@/features/widgets/widget.svelte";
   import iconWind from "@/assets/icons/wind.svg?raw";
 
   const { config, onConfigChange }: WidgetProps = $props();
@@ -49,17 +49,23 @@
    * Read again rather than only clear the override: a reader who was already following the device
    * has just allowed the location, and nothing in the config changed for the effect below to notice.
    *
-   * The modal stays up until there is a fix to show, and hears whether there was one - a device that
+   * The modal stays up until there is a fix to show, and hears why there was none - a device that
    * answers nothing used to close the panel and leave the old city sitting there, which reads as the
    * button having done nothing at all.
    */
   async function followDevice() {
     onConfigChange({ location: undefined });
-    const fix = await askDeviceLocation();
-    detected = fix;
-    isEditingLocation = !fix;
+    const answer = await askDeviceLocation();
+    if (!answer.isFound) {
+      isEditingLocation = true;
 
-    return Boolean(fix);
+      return answer.refusal;
+    }
+
+    detected = answer.location;
+    isEditingLocation = false;
+
+    return null;
   }
 
   $effect(() => {
@@ -118,7 +124,7 @@
         class="weather__temp weather__temp--button"
         class:glitch={glitch.active}
         data-text={temperature}
-        onclick={() => glitch.fireThen(() => onConfigChange({ temperatureUnit: !isCelsius }), GLITCH_SHORT_MS)}
+        onclick={() => glitch.fire({ onDone: () => onConfigChange({ temperatureUnit: !isCelsius }) })}
         type="button">
         {temperature}
       </button>
@@ -131,7 +137,6 @@
 <LocationOverrideModal
   isFollowingDevice={isAutomatic}
   isOpen={isEditingLocation}
-  {location}
   onClose={() => (isEditingLocation = false)}
   onFollowDevice={followDevice}
   onSave={next => {

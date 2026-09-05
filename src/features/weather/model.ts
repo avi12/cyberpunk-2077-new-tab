@@ -4,7 +4,7 @@ import iconCloudSnow from "@/assets/icons/cloud-snow.svg?raw";
 import iconCloud from "@/assets/icons/cloud.svg?raw";
 import iconSun from "@/assets/icons/sun.svg?raw";
 import iconWind from "@/assets/icons/wind.svg?raw";
-import { nonEmptyTextSchema } from "@/lib/companion/model";
+import { nonEmptyTextSchema } from "@/features/companion/model";
 import { z } from "@/lib/zod";
 
 /**
@@ -74,7 +74,7 @@ export const WEATHER_ICONS: Record<WeatherCondition, {
  * The one conversion. The number the widget prints and the arithmetic Google's page is read by are
  * the same scale, so they are the same function.
  */
-export function toFahrenheit(celsius: number): number {
+export function toFahrenheit(celsius: number) {
   return Math.round((celsius * 9) / 5 + 32);
 }
 
@@ -92,7 +92,7 @@ const TEMPERATURE_FORMATS = {
   })
 };
 
-function temperatureFormat(isCelsius: boolean): Intl.NumberFormat {
+function temperatureFormat(isCelsius: boolean) {
   if (isCelsius) {
     return TEMPERATURE_FORMATS.celsius;
   }
@@ -103,12 +103,12 @@ function temperatureFormat(isCelsius: boolean): Intl.NumberFormat {
 export function formatTemperature({ celsius, isCelsius }: {
   celsius: number;
   isCelsius: boolean;
-}): string {
+}) {
   return temperatureFormat(isCelsius).format(isCelsius ? celsius : toFahrenheit(celsius));
 }
 
 /** The unit on its own, for the placeholder shown while the first reading is still in flight. */
-export function temperatureUnit(isCelsius: boolean): string {
+export function temperatureUnit(isCelsius: boolean) {
   return temperatureFormat(isCelsius)
     .formatToParts(0)
     .filter(part => part.type === "unit")

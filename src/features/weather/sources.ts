@@ -1,5 +1,4 @@
 import { readGoogleWeather } from "./google";
-import type { WeatherReading } from "./model";
 import { fetchOpenMeteoWeather } from "./open-meteo";
 import type { GeoLocation } from "@/lib/storage/schema";
 
@@ -21,7 +20,7 @@ export enum WeatherSourceId {
 export const DEFAULT_WEATHER_SOURCE = WeatherSourceId.openMeteo;
 
 /** A source this build no longer offers reads as the default rather than as one that is not there. */
-export function withShippedWeatherSource(stored: WeatherSourceId): WeatherSourceId {
+export function withShippedWeatherSource(stored: WeatherSourceId) {
   if (Object.values(WeatherSourceId).includes(stored)) {
     return stored;
   }
@@ -38,7 +37,7 @@ export function withShippedWeatherSource(stored: WeatherSourceId): WeatherSource
 export async function fetchWeather({ location, sourceId }: {
   location: GeoLocation;
   sourceId: WeatherSourceId;
-}): Promise<WeatherReading> {
+}) {
   if (sourceId === WeatherSourceId.google) {
     const reading = await readGoogleWeather(location);
     if (reading) {

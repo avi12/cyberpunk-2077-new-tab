@@ -1,5 +1,5 @@
-import type { WeatherReading } from "./model";
 import { WeatherCondition } from "./model";
+import { fetchJson } from "@/lib/fetch";
 import type { GeoLocation } from "@/lib/storage/schema";
 import { z } from "@/lib/zod";
 
@@ -16,7 +16,7 @@ const FORECAST_ERROR_MESSAGE = "Weather API error";
  * WMO weather codes, bucketed exactly as the original did: the buckets are wider than the standard
  * code table, and narrowing them would change what the widget says.
  */
-function describeWeatherCode(code: number): string {
+function describeWeatherCode(code: number) {
   if (code === 0) {
     return "Clear sky";
   }
@@ -61,7 +61,7 @@ function describeWeatherCode(code: number): string {
 }
 
 /** The icon buckets do not line up with the description buckets - that is the original's shape. */
-function conditionForCode(code: number): WeatherCondition {
+function conditionForCode(code: number) {
   if (code <= 1) {
     return WeatherCondition.clear;
   }
@@ -92,19 +92,16 @@ const forecastSchema = z.object({
   })
 });
 
-export async function fetchOpenMeteoWeather(location: GeoLocation): Promise<WeatherReading> {
-  const url = `${FORECAST_URL}?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,weather_code`;
-  const response = await fetch(url);
-  if (!response.ok) {
+export async function fetchOpenMeteoWeather(location: GeoLocation) {
+  const forecast = await fetchJson({
+    url: `${FORECAST_URL}?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,weather_code`,
+    schema: forecastSchema
+  });
+  if (!forecast) {
     throw new Error(FORECAST_ERROR_MESSAGE);
   }
 
-  const parsed = forecastSchema.safeParse(await response.json());
-  if (!parsed.success) {
-    throw new Error(FORECAST_ERROR_MESSAGE);
-  }
-
-  const { temperature_2m: temperature, weather_code: weatherCode } = parsed.data.current;
+  const { temperature_2m: temperature, weather_code: weatherCode } = forecast.current;
 
   return {
     temperature: Math.round(temperature),
