@@ -127,7 +127,7 @@ export const BACKGROUND_BRIGHTNESS_MAX = 200;
 
 export const backgroundBrightnessSchema = z.number().min(BACKGROUND_BRIGHTNESS_MIN).max(BACKGROUND_BRIGHTNESS_MAX);
 
-const taskSchema = z.object({
+export const taskSchema = z.object({
   id: z.string(),
   text: z.string(),
   completed: z.boolean()

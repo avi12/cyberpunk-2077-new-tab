@@ -4,7 +4,7 @@
   import { readProxied } from "./cors-proxy";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import Modal from "@/ui/Modal.svelte";
-  import { parseFeed } from "@/features/widgets/rss/model";
+  import { DEFAULT_MAX_ITEMS, MAX_ITEMS, MIN_ITEMS, parseFeed, readFeedUrl, readMaxItems } from "@/features/widgets/rss/model";
   import type { FeedItem } from "@/features/widgets/rss/model";
   import iconRss from "@/assets/icons/rss.svg?raw";
   import iconSettings from "@/assets/icons/settings.svg?raw";
@@ -17,9 +17,6 @@
   const { config, onConfigChange }: WidgetProps = $props();
 
   const REFRESH_MS = 900_000;
-  const MIN_ITEMS = 1;
-  const MAX_ITEMS = 50;
-  const DEFAULT_MAX_ITEMS = 10;
   const SKELETON_ROWS = [0, 1, 2];
 
   let items = $state<FeedItem[]>([]);
@@ -27,11 +24,12 @@
   let isFailed = $state(false);
   let isSettingsOpen = $state(false);
   let urlDraft = $state(untrack(() => config.feedUrl ?? ""));
-  let countDraft = $state(untrack(() => config.maxItems ?? DEFAULT_MAX_ITEMS));
+  let countDraft = $state(untrack(() => readMaxItems(config.maxItems)));
 
   const saver = configSaver({ save: patch => onConfigChange(patch) });
-  const feedUrl = $derived(config.feedUrl ?? "");
-  const maxItems = $derived(config.maxItems ?? DEFAULT_MAX_ITEMS);
+  const feedUrl = $derived(readFeedUrl(config.feedUrl));
+  const maxItems = $derived(readMaxItems(config.maxItems));
+  const isDraftUsable = $derived(urlDraft.trim() === "" || readFeedUrl(urlDraft) !== "");
 
   async function refresh() {
     if (!feedUrl) {
@@ -73,7 +71,7 @@
 
   function queueSave() {
     saver.queue({
-      feedUrl: urlDraft,
+      feedUrl: readFeedUrl(urlDraft),
       maxItems: countDraft
     });
   }
@@ -149,6 +147,9 @@
         placeholder="https://example.com/rss"
         type="url"
         bind:value={urlDraft} />
+      {#if !isDraftUsable}
+        <p class="cyber-error">Needs an http:// or https:// address</p>
+      {/if}
     </div>
     <div>
       <label class="cyber-label" for="rss-count">Max Items ({MIN_ITEMS}-{MAX_ITEMS})</label>

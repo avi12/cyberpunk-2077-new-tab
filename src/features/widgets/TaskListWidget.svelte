@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { Task } from "@/lib/storage/schema";
+  import { taskSchema } from "@/lib/storage/schema";
+  import { validRecords } from "@/features/companion/model";
   import iconClipboardList from "@/assets/icons/clipboard-list.svg?raw";
   import { GLITCH_LONG_MS } from "@/lib/glitch.svelte";
   import iconPlus from "@/assets/icons/plus.svg?raw";
@@ -15,7 +17,11 @@
   const COUNTER_DIGITS = 3;
   const COUNTER_FORMAT = counterFormat(COUNTER_DIGITS);
 
-  let tasks = $state<Task[]>(untrack(() => config.tasks ?? []));
+  // A stored list is another build's claim about itself, so a gig that no longer reads is dropped.
+  let tasks = $state<Task[]>(untrack(() => validRecords({
+    raw: config.tasks,
+    schema: taskSchema
+  })));
   let idCompleting = $state<string | null>(null);
   let idFocused = $state<string | null>(null);
   let removalTimer: ReturnType<typeof setTimeout> | undefined;

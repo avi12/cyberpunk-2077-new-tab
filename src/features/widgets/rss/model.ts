@@ -4,6 +4,35 @@ import { z } from "@/lib/zod";
 
 const INVALID_FEED_MESSAGE = "Feed is not XML";
 
+export const MIN_ITEMS = 1;
+export const MAX_ITEMS = 50;
+export const DEFAULT_MAX_ITEMS = 10;
+
+/**
+ * The bound belongs to the count, not to the field that happens to edit it: the same number comes
+ * back from storage and out of a settings file another build wrote, and neither has been past the
+ * spinner.
+ */
+const maxItemsSchema = z.number().int().min(MIN_ITEMS).max(MAX_ITEMS);
+
+/** A count that is absent, fractional, or past either end is the one the widget ships with. */
+export function readMaxItems(stored: number | undefined) {
+  const parsed = maxItemsSchema.safeParse(stored);
+
+  return parsed.success ? parsed.data : DEFAULT_MAX_ITEMS;
+}
+
+/**
+ * The address is fetched exactly as it was typed, so it is held to the same shape the stories it
+ * answers with are held to - and it is held there on the way in, since the field is one way to set
+ * it and a settings file is another. An address that is not http(s) is no feed at all.
+ */
+export function readFeedUrl(stored: string | undefined) {
+  const parsed = openableUrlSchema.safeParse(stored);
+
+  return parsed.success ? parsed.data : "";
+}
+
 /**
  * One story, narrowed to the two fields the widget renders. The link goes straight into an `href`,
  * so it is held to the one shape everything openable is held to.
