@@ -1,4 +1,4 @@
-import { COMPOSE_SITES } from "@/lib/compose/sites";
+import { COMPOSE_SITES } from "@/features/compose/sites";
 import { sendMessage } from "@/lib/messaging";
 import { defineUnlistedScript } from "#imports";
 
@@ -10,7 +10,9 @@ import { defineUnlistedScript } from "#imports";
  * This is injected once, into one tab, only after the reader has handed over that site.
  *
  * The request is fetched rather than carried: `executeScript` takes either a file or a function with
- * arguments, never both, so the script asks the background for whatever was meant for this tab.
+ * arguments, never both, so the script asks the background for whatever was meant for this tab. That
+ * is also the whole reason a prompt too long for a URL can be delivered at all - it travels as a
+ * message to this script rather than as an address the browser has to swallow.
  */
 
 /** A composer mounts well after the page settles, so waiting is the normal case, not the sad one. */
@@ -46,7 +48,7 @@ async function appearing<TFound>({ find, timeoutMs }: {
  * `value` directly leaves the box looking full and the send button still disabled. The prototype's
  * own setter, followed by the event React listens for, is what it takes for the page to agree.
  */
-function type({ composer, prompt }: {
+function fillField({ composer, prompt }: {
   composer: HTMLTextAreaElement;
   prompt: string;
 }) {
@@ -55,19 +57,52 @@ function type({ composer, prompt }: {
   composer.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
+/**
+ * A rich-text composer is an editor's own document rather than a form field, so there is no value to
+ * set: it changes only for what the browser tells it a person did. An insertion is the one such
+ * event that carries a whole prompt at once - keystrokes would have to be faked a character at a
+ * time, and a paste this size is what sites turn into an attachment instead of a question.
+ * `execCommand` is on its way out and still the only way to raise one.
+ *
+ * Selecting the box first makes it a replacement, so a prompt the URL already delivered is written
+ * over rather than doubled.
+ */
+function insertIntoEditor({ composer, prompt }: {
+  composer: HTMLElement;
+  prompt: string;
+}) {
+  composer.focus();
+  const range = document.createRange();
+  range.selectNodeContents(composer);
+  const selection = getSelection();
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+  document.execCommand("insertText", false, prompt);
+}
+
 async function fill({ selector, prompt }: {
   selector: string;
   prompt: string;
 }) {
   const composer = await appearing({
-    find: () => document.querySelector<HTMLTextAreaElement>(selector),
+    find: () => document.querySelector<HTMLElement>(selector),
     timeoutMs: APPEAR_TIMEOUT_MS
   });
   if (!composer) {
     return false;
   }
 
-  type({
+  const isFormField = composer instanceof HTMLTextAreaElement;
+  if (isFormField) {
+    fillField({
+      composer,
+      prompt
+    });
+
+    return true;
+  }
+
+  insertIntoEditor({
     composer,
     prompt
   });
@@ -85,10 +120,11 @@ export default defineUnlistedScript({
     }
 
     const { composerSelector, submitSelector } = COMPOSE_SITES[request.siteId];
-    if (composerSelector && !await fill({
+    const isComposerFilled = !composerSelector || await fill({
       selector: composerSelector,
       prompt: request.prompt
-    })) {
+    });
+    if (!isComposerFilled) {
       return "no composer";
     }
 

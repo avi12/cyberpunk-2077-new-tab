@@ -1,14 +1,14 @@
 <script lang="ts">
   import iconChevronRight from "@/assets/icons/chevron-right.svg?raw";
-  import { COPILOT_KINDS } from "@/lib/companion/copilot";
-  import { composeSiteFor, promptUrl } from "@/lib/companion/prompt-target";
-  import { promptDestination } from "@/lib/companion/prompt-destination";
-  import type { ComposeSiteId } from "@/lib/compose/sites";
-  import type { CopilotKind } from "@/lib/companion/copilot";
-  import { handOffPrompt } from "@/lib/compose/deliver";
+  import { COPILOT_KINDS } from "./copilot";
+  import { composeSiteFor, promptUrl } from "./prompt-target";
+  import { promptDestination } from "./prompt-destination";
+  import type { ComposeSiteId } from "@/features/compose/sites";
+  import type { CopilotKind } from "./copilot";
+  import { handOffPrompt, promptBudgetFor } from "@/features/compose/deliver";
   import type { Snippet } from "svelte";
-  import { settings } from "@/lib/storage/settings.svelte";
   import { TabDisposition } from "@/lib/messaging";
+  import { tipContextFor, withTipContext } from "@/features/tips/context";
   import { tooltip } from "@/lib/tooltip";
 
   const { kind, title, hint, summary, actionLabel, prompt, meta }: {
@@ -44,37 +44,50 @@
   /**
    * One address for the link and the hand-off alike, so a middle-click cannot land anywhere a plain
    * click would not. Every destination now carries the prompt in its own URL, so there is always one.
+   *
+   * A tip asking about the reader's own tabs or reading is the one thing this cannot hold, since
+   * that is only true at the moment it is pressed. The href is the question on its own, which is
+   * what a middle-click gets and what the click improves on.
    */
   const destination = $derived(promptUrl({
     targetId,
     prompt
-  }) ?? "");
+  }));
 
-  /**
-   * Deciding here and nowhere else, because a click's default is spent the moment this returns: an
-   * `await` before `preventDefault` lets the link open its own tab first, and the background then
-   * opens a second one.
-   */
-  function onAction(e: MouseEvent) {
-    if (!siteId) {
-      return;
-    }
-
-    e.preventDefault();
-    void handOff(siteId);
-  }
+  /** Whether pressing this has anything to add to the prompt beyond opening the link. */
+  const isAskingAboutReader = $derived(tipContextFor({
+    title,
+    prompt
+  }) !== null);
 
   /**
    * The site is asked for on the way, so a card is what raises the question, and only for someone
    * who clicked one. A no costs only the sending: the prompt goes by clipboard and the destination
    * opens all the same, which is what this always did.
    */
-  async function handOff(site: ComposeSiteId) {
+  async function handOff(site: ComposeSiteId | null) {
     notice = "";
+    /*
+     * How much context there is room for is settled before it is gathered, because it depends on how
+     * the prompt will travel and not on what it turns out to say. A destination a script can type
+     * into takes a page's worth; one that only reads its own URL takes a paragraph.
+     *
+     * Awaited first and asked for inside, because reading the reader's own browsing is a permission
+     * and a permission is a question the click has to still be paying for.
+     */
+    const asked = await withTipContext({
+      title,
+      prompt,
+      budget: promptBudgetFor(site)
+    });
+
     await handOffPrompt({
       siteId: site,
-      url: destination,
-      prompt,
+      url: promptUrl({
+        targetId,
+        prompt: asked
+      }),
+      prompt: asked,
       disposition: TabDisposition.new,
       onCopied(isCopied) {
         notice = isCopied ? COPIED_NOTICE : UNCOPIED_NOTICE;
@@ -95,10 +108,22 @@
     {@render meta()}
   </ul>
 
+  <!--
+    The click decides here and nowhere else, because its default is spent the moment the handler
+    returns: an `await` before `preventDefault` lets the link open its own tab first, and the
+    background then opens a second one.
+  -->
   <a
     class="card__action"
     href={destination}
-    onclick={onAction}
+    onclick={e => {
+      if (!siteId && !isAskingAboutReader) {
+        return;
+      }
+
+      e.preventDefault();
+      void handOff(siteId);
+    }}
     rel="noopener noreferrer"
     target="_blank">
     {actionLabel}

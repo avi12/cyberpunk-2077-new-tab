@@ -1,5 +1,4 @@
 import { promptTargetForEngine } from "./prompt-target";
-import type { PromptTargetId } from "./prompt-target";
 import { settings } from "@/lib/storage/settings.svelte";
 
 /**
@@ -11,7 +10,7 @@ import { settings } from "@/lib/storage/settings.svelte";
  * without this module having to be a rune module of its own.
  */
 export const promptDestination = {
-  get targetId(): PromptTargetId {
+  get targetId() {
     return settings.promptTarget.current ?? promptTargetForEngine(settings.activeSearchEngine.current);
   }
 };

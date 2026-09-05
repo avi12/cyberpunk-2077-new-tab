@@ -1,14 +1,18 @@
 <script lang="ts">
-  import { COMPANION_NAME, CompanionState, requestCompanionPermission } from "@/lib/companion/bridge";
-  import { companion } from "@/lib/companion/connection.svelte";
-  import { composeAccess } from "@/lib/compose/access.svelte";
-  import { composeSiteFor, PROMPT_TARGETS } from "@/lib/companion/prompt-target";
-  import { promptDestination } from "@/lib/companion/prompt-destination";
+  import { COMPANION_NAME, CompanionState, requestCompanionPermission } from "./bridge";
+  import { companion } from "./connection.svelte";
+  import { composeAccess } from "@/features/compose/access.svelte";
+  import { composeSiteFor, promptTargetLabel } from "./prompt-target";
+  import { hasTipsAccess, requestTipsAccess } from "@/features/tips/catalogue";
+  import { promptDestination } from "./prompt-destination";
   import CompanionNotice from "./CompanionNotice.svelte";
-  import { IS_WINDOWS } from "@/lib/companion/platform";
-  import { settings } from "@/lib/storage/settings.svelte";
+  import { IS_WINDOWS } from "./platform";
   import { slide } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
+  import { motionDuration } from "@/lib/motion";
+
+  /** Long enough to read as the section leaving, short enough not to sit in the way of the row. */
+  const COLLAPSE_MS = 220;
 
   /**
    * How soon each unsettled state is worth asking about again. Native messaging has no "a host
@@ -20,9 +24,6 @@
    * stretch of silence longer than Chromium's 30-second idle timeout lets it be replaced by one
    * that can reach the app.
    */
-  /** Long enough to read as the section leaving, short enough not to sit in the way of the row. */
-  const COLLAPSE_MS = 220;
-
   const RETRY_MS: Partial<Record<CompanionState, number>> = {
     [CompanionState.companionOffline]: 3000,
     [CompanionState.linking]: 35_000
@@ -40,21 +41,36 @@
   const isConnected = $derived(companion.state === CompanionState.connected);
 
   /** Whatever destination the reader picked, since that is the one a card will be asking. */
-  const targetLabel = $derived(PROMPT_TARGETS[promptDestination.targetId].label);
+  const targetLabel = $derived(promptTargetLabel(promptDestination.targetId));
   const siteId = $derived(composeSiteFor(promptDestination.targetId));
 
   /**
-   * Offered on an answer and never on a silence: `granted` says nothing at all about a site the
-   * browser has not been asked about yet, and reading that as a no would offer the site to the
-   * people who handed it over long ago. A site the browser refuses to let any extension script is
-   * no better an offer - it would be granted and still not type a word.
+   * An offer is a question worth asking, made ahead of the press that would otherwise raise it - so
+   * whether there is one at all is the same answer a press reads.
+   *
+   * The extra half is the silence: `granted` says nothing at all about a site the browser has not
+   * been asked about yet, and offering on that would put the panel in front of the people who handed
+   * the site over long ago, until the answer arrives.
    */
   const isOfferingSite = $derived.by(() => {
     if (!isConnected || !siteId) {
       return false;
     }
 
-    return composeAccess.granted[siteId] === false && !composeAccess.refused.includes(siteId);
+    return composeAccess.granted[siteId] !== undefined && composeAccess.isWorthAsking(siteId);
+  });
+
+  /**
+   * Edge's tip catalogue is one public GET, so the page can have it without the app. Offered only
+   * once the app has answered, like the site is: nothing is asked for until the row has proved it
+   * works on this machine. Undefined until the browser has answered, so a silence offers nothing.
+   */
+  let isTipsAllowed = $state<boolean | undefined>();
+
+  const isOfferingTips = $derived(isConnected && isTipsAllowed === false);
+
+  $effect(() => {
+    void hasTipsAccess().then(isAllowed => (isTipsAllowed = isAllowed));
   });
 
   const isVisible = $derived.by(() => {
@@ -66,7 +82,7 @@
       return false;
     }
 
-    return !isConnected || isOfferingSite;
+    return !isConnected || isOfferingSite || isOfferingTips;
   });
 
   /**
@@ -113,7 +129,7 @@
     one both follow a permission prompt - so the section has to answer for its own exit, and an
     outro is the one that cannot be skipped.
   -->
-  <div class="setup" transition:slide={{ duration: COLLAPSE_MS, easing: cubicOut }}>
+  <div class="setup" transition:slide={{ duration: motionDuration(COLLAPSE_MS), easing: cubicOut }}>
     {#if isOfferingSite}
       <CompanionNotice>
         Let a card ask {targetLabel} for you, instead of copying the prompt for you to paste
@@ -123,6 +139,18 @@
             onclick={allowSite}
             type="button">
             Allow {targetLabel} site
+          </button>
+        {/snippet}
+      </CompanionNotice>
+    {:else if isOfferingTips}
+      <CompanionNotice>
+        Let the tips come straight from Microsoft, so they stay fresh without the app reading Edge
+        {#snippet action()}
+          <button
+            class="cyber-button cyber-button--primary"
+            onclick={() => void requestTipsAccess().then(isAllowed => (isTipsAllowed = isAllowed))}
+            type="button">
+            Allow tips source
           </button>
         {/snippet}
       </CompanionNotice>

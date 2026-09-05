@@ -24,6 +24,15 @@ class ComposeAccess {
     return this.granted[siteId] === true && !this.refused.includes(siteId);
   }
 
+  /**
+   * Whether asking about a site could still change anything: not already handed over, and not one
+   * the browser refuses to script however it is answered. Said here rather than at each press, so a
+   * pick and a card's hand-off cannot disagree about when there is a question worth raising.
+   */
+  isWorthAsking(siteId: ComposeSiteId) {
+    return this.granted[siteId] !== true && !this.refused.includes(siteId);
+  }
+
   async refresh() {
     const siteIds = Object.values(ComposeSiteId);
     const [granted, refused] = await Promise.all([

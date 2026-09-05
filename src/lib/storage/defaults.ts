@@ -1,5 +1,3 @@
-import { ComposeSiteId } from "../compose/sites";
-import type { IconName } from "../icons/choices";
 import type { Bookmark, GeoLocation, SearchEngine, Widget } from "./schema";
 import {
   BookmarkCategory,
@@ -9,6 +7,8 @@ import {
   SearchEngineId,
   WidgetType
 } from "./schema";
+import { ComposeSiteId } from "@/features/compose/sites";
+import type { IconName } from "@/features/netlinks/icons/choices";
 
 /**
  * What every setting starts at, and the fixed lists the panels pick from. The shapes themselves live
@@ -127,6 +127,8 @@ export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
     params: {
       enable_research: "true"
     },
+    /* Already an AI, and the destination on offer is the plain ask at the same address. */
+    aiEngineId: SearchEngineId.braveAi,
     placeholder: "Research with an AI..."
   }
 ];
