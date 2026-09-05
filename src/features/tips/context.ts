@@ -113,6 +113,9 @@ const CONTEXT_HEADINGS: Record<TipContext, string> = {
     "Here is what I keep coming back to, with how many times I have visited each. Open any of them you need, then answer the question below."
 };
 
+/** What stands between the context and the question, and what the question's room has to allow for. */
+const CONTEXT_SEPARATOR = "\n\n";
+
 /** Added to the heading only once there is something quoted under the addresses to introduce. */
 const PASSAGE_NOTE = "Under each one are the parts of that page the question is about, quoted from the page itself.";
 
@@ -486,11 +489,15 @@ function blockFrom({ context, readings, budget }: {
  * the moment it is used - tabs open and close while a new tab sits there. The request goes out
  * before anything is awaited, since that is the only place the click is still worth spending.
  *
- * `budget` is how many characters of the finished prompt the context may be, and it is asked of the
- * caller because only the carrier knows: a prompt going in an address gets what a link will hold,
- * which `compose/deliver.ts` is the one to say, and a prompt typed into a site's own box gets an
- * order of magnitude more. The difference decides whether the pages arrive with their text or with
- * only their names.
+ * `budget` is how long the finished prompt may be - context, blank line and question together - and
+ * it is asked of the caller because only the carrier knows: a prompt going in an address gets what
+ * a link will hold, which `compose/deliver.ts` is the one to say, and a prompt typed into a site's
+ * own box gets an order of magnitude more. The difference decides whether the pages arrive with
+ * their text or with only their names.
+ *
+ * What the question itself takes comes off the top. Handing the whole limit to the context put
+ * every finished prompt over it by the length of the question, which is the clipboard being
+ * offered for a prompt that would have fitted in the address.
  *
  * Anything that does not work out - refused, nothing open, a browser that will not answer - returns
  * the prompt untouched. A card that asks about the reader's tabs and is told no still asks its
@@ -501,16 +508,8 @@ export async function withTipContext({ title, prompt, budget }: {
   prompt: string;
   budget: number;
 }) {
-  const context = tipContextFor({
-    title,
-    prompt
-  });
-  if (!context) {
-    return prompt;
-  }
-
-  const access = await requestTipContextAccess(context);
-  if (!access.isListing) {
+  const room = budget - prompt.length - CONTEXT_SEPARATOR.length;
+  if (room <= 0) {
     return prompt;
   }
 
@@ -537,11 +536,11 @@ export async function withTipContext({ title, prompt, budget }: {
   const block = blockFrom({
     context,
     readings,
-    budget
+    budget: room
   });
   if (!block) {
     return prompt;
   }
 
-  return `${block}\n\n${prompt}`;
+  return `${block}${CONTEXT_SEPARATOR}${prompt}`;
 }
