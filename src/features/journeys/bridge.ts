@@ -1,6 +1,6 @@
 import type { Journey } from "./model";
 import { parseJourneys } from "./model";
-import { readCompanion } from "@/lib/companion/bridge";
+import { readCompanion } from "@/features/companion/bridge";
 import { CompanionRequest } from "@/lib/messaging";
 import { journeysSnapshotItem } from "@/lib/storage/items";
 

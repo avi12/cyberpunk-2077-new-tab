@@ -1,10 +1,10 @@
 <script lang="ts">
-  import CompanionCard from "@/components/companion/CompanionCard.svelte";
-  import { copilotPrompt } from "@/lib/journeys/model";
-  import { CopilotKind } from "@/lib/companion/copilot";
+  import CompanionCard from "@/features/companion/CompanionCard.svelte";
+  import { copilotPrompt } from "./model";
+  import { CopilotKind } from "@/features/companion/copilot";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
-  import { hostOf } from "@/lib/link";
-  import type { Journey } from "@/lib/journeys/model";
+  import { hostOf } from "@/features/netlinks/link";
+  import type { Journey } from "./model";
 
   const { journey }: { journey: Journey } = $props();
 

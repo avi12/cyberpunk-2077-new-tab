@@ -1,7 +1,7 @@
 <script lang="ts">
-  import CompanionCard from "@/components/companion/CompanionCard.svelte";
-  import { CopilotKind } from "@/lib/companion/copilot";
-  import type { Tip } from "@/lib/tips/model";
+  import CompanionCard from "@/features/companion/CompanionCard.svelte";
+  import { CopilotKind } from "@/features/companion/copilot";
+  import type { Tip } from "./model";
 
   const { tip }: { tip: Tip } = $props();
 

@@ -1,4 +1,4 @@
-import { z } from "../zod";
+import { z } from "@/lib/zod";
 
 /**
  * How tall a row of cards actually came out last time, so the placeholders standing in for it can be
@@ -21,26 +21,28 @@ const rowSchema = z.object({
 
 type Row = z.infer<typeof rowSchema>;
 
-function storedRow(key: string): unknown {
+function storedRow(key: string) {
   const stored = localStorage.getItem(key);
   if (!stored) {
     return null;
   }
 
   try {
-    return JSON.parse(stored);
+    const row: unknown = JSON.parse(stored);
+
+    return row;
   } catch {
     return null;
   }
 }
 
-export function rememberedRow(key: string): Row | null {
+export function rememberedRow(key: string) {
   const parsed = rowSchema.safeParse(storedRow(key));
 
   return parsed.success ? parsed.data : null;
 }
 
-export function rememberRow({ key, width, height }: Row & { key: string }): void {
+export function rememberRow({ key, width, height }: Row & { key: string }) {
   localStorage.setItem(
     key, JSON.stringify({
       width,

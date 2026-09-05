@@ -1,16 +1,17 @@
 <script lang="ts">
   import iconBot from "@/assets/icons/bot.svg?raw";
   import CardSection from "./CardSection.svelte";
-  import { COMPANION_NAME } from "@/lib/companion/bridge";
+  import { COMPANION_NAME } from "./bridge";
   import CompanionNotice from "./CompanionNotice.svelte";
-  import type { CopilotCard } from "@/lib/companion/copilot";
-  import { CopilotKind, readCopilot } from "@/lib/companion/copilot";
+  import type { CopilotCard } from "./copilot";
+  import { CopilotKind, readCopilot } from "./copilot";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import PromptTargetPicker from "./PromptTargetPicker.svelte";
-  import { IS_WINDOWS } from "@/lib/companion/platform";
-  import JourneyCard from "@/components/journeys/JourneyCard.svelte";
-  import { JOURNEYS_AVAILABILITY, JOURNEYS_SUPPORT_URL, JourneysAvailability } from "@/lib/journeys/platform";
-  import TipCard from "@/components/tips/TipCard.svelte";
+  import { IS_WINDOWS } from "./platform";
+  import JourneyCard from "@/features/journeys/JourneyCard.svelte";
+  import { JOURNEYS_AVAILABILITY, JOURNEYS_SUPPORT_URL, JourneysAvailability } from "@/features/journeys/platform";
+  import TipCard from "@/features/tips/TipCard.svelte";
+  import { TIPS_ROTATE_MS } from "@/features/tips/model";
 
   const { glitching = false }: { glitching?: boolean } = $props();
 
@@ -26,6 +27,7 @@
   icon={iconBot}
   isReadable={IS_WINDOWS}
   read={readCopilot}
+  rotateMs={TIPS_ROTATE_MS}
   title={TITLE}
   {unavailable} />
 

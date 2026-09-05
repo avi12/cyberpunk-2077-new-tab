@@ -1,9 +1,6 @@
-import { MAX_CARDS } from "@/lib/companion/bridge";
-import { nonEmptyTextSchema, validRecords } from "@/lib/companion/model";
+import { MAX_CARDS } from "@/features/companion/bridge";
+import { nonEmptyTextSchema, validRecords } from "@/features/companion/model";
 import { z } from "@/lib/zod";
-
-const MS_PER_MINUTE = 60_000;
-export const MS_PER_DAY = 86_400_000;
 
 /**
  * One tip as Edge cached it, narrowed to the fields this page shows or acts on - `z.object` drops
@@ -26,22 +23,30 @@ const tipSchema = z.object({
 
 export type Tip = z.infer<typeof tipSchema>;
 
-/** The local day, so a set of tips holds until midnight here rather than until midnight in UTC. */
-function localDay(nowMs: number) {
-  return Math.floor((nowMs - new Date(nowMs).getTimezoneOffset() * MS_PER_MINUTE) / MS_PER_DAY);
-}
+/**
+ * How often the row re-deals while somebody is looking at it. Edge rotates its tip on a timer rather
+ * than only when a tab opens - watched happening on a page that was just sitting there - and this is
+ * the one number in the mechanism that had to be chosen rather than read: the interval is inside
+ * Edge and reaches neither disk nor any API. Long enough to read the card, short enough to notice.
+ */
+export const TIPS_ROTATE_MS = 45_000;
 
 /**
- * Edge deals three tips from three different categories, moves on to the next three on every call,
- * and reshuffles when the browser restarts - so which tips you get depends on how many new tabs you
- * happened to open. The same deal, dealt once a day instead: three categories from the day's place
- * in the catalogue, and one tip further into each category every time the categories have all been
- * through.
+ * Edge's own deal, and now this one: three tips from three different categories, the next three on
+ * every new tab, starting somewhere new each time the browser starts. Traced from the cache it reads
+ * - the catalogue is 130 flat entries across 12 categories with no trigger, score or context field
+ * anywhere in it, so nothing about a reader can be deciding this. The tip that reads like it knows
+ * about your tabs ("Tell me which of the hotels in my tabs is better for families") is one of those
+ * 130, written that way for everybody.
+ *
+ * `turn` is what Edge keeps in memory and this keeps in `local:`, since a page cannot hold a count
+ * that has to outlive it. One turn further is one category further round, and one tip deeper into
+ * each category every time the categories have all been through.
  */
-function dealTips({ catalog, nowMs }: {
+function dealTips({ catalog, turn }: {
   catalog: Tip[];
-  nowMs: number;
-}): Tip[] {
+  turn: number;
+}) {
   const byCategory = new Map<string, Tip[]>();
   for (const tip of catalog) {
     byCategory.set(tip.category, [...byCategory.get(tip.category) ?? [], tip]);
@@ -52,9 +57,8 @@ function dealTips({ catalog, nowMs }: {
     return [];
   }
 
-  const day = localDay(nowMs);
-  const offset = day * MAX_CARDS % categories.length;
-  const pass = Math.floor(day * MAX_CARDS / categories.length);
+  const offset = turn * MAX_CARDS % categories.length;
+  const pass = Math.floor(turn * MAX_CARDS / categories.length);
 
   return [...categories.slice(offset), ...categories.slice(0, offset)]
     .slice(0, MAX_CARDS)
@@ -62,16 +66,16 @@ function dealTips({ catalog, nowMs }: {
     .filter(tip => tip !== undefined);
 }
 
-/** The catalogue as the companion read it, narrowed to the three the day calls for. */
-export function parseTips({ raw, nowMs }: {
+/** The catalogue as the companion read it, narrowed to the three this turn calls for. */
+export function parseTips({ raw, turn }: {
   raw: unknown;
-  nowMs: number;
-}): Tip[] {
+  turn: number;
+}) {
   return dealTips({
     catalog: validRecords({
       raw,
       schema: tipSchema
     }),
-    nowMs
+    turn
   });
 }

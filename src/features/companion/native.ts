@@ -1,4 +1,3 @@
-import type { CompanionResult } from "@/lib/messaging";
 import { CompanionAnswer, CompanionRequest } from "@/lib/messaging";
 import { z } from "@/lib/zod";
 
@@ -34,7 +33,7 @@ const answerSchema = z.looseObject({
 const recordsSchema = z.array(z.unknown()).catch([]);
 
 /** What the companion said, or which of the two ways of hearing nothing this was. */
-export async function readCompanionRecords(request: CompanionRequest): Promise<CompanionResult> {
+export async function readCompanionRecords(request: CompanionRequest) {
   // A worker older than the grant holds no binding at all, which is worth telling the page apart
   // from an app that is simply not installed - only one of the two is fixed by asking again.
   if (!browser.runtime.sendNativeMessage) {
@@ -45,23 +44,23 @@ export async function readCompanionRecords(request: CompanionRequest): Promise<C
   }
 
   const response = await browser.runtime.sendNativeMessage(HOST_NAME, { kind: request }).catch(() => null);
-  const answer = answerSchema.safeParse(response);
-  if (!answer.success) {
+  const parsed = answerSchema.safeParse(response);
+  if (!parsed.success) {
     return {
       answer: CompanionAnswer.silent,
       records: []
     };
   }
 
-  if (!answer.data.ok) {
+  if (!parsed.data.ok) {
     return {
-      answer: answer.data.isRunning === false ? CompanionAnswer.notRunning : CompanionAnswer.silent,
+      answer: parsed.data.isRunning === false ? CompanionAnswer.notRunning : CompanionAnswer.silent,
       records: []
     };
   }
 
   return {
     answer: CompanionAnswer.read,
-    records: recordsSchema.parse(answer.data[request])
+    records: recordsSchema.parse(parsed.data[request])
   };
 }

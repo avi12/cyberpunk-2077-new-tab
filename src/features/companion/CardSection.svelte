@@ -1,12 +1,12 @@
 <script generics="TCard extends { id: string }" lang="ts">
-  import type { CompanionRead } from "@/lib/companion/bridge";
-  import { companion } from "@/lib/companion/connection.svelte";
-  import { CompanionState, MAX_CARDS } from "@/lib/companion/bridge";
-  import { rememberedRow, rememberRow } from "@/lib/companion/row";
+  import type { CompanionRead } from "./bridge";
+  import { companion } from "./connection.svelte";
+  import { CompanionState, MAX_CARDS } from "./bridge";
+  import { rememberedRow, rememberRow } from "./row";
   import type { Snippet } from "svelte";
   import { withViewTransition } from "@/lib/view-transition";
 
-  const { id, title, icon, isReadable, read, card, unavailable, action, glitching = false }: {
+  const { id, title, icon, isReadable, read, card, unavailable, action, rotateMs, glitching = false }: {
     /** Names the section's view transition, and the row it remembers between tabs. */
     id: string;
     title: string;
@@ -19,6 +19,8 @@
     unavailable: Snippet;
     /** A control that belongs to this section rather than to the page, drawn beside its title. */
     action?: Snippet;
+    /** How often to re-deal while the page is watched, for a row whose contents are meant to move. */
+    rotateMs?: number;
     glitching?: boolean;
   } = $props();
 
@@ -72,17 +74,31 @@
     elList.style.setProperty("--cp-card-height", `${remembered.height}px`);
   }
 
-  async function load() {
+  /**
+   * A first answer arriving is the row appearing, which is worth a transition. A rotation is the same
+   * row saying something else, and animating that turns a card the reader may be mid-sentence in into
+   * a thing that slides. It swaps instead.
+   */
+  async function load({ isAnimated }: { isAnimated: boolean }) {
     const result = await read();
     // A retry that finds the same nothing has nothing to redraw.
-    if (result.state === companion.state && result.cards.length === 0 && cards.length === 0) {
+    const isAnswerUnchanged = result.state === companion.state && result.cards.length === 0 && cards.length === 0;
+    if (isAnswerUnchanged) {
       return;
     }
 
-    await withViewTransition(() => {
+    function show() {
       companion.state = result.state;
       cards = result.cards;
-    });
+    }
+
+    if (!isAnimated) {
+      show();
+
+      return;
+    }
+
+    await withViewTransition(show);
   }
 
   /** Only Windows has a companion to ask; the other platforms are told, not queried. */
@@ -92,7 +108,29 @@
       return;
     }
 
-    void load();
+    void load({ isAnimated: true });
+  });
+
+  /*
+   * Re-dealt while it is being read, which is what Edge does with the same row. Only while the page
+   * is actually on screen: a new tab left open behind others would otherwise walk the rotation on
+   * for nobody, and every one of them would be walking the same shared count at once. The cards that
+   * do not change keep their id, so only the one that moved is redrawn.
+   */
+  $effect(() => {
+    if (!isReadable || !rotateMs) {
+      return;
+    }
+
+    const rotate = setInterval(() => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+
+      void load({ isAnimated: false });
+    }, rotateMs);
+
+    return () => clearInterval(rotate);
   });
 </script>
 

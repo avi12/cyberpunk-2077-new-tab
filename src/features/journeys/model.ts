@@ -1,5 +1,5 @@
-import { MAX_CARDS } from "@/lib/companion/bridge";
-import { nonEmptyTextSchema, validRecords } from "@/lib/companion/model";
+import { MAX_CARDS } from "@/features/companion/bridge";
+import { nonEmptyTextSchema, validRecords } from "@/features/companion/model";
 import { z } from "@/lib/zod";
 
 /**
@@ -29,7 +29,6 @@ const journeySchema = z.object({
   buttonText: nonEmptyTextSchema,
   copilotPrompts: z.tuple([nonEmptyTextSchema], z.string()),
   sourceInfos: z.tuple([journeySourceSchema], journeySourceSchema),
-  rankScore: z.number().default(0),
   validStartTime: timestampSchema,
   validEndTime: timestampSchema
 });
@@ -44,13 +43,18 @@ function isLive({ card, nowMs }: {
 }
 
 /**
- * A card that has expired is dropped along with the malformed ones. Edge ranks its own cards and
- * this keeps that order, taking the highest scoring three - a snapshot usually holds a few more.
+ * A card that has expired is dropped along with the malformed ones, and what is left stays in the
+ * order the database holds it.
+ *
+ * Every record carries a `rankScore` and sorting by it looks like the obvious thing to do, which is
+ * why this used to. Edge does not: measured against three live journeys scoring 60.94, 65.33 and
+ * 60.57, its own new tab showed them in exactly that order - stored order, not sorted. Sorting was
+ * the one reason the two rows disagreed about which card came first.
  */
 export function parseJourneys({ raw, nowMs }: {
   raw: unknown;
   nowMs: number;
-}): Journey[] {
+}) {
   return validRecords({
     raw,
     schema: journeySchema
@@ -59,11 +63,10 @@ export function parseJourneys({ raw, nowMs }: {
       card,
       nowMs
     }))
-    .sort((first, second) => second.rankScore - first.rankScore)
     .slice(0, MAX_CARDS);
 }
 
 /** The card's own prompt: the first is the one Edge itself sends when its card is clicked. */
-export function copilotPrompt(card: Journey): string {
+export function copilotPrompt(card: Journey) {
   return card.copilotPrompts[0];
 }

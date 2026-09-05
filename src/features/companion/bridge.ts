@@ -1,5 +1,6 @@
 import { CompanionAnswer, type CompanionRequest, sendMessage } from "@/lib/messaging";
 import type { CompanionSnapshot, StorageItem } from "@/lib/storage/items";
+import { z } from "@/lib/zod";
 
 /**
  * The new tab's side of the companion app - a separate, paid Microsoft Store download that is what
@@ -33,9 +34,11 @@ export type CompanionRead<TCard> = {
   cards: TCard[];
 };
 
-export async function requestCompanionPermission(): Promise<boolean> {
+export async function requestCompanionPermission() {
   return browser.permissions.request({ permissions: [NATIVE_MESSAGING] });
 }
+
+const nonEmptyRecordsSchema = z.array(z.unknown()).nonempty();
 
 /**
  * An answer holding nothing is never kept, and never believed if an older build kept one: a refresh
@@ -44,17 +47,22 @@ export async function requestCompanionPermission(): Promise<boolean> {
  * while there is genuinely nothing to have, which is the state that most wants to end quickly.
  */
 function hasRecords(raw: unknown) {
-  return Array.isArray(raw) && raw.length > 0;
+  return nonEmptyRecordsSchema.safeParse(raw).success;
 }
 
 /** The cached snapshot while it is still fresh and still worth something, and nothing once it is not. */
-async function freshSnapshot({ snapshot, refreshMs, nowMs }: {
+export async function freshSnapshot({ snapshot, refreshMs, nowMs }: {
   snapshot: StorageItem<CompanionSnapshot | null>;
   refreshMs: number;
   nowMs: number;
 }) {
   const cached = await snapshot.getValue();
-  if (!cached || nowMs - cached.fetchedAtMs >= refreshMs || !hasRecords(cached.raw)) {
+  if (!cached) {
+    return undefined;
+  }
+
+  const isFresh = nowMs - cached.fetchedAtMs < refreshMs && hasRecords(cached.raw);
+  if (!isFresh) {
     return undefined;
   }
 
@@ -75,7 +83,7 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
     raw: unknown;
     nowMs: number;
   }) => TCard[];
-}): Promise<CompanionRead<TCard>> {
+}) {
   if (!await browser.permissions.contains({ permissions: [NATIVE_MESSAGING] })) {
     return {
       state: CompanionState.permissionNeeded,

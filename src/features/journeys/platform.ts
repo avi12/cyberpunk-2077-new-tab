@@ -1,4 +1,4 @@
-import { IS_MAC, IS_WINDOWS } from "@/lib/companion/platform";
+import { IS_MAC, IS_WINDOWS } from "@/features/companion/platform";
 
 /**
  * Journeys exist on fewer machines than the companion that reads them: Microsoft only generates
@@ -18,7 +18,7 @@ export enum JourneysAvailability {
   unavailable = "unavailable"
 }
 
-function detectAvailability(): JourneysAvailability {
+function detectAvailability() {
   if (IS_WINDOWS) {
     return JourneysAvailability.readable;
   }

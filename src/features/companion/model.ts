@@ -10,16 +10,16 @@ export const nonEmptyTextSchema = z.string().min(1);
 export function validRecords<TRecord>({ raw, schema }: {
   raw: unknown;
   schema: z.ZodType<TRecord>;
-}): TRecord[] {
+}) {
   if (!Array.isArray(raw)) {
     return [];
   }
 
   const records: TRecord[] = [];
   for (const entry of raw) {
-    const record = schema.safeParse(entry);
-    if (record.success) {
-      records.push(record.data);
+    const parsed = schema.safeParse(entry);
+    if (parsed.success) {
+      records.push(parsed.data);
     }
   }
 
