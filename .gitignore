@@ -17,3 +17,6 @@ reference/
 
 # Written by `svelte-check --tsgo`, which type checks transpiled components from disk
 .svelte-check/
+
+# The companion app is built, not committed.
+companion/bin/

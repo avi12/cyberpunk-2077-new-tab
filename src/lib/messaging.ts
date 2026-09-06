@@ -8,7 +8,7 @@ type TopSite = {
 
 /**
  * What the companion may be asked for. The strings are the wire contract with the app, which files
- * its answer under the same name it was asked by - `companion/src/host.mjs` names these two.
+ * its answer under the same name it was asked by - `companion/dotnet/src/NativeMessage.cs` names these two.
  */
 export enum CompanionRequest {
   journeys = "journeys",

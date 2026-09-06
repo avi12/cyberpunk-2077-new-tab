@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/getfallow/fallow/main/schema/fallowrc.json",
   // The tray is a third way in: `cli.mjs start` spawns it by path rather than importing it, and it
   // is what the packaged app launches, so nothing statically reaches it.
-  "entry": ["src/entrypoints/**", "scripts/*.mjs", "companion/src/cli.mjs", "companion/src/host.mjs", "companion/src/tray.mjs"],
+  "entry": ["src/entrypoints/**", "scripts/*.mjs", "companion/packaging/*.mjs"],
   // Svelte 5 rune modules are `*.svelte.ts`, imported without the `.ts`. Fallow's resolver reads
   // `foo.svelte` as a component file and cannot follow the edge, so the modules are declared
   // reachable here and their specifiers exempted from the unresolved-import check.

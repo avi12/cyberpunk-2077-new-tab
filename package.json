@@ -23,9 +23,10 @@
     "fallow": "fallow audit --base HEAD",
     "icons:generate": "node scripts/generate-icons.mjs",
     "key:generate": "node scripts/generate-key.mjs",
-    "journeys:install": "node companion/src/cli.mjs install",
-    "journeys:uninstall": "node companion/src/cli.mjs uninstall",
-    "journeys:status": "node companion/src/cli.mjs status",
+    "journeys": "node companion/packaging/companion.mjs",
+    "journeys:status": "node companion/packaging/companion.mjs status",
+    "journeys:stop": "node companion/packaging/companion.mjs stop",
+    "journeys:uninstall": "node companion/packaging/companion.mjs uninstall",
     "journeys:package": "node companion/packaging/build.mjs",
     "postinstall": "wxt prepare",
     "fallow:all": "fallow dead-code --root ."
