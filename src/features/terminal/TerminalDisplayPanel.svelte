@@ -97,7 +97,13 @@
    * on screen - the viewport minus everything below the panel - so it scrolls rather than spills.
    */
   .terminal__popup {
-    position: absolute;
+    /*
+     * Fixed, not absolute. In the top layer an absolutely positioned box still resolves its insets
+     * against the initial containing block, which does not move with the page - so on a scrolled
+     * page the panel rose by exactly `scrollY` and left a gap between itself and the button it
+     * belongs to. The button is inside a fixed container and never scrolls; neither should this.
+     */
+    position: fixed;
     inset: auto;
     right: anchor(right);
     bottom: anchor(top);
