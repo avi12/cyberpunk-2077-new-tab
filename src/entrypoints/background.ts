@@ -23,12 +23,6 @@ export default defineBackground(() => {
   browser.runtime.onStartup.addListener(forgetComposeRefusals);
 
   /*
-   * Edge starts its tip rotation somewhere new every time it launches, so this does too - otherwise
-   * the first new tab of every session would open on the three the last one closed on.
-   */
-  browser.runtime.onStartup.addListener(reshuffleTips);
-
-  /*
    * What each tab this opened is waiting to be told to send. Held here rather than in storage
    * because it belongs to a tab that is being opened right now: it is collected once, by the script
    * running in that tab, and there is nothing left behind to tidy up afterwards.
@@ -116,11 +110,18 @@ export default defineBackground(() => {
   });
 
   /*
-   * Only a build that ships the section has anything to ask this, which is Chrome and Edge. Every
-   * other one is given no `nativeMessaging` to grant either, so the read could never have answered
-   * there. Read at the branch so the flags are literals and the handler folds out of those workers.
+   * Everything the Copilot section needs of this worker, and nothing else does. Only Chrome and Edge
+   * build that section, and only they are given a `nativeMessaging` to grant, so elsewhere the read
+   * could never have answered and the rotation would only ever be shuffling a row nobody has. The
+   * flags are read at the branch so they are literals and the whole block folds out of that worker.
    */
   if (import.meta.env.CHROME || import.meta.env.EDGE) {
+    /*
+     * Edge starts its tip rotation somewhere new every time it launches, so this does too - otherwise
+     * the first new tab of every session would open on the three the last one closed on.
+     */
+    browser.runtime.onStartup.addListener(reshuffleTips);
+
     onMessage(MessageType.readCompanion, async ({ data }) => readCompanionRecords(data));
   }
 
