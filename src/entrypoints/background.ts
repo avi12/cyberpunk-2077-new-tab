@@ -115,7 +115,14 @@ export default defineBackground(() => {
     }));
   });
 
-  onMessage(MessageType.readCompanion, async ({ data }) => readCompanionRecords(data));
+  /*
+   * Only a build that ships the section has anything to ask this, which is Chrome and Edge. Every
+   * other one is given no `nativeMessaging` to grant either, so the read could never have answered
+   * there. Read at the branch so the flags are literals and the handler folds out of those workers.
+   */
+  if (import.meta.env.CHROME || import.meta.env.EDGE) {
+    onMessage(MessageType.readCompanion, async ({ data }) => readCompanionRecords(data));
+  }
 
   /*
    * Awaited rather than fired and forgotten: the browser refuses this when there is no window it

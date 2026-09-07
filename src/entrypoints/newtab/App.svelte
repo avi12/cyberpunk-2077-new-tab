@@ -35,7 +35,11 @@
 
   const preferences = $derived(settings.displayPreferences.current);
 
-  /** Both card families come through the one app, so the one line about reaching it is shared. */
+  /**
+   * Both card families come through the one app, so the one line about reaching it is shared. Only
+   * Edge files a journey or a tip under a profile, so only Edge is ever shown either - the reader's
+   * own switch decides the rest.
+   */
   const isUsingCompanion = $derived(IS_EDGE && preferences.showCopilot);
   const greetingText = $derived.by(() => {
     void greetingTick;
@@ -126,7 +130,17 @@
       <Quote glitching={glitchingElement === "showQuotes"} isPending={!isReady} />
     {/if}
 
-    {#if isUsingCompanion}
+    <!--
+      Named targets rather than "not Firefox": Chrome and Edge are the two builds an Edge reader can
+      have installed, and every other one - Firefox, Opera, Safari - is a build the section could
+      only be dead weight in.
+
+      Read here rather than from a named constant, because where it is read is what decides whether
+      it does anything: both flags are replaced by literals before the bundle is built, so the branch
+      folds away and takes the two components with it. Behind an import it would only ever be a
+      runtime `false`, and the section would ship to a browser that can never draw it.
+    -->
+    {#if (import.meta.env.CHROME || import.meta.env.EDGE) && isUsingCompanion}
       <CompanionSetup />
       <Copilot glitching={glitchingElement === "showCopilot"} />
     {/if}
