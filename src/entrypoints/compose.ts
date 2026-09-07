@@ -112,6 +112,13 @@ async function fill({ selector, prompt }: {
 }
 
 export default defineUnlistedScript({
+  /*
+   * Not built for Firefox at all. `wxt.config.ts` gives that build no optional host permissions, so
+   * the one site this script exists to type into can never be granted there - the search bar's
+   * Claude engine falls back to the clipboard instead, and this file could only ever sit in the
+   * package unread. The two have to agree: the manifest is why, and this is the consequence.
+   */
+  exclude: ["firefox"],
   /* Named, so what happens here comes back through `executeScript` rather than being guessed at. */
   globalName: "composePrompt",
   async main() {
