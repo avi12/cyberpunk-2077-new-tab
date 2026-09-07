@@ -11,9 +11,9 @@
   import NameForm from "./NameForm.svelte";
   import iconPlus from "@/assets/icons/plus.svg?raw";
   import { settings } from "@/lib/storage/settings.svelte";
-  import type { SortableMove } from "@/lib/sortable";
+  import type { SortableMove } from "@/lib/sortable.svelte";
   import iconSettings from "@/assets/icons/settings.svg?raw";
-  import { sortable } from "@/lib/sortable";
+  import { sortable } from "@/lib/sortable.svelte";
   import iconTriangleAlert from "@/assets/icons/triangle-alert.svg?raw";
   import { withViewTransition } from "@/lib/view-transition";
 
@@ -258,7 +258,7 @@
 
   <div
     {@attach arrowFocus}
-    use:sortable={{
+    {@attach sortable(() => ({
       ids: visibleCategories,
       disabled: !isEditing,
       handle: ".category__grip",
@@ -266,7 +266,7 @@
         // Only the visible subset is dragged; hidden categories keep their place at the end.
         settings.categoryOrder.current = [...next, ...categories.filter(name => !next.includes(name))];
       }
-    }}>
+    }))}>
     {#each visibleCategories as category (category)}
       <div data-sortable-id={category}>
         {#if renamingCategory === category}

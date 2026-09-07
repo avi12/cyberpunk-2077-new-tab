@@ -19,7 +19,7 @@ import { tick } from "svelte";
  * pointer picks whichever one it is over, and a release in a foreign container reports a move
  * instead of a reorder.
  *
- * Pointer events only, so mouse, pen and touch behave the same. The action stamps
+ * Pointer events only, so mouse, pen and touch behave the same. The engine stamps
  * `touch-action: none` on whatever starts a drag - the handle, or the item itself when there is no
  * handle - so a touch-drag reorders instead of scrolling the page; it owns that because it is the
  * only place that knows which element that is, and it lifts the stamp again while disabled.
@@ -32,7 +32,7 @@ export type SortableMove = {
   toIndex: number;
 };
 
-type SortableOptions = {
+export type SortableOptions = {
   ids: string[];
   onReorder: (ids: string[]) => void;
   /** Containers naming the same group hand items to each other. */
@@ -195,7 +195,7 @@ function swallowNextClick() {
   setTimeout(() => removeEventListener("click", onClick, true), 0);
 }
 
-export function sortable(node: HTMLElement, options: SortableOptions) {
+export function sortableEngine(node: HTMLElement, options: SortableOptions) {
   let current = options;
   let boards: Board[] = [];
   let source: Board | null = null;

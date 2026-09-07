@@ -6,8 +6,8 @@
   import iconGrip from "@/assets/icons/grip.svg?raw";
   import iconPlus from "@/assets/icons/plus.svg?raw";
   import type { Snippet } from "svelte";
-  import { sortable } from "@/lib/sortable";
-  import type { SortableMove } from "@/lib/sortable";
+  import { sortable } from "@/lib/sortable.svelte";
+  import type { SortableMove } from "@/lib/sortable.svelte";
   import iconSquarePen from "@/assets/icons/square-pen.svg?raw";
   import iconTrash2 from "@/assets/icons/trash2.svg?raw";
 
@@ -101,7 +101,7 @@
   {#if !isCollapsed}
     <ul
       class="category__grid"
-      use:sortable={{
+      {@attach sortable(() => ({
         ids,
         disabled: !isEditing || isWriting,
         group: BOOKMARK_GROUP,
@@ -111,7 +111,7 @@
           category,
           ids
         })
-      }}>
+      }))}>
       {#each bookmarks as bookmark (bookmark.id)}
         {#if bookmark.id === editingBookmarkId}
           <li data-sortable-id={bookmark.id}>{@render linkForm(category)}</li>

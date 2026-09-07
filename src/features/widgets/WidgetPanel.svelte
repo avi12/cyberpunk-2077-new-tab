@@ -10,7 +10,7 @@
   import { slide } from "svelte/transition";
   import iconSettings from "@/assets/icons/settings.svg?raw";
   import { cubicOut } from "svelte/easing";
-  import { sortable } from "@/lib/sortable";
+  import { sortable } from "@/lib/sortable.svelte";
   import { withViewTransition } from "@/lib/view-transition";
   import TaskListWidget from "./TaskListWidget.svelte";
   import WeatherWidget from "@/features/weather/WeatherWidget.svelte";
@@ -97,12 +97,12 @@
 
   <ul
     class="widgets__list"
-    use:sortable={{
+    {@attach sortable(() => ({
       ids: settings.widgetOrder.current,
       disabled: !isEditing,
       handle: ".widgets__grip",
       onReorder: next => (settings.widgetOrder.current = next)
-    }}>
+    }))}>
     <!--
       The card is the only thing that animates, and it animates its own height inside the flow. That
       is what keeps the switch above it still and the widgets below it exactly in step: they are not

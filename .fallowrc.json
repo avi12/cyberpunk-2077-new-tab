@@ -8,7 +8,7 @@
   // reachable here and their specifiers exempted from the unresolved-import check.
   "dynamicallyLoaded": ["src/**/*.svelte.ts"],
   // Vite resolves `?raw` to the file's text; fallow sees the query and gives up on the path.
-  "ignoreUnresolvedImports": ["@/assets/icons/*.svg?raw", "@/features/companion/connection.svelte", "@/lib/glitch.svelte", "@/lib/storage/settings.svelte", "./widget.svelte", "@/features/widgets/widget.svelte", "@/features/compose/access.svelte"],
+  "ignoreUnresolvedImports": ["@/assets/icons/*.svg?raw", "@/features/companion/connection.svelte", "@/lib/glitch.svelte", "@/lib/sortable.svelte", "@/lib/storage/settings.svelte", "./widget.svelte", "@/features/widgets/widget.svelte", "@/features/compose/access.svelte"],
   // Both are used through tooling rather than an import: the Svelte Vite plugin by
   // @wxt-dev/module-svelte, postcss-html as stylelint's customSyntax.
   "ignoreDependencies": ["@sveltejs/vite-plugin-svelte", "postcss-html"],
