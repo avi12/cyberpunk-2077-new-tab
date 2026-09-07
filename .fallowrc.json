@@ -1,7 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/getfallow/fallow/main/schema/fallowrc.json",
-  // The tray is a third way in: `cli.mjs start` spawns it by path rather than importing it, and it
-  // is what the packaged app launches, so nothing statically reaches it.
+  // `companion/` is a separate private repository nested in this one, so it may not be present at
+  // all - a glob that matches nothing there is the intended state for a clone of the extension.
+  // The tray is a third way in: the packaging scripts spawn it by path rather than importing it, so
+  // nothing statically reaches it.
   "entry": ["src/entrypoints/**", "scripts/*.mjs", "companion/packaging/*.mjs"],
   // Svelte 5 rune modules are `*.svelte.ts`, imported without the `.ts`. Fallow's resolver reads
   // `foo.svelte` as a component file and cannot follow the edge, so the modules are declared
