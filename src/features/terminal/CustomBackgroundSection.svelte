@@ -168,14 +168,14 @@
       <div class="stack--tight">
         <label
           class="drop-zone"
-          for="background-file"
-          use:dropZone={{
+          {@attach dropZone({
             accept,
             onFile: file => void keep({
               blob: file,
               kind: mediaKind
             })
-          }}>
+          })}
+          for="background-file">
           {@html iconUpload}
           <span>Drop {selectedKind.name} here</span>
           <span class="drop-zone__hint">or click to pick one</span>

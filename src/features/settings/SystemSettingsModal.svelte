@@ -163,11 +163,11 @@
       {:else}
         <label
           class="drop-zone"
-          for="settings-import"
-          use:dropZone={{
+          {@attach dropZone({
             accept: SETTINGS_ACCEPT,
             onFile: file => void importFrom(file)
-          }}>
+          })}
+          for="settings-import">
           {@html iconUpload}
           <span>Drop your settings file here</span>
           <span class="drop-zone__hint">or click to pick one</span>
@@ -203,16 +203,16 @@
       </button>
       <button
         class="drop-zone"
-        onclick={() => (isConfirmingImport = true)}
-        type="button"
-        use:dropZone={{
+        {@attach dropZone({
           accept: SETTINGS_ACCEPT,
           onFile: file => {
             waitingFile = file;
             error = "";
             isConfirmingImport = true;
           }
-        }}>
+        })}
+        onclick={() => (isConfirmingImport = true)}
+        type="button">
         {@html iconUpload}
         <span>Drop a settings file here</span>
         <span class="drop-zone__hint">or click to import one</span>

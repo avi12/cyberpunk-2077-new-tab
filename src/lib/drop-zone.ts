@@ -8,6 +8,10 @@
  *
  * A file dropped anywhere else is a file the browser navigates to, which would take the page with
  * it - so for as long as a zone is on screen, the document swallows the drops that miss.
+ *
+ * An attachment rather than an action, so a zone whose `accept` changes is rebuilt on the spot: the
+ * listeners are four and the state is a counter, and nothing can be mid-drop while the answer to
+ * what a zone takes is changing.
  */
 
 type DropZoneOptions = {
@@ -74,83 +78,79 @@ function isAccepted({ file, accept }: {
   });
 }
 
-export function dropZone(node: HTMLElement, options: DropZoneOptions) {
-  let current = options;
-  // `dragleave` fires for every child the pointer crosses, so the depth is what says it has left.
-  let depth = 0;
+export function dropZone({ accept, onFile }: DropZoneOptions) {
+  return (node: HTMLElement) => {
+    // `dragleave` fires for every child the pointer crosses, so the depth is what says it has left.
+    let depth = 0;
 
-  function mark(isOver: boolean) {
-    node.toggleAttribute(DROPPING_ATTRIBUTE, isOver);
-  }
-
-  function onDragEnter(e: DragEvent) {
-    if (!carriesFile(e)) {
-      return;
+    function mark(isOver: boolean) {
+      node.toggleAttribute(DROPPING_ATTRIBUTE, isOver);
     }
 
-    depth += 1;
-    mark(true);
-  }
+    function onDragEnter(e: DragEvent) {
+      if (!carriesFile(e)) {
+        return;
+      }
 
-  function onDragOver(e: DragEvent) {
-    if (!carriesFile(e)) {
-      return;
+      depth += 1;
+      mark(true);
     }
 
-    // Stopped here so the document's own handler leaves the copy cursor alone over a real target.
-    e.preventDefault();
-    e.stopPropagation();
+    function onDragOver(e: DragEvent) {
+      if (!carriesFile(e)) {
+        return;
+      }
 
-    if (e.dataTransfer) {
-      e.dataTransfer.dropEffect = "copy";
+      // Stopped here so the document's own handler leaves the copy cursor alone over a real target.
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = "copy";
+      }
     }
-  }
 
-  function onDragLeave(e: DragEvent) {
-    if (!carriesFile(e)) {
-      return;
+    function onDragLeave(e: DragEvent) {
+      if (!carriesFile(e)) {
+        return;
+      }
+
+      depth -= 1;
+
+      if (depth < 1) {
+        depth = 0;
+        mark(false);
+      }
     }
 
-    depth -= 1;
-
-    if (depth < 1) {
+    function onDrop(e: DragEvent) {
+      e.preventDefault();
+      e.stopPropagation();
       depth = 0;
       mark(false);
-    }
-  }
 
-  function onDrop(e: DragEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    depth = 0;
-    mark(false);
+      const file = e.dataTransfer?.files[0];
+      if (!file || !isAccepted({
+        file,
+        accept
+      })) {
+        return;
+      }
 
-    const file = e.dataTransfer?.files[0];
-    if (!file || !isAccepted({
-      file,
-      accept: current.accept
-    })) {
-      return;
+      onFile(file);
     }
 
-    current.onFile(file);
-  }
+    const listeners = new AbortController();
+    const { signal } = listeners;
+    node.addEventListener("dragenter", onDragEnter, { signal });
+    node.addEventListener("dragover", onDragOver, { signal });
+    node.addEventListener("dragleave", onDragLeave, { signal });
+    node.addEventListener("drop", onDrop, { signal });
+    watchStrays();
 
-  const listeners = new AbortController();
-  const { signal } = listeners;
-  node.addEventListener("dragenter", onDragEnter, { signal });
-  node.addEventListener("dragover", onDragOver, { signal });
-  node.addEventListener("dragleave", onDragLeave, { signal });
-  node.addEventListener("drop", onDrop, { signal });
-  watchStrays();
-
-  return {
-    update(next: DropZoneOptions) {
-      current = next;
-    },
-    destroy() {
+    return () => {
       listeners.abort();
       unwatchStrays();
-    }
+    };
   };
 }
