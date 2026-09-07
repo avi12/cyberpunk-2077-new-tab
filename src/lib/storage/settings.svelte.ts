@@ -37,6 +37,7 @@ import {
   widgetSchema
 } from "./schema";
 import { PromptTargetId, withShippedPromptTarget } from "@/features/companion/prompt-target";
+import { ICON_NAMES } from "@/features/netlinks/icons/choices";
 import { WeatherSourceId, withShippedWeatherSource } from "@/features/weather/sources";
 import { z } from "@/lib/zod";
 
@@ -242,7 +243,7 @@ export const settings = {
   }),
   tabFavicon: new Setting({
     item: tabFaviconItem,
-    schema: z.string()
+    schema: z.enum(ICON_NAMES)
   }),
   playSounds: new Setting({
     item: playSoundsItem,

@@ -1,3 +1,4 @@
+import type { IconName } from "@/features/netlinks/icons/choices";
 import { iconByName } from "@/features/netlinks/icons/choices";
 import { DEFAULT_TAB_FAVICON, DEFAULT_TAB_TITLE } from "@/lib/storage/defaults";
 
@@ -36,7 +37,7 @@ export function applyTabTitle(title: string) {
 }
 
 /** Restyles the icon file itself into a data URI, rather than rebuilding the same markup by hand. */
-function faviconHref(iconName: string) {
+function faviconHref(iconName: IconName) {
   const elIcon = new DOMParser().parseFromString(iconByName(iconName), "image/svg+xml").documentElement;
   elIcon.setAttribute("width", String(FAVICON_SIZE));
   elIcon.setAttribute("height", String(FAVICON_SIZE));
@@ -49,7 +50,7 @@ function faviconHref(iconName: string) {
   return `data:image/svg+xml,${encodeURIComponent(elIcon.outerHTML)}`;
 }
 
-export function applyTabFavicon(iconName: string) {
+export function applyTabFavicon(iconName: IconName) {
   const link = document.querySelector("link[rel='icon']");
   if (!(link instanceof HTMLLinkElement)) {
     return;

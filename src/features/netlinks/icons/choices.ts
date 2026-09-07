@@ -215,6 +215,9 @@ export const ICON_CHOICES = [
 /** The closed set of stored icon names. */
 export type IconName = (typeof ICON_CHOICES)[number]["name"];
 
+/** The same set as values, for the shapes that will only take a name this build actually ships. */
+export const ICON_NAMES = ICON_CHOICES.map(choice => choice.name);
+
 /** The first choice doubles as the fallback, so what "no icon picked" looks like is decided once. */
 const DEFAULT_CHOICE = ICON_CHOICES[0];
 

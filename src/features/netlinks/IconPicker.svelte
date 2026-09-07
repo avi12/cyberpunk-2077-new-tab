@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { IconName } from "@/features/netlinks/icons/choices";
   import { ICON_CHOICES, iconByName } from "@/features/netlinks/icons/choices";
 
   const {
@@ -7,8 +8,8 @@
     onSelect
   }: {
     label: string;
-    selected: string;
-    onSelect: (name: string) => void;
+    selected: IconName;
+    onSelect: (name: IconName) => void;
   } = $props();
 
   const panelId = $props.id();

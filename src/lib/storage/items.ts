@@ -26,6 +26,7 @@ import type {
 import { BackgroundMediaType, SearchEngineId } from "./schema";
 import type { PromptTargetId } from "@/features/companion/prompt-target";
 import type { ComposeSiteId } from "@/features/compose/sites";
+import type { IconName } from "@/features/netlinks/icons/choices";
 import { DEFAULT_WEATHER_SOURCE, type WeatherSourceId } from "@/features/weather/sources";
 import { storage } from "#imports";
 import type { WxtStorageItem } from "wxt/utils/storage";
@@ -73,7 +74,7 @@ export const scanLinesModeItem = storage.defineItem<ScanLinesMode>("local:scanLi
 
 export const tabTitleItem = storage.defineItem<string>("local:tabTitle", { fallback: DEFAULT_TAB_TITLE });
 
-export const tabFaviconItem = storage.defineItem<string>("local:tabFavicon", { fallback: DEFAULT_TAB_FAVICON });
+export const tabFaviconItem = storage.defineItem<IconName>("local:tabFavicon", { fallback: DEFAULT_TAB_FAVICON });
 
 export const playSoundsItem = storage.defineItem<boolean>("local:playSounds", { fallback: DEFAULT_PLAY_SOUNDS });
 
