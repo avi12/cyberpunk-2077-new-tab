@@ -56,7 +56,7 @@ const DEFAULT_PROMPT_TARGET = PromptTargetId.googleAiMode;
  * Bing names none. Its AI mode is Copilot, which redirects and drops the query on the way - measured
  * - so there is nothing to hand a prompt to, and its reader falls back like anyone else's.
  */
-export function promptTargetForEngine(engineId: string) {
+export function promptTargetForEngine(engineId: SearchEngineId) {
   const engine = engineById(engineId);
   const wanted = engine.aiEngineId ?? engine.id;
 

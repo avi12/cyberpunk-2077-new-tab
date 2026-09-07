@@ -33,6 +33,7 @@ import {
   displayPreferencesSchema,
   geoLocationSchema,
   ScanLinesMode,
+  SearchEngineId,
   widgetSchema
 } from "./schema";
 import { PromptTargetId, withShippedPromptTarget } from "@/features/companion/prompt-target";
@@ -178,7 +179,7 @@ export const settings = {
   }),
   activeSearchEngine: new Setting({
     item: activeSearchEngineItem,
-    schema: z.string()
+    schema: z.enum(SearchEngineId)
   }),
   weatherLocation: new Setting({
     item: weatherLocationItem,

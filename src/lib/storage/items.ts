@@ -43,7 +43,7 @@ export const collapsedCategoriesItem = storage.defineItem<Record<string, boolean
 
 export const customCategoriesItem = storage.defineItem<string[]>("local:customCategories", { fallback: [] });
 
-export const activeSearchEngineItem = storage.defineItem<string>("local:activeSearchEngine", { fallback: SearchEngineId.browserDefault });
+export const activeSearchEngineItem = storage.defineItem<SearchEngineId>("local:activeSearchEngine", { fallback: SearchEngineId.browserDefault });
 
 export const weatherLocationItem = storage.defineItem<GeoLocation>("local:weatherLocation", { fallback: DEFAULT_WEATHER_LOCATION });
 

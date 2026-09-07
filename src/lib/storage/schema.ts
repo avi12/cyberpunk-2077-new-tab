@@ -81,7 +81,7 @@ export type Bookmark = z.infer<typeof bookmarkSchema>;
  * arrives from anywhere, so there is no payload to validate - only a shape to hold the authors to.
  */
 export type SearchEngine = {
-  id: string;
+  id: SearchEngineId;
   name: string;
   /** Where the search form posts. Empty for the browser's own engine, which is asked over a message. */
   action: string;
