@@ -10,7 +10,7 @@
   }: {
     label: string;
     options: readonly SelectOption<TValue>[];
-    selected: string;
+    selected: TValue;
     columns?: 1 | 2;
     onSelect: (value: TValue) => void;
   } = $props();
