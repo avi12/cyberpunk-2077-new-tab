@@ -17,9 +17,22 @@ const LINK_SELECTOR = "a[href]";
 /** Two rows are never this close, and the same row never differs by this much. */
 const ROW_TOLERANCE_PX = 2;
 
-const STEP_BY_KEY: Record<string, number> = {
-  ArrowRight: 1,
-  ArrowLeft: -1
+/** The four keys this answers to, so the table below and the two comparisons cannot drift apart. */
+enum ArrowKey {
+  right = "ArrowRight",
+  left = "ArrowLeft",
+  up = "ArrowUp",
+  down = "ArrowDown"
+}
+
+function isArrowKey(key: string): key is ArrowKey {
+  return Object.values<string>(ArrowKey).includes(key);
+}
+
+/** Only the two that move along a row - up and down are answered geometrically instead. */
+const STEP_BY_KEY: Partial<Record<ArrowKey, number>> = {
+  [ArrowKey.right]: 1,
+  [ArrowKey.left]: -1
 };
 
 function centerOf(box: DOMRect) {
@@ -72,7 +85,7 @@ function alignedWith({ row, origin }: {
 
 export function arrowFocus(node: HTMLElement) {
   function nextFor({ key, links, current }: {
-    key: string;
+    key: ArrowKey;
     links: HTMLElement[];
     current: HTMLElement;
   }) {
@@ -81,8 +94,8 @@ export function arrowFocus(node: HTMLElement) {
       return links[links.indexOf(current) + step] ?? null;
     }
 
-    const isDown = key === "ArrowDown";
-    if (!isDown && key !== "ArrowUp") {
+    const isDown = key === ArrowKey.down;
+    if (!isDown && key !== ArrowKey.up) {
       return null;
     }
 
@@ -100,7 +113,7 @@ export function arrowFocus(node: HTMLElement) {
 
   function onKeyDown(e: KeyboardEvent) {
     const isModifierHeld = e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
-    if (isModifierHeld) {
+    if (isModifierHeld || !isArrowKey(e.key)) {
       return;
     }
 
