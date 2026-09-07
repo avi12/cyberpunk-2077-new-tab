@@ -87,12 +87,6 @@
     await importFrom(waitingFile);
   }
 
-  function hold(file: File) {
-    waitingFile = file;
-    error = "";
-    isConfirmingImport = true;
-  }
-
   function saveToFile() {
     try {
       downloadFile({
@@ -213,7 +207,11 @@
         type="button"
         use:dropZone={{
           accept: SETTINGS_ACCEPT,
-          onFile: hold
+          onFile: file => {
+            waitingFile = file;
+            error = "";
+            isConfirmingImport = true;
+          }
         }}>
         {@html iconUpload}
         <span>Drop a settings file here</span>

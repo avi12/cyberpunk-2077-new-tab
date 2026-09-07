@@ -85,29 +85,10 @@
     return !isConnected || isOfferingSite || isOfferingTips;
   });
 
-  /**
-   * A browser asked for an origin its loaded manifest has never heard of rejects rather than
-   * answering no - which is what an extension that has not been reloaded since it gained one does.
-   * That reads as a refusal, so the offer simply stays up rather than the click breaking.
-   */
-  async function allowSite() {
-    if (!siteId) {
-      return;
-    }
-
-    await composeAccess.allow(siteId);
-  }
-
   /** The one read of what is already allowed, since this is the only offer made on the answer. */
   $effect(() => {
     void composeAccess.refresh();
   });
-
-  async function connect() {
-    if (await requestCompanionPermission()) {
-      companion.refresh();
-    }
-  }
 
   /** Runs only while something is still missing, and stops itself the moment nothing is. */
   $effect(() => {
@@ -134,9 +115,14 @@
       <CompanionNotice>
         Let a card ask {targetLabel} for you, instead of copying the prompt for you to paste
         {#snippet action()}
+          <!--
+            A browser asked for an origin its loaded manifest has never heard of rejects rather than
+            answering no - which is what an extension that has not been reloaded since it gained one
+            does. That reads as a refusal, so the offer simply stays up rather than the click breaking.
+          -->
           <button
             class="cyber-button cyber-button--primary"
-            onclick={allowSite}
+            onclick={() => siteId && void composeAccess.allow(siteId)}
             type="button">
             Allow {targetLabel} site
           </button>
@@ -158,7 +144,12 @@
       <CompanionNotice>
         Edge already mapped where your browsing is heading - let the {COMPANION_NAME} read it
         {#snippet action()}
-          <button class="cyber-button cyber-button--primary" onclick={connect} type="button">Link companion</button>
+          <button
+            class="cyber-button cyber-button--primary"
+            onclick={() => void requestCompanionPermission().then(isGranted => isGranted && companion.refresh())}
+            type="button">
+            Link companion
+          </button>
         {/snippet}
       </CompanionNotice>
     {:else if companion.state === CompanionState.companionNotRunning}

@@ -126,11 +126,6 @@
     });
   }
 
-  function reorderCategories(next: string[]) {
-    // Only the visible subset is dragged; hidden categories keep their place at the end.
-    settings.categoryOrder.current = [...next, ...categories.filter(name => !next.includes(name))];
-  }
-
   function sortIntoCategories() {
     withViewTransition(() => {
       settings.bookmarks.current = settings.bookmarks.current.map(bookmark => {
@@ -147,11 +142,6 @@
   function closeForm() {
     formCategory = null;
     bookmarkToEdit = null;
-  }
-
-  function openLinkForm(category: string) {
-    bookmarkToEdit = null;
-    formCategory = category;
   }
 
   function saveBookmark(draft: Omit<Bookmark, "id">) {
@@ -173,11 +163,6 @@
     }
 
     closeForm();
-  }
-
-  function startRename(category: string) {
-    renamingCategory = category;
-    renameDraft = category;
   }
 
   function confirmRename() {
@@ -277,7 +262,10 @@
       ids: visibleCategories,
       disabled: !isEditing,
       handle: ".category__grip",
-      onReorder: reorderCategories
+      onReorder: next => {
+        // Only the visible subset is dragged; hidden categories keep their place at the end.
+        settings.categoryOrder.current = [...next, ...categories.filter(name => !next.includes(name))];
+      }
     }}>
     {#each visibleCategories as category (category)}
       <div data-sortable-id={category}>
@@ -298,13 +286,19 @@
             isCollapsed={settings.collapsedCategories.current[category] ?? false}
             {isEditing}
             {linkForm}
-            onAddBookmark={openLinkForm}
+            onAddBookmark={name => {
+              bookmarkToEdit = null;
+              formCategory = name;
+            }}
             onBookmarkMove={moveBookmark}
             onBookmarkOrderChange={applyBookmarkOrder}
             onDeleteBookmark={id => (settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.id !== id))}
             onDeleteCategory={requestDeleteCategory}
             onEditBookmark={bookmark => (bookmarkToEdit = bookmark)}
-            onEditCategory={startRename}
+            onEditCategory={name => {
+              renamingCategory = name;
+              renameDraft = name;
+            }}
             onToggleCollapse={name => withViewTransition(() => toggleCollapsed(name))} />
         {/if}
       </div>

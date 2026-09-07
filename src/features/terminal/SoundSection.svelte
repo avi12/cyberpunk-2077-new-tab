@@ -9,19 +9,17 @@
   const TOGGLE_LABEL = "Hover sounds";
 
   const isOn = $derived(settings.playSounds.current);
-
-  /** Turning them on is the one click that can answer for itself, so it does. */
-  function toggle() {
-    settings.playSounds.current = !settings.playSounds.current;
-    void previewTick();
-  }
 </script>
 
 <PanelSection title="Sound">
+  <!-- Turning them on is the one click that can answer for itself, so it does. -->
   <ToggleOption
     iconOff={iconVolumeOff}
     iconOn={iconVolume}
     {isOn}
     label={TOGGLE_LABEL}
-    onToggle={toggle} />
+    onToggle={() => {
+      settings.playSounds.current = !settings.playSounds.current;
+      void previewTick();
+    }} />
 </PanelSection>
