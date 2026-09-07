@@ -257,7 +257,7 @@
   </div>
 
   <div
-    use:arrowFocus
+    {@attach arrowFocus}
     use:sortable={{
       ids: visibleCategories,
       disabled: !isEditing,

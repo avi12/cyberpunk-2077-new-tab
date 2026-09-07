@@ -140,9 +140,5 @@ export function arrowFocus(node: HTMLElement) {
   const listeners = new AbortController();
   node.addEventListener("keydown", onKeyDown, { signal: listeners.signal });
 
-  return {
-    destroy() {
-      listeners.abort();
-    }
-  };
+  return () => listeners.abort();
 }
