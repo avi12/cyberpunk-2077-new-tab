@@ -262,4 +262,14 @@ existing user's uploaded background survives the switch.
 
 ## Licence
 
-MIT
+GPL-3.0-or-later. See [LICENSE](LICENSE).
+
+The companion app is not in this repository and is not under this licence. It is a separate,
+closed-source program sold through the Microsoft Store, and the two talk over Chromium's
+[native messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging):
+separate processes, exchanging one small JSON object over stdio. That boundary is deliberate and it
+is what keeps them separate works rather than one combined program.
+
+The extension is complete without it. With the app absent the new tab shows one line where the
+Copilot cards would be, and nothing else about the page changes - so everything in this repository
+builds, runs and is useful on its own.
