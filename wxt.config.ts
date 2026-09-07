@@ -1,4 +1,4 @@
-import extensionIdentity from "./companion/extension-identity.json";
+import extensionIdentity from "./extension-identity.json";
 import { defineConfig } from "wxt";
 
 /**

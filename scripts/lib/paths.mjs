@@ -11,4 +11,4 @@ const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const LOGO_ICO = join(REPO_ROOT, "scripts", "cyberpunk-logo.ico");
 export const ICON_DIR = join(REPO_ROOT, "src", "public", "icon");
 export const PRIVATE_KEY_PATH = join(REPO_ROOT, "keys", "chrome.pem");
-export const IDENTITY_PATH = join(REPO_ROOT, "companion", "extension-identity.json");
+export const IDENTITY_PATH = join(REPO_ROOT, "extension-identity.json");

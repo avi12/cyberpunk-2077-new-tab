@@ -66,7 +66,7 @@ The Chromium manifest carries a `key`, so the extension id is the same everywher
 as a CRX, or installed from a store. Without it the id is a hash of whatever folder the extension was
 loaded from, and the Journeys companion has to name an origin that would then differ on every
 machine. `pnpm key:generate` mints `keys/chrome.pem` (git-ignored; it signs release CRXs and nothing
-else) and writes the public half to `companion/extension-identity.json`, which is the one place both
+else) and writes the public half to `extension-identity.json`, which is the one place both
 the manifest and the companion read it from.
 
 Firefox has an id of its own in `browser_specific_settings`, for a different reason: it keys

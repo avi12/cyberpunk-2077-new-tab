@@ -1,6 +1,6 @@
 /**
  * Mints (once) the keypair that gives this extension a permanent id, and writes the public half
- * where both sides read it from: `companion/extension-identity.json`.
+ * where both sides read it from: `extension-identity.json`, at the repo root.
  *
  * A Chromium extension's id is a hash of its public key. Loaded unpacked with no key, the id is a
  * hash of the folder path instead - different on every machine - and a native messaging host cannot
