@@ -262,4 +262,4 @@ type AnySetting = {
   set(value: unknown): Promise<void>;
 };
 
-export const allSettings: Record<string, AnySetting> = settings;
+export const allSettings: Record<keyof typeof settings, AnySetting> = settings;
