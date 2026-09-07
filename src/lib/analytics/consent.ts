@@ -16,7 +16,7 @@ let developmentInstall: Promise<boolean> | undefined;
 function isDevelopmentInstall() {
   developmentInstall ??= browser.management
     .getSelf()
-    .then(info => info.installType === "development")
+    .then(info => info.installType === browser.management.ExtensionInstallType.DEVELOPMENT)
     .catch(() => false);
 
   return developmentInstall;

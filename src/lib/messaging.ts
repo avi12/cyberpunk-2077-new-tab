@@ -1,10 +1,9 @@
 import type { ComposeSiteId } from "@/features/compose/sites";
 import { defineExtensionMessaging } from "@webext-core/messaging";
+import type { Browser } from "wxt/browser";
 
-type TopSite = {
-  title: string;
-  url: string;
-};
+/** What `topSites.get` answers with, named here so the message and the API cannot drift apart. */
+type TopSite = Browser.topSites.MostVisitedURL;
 
 /**
  * What the companion may be asked for. The strings are the wire contract with the app, which files

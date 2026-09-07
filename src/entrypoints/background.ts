@@ -6,6 +6,7 @@ import { ComposeOutcome, MessageType, onMessage, TabDisposition } from "@/lib/me
 import { forgetComposeRefusals, rememberComposeRefusal, reshuffleTips } from "@/lib/storage/items";
 import { openableUrlSchema } from "@/lib/url";
 import { defineBackground } from "#imports";
+import type { Browser } from "wxt/browser";
 
 /** The built name of the unlisted script, which is its entrypoint file's. */
 const COMPOSE_SCRIPT = "/compose.js";
@@ -80,8 +81,8 @@ export default defineBackground(() => {
       }
     }
 
-    function onUpdated(updatedId: number, changeInfo: { status?: string }, tab: { url?: string }) {
-      const isThisTabFinished = updatedId === tabId && changeInfo.status === "complete";
+    function onUpdated(updatedId: number, changeInfo: Browser.tabs.OnUpdatedInfo, tab: Browser.tabs.Tab) {
+      const isThisTabFinished = updatedId === tabId && changeInfo.status === browser.tabs.TabStatus.COMPLETE;
       if (!isThisTabFinished) {
         return;
       }
@@ -176,7 +177,7 @@ export default defineBackground(() => {
   onMessage(MessageType.searchWithDefaultEngine, async ({ data }) => {
     await browser.search.query({
       text: data,
-      disposition: "CURRENT_TAB"
+      disposition: browser.search.Disposition.CURRENT_TAB
     });
   });
 });
