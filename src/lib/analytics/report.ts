@@ -44,9 +44,12 @@ const MAX_BACKDATE_HOURS = 72;
  */
 const FORBIDDEN_PARAMS = new Set(["email", "name", "phone", "address", "page_referrer", "query", "prompt"]);
 
+/** One report's parameters: only the names the property has dimensions for, and only flat values. */
+type ReportedParams = Partial<Record<AnalyticsParam, string | number | boolean>>;
+
 function isSendable({ key, value }: {
   key: string;
-  value: unknown;
+  value: ReportedParams[AnalyticsParam];
 }) {
   if (FORBIDDEN_PARAMS.has(key) || key.length > MAX_PARAM_NAME_LENGTH) {
     return false;
@@ -63,7 +66,7 @@ function isSendable({ key, value }: {
  * A parameter is dropped rather than trimmed: half a value in a report reads as data and is not.
  * GA4 discards the whole event past 25 of them, so the cap is kept here rather than discovered.
  */
-function sendableParams(params: Record<string, unknown>) {
+function sendableParams(params: ReportedParams) {
   const kept: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(params)) {
     const isRoom = Object.keys(kept).length < MAX_EVENT_PARAMS;
@@ -89,8 +92,9 @@ function userProperties() {
     [AnalyticsUserProperty.uiLanguage]: browser.i18n.getUILanguage()
   };
 
-  const properties: Record<string, { value: string }> = {};
-  for (const [name, value] of Object.entries(values)) {
+  const properties: Partial<Record<AnalyticsUserProperty, { value: string }>> = {};
+  for (const name of Object.values(AnalyticsUserProperty)) {
+    const value = values[name];
     if (value) {
       properties[name] = { value: value.slice(0, MAX_USER_PROPERTY_VALUE_LENGTH) };
     }
@@ -137,8 +141,6 @@ async function currentSession() {
  * Never throws and is never awaited by anything the reader is waiting on: a report is the least
  * important thing the page is doing, and a page that stalls because a beacon did is indefensible.
  */
-type ReportedParams = Partial<Record<AnalyticsParam, string | number | boolean>>;
-
 async function report(name: AnalyticsEvent, params: ReportedParams = {}) {
   if (!MEASUREMENT_ID || !API_SECRET || !(await isAnalyticsEnabled())) {
     return;
