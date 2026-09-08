@@ -10,10 +10,9 @@
  * Usage: `pnpm ext:sideload [--port 9223] [--firefox]`
  */
 
+import { CDP_PORT } from "./browser.mjs";
 import process from "node:process";
 import webExt from "web-ext";
-
-const DEFAULT_PORT = 9223;
 
 /** The remote debugging port is what lets the chrome-devtools MCP attach to this browser. */
 const BROWSERS = {
@@ -33,7 +32,7 @@ const args = process.argv.slice(2);
 const isFirefox = args.includes("--firefox");
 const iPortFlag = args.indexOf("--port");
 const isPortGiven = iPortFlag !== -1;
-const port = isPortGiven ? Number(args[iPortFlag + 1]) : DEFAULT_PORT;
+const port = isPortGiven ? Number(args[iPortFlag + 1]) : CDP_PORT;
 const { webExtTarget, sourceDir, launchArgs } = isFirefox ? BROWSERS.firefox : BROWSERS.chromium;
 
 const runner = await webExt.cmd.run(

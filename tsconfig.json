@@ -3,6 +3,11 @@
   "compilerOptions": {
     "types": ["svelte", "node"],
     "useDefineForClassFields": true,
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    // `wxt.config.ts` reads the dev browser's port from `scripts/browser.mjs`, which is where the
+    // launcher that uses it lives. Inference off the JavaScript is enough to type that; the scripts
+    // are tooling and are not themselves type checked.
+    "allowJs": true,
+    "checkJs": false
   }
 }

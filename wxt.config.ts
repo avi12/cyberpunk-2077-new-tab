@@ -1,4 +1,5 @@
 import extensionIdentity from "./extension-identity.json";
+import { CDP_PORT } from "./scripts/browser.mjs";
 import { defineConfig } from "wxt";
 
 /**
@@ -184,6 +185,10 @@ export default defineConfig({
         // skipping the one file. Nothing under `companion/` or `keys/` is bundled, so watching
         // either buys nothing and costs that.
         //
+        // A mitigation rather than a fix: measured, a file that appears while the watcher is already
+        // running still gets through. Anything held open for as long as it lives belongs outside the
+        // project entirely - which is where the dev browser's profile went (`scripts/browser.mjs`).
+        //
         // Regexes rather than globs: chokidar 4, which Vite 6 onwards ships, dropped glob support
         // in `ignored`, and a glob there is silently read as a literal path that matches nothing.
         ignored: [/[\\/]companion[\\/]/, /[\\/]keys[\\/]/]
@@ -191,9 +196,13 @@ export default defineConfig({
     }
   }),
   webExt: {
+    // `scripts/dev.mjs` opens the browser itself, so that one window survives the CLI restarts an
+    // `.env` edit or a watcher crash forces - it sets this variable to say so. Plain `pnpm ext:dev`
+    // does not, and goes on opening its own browser.
+    disabled: process.env.WXT_DEV_OWNS_BROWSER === "true",
     // Pairs the dev browser with the chrome-devtools MCP server configured in .mcp.json, so the new
     // tab can be driven and screenshotted while `pnpm ext:dev` runs.
-    chromiumArgs: ["--remote-debugging-port=9223"]
+    chromiumArgs: [`--remote-debugging-port=${CDP_PORT}`]
   },
   zip: {
     artifactTemplate: "cyberpunk-2077-new-tab-{{versionName}}-{{browser}}.zip",
