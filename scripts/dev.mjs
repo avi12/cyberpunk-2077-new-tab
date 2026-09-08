@@ -4,11 +4,18 @@
  * an stdin pipe that is simply never closed, which keeps the dev loop alive: edits hot-update the
  * open tab, and the browser is never restarted.
  *
- * The one edit that cannot hot-update is an `.env` one. Vite inlines those values when the build
- * starts, so a running server goes on serving the old ones - which reads as a key that did not take
- * rather than as a server that never re-read it. This watches for that and restarts the CLI, which
- * is the only thing that picks the values up. The browser does come back with it; a restart is the
- * cost of the change, and a silently stale key is worse.
+ * Two things it also survives, both of which used to end the session outright:
+ *
+ * An `.env` edit. Vite inlines those values when the build starts, so a running server goes on
+ * serving the old ones - which reads as a key that did not take rather than as a server that never
+ * re-read it. Only a restart picks them up, so this watches for one and restarts.
+ *
+ * A watcher crash. Vite watches the whole project root, which includes `companion/`, and a locked
+ * artifact there - MSBuild holding an `obj/**` binary mid-build, or the tray app holding its own
+ * exe - makes chokidar raise EBUSY. Vite treats that as fatal and takes the dev server with it, even
+ * though nothing being watched there is ever bundled. `wxt.config.ts` asks Vite to ignore the
+ * directory, which helps for a file that exists at startup and not for one that appears during a
+ * build, so the crash is also caught here and the CLI brought back up.
  *
  * The remote debugging port comes from `webExt.chromiumArgs` in wxt.config.ts, so the
  * chrome-devtools MCP can attach to the same browser.
@@ -34,9 +41,21 @@ const SETTLE_MS = 250;
 /** Vite never loads the example, so editing the documentation is not a reason to restart. */
 const IGNORED_ENV_FILE = ".env.example";
 
+/**
+ * How many times a crash is worth answering with a restart before the crash is the answer. A watcher
+ * that lost a race comes back; a config that cannot start never will, and looping on it hides the
+ * error that says so.
+ */
+const MAX_CRASH_RESTARTS = 5;
+
+/** A crash later than this is a fresh problem rather than the same one going round. */
+const CRASH_WINDOW_MS = 60_000;
+
 let child = null;
 let isRestarting = false;
 let settleTimer = null;
+let crashRestarts = 0;
+let firstCrashAtMs = 0;
 
 function start() {
   child = spawn(process.execPath, [wxtCli, ...process.argv.slice(2)], {
@@ -51,8 +70,27 @@ function start() {
       return;
     }
 
-    process.exit(code ?? 0);
+    if (code === 0 || !shouldAnswerCrash()) {
+      process.exit(code ?? 0);
+    }
+
+    console.info(`\n[dev] wxt exited with ${code} - restarting (${crashRestarts}/${MAX_CRASH_RESTARTS})`);
+    start();
   });
+}
+
+/** Counted inside a window, so a long healthy run resets the budget rather than spending it. */
+function shouldAnswerCrash() {
+  const nowMs = Date.now();
+  const isSameSpell = nowMs - firstCrashAtMs < CRASH_WINDOW_MS;
+  if (!isSameSpell) {
+    firstCrashAtMs = nowMs;
+    crashRestarts = 0;
+  }
+
+  crashRestarts += 1;
+
+  return crashRestarts <= MAX_CRASH_RESTARTS;
 }
 
 function restart(filename) {
@@ -90,6 +128,7 @@ watch(projectRoot, (_, filename) => {
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, () => {
     isRestarting = false;
+    crashRestarts = MAX_CRASH_RESTARTS + 1;
     child?.kill(signal);
   });
 }

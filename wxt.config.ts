@@ -171,6 +171,21 @@ export default defineConfig({
     },
     homepage_url: "https://avi12.com"
   }),
+  vite: () => ({
+    server: {
+      watch: {
+        // The dev server watches the project root, which sweeps in the companion's build output. A
+        // locked artifact there - MSBuild holding `obj/**/*.dll`, or the tray app holding its own
+        // `bin/*.exe` - makes chokidar emit EBUSY, and that kills the whole dev server rather than
+        // skipping the one file. Nothing under `companion/` or `keys/` is bundled, so watching
+        // either buys nothing and costs that.
+        //
+        // Regexes rather than globs: chokidar 4, which Vite 6 onwards ships, dropped glob support
+        // in `ignored`, and a glob there is silently read as a literal path that matches nothing.
+        ignored: [/[\\/]companion[\\/]/, /[\\/]keys[\\/]/]
+      }
+    }
+  }),
   webExt: {
     // Pairs the dev browser with the chrome-devtools MCP server configured in .mcp.json, so the new
     // tab can be driven and screenshotted while `pnpm ext:dev` runs.
