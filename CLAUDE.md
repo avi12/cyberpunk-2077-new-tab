@@ -6,7 +6,9 @@
 - TypeScript (100% type safety, let TypeScript infer return types - never write them explicitly)
 - zod for every payload that crosses the extension boundary
 - @webext-core/messaging for message passing
-- Chromium (Chrome, Edge, Opera) MV3 + Firefox MV2
+- Chrome, Edge, Opera and Firefox, all MV3 - there is no MV2 build of anything
+  - Two builds, not four: Chrome, Edge and Opera all install the Chromium one, and Opera has no
+    target of its own. Firefox is the only separate build, and every Firefox script passes `--mv3`
   - Single shared code path; branch only when an API genuinely diverges
   - The manifest is a function of `browser` in `wxt.config.ts`: `identity` and `identity.email` are
     Chromium-only, so Firefox's manifest omits them

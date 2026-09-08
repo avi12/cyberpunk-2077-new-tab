@@ -45,7 +45,7 @@ pnpm fallow           # dead code, duplication, complexity
 
 ## Permissions
 
-Six on Chrome, four on Firefox, and each backs one feature:
+Six on Chromium (Chrome, Edge, Opera), four on Firefox, and each backs one feature:
 
 | Permission       | Why                                                                     |
 | ---------------- | ----------------------------------------------------------------------- |
@@ -56,7 +56,7 @@ Six on Chrome, four on Firefox, and each backs one feature:
 | `identity`       | "USE BROWSER ACCOUNT" names the greeting after the signed-in account     |
 | `identity.email` | that address is the only name any browser API will hand over             |
 
-The last two are Chrome-only: Firefox exposes the `identity` namespace without
+The last two are Chromium-only: Firefox exposes the `identity` namespace without
 `getProfileUserInfo`, so its manifest omits both and the button reports no account.
 
 `nativeMessaging` is **optional** and Chromium-only: it is asked for only if you link the companion

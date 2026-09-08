@@ -167,9 +167,9 @@ function evaluateInWorker({ webSocketDebuggerUrl, expression }) {
 /**
  * Where the dev server writes the build for this browser, once it has written one.
  *
- * Read off disk rather than composed from the arguments, because the manifest version in the name
- * is the config's to decide - `mv2` or `mv3` depending on the browser and the flags - and this
- * script has no business restating that rule.
+ * Read off disk rather than composed from the arguments. Every target is MV3, so the name is
+ * `<browser>-mv3-dev` today - but which browser and which manifest version is the config's to
+ * decide, and this script has no business restating that rule to disagree with it later.
  */
 export function devOutputDirectory(browser) {
   const output = join(PROJECT_ROOT, ".output");
