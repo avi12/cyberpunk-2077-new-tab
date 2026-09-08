@@ -2,7 +2,6 @@
   import { capturePage } from "@/features/capture/page-image";
   import iconCamera from "@/assets/icons/camera.svg?raw";
   import Modal from "@/ui/Modal.svelte";
-  import { tick } from "svelte";
 
   const {
     isOpen,
@@ -26,9 +25,6 @@
 
   let result = $state("");
 
-  /** Only the drawing hides the panel; the answer afterwards has something to show. */
-  let isDrawing = $state(false);
-
   let isBusy = $state(false);
 
   async function capture() {
@@ -42,7 +38,7 @@
   }
 
   async function captureToClipboard() {
-    const png = await draw();
+    const png = await capturePage().catch(() => null);
     if (!png) {
       result = RESULT.undrawable;
 
@@ -51,29 +47,6 @@
 
     const isCopied = await copyToClipboard(png);
     result = isCopied ? RESULT.copied : RESULT.unwritable;
-  }
-
-  /**
-   * Hidden rather than closed, for two reasons: a panel in front of the page would be in the
-   * picture of it, and a closed one has nowhere left to say how it went.
-   */
-  async function draw() {
-    isDrawing = true;
-    await tick();
-    await nextPaint();
-
-    const png = await capturePage().catch(() => null);
-    isDrawing = false;
-
-    return png;
-  }
-
-  /**
-   * Two frames. One only reaches the paint that is already about to happen, and what is wanted is
-   * the one after it - the frame this panel is missing from, which is the frame that gets copied.
-   */
-  function nextPaint() {
-    return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   }
 
   /** An image rather than a file: what a screenshot is usually for is the next thing you paste it into. */
@@ -89,7 +62,7 @@
   }
 </script>
 
-<Modal isHidden={isDrawing} {isOpen} isSelfFocused {onClose} title="About">
+<Modal {isOpen} isSelfFocused {onClose} title="About">
   <p class="about__body">
     Cyberpunk 2077 themed start page<br />
     Fully customizable with many dynamic and interactive elements

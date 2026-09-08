@@ -29,6 +29,16 @@ const XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 /** Where the generated pseudo-element rules are hung, since inline styles cannot express them. */
 const PSEUDO_CLASS_PREFIX = "capture-pseudo-";
 
+/**
+ * What the reader raised over the page, which is not the page.
+ *
+ * `foreignObject` has no top layer, so a copied dialog would come back as an ordinary block in the
+ * flow - out of position, without its backdrop, sitting on the very thing it was raised above. It
+ * would not be wanted even if it landed correctly: the panel someone pressed a button in is not
+ * part of the picture they asked for.
+ */
+const TOP_LAYER_SELECTOR = "dialog[open], :popover-open";
+
 /** Every longhand, so nothing rests on whether the shorthand happens to serialise back out. */
 const BACKGROUND_PROPERTIES = [
   "background-color",
@@ -61,6 +71,10 @@ export async function capturePage() {
     originals,
     clones,
     pseudoRules
+  });
+  hideTopLayer({
+    originals,
+    clones
   });
   await inlineMedia({
     originals,
@@ -127,6 +141,26 @@ function collectPseudoRules({ original, clone, index, pseudoRules }: {
     const className = `${PSEUDO_CLASS_PREFIX}${index}`;
     clone.classList.add(className);
     pseudoRules.push(`.${className}${pseudo}{${declarationsOf(style)}}`);
+  }
+}
+
+/**
+ * Asked of the original rather than the copy, and answered after the styles are on.
+ *
+ * `:popover-open` is a live state rather than an attribute, so a copy torn out of the document
+ * cannot answer it - only the element still in the page knows. And `copyStyles` assigns `cssText`
+ * whole, which would wipe anything written before it.
+ */
+function hideTopLayer({ originals, clones }: {
+  originals: HTMLElement[];
+  clones: HTMLElement[];
+}) {
+  for (const [index, original] of originals.entries()) {
+    const clone = clones[index];
+    const isRaised = original.matches(TOP_LAYER_SELECTOR);
+    if (clone && isRaised) {
+      clone.style.display = "none";
+    }
   }
 }
 
