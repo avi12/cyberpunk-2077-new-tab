@@ -30,6 +30,35 @@ const XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 const PSEUDO_CLASS_PREFIX = "capture-pseudo-";
 
 /**
+ * The logical half of the box model, left out because the physical half is already in.
+ *
+ * `getComputedStyle` resolves both spellings of every edge: `margin-block-end` and `margin-bottom`
+ * come back as the same `16px`. Writing both puts two declarations for one edge in a single block,
+ * and the CSSOM regroups them into shorthands where the last one written wins. Measured on this
+ * page: `margin-block: 0px 16px;` followed by `margin-block: 0px;`, and every netlink section lost
+ * the 16px beneath it - the copy stacked four sections 64px tighter than the page it was of.
+ *
+ * The physical value is the resolved one, whatever the writing mode, so it is the one worth
+ * keeping. Forty-four properties go, and every one of them has a twin that stays.
+ */
+const LOGICAL_BOX_PROPERTY = /(^|-)(block|inline)(-|$)/u;
+
+/**
+ * The one resolved value that changes meaning when it is written back.
+ *
+ * `getComputedStyle` resolves `height: auto` to the pixels the box ended up being, and writing those
+ * pixels back makes it a specified height - which is not the same box. An auto-height box lets its
+ * last child's bottom margin collapse out through it; a box with a height traps it. Measured: every
+ * netlink section's 16px sat stuck inside its wrapper, and the copy stacked four sections 48px
+ * tighter than the page it was a copy of.
+ *
+ * Leaving it out costs nothing, because the copy carries everything that decided the height in the
+ * first place: measured across all 165 elements on this page, every one came back the exact height
+ * it had.
+ */
+const COLLAPSE_BLOCKING_PROPERTY = "height";
+
+/**
  * What the reader raised over the page, which is not the page.
  *
  * `foreignObject` has no top layer, so a copied dialog would come back as an ordinary block in the
@@ -56,7 +85,9 @@ const TRANSPARENT_PIXEL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
 export async function capturePage() {
-  const { innerWidth: width, innerHeight: height, devicePixelRatio } = window;
+  const { scrollX, scrollY, devicePixelRatio } = window;
+  /* `clientWidth` rather than `innerWidth`, which counts the scrollbar the page cannot draw in. */
+  const { clientWidth: width, clientHeight: height } = document.documentElement;
   const clone = document.body.cloneNode(true);
   if (!(clone instanceof HTMLElement)) {
     throw new Error("the page has no body to copy");
@@ -75,6 +106,11 @@ export async function capturePage() {
   hideTopLayer({
     originals,
     clones
+  });
+  alignToScroll({
+    clone,
+    scrollX,
+    scrollY
   });
   await inlineMedia({
     originals,
@@ -145,6 +181,34 @@ function collectPseudoRules({ original, clone, index, pseudoRules }: {
 }
 
 /**
+ * The copy moved under the window, so the picture is the part of the page being looked at.
+ *
+ * A `foreignObject` does not scroll. The copy is laid out from the document's origin, so a page
+ * scrolled halfway down was photographed from the top - the right page, the wrong part of it. What
+ * cannot be scrolled is offset instead.
+ *
+ * Placed rather than transformed, deliberately: a transform would make the copy the containing
+ * block for everything `fixed` inside it, and the wallpaper, the widget panel and the corner
+ * buttons would slide up with the flow rather than staying against the window, which is the one
+ * thing `fixed` is for. Absolute positioning leaves them to the window and stands in for the
+ * document origin that everything absolute inside was measured from.
+ *
+ * These two edges only hold because `LOGICAL_BOX_PROPERTY` keeps `inset-block-start` and
+ * `inset-inline-start` out of the copy. While both spellings were written, the logical pair sat
+ * later in the block at `0px` and quietly overruled this, and the picture came back at the top of
+ * the page however far down the reader was.
+ */
+function alignToScroll({ clone, scrollX, scrollY }: {
+  clone: HTMLElement;
+  scrollX: number;
+  scrollY: number;
+}) {
+  clone.style.position = "absolute";
+  clone.style.left = `${-scrollX}px`;
+  clone.style.top = `${-scrollY}px`;
+}
+
+/**
  * Asked of the original rather than the copy, and answered after the styles are on.
  *
  * `:popover-open` is a live state rather than an attribute, so a copy torn out of the document
@@ -178,7 +242,10 @@ function hideTopLayer({ originals, clones }: {
 function declarationsOf(style: CSSStyleDeclaration) {
   let declarations = "";
   for (const property of style) {
-    declarations += `${property}:${style.getPropertyValue(property)};`;
+    const isCopied = property !== COLLAPSE_BLOCKING_PROPERTY && !LOGICAL_BOX_PROPERTY.test(property);
+    if (isCopied) {
+      declarations += `${property}:${style.getPropertyValue(property)};`;
+    }
   }
 
   return declarations;
