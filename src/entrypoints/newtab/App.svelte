@@ -285,31 +285,8 @@
     }
   }
 
-  /*
-   * The one line of small text with nothing behind it but the wallpaper.
-   *
-   * Everything else over the picture is large, lit, or inside a panel of its own. This is 12px of
-   * `#6b7280` - the original's colour, and the original leaves it at that - and the bottom of a
-   * night-city photo is the brightest part of it: lit windows and their reflections in the water,
-   * exactly where the line runs. The scrim over the wallpaper is the original's too, and it is not
-   * enough there.
-   *
-   * Something opaque, rather than a brighter grey or a shadow. Grey on a lit window is about 1.3:1
-   * and white is barely 2:1, so no colour fixes this, and a blurred halo around 12px mono glyphs
-   * only greys the gaps between them - measured, and still unreadable. A plate under the line is
-   * the thing that works.
-   *
-   * `fit-content` rather than `inline-block`, so the plate is only as wide as the sentence without
-   * the paragraph becoming inline and riding up beside the button above it. The page's own
-   * background colour, so it disappears into a dark wallpaper or a plain one - where there was
-   * never a problem to fix.
-   */
   .footer__text {
-    width: fit-content;
     margin-top: 0.5rem;
-    margin-inline: auto;
-    padding: 0.25rem 0.75rem;
-    background: color-mix(in sRGB, var(--cp-bg) 78%, transparent);
     color: var(--cp-text-faint);
     font-family: var(--cp-mono);
     font-size: 0.75rem;
