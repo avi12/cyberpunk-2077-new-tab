@@ -8,6 +8,8 @@ matching the original's visuals while replacing its React/Tailwind/dnd-kit stack
 
 [original]: https://chromewebstore.google.com/detail/cyberpunk-2077-themed-hom/dccdlniomlefbafjbonkmdnncabjenbk
 
+<img width="1654" height="1003" alt="image" src="https://github.com/user-attachments/assets/06a0fce7-4a8c-4055-94ea-a0ead4a02464" />
+
 ## Getting started
 
 ```bash
