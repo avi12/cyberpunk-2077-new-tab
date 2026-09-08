@@ -16,6 +16,7 @@
     title,
     variant = "primary",
     isSelfFocused = false,
+    isHidden = false,
     children
   }: {
     isOpen: boolean;
@@ -29,6 +30,12 @@
      * for none of it. The panel takes it instead, and the reader tabs to what they came for.
      */
     isSelfFocused?: boolean;
+    /**
+     * Out of sight without being closed, for the panel that draws a picture of the page behind it.
+     * Closing would take the panel's own answer with it - and a reader who pressed a button is owed
+     * one - so this keeps it open, focused and mounted, and only stops it being drawn.
+     */
+    isHidden?: boolean;
     children: Snippet;
   } = $props();
 
@@ -59,6 +66,7 @@
 <dialog
   bind:this={elDialog}
   class="cyber-dialog"
+  class:cyber-dialog--hidden={isHidden}
   class:cyber-dialog--warning={variant === "warning"}
   closedby="any"
   onclose={onClose}
@@ -112,6 +120,19 @@
 
   .cyber-dialog--warning {
     border-color: var(--cp-secondary);
+  }
+
+  /*
+   * Visibility rather than `display: none`, which would drop the dialog out of the top layer and
+   * take the focus inside it along. The backdrop is a box of its own and does not inherit this, so
+   * it is told separately.
+   */
+  .cyber-dialog--hidden {
+    visibility: hidden;
+
+    &::backdrop {
+      visibility: hidden;
+    }
   }
 
   /* `open` is `showModal()`'s to set rather than the markup's, so the compiler cannot see it. */

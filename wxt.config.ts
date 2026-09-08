@@ -116,6 +116,10 @@ export default defineConfig({
     // No `action` key on purpose: the extension is the new tab, so a toolbar button would only
     // duplicate the one thing Ctrl+T already does. Nothing may touch `browser.action` while this is
     // absent - the API is not there to be called, and the read alone would kill the worker.
+    //
+    // One was tried, to give `captureVisibleTab` the `activeTab` a page click cannot grant, and to
+    // anchor the `<all_urls>` prompt. Neither worked out: the screenshot draws the page itself now,
+    // and `permissions.request` never resolved here with an action or without one.
     // `search` runs the browser's own default engine for the "Default" search option; `topSites`
     // seeds the netlinks on first run; `storage` holds every setting, local and the backup in the
     // browser account alike; `identity` is the greeting's "Use Google account" button, and it is

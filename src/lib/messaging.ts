@@ -66,8 +66,7 @@ export enum MessageType {
   searchWithDefaultEngine = "searchWithDefaultEngine",
   readCompanion = "readCompanion",
   openPromptTarget = "openPromptTarget",
-  takeComposeRequest = "takeComposeRequest",
-  captureNewTab = "captureNewTab"
+  takeComposeRequest = "takeComposeRequest"
 }
 
 type ProtocolMap = {
@@ -92,14 +91,6 @@ type ProtocolMap = {
    * never written anywhere it would have to be cleaned up from, and is only ever collected once.
    */
   [MessageType.takeComposeRequest](): ComposeRequest | null;
-  /**
-   * The page as the browser actually drew it, as a PNG data URL, or null where it would not.
-   *
-   * Only the background may ask: `captureVisibleTab` is a tabs API, and a page cannot photograph
-   * itself. What comes back is the compositor's own output rather than a second rendering of the
-   * DOM, so the scanlines, the glows and the blur behind the panels are the ones on screen.
-   */
-  [MessageType.captureNewTab](): string | null;
 };
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

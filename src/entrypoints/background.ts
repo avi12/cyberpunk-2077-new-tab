@@ -176,12 +176,6 @@ export default defineBackground(() => {
     return request;
   });
 
-  /*
-   * Answered here because only the background can: the API belongs to tabs, not to the page that
-   * wants the picture. It needs `<all_urls>`, which the page asks the reader for at the press.
-   */
-  onMessage(MessageType.captureNewTab, async () => browser.tabs.captureVisibleTab({ format: "png" }).catch(() => null));
-
   onMessage(MessageType.searchWithDefaultEngine, async ({ data }) => {
     await browser.search.query({
       text: data,

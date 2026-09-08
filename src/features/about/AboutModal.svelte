@@ -1,8 +1,8 @@
 <script lang="ts">
+  import { capturePage } from "@/features/capture/page-image";
   import iconCamera from "@/assets/icons/camera.svg?raw";
   import Modal from "@/ui/Modal.svelte";
-  import { requestAccess } from "@/lib/permissions";
-  import { sendMessage, MessageType } from "@/lib/messaging";
+  import { tick } from "svelte";
 
   const {
     isOpen,
@@ -14,50 +14,82 @@
 
   const SCREENSHOT_LABEL = "Capture screenshot";
 
-  /** Long enough for the dialog to be gone from the picture it is asking for. */
-  const CLOSE_ANIMATION_MS = 300;
+  /**
+   * What each ending says. A press always answers, which it used to not: every way of failing
+   * returned in silence, and silence reads as a button that does nothing.
+   */
+  const RESULT = {
+    copied: "Copied to the clipboard",
+    undrawable: "The page could not be drawn",
+    unwritable: "Drawn, but the clipboard would not take it"
+  } as const;
+
+  let result = $state("");
+
+  /** Only the drawing hides the panel; the answer afterwards has something to show. */
+  let isDrawing = $state(false);
+
+  let isBusy = $state(false);
+
+  async function capture() {
+    isBusy = true;
+    result = "";
+    try {
+      await captureToClipboard();
+    } finally {
+      isBusy = false;
+    }
+  }
+
+  async function captureToClipboard() {
+    const png = await draw();
+    if (!png) {
+      result = RESULT.undrawable;
+
+      return;
+    }
+
+    const isCopied = await copyToClipboard(png);
+    result = isCopied ? RESULT.copied : RESULT.unwritable;
+  }
 
   /**
-   * The browser's own photograph of the tab, rather than a second rendering of the DOM.
-   *
-   * This used to redraw the page into a canvas through `html-to-image`, which is a whole dependency
-   * doing an approximate job: a re-render has to reimplement fonts, blend modes and the blur behind
-   * the panels, and gets to be wrong about any of them. `captureVisibleTab` hands back what the
-   * compositor already drew, so the picture is the page.
-   *
-   * It costs a permission the extension already declares for reading tabs, asked for here rather
-   * than at install, because nobody should hand it over for a button they never press. The request
-   * goes out before anything is awaited - a permission prompt needs the click that raised it - and
-   * the dialog is only dismissed once the answer is in, so a refusal leaves the reader where they
-   * were rather than closing on nothing.
+   * Hidden rather than closed, for two reasons: a panel in front of the page would be in the
+   * picture of it, and a closed one has nowhere left to say how it went.
    */
-  async function capture() {
-    const isAllowed = await requestAccess({ origins: ["<all_urls>"] });
-    if (!isAllowed) {
-      return;
+  async function draw() {
+    isDrawing = true;
+    await tick();
+    await nextPaint();
+
+    const png = await capturePage().catch(() => null);
+    isDrawing = false;
+
+    return png;
+  }
+
+  /**
+   * Two frames. One only reaches the paint that is already about to happen, and what is wanted is
+   * the one after it - the frame this panel is missing from, which is the frame that gets copied.
+   */
+  function nextPaint() {
+    return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }
+
+  /** An image rather than a file: what a screenshot is usually for is the next thing you paste it into. */
+  async function copyToClipboard(dataUrl: string) {
+    try {
+      const png = await (await fetch(dataUrl)).blob();
+      await navigator.clipboard.write([new ClipboardItem({ [png.type]: png })]);
+
+      return true;
+    } catch {
+      return false;
     }
-
-    onClose();
-    /* The panel is on screen until its closing animation ends, and it is not part of the page. */
-    await new Promise(resolve => setTimeout(resolve, CLOSE_ANIMATION_MS));
-
-    const png = await sendMessage(MessageType.captureNewTab, undefined);
-    if (!png) {
-      return;
-    }
-
-    const elDownload = document.createElement("a");
-    /* A colon cannot go in a Windows filename, so the ISO stamp gives its colons up for hyphens. */
-    const stamp = Temporal.Now.plainDateTimeISO().toString({ smallestUnit: "second" }).replaceAll(":", "-");
-    elDownload.download = `Cyberpunk-${stamp}.png`;
-    elDownload.href = png;
-    document.body.append(elDownload);
-    elDownload.click();
-    elDownload.remove();
   }
 </script>
 
-<Modal {isOpen} isSelfFocused {onClose} title="About">
+<Modal isHidden={isDrawing} {isOpen} isSelfFocused {onClose} title="About">
   <p class="about__body">
     Cyberpunk 2077 themed start page<br />
     Fully customizable with many dynamic and interactive elements
@@ -68,11 +100,14 @@
       class="about__action"
       aria-label={SCREENSHOT_LABEL}
       data-tooltip={SCREENSHOT_LABEL}
+      disabled={isBusy}
       onclick={() => void capture()}
       type="button">
       {@html iconCamera}
     </button>
   </div>
+  <!-- Always rendered: a live region added at the same moment as its text is one a screen reader can miss. -->
+  <p class="about__result" role="status">{result}</p>
 </Modal>
 
 <style>
@@ -112,5 +147,19 @@
     &:hover {
       background: var(--cp-primary-hover);
     }
+
+    &:disabled {
+      opacity: 60%;
+    }
+  }
+
+  /* The height is held whether or not there is anything to say, so an answer never moves the panel. */
+  .about__result {
+    min-height: 1.25rem;
+    margin-top: 0.75rem;
+    color: var(--cp-text-dim);
+    font-family: var(--cp-mono);
+    font-size: 0.8125rem;
+    text-align: center;
   }
 </style>
