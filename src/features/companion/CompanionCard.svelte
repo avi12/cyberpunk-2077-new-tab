@@ -106,9 +106,19 @@
     {@html COPILOT_KINDS[kind].icon}
     {COPILOT_KINDS[kind].label}
   </p>
-  <!-- Named by the title alone: the hint is drawn as this heading's own `::after`, which would
-       otherwise be read out as part of it. -->
-  <h3 class="card__title hover-glitch" aria-label={title} data-tooltip={hint}>{title}</h3>
+  <!--
+    Named by the title alone: the hint is drawn as this heading's own `::after`, which would
+    otherwise be read out as part of it.
+
+    The tear sits on the span rather than on the heading, and has to. `hover-glitch` animates
+    `translate`, and a translated element becomes the containing block for anything `fixed` inside
+    it - including its own `::after`, which is where the hint lives. With both on the heading, the
+    first 130ms of every hover measured the hint against the heading's own box instead of the
+    viewport and threw it across the card. A span is a sibling of the `::after` and cannot reach it.
+  -->
+  <h3 class="card__title" aria-label={title} data-tooltip={hint}>
+    <span class="hover-glitch">{title}</span>
+  </h3>
   <p class="card__summary">{summary}</p>
 
   <ul class="card__meta">

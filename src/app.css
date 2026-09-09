@@ -384,6 +384,12 @@ textarea {
  * `anchor-scope` is what lets every trigger claim the same anchor name: the name is confined to the
  * trigger's own subtree, so each `::after` resolves to the element it hangs off rather than to
  * whichever trigger the page happened to lay out last.
+ *
+ * A trigger may not be transformed. `translate`, `scale`, `rotate` and `filter` all make an element
+ * the containing block for anything `fixed` inside it, and the hint below is `fixed` and inside it -
+ * so a moved trigger is measured against its own box rather than the viewport, and the hint lands
+ * somewhere across the card. Put the movement on a child: `hover-glitch` on a span inside the
+ * trigger is a sibling of this `::after` and cannot reach it.
  */
 [data-tooltip] {
   anchor-name: --tooltip;
