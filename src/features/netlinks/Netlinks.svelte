@@ -8,6 +8,7 @@
   import { importTopSites } from "./top-sites";
   import Modal from "@/ui/Modal.svelte";
   import { pickCategory } from "@/features/netlinks/icons/auto";
+  import { SEEDED_CATEGORY } from "@/lib/storage/defaults";
   import NameForm from "./NameForm.svelte";
   import iconPlus from "@/assets/icons/plus.svg?raw";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -43,6 +44,21 @@
     return groups;
   });
   const visibleCategories = $derived(categories.filter(name => isEditing || bookmarksIn(name).length > 0));
+  /**
+   * The section a first link lands in, and null unless the form was opened from the empty grid.
+   *
+   * An empty grid draws no sections, so there is nowhere for the form to be put the way a section
+   * puts it. Editing draws them all again, each with its own way in, so this only ever answers when
+   * there are none to ask.
+   */
+  const firstLinkCategory = $derived.by(() => {
+    const isAskedFromEmptyGrid = isImportOffered && !isEditing;
+    if (!isAskedFromEmptyGrid) {
+      return null;
+    }
+
+    return formCategory;
+  });
   /** Only links the tables recognise, that would land somewhere else, in a section that still exists. */
   const misfiled = $derived(settings.bookmarks.current.filter(bookmark => filedCategory(bookmark) !== null));
   const isEverythingFiled = $derived(misfiled.length === 0);
@@ -319,20 +335,37 @@
     {/each}
   </div>
 
-  {#if isImportOffered}
+  {#if firstLinkCategory}
+    {@render linkForm(firstLinkCategory)}
+  {:else if isImportOffered}
     <p class="netlinks__empty">Nothing saved yet - pull in the sites you visit most, or add your own</p>
-    <button
-      class="netlinks__import-button cyber-glass"
-      onclick={async () => {
-        const imported = await importTopSites();
-        if (imported) {
-          settings.bookmarks.current = imported;
-        }
-      }}
-      type="button">
-      {@html iconDownload}
-      IMPORT MOST VISITED
-    </button>
+    <div class="netlinks__empty-actions">
+      <button
+        class="netlinks__import-button cyber-glass"
+        onclick={async () => {
+          const imported = await importTopSites();
+          if (imported) {
+            settings.bookmarks.current = imported;
+          }
+        }}
+        type="button">
+        {@html iconDownload}
+        IMPORT MOST VISITED
+      </button>
+      <!-- Only where there are no sections: editing draws them all, and each carries its own. -->
+      {#if !isEditing}
+        <button
+          class="netlinks__add-link-button cyber-glass"
+          onclick={() => {
+            bookmarkToEdit = null;
+            formCategory = SEEDED_CATEGORY;
+          }}
+          type="button">
+          {@html iconPlus}
+          ADD LINK
+        </button>
+      {/if}
+    </div>
   {/if}
 
   {#if isEditing}
@@ -471,9 +504,18 @@
     text-align: center;
   }
 
+  /* Side by side while both fit, stacked when they do not. A lone button is not a flex item. */
+  .netlinks__empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
   .netlinks__add-button,
+  .netlinks__add-link-button,
   .netlinks__import-button {
     display: flex;
+    flex: 1 1 14rem;
     gap: 0.5rem;
     justify-content: center;
     align-items: center;
