@@ -168,3 +168,13 @@ Only run a build when explicitly asked.
 
 `pnpm ext:dev:hmr` (`scripts/dev.mjs`) keeps the dev browser alive across rebuilds and exposes CDP on
 port 9223, so the new tab can be driven and screenshotted while it runs.
+
+# Companion app
+
+The opposite rule to the extension's: `companion/` has no watcher, so a change there is not running
+anywhere until it is built. After **any** edit under `companion/`, run `pnpm journeys` without being
+asked - it stops the resident app, publishes the native build into `companion/bin/`, reconnects it to
+Edge and starts it again. An edit left unbuilt means the tray, and the extension reading through it,
+are still answering with the last build.
+
+Never leave the app stopped: the extension's Copilot section goes offline with it.
