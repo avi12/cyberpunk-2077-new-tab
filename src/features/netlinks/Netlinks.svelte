@@ -139,6 +139,20 @@
     });
   }
 
+  /**
+   * Through a transition, because a card leaving is rarely the only thing that moves.
+   *
+   * The cards after it each slide up a place, and where two rows stood at different heights - one
+   * card's title wrapping to a second line and the next one's not - the row it left resizes, and
+   * everything below the grid moves with it. Every card is a `.view-item`, so the browser morphs
+   * each one from where it was instead of cutting to where it ends up.
+   */
+  function deleteBookmark(id: string) {
+    return withViewTransition(() => {
+      settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.id !== id);
+    });
+  }
+
   function closeForm() {
     formCategory = null;
     bookmarkToEdit = null;
@@ -292,7 +306,7 @@
             }}
             onBookmarkMove={moveBookmark}
             onBookmarkOrderChange={applyBookmarkOrder}
-            onDeleteBookmark={id => (settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.id !== id))}
+            onDeleteBookmark={deleteBookmark}
             onDeleteCategory={requestDeleteCategory}
             onEditBookmark={bookmark => (bookmarkToEdit = bookmark)}
             onEditCategory={name => {
