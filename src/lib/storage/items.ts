@@ -87,6 +87,16 @@ export const promptTargetItem = storage.defineItem<PromptTargetId | null>("local
 export const bookmarksSeededItem = storage.defineItem<boolean>("local:bookmarksSeeded", { fallback: false });
 
 /**
+ * Whether the reader has asked for the companion app. Nothing is said to the app until they have:
+ * it is a separate, paid Microsoft Store download, so knocking on a native host for someone who
+ * never asked for one is a knock that could only ever go unanswered.
+ *
+ * Written by the press that starts the setup, which is the one thing the page can honestly know -
+ * that they want it, not that they have it. Absence is the whole of "not yet".
+ */
+export const companionSetupStartedItem = storage.defineItem<boolean>("local:companionSetupStarted", { fallback: false });
+
+/**
  * Not a setting: the last answer the companion app gave about one family of cards. Reading journeys
  * afresh means snapshotting a database that runs to tens of megabytes and takes a quarter of a
  * second, which is long enough to see, so the answer outlives the browser session - otherwise the

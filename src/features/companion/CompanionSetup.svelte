@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { COMPANION_NAME, CompanionState, requestCompanionPermission } from "./bridge";
+  import { COMPANION_NAME, CompanionState, requestCompanionPermission, startCompanionSetup } from "./bridge";
   import { companion } from "./connection.svelte";
   import { composeAccess } from "@/features/compose/access.svelte";
   import { composeSiteFor, promptTargetLabel } from "./prompt-target";
@@ -20,6 +20,9 @@
    * `companionOffline` simply keeps asking - installing the app fills the sections in with the tab
    * left open. It spreads out as it goes because every ask wakes the background worker to knock on
    * a host that is not there, and a tab left open all day would otherwise knock thousands of times.
+   *
+   * Neither state is reached until the reader has asked for the app, so a new tab on a machine that
+   * never wanted one runs no timer at all - see `isCompanionWorthAsking`.
    *
    * `linking` waits far longer and never drifts: the worker that answered was started before the
    * permission existed, so it will keep saying no however often it is asked, and only a stretch of
@@ -186,9 +189,27 @@
           </button>
         {/snippet}
       </CompanionNotice>
+    {:else if companion.state === CompanionState.setupNeeded}
+      <CompanionNotice>
+        Edge already mapped where your browsing is heading - the {COMPANION_NAME} that reads it is
+        coming to the Microsoft Store
+        {#snippet action()}
+          <!--
+            There is nowhere to send anyone yet - the listing is not live - so the press is only the
+            reader saying they want the app, which is the whole of what unlocks the rest. It becomes
+            a link out the day the listing exists, and nothing else about the flow moves.
+          -->
+          <button
+            class="cyber-button cyber-button--primary"
+            onclick={() => void startCompanionSetup().then(() => companion.refresh())}
+            type="button">
+            Set it up
+          </button>
+        {/snippet}
+      </CompanionNotice>
     {:else if companion.state === CompanionState.permissionNeeded}
       <CompanionNotice>
-        Edge already mapped where your browsing is heading - let the {COMPANION_NAME} read it
+        Let the {COMPANION_NAME} through and this fills itself in
         {#snippet action()}
           <button
             class="cyber-button cyber-button--primary"

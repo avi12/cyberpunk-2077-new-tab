@@ -96,6 +96,7 @@ const STATE_ORDER = [
   CompanionState.companionNotRunning,
   CompanionState.linking,
   CompanionState.permissionNeeded,
+  CompanionState.setupNeeded,
   CompanionState.loading
 ];
 

@@ -1,5 +1,6 @@
+import { IS_EDGE } from "./platform";
 import { CompanionAnswer, type CompanionRequest, MessageType, sendMessage } from "@/lib/messaging";
-import type { CompanionSnapshot, StorageItem } from "@/lib/storage/items";
+import { companionSetupStartedItem, type CompanionSnapshot, type StorageItem } from "@/lib/storage/items";
 import { z } from "@/lib/zod";
 
 /**
@@ -21,6 +22,8 @@ export const MAX_CARDS = 3;
 export enum CompanionState {
   loading = "loading",
   connected = "connected",
+  /** Nobody has asked for the app yet, so nothing is asked of it and no retry is running. */
+  setupNeeded = "setupNeeded",
   permissionNeeded = "permissionNeeded",
   companionOffline = "companionOffline",
   /** Installed and answering, but quit from its tray - the one state the reader fixes in a click. */
@@ -36,6 +39,20 @@ export type CompanionRead<TCard> = {
 
 export async function requestCompanionPermission() {
   return browser.permissions.request({ permissions: [NATIVE_MESSAGING] });
+}
+
+/** The press that starts the setup, which is the page's cue to start looking for the app at all. */
+export async function startCompanionSetup() {
+  await companionSetupStartedItem.setValue(true);
+}
+
+/**
+ * Whether there is anything to be gained by speaking to the app at all. Edge is the only browser
+ * with a journey or a Copilot tip to read, and the app is a separate paid download - so a page that
+ * has never been asked for it stays quiet rather than knocking on a host nobody installed.
+ */
+async function isCompanionWorthAsking() {
+  return IS_EDGE && await companionSetupStartedItem.getValue();
 }
 
 const nonEmptyRecordsSchema = z.array(z.unknown()).nonempty();
@@ -84,6 +101,13 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
     nowMs: number;
   }) => TCard[];
 }) {
+  if (!await isCompanionWorthAsking()) {
+    return {
+      state: CompanionState.setupNeeded,
+      cards: []
+    };
+  }
+
   if (!await browser.permissions.contains({ permissions: [NATIVE_MESSAGING] })) {
     return {
       state: CompanionState.permissionNeeded,
