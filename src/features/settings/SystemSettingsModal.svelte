@@ -1,12 +1,11 @@
 <script lang="ts">
   import { backupTakenAtMs, dropBackup, keepBackup, restoreBackup } from "./settings-sync";
-  import { downloadFile, exportSettings, importSettings, INVALID_SETTINGS_FILE, SETTINGS_FILE_NAME } from "./settings-file";
+  import { exportSettings, importSettings, INVALID_SETTINGS_FILE, SETTINGS_FILE_STEM } from "./settings-file";
+  import AccountBackup, { backupState } from "@/ui/AccountBackup.svelte";
+  import { downloadFile, jsonFileName } from "@/lib/download";
   import { dropZone } from "@/lib/drop-zone";
-  import { formatTimestamp } from "@/features/clock/time";
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import iconDownload from "@/assets/icons/download.svg?raw";
-  import iconSave from "@/assets/icons/save.svg?raw";
-  import iconTrash2 from "@/assets/icons/trash2.svg?raw";
   import iconTriangleAlert from "@/assets/icons/triangle-alert.svg?raw";
   import iconUpload from "@/assets/icons/upload.svg?raw";
   import Modal from "@/ui/Modal.svelte";
@@ -20,29 +19,18 @@
   } = $props();
 
   const SETTINGS_ACCEPT = ".json,application/json";
-  const NOTHING_BACKED_UP = "Nothing backed up yet";
 
   let isConfirmingImport = $state(false);
   let isConfirmingRestore = $state(false);
-  let isConfirmingDelete = $state(false);
   let isWorking = $state(false);
   let waitingFile = $state<File | null>(null);
   let backupAtMs = $state<number | null>(null);
   let error = $state("");
 
-  const backupState = $derived.by(() => {
-    if (backupAtMs === null) {
-      return NOTHING_BACKED_UP;
-    }
-
-    return `Backed up ${formatTimestamp(backupAtMs)}`;
-  });
-
   $effect(() => {
     if (!isOpen) {
       isConfirmingImport = false;
       isConfirmingRestore = false;
-      isConfirmingDelete = false;
       waitingFile = null;
       error = "";
 
@@ -90,7 +78,7 @@
   function saveToFile() {
     try {
       downloadFile({
-        name: SETTINGS_FILE_NAME,
+        name: jsonFileName(SETTINGS_FILE_STEM),
         contents: exportSettings(),
         type: "application/json"
       });
@@ -125,7 +113,6 @@
   async function forgetBackup() {
     await dropBackup();
     backupAtMs = null;
-    isConfirmingDelete = false;
   }
 </script>
 
@@ -154,7 +141,7 @@
         type="file" />
       {#if waitingFile}
         <button
-          class="cyber-button cyber-button--primary system__action"
+          class="cyber-button cyber-button--primary cyber-button--action"
           onclick={() => void importWaiting()}
           type="button">
           {@html iconUpload}
@@ -181,9 +168,9 @@
   {:else if isConfirmingRestore}
     <div class="stack">
       {@render overwriteWarning()}
-      <p class="system__note">{backupState}</p>
+      <p class="cyber-note">{backupState(backupAtMs)}</p>
       <button
-        class="cyber-button cyber-button--primary system__action"
+        class="cyber-button cyber-button--primary cyber-button--action"
         disabled={isWorking}
         onclick={() => void restoreFromBackup()}
         type="button">
@@ -195,7 +182,7 @@
   {:else}
     <div class="stack">
       <button
-        class="cyber-button cyber-button--cyan system__action"
+        class="cyber-button cyber-button--cyan cyber-button--action"
         onclick={saveToFile}
         type="button">
         {@html iconDownload}
@@ -218,51 +205,12 @@
         <span class="drop-zone__hint">or click to import one</span>
       </button>
 
-      <section class="system__backup">
-        <h3 class="cyber-label">Browser account</h3>
-        <p class="system__note">{backupState}</p>
-        <button
-          class="cyber-button cyber-button--muted system__action"
-          disabled={isWorking}
-          onclick={() => void backUp()}
-          type="button">
-          {@html iconSave}
-          Back up there now
-        </button>
-        {#if backupAtMs !== null}
-          <div class="row">
-            {#if isConfirmingDelete}
-              <button
-                class="cyber-button cyber-button--danger cyber-button--grow"
-                onclick={() => void forgetBackup()}
-                type="button">
-                Delete it for good
-              </button>
-              <button
-                class="cyber-button cyber-button--ghost cyber-button--grow"
-                onclick={() => (isConfirmingDelete = false)}
-                type="button">
-                Keep it
-              </button>
-            {:else}
-              <button
-                class="cyber-button cyber-button--ghost cyber-button--grow"
-                onclick={() => (isConfirmingRestore = true)}
-                type="button">
-                Restore
-              </button>
-              <button
-                class="cyber-button cyber-button--danger system__delete"
-                aria-label="Delete the backup"
-                onclick={() => (isConfirmingDelete = true)}
-                type="button">
-                {@html iconTrash2}
-              </button>
-            {/if}
-          </div>
-        {/if}
-        <p class="system__note">Rides the browser's own sync, so a reinstall or another machine picks it up</p>
-      </section>
+      <AccountBackup
+        {isWorking}
+        onBackUp={() => void backUp()}
+        onForget={() => void forgetBackup()}
+        onRestore={() => (isConfirmingRestore = true)}
+        takenAtMs={backupAtMs} />
     </div>
   {/if}
 
@@ -272,16 +220,6 @@
 </Modal>
 
 <style>
-  /* The only danger buttons in the app, so the variant lives here rather than in the shared sheet. */
-  .cyber-button--danger {
-    background: var(--cp-danger);
-    color: var(--cp-text);
-
-    &:hover {
-      background: var(--cp-danger-hover);
-    }
-  }
-
   .system__warning {
     display: flex;
     gap: 0.5rem;
@@ -292,47 +230,6 @@
     :global(svg) {
       width: 24px;
       height: 24px;
-    }
-  }
-
-  .system__action {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    padding: 0.75rem;
-
-    :global(svg) {
-      width: 20px;
-      height: 20px;
-    }
-  }
-
-  /* The other place a snapshot can go, kept apart from the file half above it. */
-  .system__backup {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--cp-outline);
-  }
-
-  .system__note {
-    color: var(--cp-text-dim);
-    font-family: var(--cp-mono);
-    font-size: 0.75rem;
-    line-height: 1rem;
-  }
-
-  .system__delete {
-    display: flex;
-    align-items: center;
-    padding: 0.5rem;
-
-    :global(svg) {
-      width: 16px;
-      height: 16px;
     }
   }
 </style>

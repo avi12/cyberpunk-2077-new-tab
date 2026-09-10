@@ -12,7 +12,7 @@ import { z } from "@/lib/zod";
  * shape each one may take is the setting's own schema, which is what a file is checked against.
  */
 
-export const SETTINGS_FILE_NAME = "Cyberpunk-settings.json";
+export const SETTINGS_FILE_STEM = "Cyberpunk-settings";
 
 export const INVALID_SETTINGS_FILE = "Invalid settings file";
 
@@ -79,19 +79,4 @@ export async function importSettings(json: string) {
     .map(([key, setting]) => setting.set(parsed.data[key]));
 
   await Promise.all(arriving);
-}
-
-export function downloadFile({ name, contents, type }: {
-  name: string;
-  contents: BlobPart;
-  type: string;
-}) {
-  const url = URL.createObjectURL(new Blob([contents], { type }));
-  const elAnchor = document.createElement("a");
-  elAnchor.href = url;
-  elAnchor.download = name;
-  document.body.append(elAnchor);
-  elAnchor.click();
-  elAnchor.remove();
-  URL.revokeObjectURL(url);
 }

@@ -47,6 +47,14 @@
   text-transform: uppercase;
 }
 
+/* The small muted line a panel explains itself with, under a heading or beside a control. */
+.cyber-note {
+  color: var(--cp-text-dim);
+  font-family: var(--cp-mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
 .cyber-error {
   color: var(--cp-secondary);
   font-family: var(--cp-mono);
@@ -101,8 +109,33 @@
   }
 }
 
+/* Danger red, for the buttons that delete or overwrite something the reader cannot get back. */
+.cyber-button--danger {
+  background: var(--cp-danger);
+  color: var(--cp-text);
+
+  &:hover {
+    background: var(--cp-danger-hover);
+  }
+}
+
 .cyber-button--block {
   width: 100%;
+}
+
+/* A full-width button with a glyph beside its label - the shape every panel action here takes. */
+.cyber-button--action {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 .cyber-button--grow {
