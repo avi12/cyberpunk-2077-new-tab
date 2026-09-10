@@ -100,7 +100,7 @@
 
   {#if !isCollapsed}
     <ul
-      class="category__grid"
+      class="netlink-grid"
       {@attach sortable(() => ({
         ids,
         disabled: !isEditing || isWriting,
@@ -232,12 +232,6 @@
     }
   }
 
-  .category__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
-
   /* Sized like a bookmark card, so the tile reads as the slot the new link will occupy. */
   .category__add {
     display: flex;
@@ -268,21 +262,4 @@
     }
   }
 
-  @media (width >= 640px) {
-    .category__grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  @media (width >= 768px) {
-    .category__grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
-  @media (width >= 1024px) {
-    .category__grid {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-    }
-  }
 </style>

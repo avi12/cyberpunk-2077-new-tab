@@ -336,7 +336,7 @@
   </div>
 
   {#if firstLinkCategory}
-    {@render linkForm(firstLinkCategory)}
+    <div class="netlink-grid">{@render linkForm(firstLinkCategory)}</div>
   {:else if isImportOffered}
     <p class="netlinks__empty">Nothing saved yet - pull in the sites you visit most, or add your own</p>
     <div class="netlinks__empty-actions">
