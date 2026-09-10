@@ -115,6 +115,12 @@ whole catalogue without ever repeating a category within a day.
 Both families come through the one app, so the one line about reaching it is shared: it sits above
 both sections, said once, and neither section appears until it has something to show.
 
+Windows only, for now, and it is the app rather than the extension that decides that: it reads files
+Edge writes under a Windows profile and it ships as a Windows package. **macOS support is planned.**
+Until it lands the section is simply absent for a reader on macOS rather than sitting there empty,
+and nothing else in the extension waits on it - every other browser and platform gets the same new
+tab, minus this one section.
+
 ### Hover sounds
 
 A card answers the cursor with the game's own menu, synthesised rather than sampled. `ui_menu_hover`
