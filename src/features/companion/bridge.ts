@@ -1,4 +1,4 @@
-import { IS_EDGE } from "./platform";
+import { IS_EDGE, isWindows11 } from "./platform";
 import { CompanionAnswer, type CompanionRequest, MessageType, sendMessage } from "@/lib/messaging";
 import { companionSetupStartedItem, type CompanionSnapshot, type StorageItem } from "@/lib/storage/items";
 import { z } from "@/lib/zod";
@@ -22,6 +22,12 @@ export const MAX_CARDS = 3;
 export enum CompanionState {
   loading = "loading",
   connected = "connected",
+  /**
+   * Nothing here can read Edge's journeys: the companion is a Windows 11 package, and Edge on
+   * Windows 10 still writes journeys nobody on that machine can get at. The panel only ever renders
+   * on Edge, so the browser half of the same check is never what this is seen saying.
+   */
+  windowsTooOld = "windowsTooOld",
   /** Nobody has asked for the app yet, so nothing is asked of it and no retry is running. */
   setupNeeded = "setupNeeded",
   permissionNeeded = "permissionNeeded",
@@ -47,12 +53,12 @@ export async function startCompanionSetup() {
 }
 
 /**
- * Whether there is anything to be gained by speaking to the app at all. Edge is the only browser
- * with a journey or a Copilot tip to read, and the app is a separate paid download - so a page that
- * has never been asked for it stays quiet rather than knocking on a host nobody installed.
+ * Whether the app could run on this machine at all. Edge is the only browser with a journey or a
+ * Copilot tip to read, and the companion is a Windows 11 package - so on anything older there is
+ * nothing to offer, never mind knock on.
  */
-async function isCompanionWorthAsking() {
-  return IS_EDGE && await companionSetupStartedItem.getValue();
+async function isCompanionRunnableHere() {
+  return IS_EDGE && await isWindows11();
 }
 
 const nonEmptyRecordsSchema = z.array(z.unknown()).nonempty();
@@ -101,7 +107,14 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
     nowMs: number;
   }) => TCard[];
 }) {
-  if (!await isCompanionWorthAsking()) {
+  if (!await isCompanionRunnableHere()) {
+    return {
+      state: CompanionState.windowsTooOld,
+      cards: []
+    };
+  }
+
+  if (!await companionSetupStartedItem.getValue()) {
     return {
       state: CompanionState.setupNeeded,
       cards: []

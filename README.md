@@ -74,7 +74,7 @@ the manifest and the companion read it from.
 Firefox has an id of its own in `browser_specific_settings`, for a different reason: it keys
 `storage.sync` to the add-on id, so a build without one has no account area to back settings up to.
 
-### Copilot Journeys (Edge on Windows)
+### Copilot Journeys (Edge on Windows 11)
 
 Edge works out where your browsing is heading and writes the resulting cards into its own profile as
 plaintext JSON - a feature it then only renders in some regions. The new tab shows them anyway, in
@@ -83,9 +83,14 @@ with the prompt Edge generated for it.
 
 An extension cannot read a browser profile file, so the reading is done by a separate app that
 answers over native messaging - a paid Microsoft Store add-on, closed source and kept in a private
-repository of its own, which is why there is nothing to link to here. The extension is complete without it: the section only exists on Edge for Windows, it can be
-switched off like any other display element, and with the app absent it is one line saying so - one
-that fills itself in a few seconds after the app arrives, with nothing reloaded or restarted.
+repository of its own, which is why there is nothing to link to here. It needs Windows 11 - the
+Store package's floor is 24H2 (`10.0.26100.0`), the oldest Windows 11 still serviced when Edge
+shipped Journeys - and the new tab says so where it cannot run rather than offering it.
+
+The extension is complete without it: the section only exists on Edge for Windows, it can be
+switched off like any other display element, and until someone presses **Set it up** nothing is sent
+to the app at all - after that, with the app absent it is one line saying so, one that fills itself
+in a few seconds after the app arrives, with nothing reloaded or restarted.
 
 The native call is made by the background script rather than the new tab, because `nativeMessaging`
 is optional: a page that was already open when the permission is granted never receives the matching
@@ -98,7 +103,7 @@ will occupy, so nothing below the section moves when they arrive. The first tab 
 from type metrics and grows into the difference; every tab after it reserves the row the cards
 actually came out at, remembered at the width it was measured, and moves nothing at all.
 
-### Copilot tips (Edge on Windows)
+### Copilot tips (Edge on Windows 11)
 
 The second card family on Edge's own new tab, and structurally the opposite of a journey: not
 generated for you, but one catalogue of about 130 prompt ideas that Microsoft ships to everybody and

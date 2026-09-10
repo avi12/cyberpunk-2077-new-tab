@@ -97,6 +97,7 @@ const STATE_ORDER = [
   CompanionState.linking,
   CompanionState.permissionNeeded,
   CompanionState.setupNeeded,
+  CompanionState.windowsTooOld,
   CompanionState.loading
 ];
 

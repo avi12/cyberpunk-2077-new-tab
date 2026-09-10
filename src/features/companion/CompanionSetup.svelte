@@ -189,6 +189,11 @@
           </button>
         {/snippet}
       </CompanionNotice>
+    {:else if companion.state === CompanionState.windowsTooOld}
+      <CompanionNotice>
+        {COMPANION_NAME} needs Windows 11 - Edge still maps where your browsing is heading, there's
+        just nothing on this one that can read it
+      </CompanionNotice>
     {:else if companion.state === CompanionState.setupNeeded}
       <CompanionNotice>
         Edge already mapped where your browsing is heading - the {COMPANION_NAME} that reads it is
