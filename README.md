@@ -81,9 +81,9 @@ plaintext JSON - a feature it then only renders in some regions. The new tab sho
 its own colours: title, summary, the sites the card was drawn from, and a button that opens Copilot
 with the prompt Edge generated for it.
 
-An extension cannot read a browser profile file, so the reading is done by
-[a separate app](companion/README.md) that answers over native messaging - a paid Microsoft Store
-add-on. The extension is complete without it: the section only exists on Edge for Windows, it can be
+An extension cannot read a browser profile file, so the reading is done by a separate app that
+answers over native messaging - a paid Microsoft Store add-on, closed source and kept in a private
+repository of its own, which is why there is nothing to link to here. The extension is complete without it: the section only exists on Edge for Windows, it can be
 switched off like any other display element, and with the app absent it is one line saying so - one
 that fills itself in a few seconds after the app arrives, with nothing reloaded or restarted.
 
