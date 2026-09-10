@@ -15,18 +15,29 @@
   const COLLAPSE_MS = 220;
 
   /**
-   * How soon each unsettled state is worth asking about again. Native messaging has no "a host
-   * appeared" event, so `companionOffline` simply keeps asking - installing the app fills the
-   * sections in with the tab left open.
+   * How soon each unsettled state is worth asking about again, and how far apart the asking may
+   * drift once it keeps finding nothing. Native messaging has no "a host appeared" event, so
+   * `companionOffline` simply keeps asking - installing the app fills the sections in with the tab
+   * left open. It spreads out as it goes because every ask wakes the background worker to knock on
+   * a host that is not there, and a tab left open all day would otherwise knock thousands of times.
    *
-   * `linking` waits far longer, and the waiting is the point: the worker that answered was started
-   * before the permission existed, so it will keep saying no however often it is asked, and only a
-   * stretch of silence longer than Chromium's 30-second idle timeout lets it be replaced by one
-   * that can reach the app.
+   * `linking` waits far longer and never drifts: the worker that answered was started before the
+   * permission existed, so it will keep saying no however often it is asked, and only a stretch of
+   * silence longer than Chromium's 30-second idle timeout lets it be replaced by one that can reach
+   * the app. Spreading that out would only delay the one retry that fixes it.
    */
-  const RETRY_MS: Partial<Record<CompanionState, number>> = {
-    [CompanionState.companionOffline]: 3000,
-    [CompanionState.linking]: 35_000
+  const RETRY_SCHEDULE: Partial<Record<CompanionState, {
+    firstMs: number;
+    ceilingMs: number;
+  }>> = {
+    [CompanionState.companionOffline]: {
+      firstMs: 3000,
+      ceilingMs: 60_000
+    },
+    [CompanionState.linking]: {
+      firstMs: 35_000,
+      ceilingMs: 35_000
+    }
   };
 
   /**
@@ -90,16 +101,51 @@
     void composeAccess.refresh();
   });
 
-  /** Runs only while something is still missing, and stops itself the moment nothing is. */
+  /**
+   * Runs only while something is still missing, and stops itself the moment nothing is.
+   *
+   * A hidden tab asks nothing at all - nobody is watching the section fill in - and coming back to
+   * it asks straight away, eager again. That is the ordinary way this ends: the Store was the other
+   * tab, and returning is the moment the app is finally there.
+   */
   $effect(() => {
-    const delayMs = RETRY_MS[companion.state];
-    if (!delayMs) {
+    const schedule = RETRY_SCHEDULE[companion.state];
+    if (!schedule) {
       return;
     }
 
-    const retry = setInterval(() => companion.refresh(), delayMs);
+    const { firstMs, ceilingMs } = schedule;
+    let delayMs = firstMs;
+    let retry: ReturnType<typeof setTimeout>;
 
-    return () => clearInterval(retry);
+    function ask() {
+      const isOnScreen = document.visibilityState === "visible";
+      if (isOnScreen) {
+        companion.refresh();
+        delayMs = Math.min(delayMs * 2, ceilingMs);
+      }
+
+      retry = setTimeout(ask, delayMs);
+    }
+
+    function askOnReturn() {
+      const isOnScreen = document.visibilityState === "visible";
+      if (!isOnScreen) {
+        return;
+      }
+
+      clearTimeout(retry);
+      delayMs = firstMs;
+      ask();
+    }
+
+    retry = setTimeout(ask, delayMs);
+    document.addEventListener("visibilitychange", askOnReturn);
+
+    return () => {
+      clearTimeout(retry);
+      document.removeEventListener("visibilitychange", askOnReturn);
+    };
   });
 </script>
 
