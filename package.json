@@ -1,6 +1,6 @@
 {
   "name": "cyberpunk-2077-new-tab",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "type": "module",
   "sideEffects": ["*.css"],
   "description": "A Cyberpunk 2077 themed new tab page: clock, search, quotes, netlinks seeded from your most-visited sites, and drag-ordered widgets.",

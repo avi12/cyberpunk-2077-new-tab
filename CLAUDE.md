@@ -178,3 +178,16 @@ Edge and starts it again. An edit left unbuilt means the tray, and the extension
 are still answering with the last build.
 
 Never leave the app stopped: the extension's Copilot section goes offline with it.
+
+# Versioning
+
+Both start at `0.0.1` and neither has shipped yet. Two versions, not one: the extension is versioned
+in `package.json` and the companion in `companion/package.json`, each the only place its own build
+reads, and each ships on its own.
+
+**Never bump a version as part of ordinary work.** A version is only raised when that thing is
+actually deployed, and only then - a fix, a feature and a refactor all leave it exactly where it is.
+
+At a deploy, raise the version of what is being deployed: **patch** by default, **minor** where the
+release carries something bigger than a fix. Nothing here decides that on its own - wait to be told
+a deploy is happening.
