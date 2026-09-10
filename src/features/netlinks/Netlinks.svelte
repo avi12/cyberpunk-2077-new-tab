@@ -5,6 +5,7 @@
   import { arrowFocus } from "@/lib/arrow-focus";
   import CategorySection from "./CategorySection.svelte";
   import iconDownload from "@/assets/icons/download.svg?raw";
+  import NetlinksTransferModal from "./NetlinksTransferModal.svelte";
   import { importTopSites } from "./top-sites";
   import Modal from "@/ui/Modal.svelte";
   import { pickCategory } from "@/features/netlinks/icons/auto";
@@ -13,12 +14,14 @@
   import iconPlus from "@/assets/icons/plus.svg?raw";
   import { settings } from "@/lib/storage/settings.svelte";
   import type { SortableMove } from "@/lib/sortable.svelte";
+  import iconSave from "@/assets/icons/save.svg?raw";
   import iconSettings from "@/assets/icons/settings.svg?raw";
   import { sortable } from "@/lib/sortable.svelte";
   import iconTriangleAlert from "@/assets/icons/triangle-alert.svg?raw";
   import { withViewTransition } from "@/lib/view-transition";
 
   const EDIT_LABEL = "Edit netlinks";
+  const TRANSFER_LABEL = "Export, import or back up netlinks";
 
   let isEditing = $state(false);
   /** The category the link form is open inside, so a link is always added where it will land. */
@@ -29,6 +32,7 @@
   let isAddingCategory = $state(false);
   let newCategoryName = $state("");
   let pendingDelete = $state<string | null>(null);
+  let isTransferOpen = $state(false);
 
   const categories = $derived(settings.categoryOrder.current);
   /** A grid with nothing in it is the only place the browser's own list is worth offering. */
@@ -277,6 +281,14 @@
           disabled={isEverythingFiled}
           onclick={sortIntoCategories}
           type="button">SORT</button>
+        <button
+          class="netlinks__icon-button"
+          aria-label={TRANSFER_LABEL}
+          data-tooltip={TRANSFER_LABEL}
+          onclick={() => (isTransferOpen = true)}
+          type="button">
+          {@html iconSave}
+        </button>
         <button class="netlinks__save" onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
       {:else}
         <button class="netlinks__icon-button" aria-label={EDIT_LABEL} data-tooltip={EDIT_LABEL} onclick={() => withViewTransition(() => (isEditing = true))} type="button">
@@ -390,6 +402,8 @@
     </div>
   {/if}
 </nav>
+
+<NetlinksTransferModal isOpen={isTransferOpen} onClose={() => (isTransferOpen = false)} />
 
 <Modal isOpen={pendingDelete !== null} onClose={() => (pendingDelete = null)} variant="warning">
   <div class="warning__heading">
