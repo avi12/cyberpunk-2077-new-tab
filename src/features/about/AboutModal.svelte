@@ -1,5 +1,6 @@
 <script lang="ts">
   import { capturePage } from "@/features/capture/page-image";
+  import iconBug from "@/assets/icons/bug.svg?raw";
   import iconCamera from "@/assets/icons/camera.svg?raw";
   import Modal from "@/ui/Modal.svelte";
 
@@ -12,6 +13,10 @@
   } = $props();
 
   const SCREENSHOT_LABEL = "Capture screenshot";
+  const BUG_REPORT_LABEL = "Report a bug";
+
+  /** The issue list rather than a new-issue form: a bug worth reporting is often already reported. */
+  const ISSUES_URL = "https://github.com/avi12/cyberpunk-2077-new-tab/issues";
 
   /**
    * What each ending says. A press always answers, which it used to not: every way of failing
@@ -78,6 +83,15 @@
       type="button">
       {@html iconCamera}
     </button>
+    <a
+      class="about__action"
+      aria-label={BUG_REPORT_LABEL}
+      data-tooltip={BUG_REPORT_LABEL}
+      href={ISSUES_URL}
+      rel="noopener noreferrer"
+      target="_blank">
+      {@html iconBug}
+    </a>
   </div>
   <!-- Always rendered: a live region added at the same moment as its text is one a screen reader can miss. -->
   <p class="about__result" role="status">{result}</p>
