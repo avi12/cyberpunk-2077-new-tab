@@ -10,7 +10,7 @@
   import IdentityModal from "@/features/identity/IdentityModal.svelte";
   import CompanionSetup from "@/features/companion/CompanionSetup.svelte";
   import Copilot from "@/features/companion/Copilot.svelte";
-  import { IS_EDGE } from "@/features/companion/platform";
+  import { isCopilotShowing } from "@/features/companion/visibility";
   import iconInfo from "@/assets/icons/info.svg?raw";
   import { AnalyticsAction } from "@/lib/analytics/definitions";
   import { reportClicks } from "@/lib/analytics/clicks";
@@ -42,7 +42,7 @@
    * Edge files a journey or a tip under a profile, so only Edge is ever shown either - the reader's
    * own switch decides the rest.
    */
-  const isUsingCompanion = $derived(IS_EDGE && preferences.showCopilot);
+  const isUsingCompanion = $derived(isCopilotShowing(preferences));
   const greetingText = $derived.by(() => {
     void greetingTick;
 

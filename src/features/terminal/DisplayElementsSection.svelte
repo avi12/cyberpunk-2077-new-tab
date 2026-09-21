@@ -4,6 +4,7 @@
   import iconEye from "@/assets/icons/eye.svg?raw";
   import iconEyeOff from "@/assets/icons/eye-off.svg?raw";
   import { GLITCH_SHORT_MS } from "@/lib/glitch.svelte";
+  import { isCopilotShowing } from "@/features/companion/visibility";
   import { IS_EDGE } from "@/features/companion/platform";
   import Modal from "@/ui/Modal.svelte";
   import PanelSection from "@/ui/PanelSection.svelte";
@@ -102,6 +103,20 @@
     onElementGlitch(null);
   }
 
+  /**
+   * What the switch reads is what the page will actually draw, which is not always what is stored:
+   * a `showCopilot` carried in from a backup made in Microsoft Edge would otherwise light the switch
+   * in a browser that can never draw the section.
+   */
+  function isShowing(key: keyof DisplayPreferences) {
+    const preferences = settings.displayPreferences.current;
+    if (EDGE_ONLY_KEYS.includes(key)) {
+      return isCopilotShowing(preferences);
+    }
+
+    return preferences[key];
+  }
+
   async function toggle(key: keyof DisplayPreferences) {
     const isUnreachableHere = !IS_EDGE && EDGE_ONLY_KEYS.includes(key);
     if (isUnreachableHere) {
@@ -127,7 +142,7 @@
         <ToggleOption
           iconOff={iconEyeOff}
           iconOn={iconEye}
-          isOn={settings.displayPreferences.current[element.key]}
+          isOn={isShowing(element.key)}
           label={element.label}
           onToggle={() => void toggle(element.key)} />
       </li>
