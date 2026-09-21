@@ -6,7 +6,7 @@
  * DevTools protocol. This opens the same browsers that loop opens, through the same launcher and
  * the same kept profiles, against `.output/` rather than a dev build. Ctrl+C closes all of them.
  *
- * Usage: `pnpm ext:sideload [--port 9223] [--firefox] [--opera] [--all]`
+ * Usage: `pnpm ext:sideload [--port 9223] [--edge] [--firefox] [--opera] [--all]`
  *
  * A Chrome that lists the extension but leaves it switched off wants developer mode - one press on
  * `chrome://extensions`, which the kept profile then remembers. `scripts/browser.mjs` says why it
@@ -18,13 +18,15 @@ import { join } from "node:path";
 import process from "node:process";
 
 /**
- * Opera is not a target - it blocks `chrome_url_overrides`, so the new tab never appears there - but
- * it installs the Chromium build like any other Chromium, and a second one to check that build
- * against costs nothing. The only thing that differs is which binary `web-ext.config.ts` points the
- * launcher at.
+ * Three Chromiums off one build. Edge is a target and the only browser with Copilot Journeys to
+ * show, so it is the one to open when the companion is what is being worked on. Opera is not a
+ * target at all - it blocks `chrome_url_overrides`, so the new tab never appears there - but a
+ * second Chromium to check the build against costs nothing. The only thing that differs between the
+ * three is which binary `web-ext.config.ts` points the launcher at.
  */
 const SOURCE_DIRECTORIES = {
   chrome: join(PROJECT_ROOT, ".output", "chrome-mv3"),
+  edge: join(PROJECT_ROOT, ".output", "chrome-mv3"),
   opera: join(PROJECT_ROOT, ".output", "chrome-mv3"),
   firefox: join(PROJECT_ROOT, ".output", "firefox-mv3")
 };
@@ -35,7 +37,11 @@ const portBase = iPortFlag === -1 ? CDP_PORT : Number(args[iPortFlag + 1]);
 
 function browsersRequested() {
   if (args.includes("--all")) {
-    return ["chrome", "opera", "firefox"];
+    return ["chrome", "edge", "opera", "firefox"];
+  }
+
+  if (args.includes("--edge")) {
+    return ["edge"];
   }
 
   if (args.includes("--firefox")) {
