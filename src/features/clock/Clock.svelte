@@ -17,8 +17,6 @@
   } = $props();
 
   const TICK_MS = 1000;
-  const RANDOM_GLITCH_INTERVAL_MS = 5000;
-  const RANDOM_GLITCH_CHANCE = 0.1;
 
   const glitch = new Glitch();
 
@@ -32,40 +30,39 @@
   const glitching = $derived(glitch.active || glitchingTime);
 
   /**
-   * Reading the cycle here is what makes a press show immediately: the effect re-runs on the new
-   * one and reformats before the next tick, rather than the clock waiting out the second it is in.
+   * The tear is fired from the tick that changes the reading, rather than from a timer of its own.
+   * A second timer starts at mount and lands wherever that leaves it - somewhere inside the minute,
+   * tearing a display that is not about to change, which reads as the clock running late.
+   *
+   * Reading the cycle here is also what makes a press show immediately: the effect re-runs on the
+   * new one and reformats before the next tick, rather than waiting out the second it is in.
    */
   $effect(() => {
     const cycle = hourCycle;
     time = currentTime(cycle);
 
     const tick = setInterval(() => {
-      time = currentTime(cycle);
+      const reading = currentTime(cycle);
+      const isReadingChanged = reading !== time;
+
+      time = reading;
       timeIso = currentTimeIso();
       date = currentDate();
       dateIso = currentDateIso();
+
+      if (isReadingChanged) {
+        glitch.fire({ durationMs: GLITCH_LONG_MS });
+      }
     }, TICK_MS);
 
     return () => clearInterval(tick);
   });
 
   /**
-   * The stutter belongs to the display rather than to the format, so it is its own effect: reading
-   * the cycle in here would tear this down on a press, and the teardown stops the very glitch the
-   * press just fired.
+   * Unmount alone, which is why it is not the tick's teardown: that one re-runs on a press, and
+   * stopping the tear there would cancel the very tear the press had just fired.
    */
-  $effect(() => {
-    const stutter = setInterval(() => {
-      if (Math.random() < RANDOM_GLITCH_CHANCE) {
-        glitch.fire({ durationMs: GLITCH_LONG_MS });
-      }
-    }, RANDOM_GLITCH_INTERVAL_MS);
-
-    return () => {
-      clearInterval(stutter);
-      glitch.stop();
-    };
-  });
+  $effect(() => () => glitch.stop());
 
   const hourCycleHint = $derived.by(() => {
     if (hourCycle === HourCycle.hour12) {
@@ -86,7 +83,12 @@
 <div class="clock">
   {#if showTime}
     <p class="clock__time">
-      <button class="clock__toggle" aria-label={hourCycleHint} data-tooltip={hourCycleHint} onclick={flipHourCycle} type="button">
+      <button
+        class="clock__toggle"
+        aria-label={hourCycleHint}
+        data-tooltip={hourCycleHint}
+        onclick={flipHourCycle}
+        type="button">
         <span class="clock__reading hover-glitch" class:glitch={glitching} data-text={time}>
           <time datetime={timeIso}>{time}</time>
           {#if glitching}
