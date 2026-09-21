@@ -12,7 +12,7 @@ import { z } from "@/lib/zod";
  * optional permission, and a page that was already open when one is granted never gets the matching
  * API binding. The extension is complete without the app either way.
  */
-const NATIVE_MESSAGING = "nativeMessaging";
+export const NATIVE_MESSAGING = "nativeMessaging";
 
 export const COMPANION_NAME = "Copilot Journeys companion";
 
@@ -114,14 +114,23 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
     };
   }
 
-  if (!await companionSetupStartedItem.getValue()) {
+  /*
+   * The permission is asked about first because holding it is itself proof the setup happened - it
+   * cannot be granted except by pressing through this panel. So a reader who has it is never offered
+   * the setup again, whatever the stored flag says: turning the section back on, or landing on a
+   * profile whose local storage went without its permissions, reads the app rather than knocking on
+   * the reader. The flag only covers the one window the permission cannot: asked for, not yet given.
+   */
+  const isCompanionAllowed = await browser.permissions.contains({ permissions: [NATIVE_MESSAGING] });
+  const isSetupStarted = isCompanionAllowed || await companionSetupStartedItem.getValue();
+  if (!isSetupStarted) {
     return {
       state: CompanionState.setupNeeded,
       cards: []
     };
   }
 
-  if (!await browser.permissions.contains({ permissions: [NATIVE_MESSAGING] })) {
+  if (!isCompanionAllowed) {
     return {
       state: CompanionState.permissionNeeded,
       cards: []

@@ -99,7 +99,11 @@ export const bookmarksSeededItem = storage.defineItem<boolean>("local:bookmarksS
  * never asked for one is a knock that could only ever go unanswered.
  *
  * Written by the press that starts the setup, which is the one thing the page can honestly know -
- * that they want it, not that they have it. Absence is the whole of "not yet".
+ * that they want it, not that they have it.
+ *
+ * Not the authority on whether they asked, though: the `nativeMessaging` permission is, since it
+ * cannot be held without having pressed through the same panel. This is only read where the
+ * permission is absent, so the two can never be seen disagreeing - see `readCompanion`.
  */
 export const companionSetupStartedItem = storage.defineItem<boolean>("local:companionSetupStarted", { fallback: false });
 
