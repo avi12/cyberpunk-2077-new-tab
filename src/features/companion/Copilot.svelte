@@ -54,7 +54,7 @@
       Microsoft Edge maps Journeys on Windows and Mac, and caches Copilot Tips on Windows
       {#snippet action()}
         <a
-          class="cyber-button cyber-button--ghost link"
+          class="cyber-button cyber-button--ghost cyber-button--link"
           data-analytics={AnalyticsAction.journeysSupportOpened}
           href={JOURNEYS_SUPPORT_URL}
           rel="noopener noreferrer"
@@ -66,17 +66,3 @@
     </CompanionNotice>
   {/if}
 {/snippet}
-
-<style>
-  .link {
-    display: flex;
-    gap: 0.375rem;
-    align-items: center;
-    white-space: nowrap;
-
-    :global(svg) {
-      width: 12px;
-      height: 12px;
-    }
-  }
-</style>
