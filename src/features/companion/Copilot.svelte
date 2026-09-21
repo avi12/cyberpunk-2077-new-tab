@@ -46,11 +46,11 @@
 {#snippet unavailable()}
   {#if JOURNEYS_AVAILABILITY === JourneysAvailability.comingSoon}
     <CompanionNotice>
-      {COMPANION_NAME} for Mac is coming soon - Edge already maps your journeys here
+      {COMPANION_NAME} for Mac is coming soon - Microsoft Edge already maps your Journeys here
     </CompanionNotice>
   {:else}
     <CompanionNotice>
-      Edge maps journeys on Windows and Mac, and caches Copilot tips on Windows
+      Microsoft Edge maps Journeys on Windows and Mac, and caches Copilot Tips on Windows
       {#snippet action()}
         <a class="cyber-button cyber-button--ghost link" href={JOURNEYS_SUPPORT_URL} rel="noopener noreferrer" target="_blank">
           {@html iconExternalLink}

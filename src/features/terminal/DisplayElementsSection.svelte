@@ -134,10 +134,10 @@
   </ul>
 </PanelSection>
 
-<Modal isOpen={isEdgeOnlyOpen} onClose={() => (isEdgeOnlyOpen = false)} title="Edge only">
+<Modal isOpen={isEdgeOnlyOpen} onClose={() => (isEdgeOnlyOpen = false)} title="Microsoft Edge only">
   <p class="edge-only">
-    Copilot journeys and tips are Edge's own, read out of its profile by the companion app - so
-    there's nothing for this section to show in another browser
+    Copilot Journeys and Tips are Microsoft Edge's own, read out of its profile by the companion
+    app - so there's nothing for this section to show in another browser
   </p>
   <div class="row">
     <button class="cyber-button cyber-button--primary cyber-button--grow" onclick={() => (isEdgeOnlyOpen = false)} type="button">

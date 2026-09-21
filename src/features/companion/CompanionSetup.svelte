@@ -179,7 +179,8 @@
       </CompanionNotice>
     {:else if isOfferingTips}
       <CompanionNotice>
-        Let the tips come straight from Microsoft, so they stay fresh without the app reading Edge
+        Let the tips come straight from Microsoft, so they stay fresh without the app reading
+        Microsoft Edge
         {#snippet action()}
           <button
             class="cyber-button cyber-button--primary"
@@ -191,13 +192,13 @@
       </CompanionNotice>
     {:else if companion.state === CompanionState.windowsTooOld}
       <CompanionNotice>
-        {COMPANION_NAME} needs Windows 11 - Edge still maps where your browsing is heading, there's
-        just nothing on this one that can read it
+        {COMPANION_NAME} needs Windows 11 - Microsoft Edge still maps where your browsing is heading,
+        there's just nothing on this one that can read it
       </CompanionNotice>
     {:else if companion.state === CompanionState.setupNeeded}
       <CompanionNotice>
-        Edge already mapped where your browsing is heading - the {COMPANION_NAME} that reads it is
-        coming to the Microsoft Store
+        Microsoft Edge already mapped where your browsing is heading - the {COMPANION_NAME} that reads it
+        is coming to the Microsoft Store
         {#snippet action()}
           <!--
             There is nowhere to send anyone yet - the listing is not live - so the press is only the
