@@ -160,6 +160,23 @@
   });
 </script>
 
+<!--
+  The way to the Store, on every state that is listening for an app that has not answered. Nothing
+  to record beyond the press: both of them are past the permission, so the setup this would mark as
+  started is long since started.
+-->
+{#snippet storeLink()}
+  <a
+    class="cyber-button cyber-button--primary cyber-button--link"
+    data-analytics={AnalyticsAction.companionStoreOpened}
+    href={COMPANION_STORE_URL}
+    rel="noopener noreferrer"
+    target="_blank">
+    {@html iconExternalLink}
+    Get the app
+  </a>
+{/snippet}
+
 {#if isVisible}
   <!--
     The section collapses on its own way out rather than leaving it to the page's view transition.
@@ -246,25 +263,12 @@
         {COMPANION_NAME} stopped - start it again and this fills itself in
       </CompanionNotice>
     {:else if companion.state === CompanionState.linking}
-      <CompanionNotice>{COMPANION_NAME} linking - give it a few seconds</CompanionNotice>
+      <CompanionNotice action={storeLink}>
+        Listening for the {COMPANION_NAME} - this fills itself in the moment it answers
+      </CompanionNotice>
     {:else}
-      <CompanionNotice>
+      <CompanionNotice action={storeLink}>
         {COMPANION_NAME} offline - install it and this fills itself in
-        {#snippet action()}
-          <!--
-            Nothing to record here beyond the press: the permission is already held by the time this
-            state is reachable, so the setup this would mark as started is long since started.
-          -->
-          <a
-            class="cyber-button cyber-button--primary cyber-button--link"
-            data-analytics={AnalyticsAction.companionStoreOpened}
-            href={COMPANION_STORE_URL}
-            rel="noopener noreferrer"
-            target="_blank">
-            {@html iconExternalLink}
-            Get the app
-          </a>
-        {/snippet}
       </CompanionNotice>
     {/if}
   </div>
