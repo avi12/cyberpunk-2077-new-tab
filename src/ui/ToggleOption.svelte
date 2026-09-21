@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   const {
     label,
     isOn,
@@ -17,6 +18,7 @@
 <button
   class="option-button toggle"
   aria-pressed={isOn}
+  data-analytics={AnalyticsAction.displayElementToggled}
   onclick={onToggle}
   type="button">
   <span>{label}</span>

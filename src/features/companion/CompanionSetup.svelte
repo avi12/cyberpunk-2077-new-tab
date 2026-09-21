@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import { COMPANION_NAME, CompanionState, requestCompanionPermission, startCompanionSetup } from "./bridge";
   import { companion } from "./connection.svelte";
   import { composeAccess } from "@/features/compose/access.svelte";
@@ -171,6 +172,7 @@
           -->
           <button
             class="cyber-button cyber-button--primary"
+            data-analytics={AnalyticsAction.composeAccessAllowed}
             onclick={() => siteId && void composeAccess.allow(siteId)}
             type="button">
             Allow {targetLabel} site
@@ -184,6 +186,7 @@
         {#snippet action()}
           <button
             class="cyber-button cyber-button--primary"
+            data-analytics={AnalyticsAction.tipsAccessAllowed}
             onclick={() => void requestTipsAccess().then(isAllowed => (isTipsAllowed = isAllowed))}
             type="button">
             Allow tips source
@@ -207,6 +210,7 @@
           -->
           <button
             class="cyber-button cyber-button--primary"
+            data-analytics={AnalyticsAction.companionSetupStarted}
             onclick={() => void startCompanionSetup().then(() => companion.refresh())}
             type="button">
             Set it up
@@ -219,6 +223,7 @@
         {#snippet action()}
           <button
             class="cyber-button cyber-button--primary"
+            data-analytics={AnalyticsAction.companionPermissionAsked}
             onclick={() => void requestCompanionPermission().then(isGranted => isGranted && companion.refresh())}
             type="button">
             Link companion

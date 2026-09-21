@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import CompanionCard from "@/features/companion/CompanionCard.svelte";
   import { copilotPrompt } from "./model";
   import { CopilotKind } from "@/features/companion/copilot";
@@ -38,6 +39,7 @@
   {#snippet meta()}
     {#each sources as source (source.host)}
       <li>
+        data-analytics={AnalyticsAction.journeySourceOpened}
         <a class="source" href={source.url} rel="noopener noreferrer" target="_blank">
           {@html iconExternalLink}
           {source.host}

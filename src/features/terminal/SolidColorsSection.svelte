@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import { BACKGROUND_COLORS } from "@/lib/storage/defaults";
   import { hexToHsv, hsvToHex, isHexColor } from "@/lib/color";
   import OptionGroup from "@/ui/OptionGroup.svelte";
@@ -77,6 +78,7 @@
         style:background-color={swatch}
         class="custom-color-swatch"
         aria-label="{isPickerOpen ? 'Close' : 'Open'} custom color picker"
+        data-analytics={AnalyticsAction.colorPickerToggled}
         onclick={() => (isPickerOpen = !isPickerOpen)}
         type="button"></button>
     </div>
@@ -124,6 +126,7 @@
           <button
             class="picker__hex-close"
             aria-label="Close custom color picker"
+            data-analytics={AnalyticsAction.colorPickerClosed}
             onclick={() => (isPickerOpen = false)}
             type="button">
             {@html iconXMark}

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import { backupTakenAtMs, dropBackup, keepBackup, restoreBackup } from "./settings-sync";
   import { exportSettings, importSettings, INVALID_SETTINGS_FILE, SETTINGS_FILE_STEM } from "./settings-file";
   import AccountBackup, { backupState } from "@/ui/AccountBackup.svelte";
@@ -124,6 +125,7 @@
 {/snippet}
 
 {#snippet cancel(onCancel: () => void)}
+  data-analytics={AnalyticsAction.settingsImportCancelled}
   <button class="cyber-button cyber-button--ghost cyber-button--block" onclick={onCancel} type="button">
     Cancel
   </button>
@@ -142,6 +144,7 @@
       {#if waitingFile}
         <button
           class="cyber-button cyber-button--primary cyber-button--action"
+          data-analytics={AnalyticsAction.settingsImported}
           onclick={() => void importWaiting()}
           type="button">
           {@html iconUpload}
@@ -154,6 +157,7 @@
             accept: SETTINGS_ACCEPT,
             onFile: file => void importFrom(file)
           })}
+          data-analytics={AnalyticsAction.settingsImportChosen}
           for="settings-import">
           {@html iconUpload}
           <span>Drop your settings file here</span>
@@ -171,6 +175,7 @@
       <p class="cyber-note">{backupState(backupAtMs)}</p>
       <button
         class="cyber-button cyber-button--primary cyber-button--action"
+        data-analytics={AnalyticsAction.settingsBackupRestored}
         disabled={isWorking}
         onclick={() => void restoreFromBackup()}
         type="button">
@@ -183,6 +188,7 @@
     <div class="stack">
       <button
         class="cyber-button cyber-button--cyan cyber-button--action"
+        data-analytics={AnalyticsAction.settingsExported}
         onclick={saveToFile}
         type="button">
         {@html iconDownload}

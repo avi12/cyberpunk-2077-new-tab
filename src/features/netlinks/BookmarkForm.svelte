@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { Bookmark } from "@/lib/storage/schema";
   import { normalizeUrl, resolveTitle } from "./link";
   import { openableUrlSchema } from "@/lib/url";
@@ -139,6 +140,7 @@
       class="link-card__action link-card__action--fetch"
       class:is-working={isResolving}
       aria-label={FETCH_TITLE_LABEL}
+      data-analytics={AnalyticsAction.netlinkTitleFetched}
       disabled={!isUrlOpenable || isResolving}
       onclick={() => void readTitle()}
       type="button">
@@ -147,6 +149,7 @@
     <button
       class="link-card__action"
       aria-label={submitLabel}
+      data-analytics={AnalyticsAction.netlinkSaved}
       disabled={isResolving}
       type="submit">
       {@html iconSquareCheck}
@@ -154,6 +157,7 @@
     <button
       class="link-card__action link-card__action--cancel"
       aria-label={CANCEL_LABEL}
+      data-analytics={AnalyticsAction.netlinkFormCancelled}
       onclick={onCancel}
       type="button">
       {@html iconXMark}

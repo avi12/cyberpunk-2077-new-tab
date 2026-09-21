@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   let {
     heading,
     value = $bindable(),
@@ -37,9 +38,11 @@
       class="cyber-button"
       class:cyber-button--cyan={isCyan}
       class:cyber-button--primary={!isCyan}
+      data-analytics={AnalyticsAction.categorySaved}
       type="submit">
       {confirmLabel}
     </button>
+    data-analytics={AnalyticsAction.categoryFormCancelled}
     <button class="cyber-button cyber-button--muted" onclick={onCancel} type="button">CANCEL</button>
   </div>
 </form>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { DisplayPreferences } from "@/lib/storage/schema";
   import { BACKGROUND_IMAGES, COLOR_THEMES, SCAN_LINES_MODES } from "@/lib/storage/defaults";
   import CustomBackgroundSection from "./CustomBackgroundSection.svelte";
@@ -22,6 +23,7 @@
   <button
     class="corner-button"
     aria-label="Terminal display settings"
+    data-analytics={AnalyticsAction.terminalOpened}
     popovertarget={PANEL_ID}
     type="button">
     {@html iconMonitor}

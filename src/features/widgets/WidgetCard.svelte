@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { Snippet } from "svelte";
 
   /**
@@ -41,6 +42,7 @@
           class="widget-card__icon-button"
           class:pulse={header.action.isPulsing}
           aria-label={header.action.label}
+          data-analytics={AnalyticsAction.widgetHeaderAction}
           onclick={header.action.onAct}
           type="button">
           {@html header.action.icon}

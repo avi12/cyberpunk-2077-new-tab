@@ -1,4 +1,5 @@
 <script generics="TValue extends string" lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { SelectOption } from "@/lib/storage/defaults";
 
   const {
@@ -22,6 +23,7 @@
       <button
         class="option-button options__button"
         aria-pressed={option.value === selected}
+        data-analytics={AnalyticsAction.optionPicked}
         onclick={() => onSelect(option.value)}
         type="button">
         {option.label}

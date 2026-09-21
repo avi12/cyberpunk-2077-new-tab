@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import { dropNetlinksBackup, keepNetlinksBackup, netlinksBackupTakenAtMs, restoreNetlinksBackup } from "./netlinks-sync";
   import {
     countNetlinks,
@@ -137,6 +138,7 @@
 </script>
 
 {#snippet cancel(onCancel: () => void)}
+  data-analytics={AnalyticsAction.netlinksTransferCancelled}
   <button class="cyber-button cyber-button--ghost cyber-button--block" onclick={onCancel} type="button">
     Cancel
   </button>
@@ -153,6 +155,7 @@
            only the reader knows which file this is. -->
       <button
         class="cyber-button cyber-button--cyan cyber-button--action"
+        data-analytics={AnalyticsAction.netlinksImportedMerge}
         disabled={isWorking}
         onclick={() => void importAs(ImportMode.merge)}
         type="button">
@@ -161,6 +164,7 @@
       </button>
       <button
         class="cyber-button cyber-button--danger cyber-button--action"
+        data-analytics={AnalyticsAction.netlinksImportedReplace}
         disabled={isWorking}
         onclick={() => void importAs(ImportMode.replace)}
         type="button">
@@ -178,6 +182,7 @@
       <p class="cyber-note transfer__centred">{backupState(backupAtMs)}</p>
       <button
         class="cyber-button cyber-button--primary cyber-button--action"
+        data-analytics={AnalyticsAction.netlinksBackupRestored}
         disabled={isWorking}
         onclick={() => void restoreFromBackup()}
         type="button">
@@ -189,6 +194,7 @@
   {:else}
     <div class="stack">
       <p class="cyber-note transfer__centred">Your netlinks alone - not your name, your wallpaper or anything else</p>
+      data-analytics={AnalyticsAction.netlinksExported}
       <button class="cyber-button cyber-button--cyan cyber-button--action" onclick={saveToFile} type="button">
         {@html iconDownload}
         Export netlinks

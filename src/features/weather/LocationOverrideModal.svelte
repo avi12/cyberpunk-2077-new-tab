@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { GeoLocation } from "@/lib/storage/schema";
   import { LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN } from "@/lib/storage/schema";
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
@@ -241,6 +242,7 @@
       class:is-active={isDeviceLit}
       class:is-dimmed={!isDeviceLit}
       aria-pressed={isDeviceLit}
+      data-analytics={AnalyticsAction.weatherFollowDevice}
       onclick={() => void followDevice()}
       onfocusin={e => e.stopPropagation()}
       type="button">
@@ -282,6 +284,7 @@
         </p>
       </div>
 
+      data-analytics={AnalyticsAction.weatherCoordinatesUsed}
       <button class="cyber-button cyber-button--primary location__confirm" type="submit">
         Use these coordinates
       </button>
@@ -293,6 +296,7 @@
   </form>
 
   <footer class="location__actions">
+    data-analytics={AnalyticsAction.weatherLocationClosed}
     <button class="cyber-button cyber-button--ghost cyber-button--block" onclick={onClose} type="button">Close</button>
   </footer>
 </Modal>

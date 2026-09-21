@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { IconName } from "@/features/netlinks/icons/choices";
   import { ICON_CHOICES, iconByName } from "@/features/netlinks/icons/choices";
 
@@ -20,6 +21,7 @@
   <button
     style:anchor-name={anchorName}
     class="picker__trigger"
+    data-analytics={AnalyticsAction.iconPickerOpened}
     popovertarget={panelId}
     type="button">
     <span>{label}</span>
@@ -39,6 +41,7 @@
             class:is-selected={choice.name === selected}
             aria-label={choice.name}
             aria-pressed={choice.name === selected}
+            data-analytics={AnalyticsAction.iconPicked}
             data-tooltip={choice.name}
             onclick={() => onSelect(choice.name)}
             popovertarget={panelId}

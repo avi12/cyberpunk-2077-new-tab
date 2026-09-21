@@ -12,6 +12,7 @@
 </script>
 
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import { formatTimestamp } from "@/features/clock/time";
   import iconSave from "@/assets/icons/save.svg?raw";
@@ -48,6 +49,7 @@
   <p class="cyber-note">{backupState(takenAtMs)}</p>
   <button
     class="cyber-button cyber-button--muted cyber-button--action"
+    data-analytics={AnalyticsAction.accountBackedUp}
     disabled={isWorking}
     onclick={onBackUp}
     type="button">
@@ -59,6 +61,7 @@
       {#if isConfirmingDelete}
         <button
           class="cyber-button cyber-button--danger cyber-button--grow"
+          data-analytics={AnalyticsAction.accountForgotten}
           onclick={() => {
             isConfirmingDelete = false;
             onForget();
@@ -68,17 +71,20 @@
         </button>
         <button
           class="cyber-button cyber-button--ghost cyber-button--grow"
+          data-analytics={AnalyticsAction.accountForgetCancelled}
           onclick={() => (isConfirmingDelete = false)}
           type="button">
           Keep it
         </button>
       {:else}
+        data-analytics={AnalyticsAction.accountRestored}
         <button class="cyber-button cyber-button--ghost cyber-button--grow" onclick={onRestore} type="button">
           {@html iconCloud}
           Restore
         </button>
         <button
           class="cyber-button cyber-button--ghost cyber-button--grow"
+          data-analytics={AnalyticsAction.accountForgetOpened}
           onclick={() => (isConfirmingDelete = true)}
           type="button">
           {@html iconTrash2}

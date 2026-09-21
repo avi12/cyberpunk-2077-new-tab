@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { AnalyticsAction, AnalyticsEvent, AnalyticsParam } from "@/lib/analytics/definitions";
   import { capturePage } from "@/features/capture/page-image";
   import iconBug from "@/assets/icons/bug.svg?raw";
   import iconCamera from "@/assets/icons/camera.svg?raw";
   import Modal from "@/ui/Modal.svelte";
+  import { reportQuietly } from "@/lib/analytics/report";
 
   const {
     isOpen,
@@ -39,6 +41,15 @@
       await captureToClipboard();
     } finally {
       isBusy = false;
+      /*
+       * The one control that reports itself rather than through `reportClicks`: the press alone says
+       * nothing useful here, and what is worth counting is whether the clipboard took the image. So
+       * it carries no `data-analytics`, and this is its single report.
+       */
+      reportQuietly(AnalyticsEvent.controlPressed, {
+        [AnalyticsParam.action]: AnalyticsAction.screenshot,
+        [AnalyticsParam.isSuccess]: result === RESULT.copied
+      });
     }
   }
 
@@ -86,6 +97,7 @@
     <a
       class="about__action"
       aria-label={BUG_REPORT_LABEL}
+      data-analytics={AnalyticsAction.reportBug}
       data-tooltip={BUG_REPORT_LABEL}
       href={ISSUES_URL}
       rel="noopener noreferrer"

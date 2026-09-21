@@ -11,6 +11,7 @@
 </script>
 
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { Bookmark } from "@/lib/storage/schema";
   import iconGripVertical from "@/assets/icons/grip-vertical.svg?raw";
   import { iconByName } from "@/features/netlinks/icons/choices";
@@ -63,6 +64,7 @@
   <a
     class="card glitch-border hover-glitch-host"
     class:is-editing={isEditing}
+    data-analytics={AnalyticsAction.netlinkOpened}
     draggable={!isEditing}
     href={openableUrl}
     onclick={e => {
@@ -80,6 +82,7 @@
       <button
         class="card__action card__action--edit"
         aria-label={editLabel}
+        data-analytics={AnalyticsAction.netlinkEditOpened}
         data-tooltip={editLabel}
         onclick={() => onEdit(bookmark)}
         type="button">
@@ -88,6 +91,7 @@
       <button
         class="card__action card__action--delete"
         aria-label={deleteLabel}
+        data-analytics={AnalyticsAction.netlinkDeleted}
         data-tooltip={deleteLabel}
         onclick={() => onDelete(bookmark.id)}
         type="button">

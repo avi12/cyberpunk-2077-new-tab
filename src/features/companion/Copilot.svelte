@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import iconBot from "@/assets/icons/bot.svg?raw";
   import CardSection from "./CardSection.svelte";
   import { COMPANION_NAME } from "./bridge";
@@ -52,6 +53,7 @@
     <CompanionNotice>
       Microsoft Edge maps Journeys on Windows and Mac, and caches Copilot Tips on Windows
       {#snippet action()}
+        data-analytics={AnalyticsAction.journeysSupportOpened}
         <a class="cyber-button cyber-button--ghost link" href={JOURNEYS_SUPPORT_URL} rel="noopener noreferrer" target="_blank">
           {@html iconExternalLink}
           Microsoft says

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { Bookmark } from "@/lib/storage/schema";
   import { addCategory, categoryOf, deleteCategory, normalizeName, renameCategory, toggleCollapsed } from "./categories";
   import BookmarkForm from "./BookmarkForm.svelte";
@@ -277,6 +278,7 @@
         <button
           class="netlinks__sort"
           aria-label={sortLabel}
+          data-analytics={AnalyticsAction.netlinksSorted}
           data-tooltip={sortLabel}
           disabled={isEverythingFiled}
           onclick={sortIntoCategories}
@@ -284,13 +286,16 @@
         <button
           class="netlinks__icon-button"
           aria-label={TRANSFER_LABEL}
+          data-analytics={AnalyticsAction.netlinksTransferOpened}
           data-tooltip={TRANSFER_LABEL}
           onclick={() => (isTransferOpen = true)}
           type="button">
           {@html iconSave}
         </button>
+        data-analytics={AnalyticsAction.netlinksEditFinished}
         <button class="netlinks__save" onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
       {:else}
+        data-analytics={AnalyticsAction.netlinksEditToggled}
         <button class="netlinks__icon-button" aria-label={EDIT_LABEL} data-tooltip={EDIT_LABEL} onclick={() => withViewTransition(() => (isEditing = true))} type="button">
           {@html iconSettings}
         </button>
@@ -354,6 +359,7 @@
     <div class="netlinks__empty-actions">
       <button
         class="netlinks__import-button cyber-glass"
+        data-analytics={AnalyticsAction.netlinksTopSitesImported}
         onclick={async () => {
           const imported = await importTopSites();
           if (imported) {
@@ -368,6 +374,7 @@
       {#if !isEditing}
         <button
           class="netlinks__add-link-button cyber-glass"
+          data-analytics={AnalyticsAction.netlinkAddOpened}
           onclick={() => {
             bookmarkToEdit = null;
             formCategory = SEEDED_CATEGORY;
@@ -393,6 +400,7 @@
       {:else}
         <button
           class="netlinks__add-button cyber-glass"
+          data-analytics={AnalyticsAction.categoryAddOpened}
           onclick={() => (isAddingCategory = true)}
           type="button">
           {@html iconPlus}
@@ -417,12 +425,14 @@
   <div class="row">
     <button
       class="cyber-button cyber-button--primary cyber-button--grow"
+      data-analytics={AnalyticsAction.categoryDeleteConfirmed}
       onclick={confirmDeleteCategory}
       type="button">
       DELETE
     </button>
     <button
       class="cyber-button cyber-button--ghost cyber-button--grow"
+      data-analytics={AnalyticsAction.categoryDeleteCancelled}
       onclick={() => (pendingDelete = null)}
       type="button">
       CANCEL

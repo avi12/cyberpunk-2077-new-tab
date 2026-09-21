@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { DisplayPreferences } from "@/lib/storage/schema";
   import iconEye from "@/assets/icons/eye.svg?raw";
   import iconEyeOff from "@/assets/icons/eye-off.svg?raw";
@@ -140,7 +141,11 @@
     app - so there's nothing for this section to show in another browser
   </p>
   <div class="row">
-    <button class="cyber-button cyber-button--primary cyber-button--grow" onclick={() => (isEdgeOnlyOpen = false)} type="button">
+    <button
+      class="cyber-button cyber-button--primary cyber-button--grow"
+      data-analytics={AnalyticsAction.edgeOnlyDismissed}
+      onclick={() => (isEdgeOnlyOpen = false)}
+      type="button">
       GOT IT
     </button>
   </div>

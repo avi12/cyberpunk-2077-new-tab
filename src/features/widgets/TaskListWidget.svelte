@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { Task } from "@/lib/storage/schema";
   import { taskSchema } from "@/lib/storage/schema";
   import { validRecords } from "@/features/companion/model";
@@ -96,6 +97,7 @@
           <button
             class="tasks__check"
             aria-label="Complete gig"
+            data-analytics={AnalyticsAction.taskCompleted}
             onclick={() => completeTask(task.id)}
             type="button">
             {@html isTicking ? iconSquareCheck : iconSquare}

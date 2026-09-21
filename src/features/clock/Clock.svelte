@@ -1,5 +1,6 @@
 <script lang="ts">
   import { currentDate, currentDateIso, currentTime, currentTimeIso, localeHourCycle } from "./time";
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import { GLITCH_LONG_MS, Glitch } from "@/lib/glitch.svelte";
   import { HourCycle } from "@/lib/storage/schema";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -86,6 +87,7 @@
       <button
         class="clock__toggle"
         aria-label={hourCycleHint}
+        data-analytics={AnalyticsAction.hourCycleFlipped}
         data-tooltip={hourCycleHint}
         onclick={flipHourCycle}
         type="button">

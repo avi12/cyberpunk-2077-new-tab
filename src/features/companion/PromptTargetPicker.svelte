@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import { composeAccess } from "@/features/compose/access.svelte";
   import { composeSiteFor, PROMPT_TARGET_OPTIONS, PromptTargetId } from "./prompt-target";
   import { promptDestination } from "./prompt-destination";
@@ -46,6 +47,7 @@
 <button
   class="picker__button"
   aria-label={LABEL}
+  data-analytics={AnalyticsAction.promptTargetOpened}
   data-tooltip={LABEL}
   popovertarget={PICKER_ID}
   type="button">

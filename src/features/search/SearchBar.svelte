@@ -3,7 +3,7 @@
   import type { ComposeSiteId } from "@/features/compose/sites";
   import { composeAccess } from "@/features/compose/access.svelte";
   import { DEFAULT_SEARCH_ENGINES } from "@/lib/storage/defaults";
-  import { AnalyticsEvent, AnalyticsParam } from "@/lib/analytics/definitions";
+  import { AnalyticsAction, AnalyticsEvent, AnalyticsParam } from "@/lib/analytics/definitions";
   import { reportQuietly } from "@/lib/analytics/report";
   import { engineById, searchUrl, searchWithBrowserDefault } from "./search";
   import { handOffPrompt } from "@/features/compose/deliver";
@@ -139,6 +139,7 @@
       <button
         class="search__engine-button"
         aria-label={`Search engine: ${engine.name}`}
+        data-analytics={AnalyticsAction.searchEngineOpened}
         popovertarget={ENGINE_POPOVER_ID}
         type="button">
         {engine.name}
@@ -152,6 +153,7 @@
               class="search__engine-option"
               class:is-active={isActive}
               aria-current={isActive}
+              data-analytics={AnalyticsAction.searchEnginePicked}
               onclick={() => (settings.activeSearchEngine.current = option.id)}
               popovertarget={ENGINE_POPOVER_ID}
               popovertargetaction="hide"

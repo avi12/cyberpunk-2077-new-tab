@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import { motionDuration } from "@/lib/motion";
   import type { Widget, WidgetConfig } from "@/lib/storage/schema";
   import { WidgetType } from "@/lib/storage/schema";
@@ -82,11 +83,13 @@
     {/if}
     <div class="widgets__controls">
       {#if isEditing}
+        data-analytics={AnalyticsAction.widgetsEditFinished}
         <button class="widgets__save" onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
       {:else}
         <button
           class="widgets__icon-button"
           aria-label="Widget settings"
+          data-analytics={AnalyticsAction.widgetSettingsOpened}
           onclick={() => withViewTransition(() => (isEditing = true))}
           type="button">
           {@html iconSettings}
@@ -126,6 +129,7 @@
               class="widgets__toggle"
               class:is-on={widget.enabled}
               aria-pressed={widget.enabled}
+              data-analytics={AnalyticsAction.widgetToggled}
               onclick={() => updateWidget({
                 id: widget.id,
                 change: current => ({

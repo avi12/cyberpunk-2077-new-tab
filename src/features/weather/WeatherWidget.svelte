@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { GeoLocation } from "@/lib/storage/schema";
   import type { WeatherReading } from "./model";
   import iconCloud from "@/assets/icons/cloud.svg?raw";
@@ -123,6 +124,7 @@
       <button
         class="weather__temp weather__temp--button"
         class:glitch={glitch.active}
+        data-analytics={AnalyticsAction.weatherSourceChanged}
         data-text={temperature}
         onclick={() => glitch.fire({ onDone: () => onConfigChange({ temperatureUnit: !isCelsius }) })}
         type="button">

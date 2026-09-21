@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
   import iconSettings from "@/assets/icons/settings.svg?raw";
 
@@ -14,6 +15,7 @@
 </script>
 
 <div class="widget-location-row">
+  data-analytics={AnalyticsAction.weatherLocationOpened}
   <button class="widget-location" class:widget-location--edit={isFailed} onclick={onEdit} type="button">
     {@html isFailed ? iconSettings : iconMapPin}
     {isFailed ? "EDIT" : name}

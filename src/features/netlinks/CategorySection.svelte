@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { Bookmark } from "@/lib/storage/schema";
   import BookmarkCard from "./BookmarkCard.svelte";
   import iconChevronDown from "@/assets/icons/chevron-down.svg?raw";
@@ -70,6 +71,7 @@
       <button
         class="category__toggle"
         aria-expanded={!isCollapsed}
+        data-analytics={AnalyticsAction.categoryCollapsed}
         onclick={() => onToggleCollapse(category)}
         type="button">
         {category}
@@ -81,6 +83,7 @@
         <button
           class="category__action category__action--edit"
           aria-label={EDIT_CATEGORY_LABEL}
+          data-analytics={AnalyticsAction.categoryEditOpened}
           data-tooltip={EDIT_CATEGORY_LABEL}
           onclick={() => onEditCategory(category)}
           type="button">
@@ -89,6 +92,7 @@
         <button
           class="category__action category__action--delete"
           aria-label={DELETE_CATEGORY_LABEL}
+          data-analytics={AnalyticsAction.categoryDeleted}
           data-tooltip={DELETE_CATEGORY_LABEL}
           onclick={() => onDeleteCategory(category)}
           type="button">
@@ -130,6 +134,7 @@
           {:else}
             <button
               class="category__add cyber-glass"
+              data-analytics={AnalyticsAction.netlinkAddOpened}
               onclick={() => onAddBookmark(category)}
               type="button">
               {@html iconPlus}

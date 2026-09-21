@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import { googleAccountName, isGoogleAccountConfigured } from "./identity";
   import iconFingerprint from "@/assets/icons/fingerprint.svg?raw";
   import Modal from "@/ui/Modal.svelte";
@@ -69,6 +70,7 @@
 
     <button
       class="cyber-button cyber-button--ghost identity__from-google"
+      data-analytics={AnalyticsAction.googleAccountUsed}
       onclick={() => void fillFromGoogle()}
       type="button">
       {@html iconFingerprint}
@@ -79,6 +81,7 @@
       <p class="cyber-error">{error}</p>
     {/if}
 
+    data-analytics={AnalyticsAction.identityClosed}
     <button class="cyber-button cyber-button--primary" type="submit">Close</button>
   </form>
 </Modal>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { AnalyticsAction } from "@/lib/analytics/definitions";
   import { BACKGROUND_BRIGHTNESS_MAX, BACKGROUND_BRIGHTNESS_MIN, BackgroundMediaType } from "@/lib/storage/schema";
   import { BACKGROUND_COLORS, BACKGROUND_IMAGES, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND_BRIGHTNESS } from "@/lib/storage/defaults";
   import { CACHED_PREFIX, clearMedia, MediaSlot, saveMedia } from "@/lib/storage/media-store";
@@ -138,6 +139,7 @@
         <button
           class="option-button custom__kind"
           aria-pressed={mediaKind === option.value}
+          data-analytics={AnalyticsAction.backgroundKindPicked}
           onclick={() => (mediaKind = option.value)}
           type="button">
           {@html option.icon}
@@ -180,11 +182,13 @@
           <span>Drop {selectedKind.name} here</span>
           <span class="drop-zone__hint">or click to pick one</span>
         </label>
+        data-analytics={AnalyticsAction.backgroundUrlOpened}
         <button class="custom__button" onclick={() => (urlEntry = "")} type="button">
           {@html selectedKind.icon}
           Enter URL
         </button>
         {#if isCustom}
+          data-analytics={AnalyticsAction.backgroundCleared}
           <button class="custom__button custom__button--danger" onclick={() => void clearCustom()} type="button">
             {@html iconTrash2}
             Clear Custom
@@ -205,11 +209,13 @@
         <div class="row">
           <button
             class="cyber-button cyber-button--primary cyber-button--grow custom__small"
+            data-analytics={AnalyticsAction.backgroundLinked}
             disabled={isFetching}
             onclick={() => void keepLinked(urlEntry ?? "")}
             type="button">
             {isFetching ? "Fetching" : "Apply"}
           </button>
+          data-analytics={AnalyticsAction.backgroundUrlCancelled}
           <button class="cyber-button cyber-button--muted custom__small" onclick={() => (urlEntry = null)} type="button">
             {@html iconXMark}
           </button>
