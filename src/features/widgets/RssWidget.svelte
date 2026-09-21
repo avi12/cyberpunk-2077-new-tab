@@ -110,8 +110,7 @@
     <div class="rss__notice">
       <span class="rss__notice-icon">{@html iconWifiOff}</span>
       <p class="rss__message rss__message--error">Feed Error</p>
-      data-analytics={AnalyticsAction.rssUrlEditOpened}
-      <button class="rss__edit" onclick={openSettings} type="button">
+      <button class="rss__edit" data-analytics={AnalyticsAction.rssUrlEditOpened} onclick={openSettings} type="button">
         {@html iconSettings}
         Edit URL
       </button>
@@ -119,8 +118,7 @@
   {:else if items.length === 0}
     <div class="rss__notice">
       <p class="rss__message">No items found</p>
-      data-analytics={AnalyticsAction.rssUrlEditOpened}
-      <button class="rss__edit rss__edit--cyan" onclick={openSettings} type="button">
+      <button class="rss__edit rss__edit--cyan" data-analytics={AnalyticsAction.rssUrlEditOpened} onclick={openSettings} type="button">
         {@html iconSettings}
         Edit URL
       </button>
@@ -129,8 +127,7 @@
     <ul class="rss__list scrollbar-cyberpunk">
       {#each items as item (item.link)}
         <li>
-          data-analytics={AnalyticsAction.rssItemOpened}
-          <a class="rss__item" href={item.link} rel="noopener noreferrer" target="_blank">
+          <a class="rss__item" data-analytics={AnalyticsAction.rssItemOpened} href={item.link} rel="noopener noreferrer" target="_blank">
             <span class="rss-title-container"><span class="rss-title">{item.title}</span></span>
             <span class="rss__item-icon">{@html iconExternalLink}</span>
           </a>
@@ -186,8 +183,7 @@
         </div>
       </div>
     </div>
-    data-analytics={AnalyticsAction.rssSettingsClosed}
-    <button class="cyber-button cyber-button--primary" onclick={() => (isSettingsOpen = false)} type="button">
+    <button class="cyber-button cyber-button--primary" data-analytics={AnalyticsAction.rssSettingsClosed} onclick={() => (isSettingsOpen = false)} type="button">
       Done
     </button>
   </div>

@@ -83,8 +83,7 @@
     {/if}
     <div class="widgets__controls">
       {#if isEditing}
-        data-analytics={AnalyticsAction.widgetsEditFinished}
-        <button class="widgets__save" onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
+        <button class="widgets__save" data-analytics={AnalyticsAction.widgetsEditFinished} onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
       {:else}
         <button
           class="widgets__icon-button"

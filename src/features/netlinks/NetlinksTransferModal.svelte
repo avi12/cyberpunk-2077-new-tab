@@ -138,8 +138,7 @@
 </script>
 
 {#snippet cancel(onCancel: () => void)}
-  data-analytics={AnalyticsAction.netlinksTransferCancelled}
-  <button class="cyber-button cyber-button--ghost cyber-button--block" onclick={onCancel} type="button">
+  <button class="cyber-button cyber-button--ghost cyber-button--block" data-analytics={AnalyticsAction.netlinksTransferCancelled} onclick={onCancel} type="button">
     Cancel
   </button>
 {/snippet}
@@ -194,8 +193,7 @@
   {:else}
     <div class="stack">
       <p class="cyber-note transfer__centred">Your netlinks alone - not your name, your wallpaper or anything else</p>
-      data-analytics={AnalyticsAction.netlinksExported}
-      <button class="cyber-button cyber-button--cyan cyber-button--action" onclick={saveToFile} type="button">
+      <button class="cyber-button cyber-button--cyan cyber-button--action" data-analytics={AnalyticsAction.netlinksExported} onclick={saveToFile} type="button">
         {@html iconDownload}
         Export netlinks
       </button>

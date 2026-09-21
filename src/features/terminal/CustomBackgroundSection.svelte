@@ -182,14 +182,12 @@
           <span>Drop {selectedKind.name} here</span>
           <span class="drop-zone__hint">or click to pick one</span>
         </label>
-        data-analytics={AnalyticsAction.backgroundUrlOpened}
-        <button class="custom__button" onclick={() => (urlEntry = "")} type="button">
+        <button class="custom__button" data-analytics={AnalyticsAction.backgroundUrlOpened} onclick={() => (urlEntry = "")} type="button">
           {@html selectedKind.icon}
           Enter URL
         </button>
         {#if isCustom}
-          data-analytics={AnalyticsAction.backgroundCleared}
-          <button class="custom__button custom__button--danger" onclick={() => void clearCustom()} type="button">
+          <button class="custom__button custom__button--danger" data-analytics={AnalyticsAction.backgroundCleared} onclick={() => void clearCustom()} type="button">
             {@html iconTrash2}
             Clear Custom
           </button>
@@ -215,8 +213,7 @@
             type="button">
             {isFetching ? "Fetching" : "Apply"}
           </button>
-          data-analytics={AnalyticsAction.backgroundUrlCancelled}
-          <button class="cyber-button cyber-button--muted custom__small" onclick={() => (urlEntry = null)} type="button">
+          <button class="cyber-button cyber-button--muted custom__small" data-analytics={AnalyticsAction.backgroundUrlCancelled} onclick={() => (urlEntry = null)} type="button">
             {@html iconXMark}
           </button>
         </div>

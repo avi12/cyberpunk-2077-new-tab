@@ -292,11 +292,9 @@
           type="button">
           {@html iconSave}
         </button>
-        data-analytics={AnalyticsAction.netlinksEditFinished}
-        <button class="netlinks__save" onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
+        <button class="netlinks__save" data-analytics={AnalyticsAction.netlinksEditFinished} onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
       {:else}
-        data-analytics={AnalyticsAction.netlinksEditToggled}
-        <button class="netlinks__icon-button" aria-label={EDIT_LABEL} data-tooltip={EDIT_LABEL} onclick={() => withViewTransition(() => (isEditing = true))} type="button">
+        <button class="netlinks__icon-button" aria-label={EDIT_LABEL} data-analytics={AnalyticsAction.netlinksEditToggled} data-tooltip={EDIT_LABEL} onclick={() => withViewTransition(() => (isEditing = true))} type="button">
           {@html iconSettings}
         </button>
       {/if}

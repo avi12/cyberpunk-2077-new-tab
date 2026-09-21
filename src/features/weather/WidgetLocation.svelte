@@ -15,8 +15,7 @@
 </script>
 
 <div class="widget-location-row">
-  data-analytics={AnalyticsAction.weatherLocationOpened}
-  <button class="widget-location" class:widget-location--edit={isFailed} onclick={onEdit} type="button">
+  <button class="widget-location" class:widget-location--edit={isFailed} data-analytics={AnalyticsAction.weatherLocationOpened} onclick={onEdit} type="button">
     {@html isFailed ? iconSettings : iconMapPin}
     {isFailed ? "EDIT" : name}
   </button>

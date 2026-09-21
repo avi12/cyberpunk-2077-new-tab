@@ -81,8 +81,7 @@
       <p class="cyber-error">{error}</p>
     {/if}
 
-    data-analytics={AnalyticsAction.identityClosed}
-    <button class="cyber-button cyber-button--primary" type="submit">Close</button>
+    <button class="cyber-button cyber-button--primary" data-analytics={AnalyticsAction.identityClosed} type="submit">Close</button>
   </form>
 </Modal>
 

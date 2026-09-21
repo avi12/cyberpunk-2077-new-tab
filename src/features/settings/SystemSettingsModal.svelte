@@ -125,8 +125,7 @@
 {/snippet}
 
 {#snippet cancel(onCancel: () => void)}
-  data-analytics={AnalyticsAction.settingsImportCancelled}
-  <button class="cyber-button cyber-button--ghost cyber-button--block" onclick={onCancel} type="button">
+  <button class="cyber-button cyber-button--ghost cyber-button--block" data-analytics={AnalyticsAction.settingsImportCancelled} onclick={onCancel} type="button">
     Cancel
   </button>
 {/snippet}

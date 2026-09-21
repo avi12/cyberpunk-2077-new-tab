@@ -77,8 +77,7 @@
           Keep it
         </button>
       {:else}
-        data-analytics={AnalyticsAction.accountRestored}
-        <button class="cyber-button cyber-button--ghost cyber-button--grow" onclick={onRestore} type="button">
+        <button class="cyber-button cyber-button--ghost cyber-button--grow" data-analytics={AnalyticsAction.accountRestored} onclick={onRestore} type="button">
           {@html iconCloud}
           Restore
         </button>

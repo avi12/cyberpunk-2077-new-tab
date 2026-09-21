@@ -39,8 +39,7 @@
   {#snippet meta()}
     {#each sources as source (source.host)}
       <li>
-        data-analytics={AnalyticsAction.journeySourceOpened}
-        <a class="source" href={source.url} rel="noopener noreferrer" target="_blank">
+        <a class="source" data-analytics={AnalyticsAction.journeySourceOpened} href={source.url} rel="noopener noreferrer" target="_blank">
           {@html iconExternalLink}
           {source.host}
         </a>

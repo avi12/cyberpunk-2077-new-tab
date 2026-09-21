@@ -284,8 +284,7 @@
         </p>
       </div>
 
-      data-analytics={AnalyticsAction.weatherCoordinatesUsed}
-      <button class="cyber-button cyber-button--primary location__confirm" type="submit">
+      <button class="cyber-button cyber-button--primary location__confirm" data-analytics={AnalyticsAction.weatherCoordinatesUsed} type="submit">
         Use these coordinates
       </button>
     </fieldset>
@@ -296,8 +295,7 @@
   </form>
 
   <footer class="location__actions">
-    data-analytics={AnalyticsAction.weatherLocationClosed}
-    <button class="cyber-button cyber-button--ghost cyber-button--block" onclick={onClose} type="button">Close</button>
+    <button class="cyber-button cyber-button--ghost cyber-button--block" data-analytics={AnalyticsAction.weatherLocationClosed} onclick={onClose} type="button">Close</button>
   </footer>
 </Modal>
 

@@ -42,8 +42,7 @@
       type="submit">
       {confirmLabel}
     </button>
-    data-analytics={AnalyticsAction.categoryFormCancelled}
-    <button class="cyber-button cyber-button--muted" onclick={onCancel} type="button">CANCEL</button>
+    <button class="cyber-button cyber-button--muted" data-analytics={AnalyticsAction.categoryFormCancelled} onclick={onCancel} type="button">CANCEL</button>
   </div>
 </form>
 
