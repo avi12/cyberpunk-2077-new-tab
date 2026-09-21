@@ -224,7 +224,7 @@
           <button
             class="cyber-button cyber-button--primary"
             data-analytics={AnalyticsAction.companionPermissionAsked}
-            onclick={() => void requestCompanionPermission().then(isGranted => isGranted && companion.refresh())}
+            onclick={() => void requestCompanionPermission()}
             type="button">
             Link companion
           </button>

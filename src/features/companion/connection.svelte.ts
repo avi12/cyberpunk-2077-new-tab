@@ -1,4 +1,4 @@
-import { CompanionState } from "./bridge";
+import { CompanionState, NATIVE_MESSAGING } from "./bridge";
 import { AnalyticsEvent } from "@/lib/analytics/definitions";
 import { reportQuietly } from "@/lib/analytics/report";
 
@@ -39,3 +39,16 @@ class Companion {
 }
 
 export const companion = new Companion();
+
+/**
+ * The grant is what starts the listening, whoever made it - the panel's own button, or the browser's
+ * own extension settings, where nothing on this page sees the press. Reading the permission change
+ * rather than the press that usually causes it is what keeps those two from being separate answers
+ * to "may the app be asked yet"; `readCompanion` is already decided by the permission alone.
+ */
+browser.permissions.onAdded.addListener(permissions => {
+  const isCompanionAllowed = permissions.permissions?.includes(NATIVE_MESSAGING);
+  if (isCompanionAllowed) {
+    companion.refresh();
+  }
+});
