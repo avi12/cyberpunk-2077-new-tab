@@ -1,6 +1,13 @@
 <script lang="ts">
   import { AnalyticsAction } from "@/lib/analytics/definitions";
-  import { COMPANION_NAME, CompanionState, requestCompanionPermission, startCompanionSetup } from "./bridge";
+  import {
+    COMPANION_NAME,
+    COMPANION_STORE_URL,
+    CompanionState,
+    requestCompanionPermission,
+    startCompanionSetup
+  } from "./bridge";
+  import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import { companion } from "./connection.svelte";
   import { composeAccess } from "@/features/compose/access.svelte";
   import { composeSiteFor, promptTargetLabel } from "./prompt-target";
@@ -201,20 +208,24 @@
     {:else if companion.state === CompanionState.setupNeeded}
       <CompanionNotice>
         Microsoft Edge already mapped where your browsing is heading - the {COMPANION_NAME} that reads it
-        is coming to the Microsoft Store
+        is on the Microsoft Store
         {#snippet action()}
           <!--
-            There is nowhere to send anyone yet - the listing is not live - so the press is only the
-            reader saying they want the app, which is the whole of what unlocks the rest. It becomes
-            a link out the day the listing exists, and nothing else about the flow moves.
+            The press does two things at once, and it has to: the Store opens in its own tab, and the
+            same click is the reader saying they want the app - which is what moves this panel on to
+            asking for the permission. Waiting for the install to report itself instead would leave
+            the panel saying "coming soon" to somebody who has just bought it.
           -->
-          <button
-            class="cyber-button cyber-button--primary"
+          <a
+            class="cyber-button cyber-button--primary cyber-button--link"
             data-analytics={AnalyticsAction.companionSetupStarted}
+            href={COMPANION_STORE_URL}
             onclick={() => void startCompanionSetup().then(() => companion.refresh())}
-            type="button">
-            Set it up
-          </button>
+            rel="noopener noreferrer"
+            target="_blank">
+            {@html iconExternalLink}
+            Get the app
+          </a>
         {/snippet}
       </CompanionNotice>
     {:else if companion.state === CompanionState.permissionNeeded}
@@ -238,7 +249,22 @@
       <CompanionNotice>{COMPANION_NAME} linking - give it a few seconds</CompanionNotice>
     {:else}
       <CompanionNotice>
-        {COMPANION_NAME} offline - install it from the Microsoft Store and this fills itself in
+        {COMPANION_NAME} offline - install it and this fills itself in
+        {#snippet action()}
+          <!--
+            Nothing to record here beyond the press: the permission is already held by the time this
+            state is reachable, so the setup this would mark as started is long since started.
+          -->
+          <a
+            class="cyber-button cyber-button--primary cyber-button--link"
+            data-analytics={AnalyticsAction.companionStoreOpened}
+            href={COMPANION_STORE_URL}
+            rel="noopener noreferrer"
+            target="_blank">
+            {@html iconExternalLink}
+            Get the app
+          </a>
+        {/snippet}
       </CompanionNotice>
     {/if}
   </div>

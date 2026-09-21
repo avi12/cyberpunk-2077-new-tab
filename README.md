@@ -105,13 +105,14 @@ its own colours: title, summary, the sites the card was drawn from, and a button
 with the prompt Edge generated for it.
 
 An extension cannot read a browser profile file, so the reading is done by a separate app that
-answers over native messaging - a paid Microsoft Store add-on, closed source and kept in a private
-repository of its own, which is why there is nothing to link to here. It needs Windows 11 - the
-Store package's floor is 24H2 (`10.0.26100.0`), the oldest Windows 11 still serviced when Edge
-shipped Journeys - and the new tab says so where it cannot run rather than offering it.
+answers over native messaging - [Cyberpunk Journeys](https://apps.microsoft.com/detail/9PL9NRMWFT3R),
+a paid Microsoft Store add-on, closed source and kept in a private repository of its own. It needs
+Windows 11 - the Store package's floor is 24H2 (`10.0.26100.0`), the oldest Windows 11 still
+serviced when Edge shipped Journeys - and the new tab says so where it cannot run rather than
+offering it.
 
 The extension is complete without it: the section only exists on Edge for Windows, it can be
-switched off like any other display element, and until someone presses **Set it up** nothing is sent
+switched off like any other display element, and until someone presses **Get the app** nothing is sent
 to the app at all - after that, with the app absent it is one line saying so, one that fills itself
 in a few seconds after the app arrives, with nothing reloaded or restarted.
 
@@ -301,7 +302,8 @@ existing user's uploaded background survives the switch.
 GPL-3.0-or-later. See [LICENSE](LICENSE).
 
 The companion app is not in this repository and is not under this licence. It is a separate,
-closed-source program sold through the Microsoft Store, and the two talk over Chromium's
+closed-source program sold through the
+[Microsoft Store](https://apps.microsoft.com/detail/9PL9NRMWFT3R), and the two talk over Chromium's
 [native messaging](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging):
 separate processes, exchanging one small JSON object over stdio. That boundary is deliberate and it
 is what keeps them separate works rather than one combined program.

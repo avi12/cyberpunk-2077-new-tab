@@ -16,6 +16,12 @@ export const NATIVE_MESSAGING = "nativeMessaging";
 
 export const COMPANION_NAME = "Copilot Journeys companion";
 
+/**
+ * Where the app is bought. The product id is the Store's own and is permanent - it was reserved
+ * when the submission was created, so the address outlives any renaming of the listing behind it.
+ */
+export const COMPANION_STORE_URL = "https://apps.microsoft.com/detail/9PL9NRMWFT3R";
+
 /** Edge deals three cards across both families at a time, and so does this. */
 export const MAX_CARDS = 3;
 
