@@ -53,6 +53,16 @@
   };
 
   /**
+   * How long the panel goes on saying it is listening before it says it could not reach the app.
+   * The one `linking` retry lands at 35 seconds, so this leaves that retry the room to be the thing
+   * that works and then stops pretending - anything still silent by now is a machine where the app
+   * is not installed, not registered, or not running, and none of those end on their own.
+   *
+   * The asking carries on underneath: an app that turns up later still fills the sections in.
+   */
+  const GIVE_UP_AFTER_MS = 45_000;
+
+  /**
    * Reaching the app is one story for both card families, so it is told once, above them - two
    * panels asking for the same permission would be two buttons doing the same thing. It says
    * nothing until a section has actually asked, and nothing again once one has succeeded.
@@ -108,6 +118,28 @@
   $effect(() => {
     void Promise.all([journeysSnapshotItem.getValue(), tipsSnapshotItem.getValue()])
       .then(snapshots => (hasCompanionAnswered = snapshots.some(snapshot => snapshot !== null)));
+  });
+
+  /**
+   * Whether the panel is still waiting on an app that has not answered, which is the same question
+   * the retry schedule already answers - a state worth asking about again is a state still waiting.
+   * A boolean rather than the state itself, so moving between the two waiting states does not read
+   * as the waiting having started over.
+   */
+  const isListening = $derived(RETRY_SCHEDULE[companion.state] !== undefined);
+
+  let isConnectionGivenUp = $state(false);
+
+  $effect(() => {
+    if (!isListening) {
+      isConnectionGivenUp = false;
+
+      return;
+    }
+
+    const giveUp = setTimeout(() => (isConnectionGivenUp = true), GIVE_UP_AFTER_MS);
+
+    return () => clearTimeout(giveUp);
   });
 
   const isVisible = $derived.by(() => {
@@ -276,6 +308,11 @@
     {:else if companion.state === CompanionState.companionNotRunning}
       <CompanionNotice>
         {COMPANION_NAME} stopped - start it again and this fills itself in
+      </CompanionNotice>
+    {:else if isConnectionGivenUp}
+      <CompanionNotice action={storeLink}>
+        Couldn't reach the {COMPANION_NAME} - get it from the Microsoft Store, or start it if it is
+        already installed
       </CompanionNotice>
     {:else if companion.state === CompanionState.linking}
       <CompanionNotice action={hasCompanionAnswered ? undefined : storeLink}>
