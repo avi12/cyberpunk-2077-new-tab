@@ -87,9 +87,8 @@ const FIREFOX_ID = "cyberpunk-2077-new-tab@avi12.com";
  * checks and every stamp are written against it, and it is a built-in rather than something
  * bundled, so a browser without it has no polyfill to fall back on and fails at the first tick.
  *
- * Chromium 144 and Firefox 139 are where it shipped, per MDN's compatibility data. Opera has no key
- * of its own and mirrors Chromium, so `minimum_chrome_version` is what holds it out - Opera 129 is
- * the first built on Chromium 144, which is the number to put on the listing.
+ * Chromium 144 and Firefox 139 are where it shipped, per MDN's compatibility data, and those are
+ * the two numbers the listings carry.
  *
  * Declared rather than left open because the alternative is an install that looks fine and then
  * shows no clock: a store that knows the floor offers the reader nothing instead.

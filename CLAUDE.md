@@ -6,9 +6,12 @@
 - TypeScript (100% type safety, let TypeScript infer return types - never write them explicitly)
 - zod for every payload that crosses the extension boundary
 - @webext-core/messaging for message passing
-- Chrome, Edge, Opera and Firefox, all MV3 - there is no MV2 build of anything
-  - Two builds, not four: Chrome, Edge and Opera all install the Chromium one, and Opera has no
-    target of its own. Firefox is the only separate build, and every Firefox script passes `--mv3`
+- Chrome, Edge and Firefox, all MV3 - there is no MV2 build of anything
+  - Two builds, not three: Chrome and Edge install the Chromium one. Firefox is the only separate
+    build, and every Firefox script passes `--mv3`
+  - Opera is not a target: it blocks `chrome_url_overrides` per extension id, so the new tab never
+    appears there. Never re-add it to a browser list - see the README's "Browsers" section for the
+    two dead ends and why the background redirect is not worth its permission
   - Single shared code path; branch only when an API genuinely diverges
   - The manifest is a function of `browser` in `wxt.config.ts`: `identity` and `identity.email` are
     Chromium-only, so Firefox's manifest omits them

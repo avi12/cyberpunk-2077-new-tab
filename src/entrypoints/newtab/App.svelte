@@ -133,8 +133,7 @@
     <!--
       Named targets rather than "not Firefox": Chrome and Edge are the two builds an Edge reader can
       have installed, and Firefox - the only other build there is - is one the section could only be
-      dead weight in. Opera has no target of its own and installs the Chromium build, so it is inside
-      this branch and gated by `isUsingCompanion` like any other Chromium reader without one.
+      dead weight in.
 
       Read here rather than from a named constant, because where it is read is what decides whether
       it does anything: both flags are replaced by literals before the bundle is built, so the branch

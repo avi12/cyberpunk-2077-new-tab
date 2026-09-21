@@ -18,8 +18,10 @@ import { join } from "node:path";
 import process from "node:process";
 
 /**
- * Opera has no build of its own: it installs the Chromium one, as Chrome and Edge do, so the only
- * thing that differs is which binary `web-ext.config.ts` points the launcher at.
+ * Opera is not a target - it blocks `chrome_url_overrides`, so the new tab never appears there - but
+ * it installs the Chromium build like any other Chromium, and a second one to check that build
+ * against costs nothing. The only thing that differs is which binary `web-ext.config.ts` points the
+ * launcher at.
  */
 const SOURCE_DIRECTORIES = {
   chrome: join(PROJECT_ROOT, ".output", "chrome-mv3"),

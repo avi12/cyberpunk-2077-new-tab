@@ -43,9 +43,32 @@ pnpm svelte:check
 pnpm fallow           # dead code, duplication, complexity
 ```
 
+## Browsers
+
+Two builds, not three: Chrome and Edge install the Chromium one, Firefox has its own. Every script
+that touches Firefox passes `--mv3`, because there is no MV2 build of anything here.
+
+Opera is not a target, and cannot be. It refuses `chrome_url_overrides` outright - the key is
+whitelisted per extension id, and an id that is not on the list gets *"'chrome_url_overrides' is not
+allowed for specified extension ID"*. Opera staff [say so on their own forum][opera-block], renaming
+the key to `startpage` hits the same block, and the extension installs there and then does nothing
+while Speed Dial keeps the new tab. Measured: developer mode, the pinned `key` and a keyless copy all
+change nothing.
+
+The one technique that works is redirecting `chrome://startpage/` from the background, which is what
+FVD Speed Dial does and what [Opera intends to close][opera-fvd]. It would also cost `tabs` as a
+required permission, and there is a single Chromium zip - so an install warning added for Opera is
+one Chrome and Edge readers see too. Not worth it for a browser whose vendor is closing the door.
+
+`pnpm ext:sideload --opera` still launches it, because a local browser to check the Chromium build
+against costs nothing.
+
+[opera-block]: https://forums.opera.com/topic/20490/using-chrome_url_overrides-for-extension
+[opera-fvd]: https://forums.opera.com/topic/33784/fvd-speed-dial-new-tab-page/29
+
 ## Permissions
 
-Six on Chromium (Chrome, Edge, Opera), four on Firefox, and each backs one feature:
+Six on Chromium (Chrome and Edge), four on Firefox, and each backs one feature:
 
 | Permission       | Why                                                                     |
 | ---------------- | ----------------------------------------------------------------------- |
