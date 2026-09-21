@@ -1,7 +1,7 @@
 {
   "extends": ["stylelint-config-ccb"],
   "customSyntax": "postcss-html",
-  "ignoreFiles": [".output/**", "node_modules/**", ".wxt/**", "reference/**", "**/*.svg"],
+  "ignoreFiles": [".output/**", "node_modules/**", ".wxt/**", "reference/**", "companion/**", "**/*.svg"],
   "rules": {
     "plugin/stylelint-no-indistinguishable-colors": null,
     "color-format/format": null,
