@@ -112,9 +112,10 @@ const MINIMUM_FIREFOX_VERSION = "147.0";
 
 /**
  * Declaring the public key pins the Chromium extension id - the same one unpacked, packed as a CRX,
- * or installed from a store. The companion app has to name an origin it will talk to, and without
- * this that origin would be a hash of whatever folder the extension was loaded from. The private
- * half lives in git-ignored `keys/`; regenerate both with `pnpm key:generate`.
+ * or installed from a store. The key is the Chrome Web Store's own for this item, so that id is
+ * `loeholjgiahjakohgpmglbhlfkhegccp`, the published one: a development build and the download from
+ * the store are the same extension as far as anything naming an origin is concerned, which is what
+ * lets the companion app name exactly one.
  */
 const { publicKey } = extensionIdentity;
 
