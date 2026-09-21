@@ -23,7 +23,6 @@
     "svelte:check": "svelte-check --tsconfig ./tsconfig.json --tsgo",
     "fallow": "fallow audit --base HEAD",
     "icons:generate": "node scripts/generate-icons.mjs",
-    "key:generate": "node scripts/generate-key.mjs",
     "journeys": "node scripts/journeys.mjs",
     "journeys:status": "node scripts/journeys.mjs status",
     "journeys:stop": "node scripts/journeys.mjs stop",

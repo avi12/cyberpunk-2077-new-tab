@@ -21,7 +21,6 @@ pnpm ext:sideload     # open the built extension without a dev server
 pnpm ext:build        # production build into .output/
 pnpm ext:zip          # store-ready zip
 pnpm icons:generate   # re-render src/public/icon/*.png from scripts/cyberpunk-logo.ico
-pnpm key:generate     # mint keys/chrome.pem once, and write the permanent extension id
 ```
 
 `.env` holds the OAuth client behind [the greeting's name button](#google-account-name),
@@ -90,9 +89,13 @@ that reads Copilot Journeys and tips, so everyone else installs without ever see
 The Chromium manifest carries a `key`, so the extension id is the same everywhere - unpacked, packed
 as a CRX, or installed from a store. Without it the id is a hash of whatever folder the extension was
 loaded from, and the Journeys companion has to name an origin that would then differ on every
-machine. `pnpm key:generate` mints `keys/chrome.pem` (git-ignored; it signs release CRXs and nothing
-else) and writes the public half to `extension-identity.json`, which is the one place both
-the manifest and the companion read it from.
+machine.
+
+That key is the **Chrome Web Store's own** for this item, copied from the listing's Package page, so
+the id it pins is the published one: `loeholjgiahjakohgpmglbhlfkhegccp`. It lives in
+`extension-identity.json`, which is the one place both the manifest and the companion read it from -
+so a build on this machine and a download from the store are one extension to anything naming an
+origin. There is no key to mint: its private half is the store's, and nothing here signs a CRX.
 
 Firefox has an id of its own in `browser_specific_settings`, for a different reason: it keys
 `storage.sync` to the add-on id, so a build without one has no account area to back settings up to.
