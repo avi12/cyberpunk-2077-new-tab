@@ -83,18 +83,32 @@ const TIPS_ORIGIN = "https://edge.microsoft.com/*";
 const FIREFOX_ID = "cyberpunk-2077-new-tab@avi12.com";
 
 /**
- * The oldest build that can run this at all, which `Temporal` decides: the clock, the freshness
- * checks and every stamp are written against it, and it is a built-in rather than something
- * bundled, so a browser without it has no polyfill to fall back on and fails at the first tick.
+ * The oldest build that can run this, which is not decided by the same feature on both engines.
  *
- * Chromium 144 and Firefox 139 are where it shipped, per MDN's compatibility data, and those are
- * the two numbers the listings carry.
+ * Chromium is decided by `Temporal`, which shipped in 144: the clock, the freshness checks and every
+ * stamp are written against it, and it is a built-in rather than something bundled, so a browser
+ * without it has no polyfill to fall back on and fails at the first tick. Everything else here is
+ * older - `position-area` 129, `anchor-name` 125, `field-sizing` 123 - so 144 is the whole of it.
  *
- * Declared rather than left open because the alternative is an install that looks fine and then
- * shows no clock: a store that knows the floor offers the reader nothing instead.
+ * Gecko is decided by CSS anchor positioning, which landed in 147. `Temporal` was there from 139,
+ * but every tooltip and both pickers are placed with `anchor-name` / `position-anchor` /
+ * `position-area`, and there is no `@supports` fallback anywhere in `src/` - so on 139 to 146 this
+ * installs, runs, and puts every hint in the wrong place, which is worse than not offering it. View
+ * transitions want 144 too, though those merely stop animating.
+ *
+ * `field-sizing` is the one thing above this floor, at Gecko 152, and it stays above it: without it
+ * the scratch pad keeps its `min-height` and scrolls rather than growing, which is a smaller loss
+ * than five releases of readers.
+ *
+ * Both come from MDN's compatibility data, and `position-anchor` is read carefully: its headline
+ * number is 151 on both engines, but that entry is about the property's initial value becoming
+ * `normal`. Every use here passes an explicit `--name`, which is the 125 / 147 row.
+ *
+ * Declared rather than left open because the alternative is an install that looks fine and then does
+ * not work: a store that knows the floor offers the reader nothing instead.
  */
 const MINIMUM_CHROMIUM_VERSION = "144";
-const MINIMUM_FIREFOX_VERSION = "139.0";
+const MINIMUM_FIREFOX_VERSION = "147.0";
 
 /**
  * Declaring the public key pins the Chromium extension id - the same one unpacked, packed as a CRX,
