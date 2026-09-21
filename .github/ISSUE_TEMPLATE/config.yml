@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Opera does not show the new tab
+    url: https://github.com/avi12/cyberpunk-2077-new-tab#browsers
+    about: Opera blocks the new tab override for extensions it has not whitelisted, so this is not a bug anyone can fix here
+  - name: The companion app
+    url: https://github.com/avi12/cyberpunk-2077-new-tab#copilot-journeys-edge-on-windows-11
+    about: Copilot Journeys and Tips need the companion app on Microsoft Edge for Windows 11 - start here before filing

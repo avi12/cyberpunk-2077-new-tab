@@ -1,0 +1,103 @@
+name: Bug report
+description: Something on the new tab does not work the way it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time - the more of this you fill in, the faster it gets fixed
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, and what the page did instead
+      placeholder: I pressed the clock and it went blank
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen again
+      description: Numbered steps if you can - a bug that reproduces is a bug that gets fixed
+      placeholder: |
+        1. Open a new tab
+        2. Press the clock
+        3. It goes blank
+    validations:
+      required: false
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      description: Opera is not supported - it blocks the new tab override, so the page never appears there
+      options:
+        - Chrome
+        - Microsoft Edge
+        - Firefox
+        - Another Chromium browser
+    validations:
+      required: true
+
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser version
+      description: Chromium - paste from chrome://version. Firefox - from about:support
+      placeholder: "153.0.7312.98"
+    validations:
+      required: true
+
+  - type: input
+    id: extension-version
+    attributes:
+      label: Extension version
+      description: The version shown on your browser's extensions page
+      placeholder: "0.0.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the page
+      options:
+        - Clock or date
+        - Search
+        - Netlinks
+        - Widgets - notes, tasks, RSS
+        - Weather
+        - Greeting or identity
+        - Copilot Journeys and Tips
+        - Settings, backup or sync
+        - Background or wallpaper
+        - Sounds
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Anything in the console
+      description: Right-click the page, Inspect, Console tab. Paste whatever is red - it is rendered as a code block, no backticks needed
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: The About panel has a camera button that copies the whole page to your clipboard - paste it straight in here
+    validations:
+      required: false

@@ -1,0 +1,46 @@
+name: Feature request
+description: Something the new tab should be able to do and cannot
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you are trying to do
+      description: The thing you wanted, rather than the control you imagined - the shape of the answer often turns out different
+      placeholder: I keep a second set of links for work and have to scroll past the personal ones
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: How you picture it working
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the page
+      options:
+        - Clock or date
+        - Search
+        - Netlinks
+        - Widgets - notes, tasks, RSS
+        - Weather
+        - Greeting or identity
+        - Copilot Journeys and Tips
+        - Settings, backup or sync
+        - Background or wallpaper
+        - Sounds
+        - Something new entirely
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checked
+    attributes:
+      label: Before you post
+      options:
+        - label: I looked through the open issues and this is not already there
+          required: true
