@@ -52,6 +52,21 @@ async function localBinaries() {
   return config.default?.binaries ?? {};
 }
 
+/*
+ * Chrome 137 onwards installs an extension handed to `--load-extension` and then leaves it switched
+ * off until developer mode is on. Measured on Chrome 153: the extension is listed, disabled, and
+ * every `chrome-extension://` page answers ERR_BLOCKED_BY_CLIENT.
+ *
+ * It is not something this script can do for you. The preference cannot be seeded - it lives in
+ * `Secure Preferences` behind an HMAC, and a copy written into plain `Preferences` is dropped on the
+ * next start, measured. Pressing the switch over the DevTools protocol after launch works and costs
+ * the launch: toggling it resets Chrome's extension service, which closed the connection web-ext was
+ * still waiting on and failed the very load it was meant to rescue.
+ *
+ * So it is one press, by hand, on `chrome://extensions` - and only ever one, because the profile
+ * below is kept and remembers. Opera enforces none of this and needs nothing.
+ */
+
 /**
  * The browser, opened once and handed back so the caller can close it.
  *
