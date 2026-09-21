@@ -1,12 +1,37 @@
+import { HourCycle } from "@/lib/storage/schema";
+
 /**
- * Intl decides how a time reads - 24-hour or not, whether there is a day period, what it is called
- * and where it sits - from the locale alone, so there is nothing here to spell out or configure.
- * Built once because the clock reformats every second.
+ * Intl decides how a time reads - whether there is a day period, what it is called and where it
+ * sits, how the hour is padded, what separates it from the minute - so nothing here spells any of
+ * that out. Built once because the clock reformats every second.
  */
-const TIME_FORMAT = new Intl.DateTimeFormat(undefined, {
+const TIME_PARTS: Intl.DateTimeFormatOptions = {
   hour: "numeric",
   minute: "2-digit"
-});
+};
+
+const TIME_FORMAT = new Intl.DateTimeFormat(undefined, TIME_PARTS);
+
+/**
+ * The same format with the clock the reader asked for rather than the one their locale assumes.
+ * Only the cycle is overridden: everything else about how the time reads is still the locale's,
+ * which is why a 12-hour Hebrew clock still says the Hebrew day period.
+ */
+const TIME_FORMATS: Record<HourCycle, Intl.DateTimeFormat> = {
+  [HourCycle.hour12]: new Intl.DateTimeFormat(undefined, {
+    ...TIME_PARTS,
+    hourCycle: "h12"
+  }),
+  [HourCycle.hour24]: new Intl.DateTimeFormat(undefined, {
+    ...TIME_PARTS,
+    hourCycle: "h23"
+  })
+};
+
+/** Which of the two the locale reads as, so the first press is the one that visibly changes it. */
+export function localeHourCycle() {
+  return TIME_FORMAT.resolvedOptions().hour12 ? HourCycle.hour12 : HourCycle.hour24;
+}
 
 const DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
   weekday: "long",
@@ -25,8 +50,8 @@ export function formatTimestamp(atMs: number) {
   return TIMESTAMP_FORMAT.format(Temporal.Instant.fromEpochMilliseconds(atMs));
 }
 
-export function currentTime() {
-  return TIME_FORMAT.format(Temporal.Now.plainTimeISO());
+export function currentTime(hourCycle: HourCycle) {
+  return TIME_FORMATS[hourCycle].format(Temporal.Now.plainTimeISO());
 }
 
 export function currentDate() {

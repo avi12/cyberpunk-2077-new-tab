@@ -30,6 +30,12 @@ export enum ScanLinesMode {
   none = "none"
 }
 
+/** Which of the two clocks `Intl` is asked for, for a reader who has said they want the other one. */
+export enum HourCycle {
+  hour12 = "12",
+  hour24 = "24"
+}
+
 export enum BackgroundMediaType {
   none = "none",
   image = "image",

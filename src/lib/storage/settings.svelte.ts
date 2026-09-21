@@ -11,6 +11,7 @@ import {
   colorThemeItem,
   customCategoriesItem,
   displayPreferencesItem,
+  hourCycleItem,
   playSoundsItem,
   promptTargetItem,
   scanLinesModeItem,
@@ -32,6 +33,7 @@ import {
   ColorTheme,
   displayPreferencesSchema,
   geoLocationSchema,
+  HourCycle,
   ScanLinesMode,
   SearchEngineId,
   widgetSchema
@@ -248,6 +250,10 @@ export const settings = {
   playSounds: new Setting({
     item: playSoundsItem,
     schema: z.boolean()
+  }),
+  hourCycle: new Setting({
+    item: hourCycleItem,
+    schema: z.enum(HourCycle).nullable()
   })
 };
 

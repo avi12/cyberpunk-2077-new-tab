@@ -20,6 +20,7 @@ import type {
   ColorTheme,
   DisplayPreferences,
   GeoLocation,
+  HourCycle,
   ScanLinesMode,
   Widget
 } from "./schema";
@@ -77,6 +78,12 @@ export const tabTitleItem = storage.defineItem<string>("local:tabTitle", { fallb
 export const tabFaviconItem = storage.defineItem<IconName>("local:tabFavicon", { fallback: DEFAULT_TAB_FAVICON });
 
 export const playSoundsItem = storage.defineItem<boolean>("local:playSounds", { fallback: DEFAULT_PLAY_SOUNDS });
+
+/**
+ * Nothing stored means the clock reads however the reader's locale reads it, which is what it did
+ * before there was anything to press. Only a press on the clock itself ever writes here.
+ */
+export const hourCycleItem = storage.defineItem<HourCycle | null>("local:hourCycle", { fallback: null });
 
 /**
  * Nothing stored means the destination follows the engine the reader searches with, rather than a

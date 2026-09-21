@@ -1,6 +1,8 @@
 <script lang="ts">
-  import { currentDate, currentDateIso, currentTime, currentTimeIso } from "./time";
+  import { currentDate, currentDateIso, currentTime, currentTimeIso, localeHourCycle } from "./time";
   import { GLITCH_LONG_MS, Glitch } from "@/lib/glitch.svelte";
+  import { HourCycle } from "@/lib/storage/schema";
+  import { settings } from "@/lib/storage/settings.svelte";
 
   const {
     showTime,
@@ -18,43 +20,81 @@
   const RANDOM_GLITCH_INTERVAL_MS = 5000;
   const RANDOM_GLITCH_CHANCE = 0.1;
 
-  const randomGlitch = new Glitch();
+  const glitch = new Glitch();
+
+  /** Nothing stored is the locale's own clock, so a first press is a press on what is on screen. */
+  const hourCycle = $derived(settings.hourCycle.current ?? localeHourCycle());
 
   let date = $state(currentDate());
   let dateIso = $state(currentDateIso());
   let timeIso = $state(currentTimeIso());
-  let time = $state(currentTime());
-  const glitching = $derived(randomGlitch.active || glitchingTime);
+  let time = $state(currentTime(localeHourCycle()));
+  const glitching = $derived(glitch.active || glitchingTime);
 
+  /**
+   * Reading the cycle here is what makes a press show immediately: the effect re-runs on the new
+   * one and reformats before the next tick, rather than the clock waiting out the second it is in.
+   */
   $effect(() => {
+    const cycle = hourCycle;
+    time = currentTime(cycle);
+
     const tick = setInterval(() => {
-      time = currentTime();
+      time = currentTime(cycle);
       timeIso = currentTimeIso();
       date = currentDate();
       dateIso = currentDateIso();
     }, TICK_MS);
+
+    return () => clearInterval(tick);
+  });
+
+  /**
+   * The stutter belongs to the display rather than to the format, so it is its own effect: reading
+   * the cycle in here would tear this down on a press, and the teardown stops the very glitch the
+   * press just fired.
+   */
+  $effect(() => {
     const stutter = setInterval(() => {
       if (Math.random() < RANDOM_GLITCH_CHANCE) {
-        randomGlitch.fire({ durationMs: GLITCH_LONG_MS });
+        glitch.fire({ durationMs: GLITCH_LONG_MS });
       }
     }, RANDOM_GLITCH_INTERVAL_MS);
 
     return () => {
-      clearInterval(tick);
       clearInterval(stutter);
-      randomGlitch.stop();
+      glitch.stop();
     };
   });
+
+  const hourCycleHint = $derived.by(() => {
+    if (hourCycle === HourCycle.hour12) {
+      return "Switch to 24-hour";
+    }
+
+    return "Switch to 12-hour";
+  });
+
+  /** The display tears as it changes, which is the page's way of saying a value just moved. */
+  function flipHourCycle() {
+    const isTwelveHour = hourCycle === HourCycle.hour12;
+    glitch.fire({ durationMs: GLITCH_LONG_MS });
+    settings.hourCycle.current = isTwelveHour ? HourCycle.hour24 : HourCycle.hour12;
+  }
 </script>
 
 <div class="clock">
   {#if showTime}
-    <p class="clock__time hover-glitch" class:glitch={glitching} data-text={time}>
-      <time datetime={timeIso}>{time}</time>
-      {#if glitching}
-        <span class="clock__ghost clock__ghost--a glitch-1" aria-hidden="true">{time}</span>
-        <span class="clock__ghost clock__ghost--b glitch-2" aria-hidden="true">{time}</span>
-      {/if}
+    <p class="clock__time">
+      <button class="clock__toggle" aria-label={hourCycleHint} data-tooltip={hourCycleHint} onclick={flipHourCycle} type="button">
+        <span class="clock__reading hover-glitch" class:glitch={glitching} data-text={time}>
+          <time datetime={timeIso}>{time}</time>
+          {#if glitching}
+            <span class="clock__ghost clock__ghost--a glitch-1" aria-hidden="true">{time}</span>
+            <span class="clock__ghost clock__ghost--b glitch-2" aria-hidden="true">{time}</span>
+          {/if}
+        </span>
+      </button>
     </p>
   {/if}
   {#if showDate}
@@ -73,7 +113,6 @@
   }
 
   .clock__time {
-    position: relative;
     color: var(--cp-primary);
     font-family: var(--cp-mono);
     font-weight: 700;
@@ -85,6 +124,20 @@
       font-size: 6rem;
       line-height: 1;
     }
+  }
+
+  /*
+   * The hint hangs off the button, so the tear has to sit on the span inside it: a transformed
+   * trigger becomes the containing block for its own `fixed` hint, and the hint lands on the clock.
+   */
+  .clock__toggle {
+    font-weight: inherit;
+    letter-spacing: inherit;
+  }
+
+  .clock__reading {
+    position: relative;
+    display: inline-block;
   }
 
   /* The two offset copies that make the RGB-split glitch read as a broken display. */
