@@ -160,6 +160,13 @@ export default defineConfig({
     ],
     ...(browser === "firefox"
       ? {
+        /**
+         * The one field the two engines disagree about the shape of. Chromium's MV3 `author` is an
+         * object carrying an email; Firefox wants the name as a plain string and refuses the object
+         * with "Expected string instead of {...}" - a warning on every install, and the field lost.
+         * Neither accepts the other's, so each is handed its own.
+         */
+        author: "avi12",
         browser_specific_settings: {
           gecko: {
             id: FIREFOX_ID,
@@ -168,14 +175,14 @@ export default defineConfig({
         }
       }
       : {
+        author: {
+          email: "avi6106@gmail.com"
+        },
         key: publicKey,
         minimum_chrome_version: MINIMUM_CHROMIUM_VERSION,
         optional_permissions: [...COMPANION_PERMISSIONS, ...TIP_CONTEXT_PERMISSIONS],
         optional_host_permissions: [COMPOSE_ORIGIN, WEATHER_ORIGIN, PAGE_TEXT_ORIGIN]
       }),
-    author: {
-      email: "avi6106@gmail.com"
-    },
     homepage_url: "https://avi12.com"
   }),
   vite: () => ({
