@@ -1,69 +1,59 @@
 <script lang="ts">
   import PanelSection from "@/ui/PanelSection.svelte";
   import { hasGoogleWeatherAccess, requestGoogleWeatherAccess } from "@/features/weather/google";
-  import { settings } from "@/lib/storage/settings.svelte";
   import iconSquare from "@/assets/icons/square.svg?raw";
   import iconSquareCheck from "@/assets/icons/square-check.svg?raw";
   import ToggleOption from "@/ui/ToggleOption.svelte";
-  import { WeatherSourceId } from "@/features/weather/sources";
-
-  const TOGGLE_LABEL = "Google weather";
-
-  const isOn = $derived(settings.weatherSource.current === WeatherSourceId.google);
 
   /**
-   * Google's page is read as the reader's own browser, so it takes their site - asked for here,
-   * because turning it on is the moment it becomes worth having, and straight out of the press,
-   * since a permission prompt needs the gesture that raised it.
+   * There is no source to choose any more - Google answers the weather or nothing does - so what is
+   * left here is the one thing that decides whether it can: its site.
    *
-   * The setting only moves once the site is actually granted. A source the page cannot reach is not
-   * a source anybody chose, and storing it would leave this switch claiming a reading that never
-   * arrives - the widget would go on drawing open-meteo underneath. The switch is drawn on every
-   * build, which is why this origin is the one optional one Firefox is given too.
+   * A tick rather than a switch, and it only travels one way. A page can ask for a site and cannot
+   * hand it back; taking it away is done in the browser's own settings, which tells this nothing. So
+   * once it is granted the row says so and stops being pressable, rather than offering an off that
+   * would do nothing.
    */
-  async function toggle() {
-    if (isOn) {
-      settings.weatherSource.current = WeatherSourceId.openMeteo;
+  const TOGGLE_LABEL = "Allow google.com";
 
-      return;
-    }
-
-    if (!await requestGoogleWeatherAccess()) {
-      return;
-    }
-
-    settings.weatherSource.current = WeatherSourceId.google;
-  }
+  let isAllowed = $state(false);
 
   /**
-   * A site allowed here can be taken back in the browser's own settings, which tells this page
-   * nothing. Reading the permission back is what stops the switch claiming a source the widget
-   * quietly stopped using, since the reading itself has been falling through to open-meteo ever
-   * since the site went.
+   * Read once as the page is built, and again after every press. The location panel can grant the
+   * same site, which this will not hear about - that lands on the next tab, which is soon enough for
+   * a row that is already ticked by then.
    */
-  async function matchGrantedSite() {
-    if (!isOn) {
-      return;
-    }
-
-    const isSiteStillGranted = await hasGoogleWeatherAccess();
-    if (isSiteStillGranted) {
-      return;
-    }
-
-    settings.weatherSource.current = WeatherSourceId.openMeteo;
-  }
-
   $effect(() => {
-    void matchGrantedSite();
+    void hasGoogleWeatherAccess().then(granted => (isAllowed = granted));
   });
+
+  /** Straight out of the press: a permission prompt needs the gesture that asked for it. */
+  async function allow() {
+    if (isAllowed) {
+      return;
+    }
+
+    isAllowed = await requestGoogleWeatherAccess();
+  }
 </script>
 
-<PanelSection title="Weather Source">
+<PanelSection title="Weather">
   <ToggleOption
     iconOff={iconSquare}
     iconOn={iconSquareCheck}
-    {isOn}
+    isEnabled={!isAllowed}
+    isOn={isAllowed}
     label={TOGGLE_LABEL}
-    onToggle={toggle} />
+    onToggle={() => void allow()} />
+  <p class="weather-note">Google reads the sky for the city on the widget - without its site there is only Night City</p>
 </PanelSection>
+
+<style>
+  .weather-note {
+    margin-top: 0.5rem;
+    color: var(--cp-text-dimmer);
+    font-family: var(--cp-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+</style>

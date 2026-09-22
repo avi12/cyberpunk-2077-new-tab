@@ -20,7 +20,6 @@ import {
   temperatureUnitItem,
   userNameItem,
   weatherLocationItem,
-  weatherSourceItem,
   widgetOrderItem,
   widgetsItem
 } from "./items";
@@ -40,7 +39,6 @@ import {
 } from "./schema";
 import { PromptTargetId, withShippedPromptTarget } from "@/features/companion/prompt-target";
 import { ICON_NAMES } from "@/features/netlinks/icons/choices";
-import { WeatherSourceId, withShippedWeatherSource } from "@/features/weather/sources";
 import { z } from "@/lib/zod";
 
 /**
@@ -187,11 +185,6 @@ export const settings = {
   weatherLocation: new Setting({
     item: weatherLocationItem,
     schema: geoLocationSchema
-  }),
-  weatherSource: new Setting({
-    item: weatherSourceItem,
-    schema: z.enum(WeatherSourceId),
-    normalize: withShippedWeatherSource
   }),
   temperatureUnit: new Setting({
     item: temperatureUnitItem,

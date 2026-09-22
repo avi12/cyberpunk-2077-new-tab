@@ -23,9 +23,10 @@ const REVERSE_GEOCODE_URL = "https://api.bigdatacloud.net/data/reverse-geocode-c
  * who told the browser no. Keyless and `Access-Control-Allow-Origin: *`, so it costs no permission
  * and no host entry, like every other address here.
  *
- * City-level and no better, which is all the weather ever needed: open-meteo answers the same
- * forecast anywhere inside a town. It follows the connection rather than the device, so a VPN moves
- * it - which is why a reader is told where the reading came from and can type over it.
+ * City-level and no better, which is all the weather ever needed: Google is asked for the sky over a
+ * place by name, so anywhere inside a town is the same question. It follows the connection rather
+ * than the device, so a VPN moves it - which is why a reader is told where the reading came from and
+ * can type over it.
  */
 const CONNECTION_LOCATION_URL = "https://ipwho.is/";
 

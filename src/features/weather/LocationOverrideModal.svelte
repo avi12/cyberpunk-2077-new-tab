@@ -8,8 +8,6 @@
   import type { AskedLocation } from "./geolocation";
   import { locationAccess, LocationRefusal, LocationSource, roundCoordinate } from "./geolocation";
   import { requestAccess } from "@/lib/permissions";
-  import { settings } from "@/lib/storage/settings.svelte";
-  import { WeatherSourceId } from "./sources";
   import { z } from "@/lib/zod";
 
   const {
@@ -46,14 +44,13 @@
 
   /**
    * Being told no about Google's site, said out loud instead of swallowed. It used to cost nothing
-   * visible, which is the whole complaint: the reader pressed, answered a browser prompt, and the
-   * panel carried on as though they had not been asked.
+   * visible, which was the first complaint, and then it named a second source, which was the next -
+   * there is no second source. Google reads the sky or nothing does.
    *
-   * What it actually costs is the reading and only the reading, so the line says so - open-meteo
-   * answers the same coordinates and asks for nothing - and it names the way back, which is the
-   * button they just pressed.
+   * So the line says what a no actually leaves them with, which is Night City and its invented
+   * weather, and it names the way back: the button they just pressed.
    */
-  const GOOGLE_REFUSED_MESSAGE = "Google's weather needs google.com - open-meteo is answering instead, press again to allow it";
+  const GOOGLE_REFUSED_MESSAGE = "Google's weather needs google.com - without it the widget only shows Night City, press again to allow it";
 
   function coordinateSchema({ min, max, label }: {
     min: number;
@@ -185,27 +182,19 @@
   });
 
   /**
-   * Google answers the weather for a place it can name, so the reading is only as good as the
-   * location - which makes the moment a location is set the moment its site is worth asking for.
-   * Granted, the widget reads Google from here on; refused, it goes on reading open-meteo and the
-   * reader loses nothing they had.
+   * Google answers the weather and nothing else does, so its site is what decides whether setting a
+   * location changes anything at all - which makes the moment one is set the moment to ask for it.
    *
-   * Only a site newly handed over moves the source. Somebody who granted it once and then switched
-   * Google off in the panel has already answered this question, and setting a location is not them
-   * changing their mind about it - and they are not told no either, since nobody asked them.
+   * Nobody is asked twice. A site already handed over answers instantly and raises no prompt, and
+   * somebody in that position is not told no either, since no question was put to them.
    */
-  function useGoogleWeather(isGranted: boolean) {
+  function noteGoogleAnswer(isGranted: boolean) {
     if (isGoogleAllowed) {
       return;
     }
 
     isGoogleRefused = !isGranted;
-    if (!isGranted) {
-      return;
-    }
-
-    isGoogleAllowed = true;
-    settings.weatherSource.current = WeatherSourceId.google;
+    isGoogleAllowed = isGranted;
   }
 
   /**
@@ -236,7 +225,7 @@
     asked = null;
     isGoogleRefused = false;
     const located = onFollowDevice();
-    useGoogleWeather(await requestAccess(GOOGLE_WEATHER_ACCESS));
+    noteGoogleAnswer(await requestAccess(GOOGLE_WEATHER_ACCESS));
     asked = await located;
 
     /* Only the device answering proves the permission; the connection knows nothing about it. */
@@ -276,7 +265,7 @@
     const isGranted = await requestAccess(GOOGLE_WEATHER_ACCESS);
     const latitude = roundCoordinate(parsed.data.latitude);
     const longitude = roundCoordinate(parsed.data.longitude);
-    useGoogleWeather(isGranted);
+    noteGoogleAnswer(isGranted);
     onSave({
       name: draft.name.trim() || `${latitude}, ${longitude}`,
       latitude,

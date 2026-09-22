@@ -5,15 +5,13 @@
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
   import { askDeviceLocation, deviceLocation } from "./geolocation";
-  import { formatTemperature, temperatureUnit, WEATHER_ICONS, WEATHER_REFRESH_MS } from "./model";
-  import { fetchWeather } from "./sources";
+  import { formatTemperature, NIGHT_CITY_WEATHER, temperatureUnit, WEATHER_ICONS, WEATHER_REFRESH_MS } from "./model";
+  import { readGoogleWeather } from "./google";
   import { Glitch } from "@/lib/glitch.svelte";
-  import { settings } from "@/lib/storage/settings.svelte";
   import LocationOverrideModal from "./LocationOverrideModal.svelte";
   import WidgetCard from "@/features/widgets/WidgetCard.svelte";
   import WidgetLocation from "./WidgetLocation.svelte";
   import type { WidgetProps } from "@/features/widgets/widget.svelte";
-  import iconWind from "@/assets/icons/wind.svg?raw";
 
   const { config, onConfigChange }: WidgetProps = $props();
 
@@ -21,29 +19,38 @@
 
   let reading = $state<WeatherReading | null>(null);
   let isLoading = $state(true);
-  let isFailed = $state(false);
   let detected = $state<GeoLocation | null>(null);
   let isEditingLocation = $state(false);
 
   const isAutomatic = $derived(!config.location);
-  const location = $derived(config.location ?? detected ?? DEFAULT_WEATHER_LOCATION);
+  const askedLocation = $derived(config.location ?? detected ?? DEFAULT_WEATHER_LOCATION);
   const isCelsius = $derived(config.temperatureUnit !== false);
-  const sourceId = $derived(settings.weatherSource.current);
   const unit = $derived(temperatureUnit(isCelsius));
 
-  async function refresh() {
-    try {
-      isLoading = true;
-      reading = await fetchWeather({
-        location,
-        sourceId
-      });
-      isFailed = false;
-    } catch {
-      isFailed = true;
-    } finally {
-      isLoading = false;
+  /**
+   * The pair the widget actually draws. A reading and the place it is for are one thing, so they
+   * fall back together: without Google's answer the city on show is Night City too, rather than the
+   * reader's own town wearing a sky nobody measured.
+   */
+  const shownLocation = $derived.by(() => {
+    if (!reading) {
+      return DEFAULT_WEATHER_LOCATION;
     }
+
+    return askedLocation;
+  });
+  const shownReading = $derived(reading ?? NIGHT_CITY_WEATHER);
+
+  /**
+   * No failure branch, because there is no failure to draw. Google is the only source and it answers
+   * null rather than throwing for every way it can come up empty - the site was never handed over,
+   * the place has no name it can find, the search came back without its block - and null is what
+   * `NIGHT_CITY_WEATHER` is for.
+   */
+  async function refresh() {
+    isLoading = true;
+    reading = await readGoogleWeather(askedLocation);
+    isLoading = false;
   }
 
   /**
@@ -81,8 +88,7 @@
   });
 
   $effect(() => {
-    void location;
-    void sourceId;
+    void askedLocation;
     void refresh();
     const timer = setInterval(() => {
       void refresh();
@@ -105,19 +111,12 @@
       <span class="weather__icon weather__icon--loading pulse">{@html iconCloud}</span>
       <p class="weather__temp weather__temp--muted">--{unit}</p>
     </div>
-    <WidgetLocation name={location.name} onEdit={openLocation} />
+    <WidgetLocation name={shownLocation.name} onEdit={openLocation} />
     <p class="weather__desc weather__desc--muted">Scanning...</p>
-  {:else if isFailed || !reading}
-    <div class="weather__row">
-      <span class="weather__icon weather__icon--error">{@html iconWind}</span>
-      <p class="weather__temp weather__temp--error">ERR</p>
-    </div>
-    <WidgetLocation name={location.name} isFailed onEdit={openLocation} />
-    <p class="weather__desc weather__desc--error">System offline</p>
   {:else}
-    {@const icon = WEATHER_ICONS[reading.condition]}
+    {@const icon = WEATHER_ICONS[shownReading.condition]}
     {@const temperature = formatTemperature({
-      celsius: reading.temperature,
+      celsius: shownReading.temperature,
       isCelsius
     })}
     <div class="weather__row">
@@ -132,8 +131,8 @@
         {temperature}
       </button>
     </div>
-    <WidgetLocation name={location.name} onEdit={openLocation} />
-    <p class="weather__desc">{reading.description}</p>
+    <WidgetLocation name={shownLocation.name} onEdit={openLocation} />
+    <p class="weather__desc">{shownReading.description}</p>
   {/if}
 </WidgetCard>
 
@@ -160,10 +159,6 @@
     color: var(--cp-primary);
   }
 
-  .weather__icon--error {
-    color: var(--cp-secondary);
-  }
-
   .weather__temp {
     flex-shrink: 0;
     font-family: var(--cp-mono);
@@ -174,10 +169,6 @@
 
   .weather__temp--muted {
     color: var(--cp-primary);
-  }
-
-  .weather__temp--error {
-    color: var(--cp-secondary);
   }
 
   .weather__temp--button {
@@ -199,9 +190,5 @@
 
   .weather__desc--muted {
     color: var(--cp-primary);
-  }
-
-  .weather__desc--error {
-    color: var(--cp-secondary);
   }
 </style>

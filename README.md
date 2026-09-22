@@ -213,8 +213,10 @@ The button fills the field - a `given_name` is a first name, and if you would ra
 something else it is one keystroke away. There is nothing to save: the field is the setting, and the
 greeting follows it as you type, falling back to `V` while it stands empty.
 
-No host permissions: open-meteo, allorigins, bigdatacloud and ipwho all answer with
-`Access-Control-Allow-Origin: *`, and an extension page follows ordinary CORS.
+No host permissions at install: allorigins, bigdatacloud and ipwho all answer with
+`Access-Control-Allow-Origin: *`, and an extension page follows ordinary CORS. The one address that
+does need declaring is `google.com`, which the weather is read off - optional, and asked for at the
+moment it is used.
 
 ## Layout
 
@@ -295,12 +297,20 @@ its slot.
   hardened Firefox, a machine with no radios, a browser you said no to - is answered by asking
   ipwho.is where your connection is, which is a town rather than a spot and costs no permission,
   since the weather is the same across a town either way. The panel says which of the two the reading
-  came from, because a connection follows a VPN and a device does not; Night City is the last resort,
-  when neither answers. Its location line opens a form holding the two sources side by side: "Follow
-  my location" keeps reading the device, and confirming a latitude and longitude pins those
-  instead. Whichever one the widget is reading is lit and the other is
-  dimmed, though both stay usable; a stored location *is* the override, so following the device again
-  clears it.
+  came from, because a connection follows a VPN and a device does not. Its location line opens a form
+  holding the two sources side by side: "Follow my location" keeps reading the device, and confirming
+  a latitude and longitude pins those instead. Whichever one the widget is reading is lit and the
+  other is dimmed, though both stay usable; a stored location *is* the override, so following the
+  device again clears it.
+- **Google reads the sky, and nothing else does.** The reading is scraped out of the search page
+  Google draws it on, which is why it takes a site: the block is only in the markup when the request
+  goes out as the signed-in browser, so the fetch carries cookies, and that is what the host
+  permission buys. It is asked for at the moment a location is set rather than at install, and the
+  panel says so out loud when it is refused instead of quietly carrying on.
+  Without it there is no weather to show, so the widget shows Night City's instead - a fixed,
+  invented reading that travels with the fallback city and never appears under a real one. Acid rain
+  over Watson, permanently. That is the honest shape of a single-source widget: either Google
+  answers for your town, or the fiction does.
 - **No world clock, and no hand-written AM/PM.** The header clock is the only clock, and `Intl`
   formats it - which day period the locale uses, and whether it has one at all - as it formats the
   temperature's degree sign and unit. A fresh install starts on whatever hour cycle the locale

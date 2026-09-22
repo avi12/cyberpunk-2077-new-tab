@@ -50,7 +50,7 @@ const SEARCH_LANGUAGE = "en";
  * The block only appears for a place Google can name. Coordinates are searched as text and answer
  * with ordinary web results - measured, both bare and spelt out as a query - so the query is the
  * location's name. A name Google cannot place, the shipped "Night City" among them, simply has no
- * reading here, and open-meteo, which is asked by coordinate, goes on answering for it.
+ * reading here - and since nothing else answers, that is what `NIGHT_CITY_WEATHER` is for.
  *
  * `hl` pins the answer to English, because the condition arrives as words and the words matched
  * below are English ones.
@@ -130,8 +130,8 @@ function celsiusOf({ displayed, alternate }: {
  * order is part of the mapping - freezing rain is snow before it is rain, and a dust storm is severe
  * before it is anything else.
  *
- * The words are bucketed on their own terms rather than borrowed from the WMO table: fog is a cloud
- * here, which is what it looks like, while open-meteo's own wider buckets stay exactly as they were.
+ * The words are bucketed on what they look like rather than on any published table: fog is a cloud
+ * here, because that is what a reader sees when they look up.
  */
 const CONDITION_WORDS: {
   condition: WeatherCondition;

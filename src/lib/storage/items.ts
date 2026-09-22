@@ -28,7 +28,6 @@ import { BackgroundMediaType, SearchEngineId } from "./schema";
 import type { PromptTargetId } from "@/features/companion/prompt-target";
 import type { ComposeSiteId } from "@/features/compose/sites";
 import type { IconName } from "@/features/netlinks/icons/choices";
-import { DEFAULT_WEATHER_SOURCE, type WeatherSourceId } from "@/features/weather/sources";
 import { storage } from "#imports";
 import type { WxtStorageItem } from "wxt/utils/storage";
 
@@ -48,8 +47,6 @@ export const customCategoriesItem = storage.defineItem<string[]>("local:customCa
 export const activeSearchEngineItem = storage.defineItem<SearchEngineId>("local:activeSearchEngine", { fallback: SearchEngineId.browserDefault });
 
 export const weatherLocationItem = storage.defineItem<GeoLocation>("local:weatherLocation", { fallback: DEFAULT_WEATHER_LOCATION });
-
-export const weatherSourceItem = storage.defineItem<WeatherSourceId>("local:weatherSource", { fallback: DEFAULT_WEATHER_SOURCE });
 
 export const temperatureUnitItem = storage.defineItem<boolean>("local:temperatureUnit", { fallback: DEFAULT_TEMPERATURE_UNIT });
 

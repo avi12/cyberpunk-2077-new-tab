@@ -9,7 +9,7 @@ import type { z } from "./zod";
  * instead; it never decides what a response is.
  *
  * The schema is not optional decoration. Everything on the other end of these calls belongs to
- * somebody else - Google's search page, open-meteo, Microsoft's catalogue, a stranger's RSS - and a
+ * somebody else - Google's search page, bigdatacloud, Microsoft's catalogue, a stranger's RSS - and a
  * response that stops matching has to fail here, where it is one null, rather than three files later
  * as a property that turned out to be undefined.
  */

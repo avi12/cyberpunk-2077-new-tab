@@ -1,23 +1,24 @@
 <script lang="ts">
   import { AnalyticsAction } from "@/lib/analytics/definitions";
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
-  import iconSettings from "@/assets/icons/settings.svg?raw";
 
+  /**
+   * Always the place and never an error. There is no failed reading to report any more: Google
+   * answers or Night City does, and either way what belongs here is the name of the city on show.
+   */
   const {
     name,
-    isFailed = false,
     onEdit
   }: {
     name: string;
-    isFailed?: boolean;
     onEdit: () => void;
   } = $props();
 </script>
 
 <div class="widget-location-row">
-  <button class="widget-location" class:widget-location--edit={isFailed} data-analytics={AnalyticsAction.weatherLocationOpened} onclick={onEdit} type="button">
-    {@html isFailed ? iconSettings : iconMapPin}
-    {isFailed ? "EDIT" : name}
+  <button class="widget-location" data-analytics={AnalyticsAction.weatherLocationOpened} onclick={onEdit} type="button">
+    {@html iconMapPin}
+    {name}
   </button>
 </div>
 
@@ -45,14 +46,6 @@
 
     &:hover {
       color: var(--cp-primary-hover);
-    }
-  }
-
-  .widget-location--edit {
-    color: var(--cp-accent);
-
-    &:hover {
-      color: var(--cp-accent-hi);
     }
   }
 </style>

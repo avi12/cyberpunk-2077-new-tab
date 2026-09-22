@@ -8,13 +8,12 @@ import { nonEmptyTextSchema } from "@/features/companion/model";
 import { z } from "@/lib/zod";
 
 /**
- * What a reading is, whichever source answered.
+ * What a reading is.
  *
- * Each source describes the sky in a vocabulary of its own - open-meteo in WMO codes, Google in
- * English words - and the widget reads neither. Both are translated into one of six conditions,
- * which is what the icon is chosen by, and the source's own words travel beside it as the line the
- * reader sees. The temperature is always Celsius, so the unit the reader asked for is the only
- * conversion left to make.
+ * Google describes the sky in English words and the widget reads none of them directly: the phrase
+ * is bucketed into one of six conditions, which is what the icon is chosen by, and Google's own
+ * words travel beside it as the line the reader sees. The temperature is always Celsius, so the unit
+ * the reader asked for is the only conversion left to make.
  */
 
 export enum WeatherCondition {
@@ -33,6 +32,24 @@ export const weatherReadingSchema = z.object({
 });
 
 export type WeatherReading = z.infer<typeof weatherReadingSchema>;
+
+/**
+ * What the widget says when Google has nothing to say: the site was never handed over, the place has
+ * no name Google can find, or the search came back without its weather block.
+ *
+ * Invented rather than measured, and it has to look invented - this is the one reading on the page
+ * that is not weather. A real city's number under a sky nobody asked about would be a lie; Night
+ * City's is the shipped fiction the widget already falls back to for a location, so the sky it gets
+ * is the same fiction. It never changes, which is the other half of saying so.
+ *
+ * It travels with `DEFAULT_WEATHER_LOCATION` and only with it - the widget draws the pair or neither,
+ * so this never appears under the reader's own city.
+ */
+export const NIGHT_CITY_WEATHER: WeatherReading = {
+  temperature: 31,
+  condition: WeatherCondition.rain,
+  description: "Acid rain over Watson"
+};
 
 export const WEATHER_REFRESH_MS = Temporal.Duration.from({ minutes: 15 }).total("milliseconds");
 
