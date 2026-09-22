@@ -233,11 +233,21 @@ async function announceReload() {
     runner,
     browser
   }).catch(() => false);
+  if (!isReloaded) {
+    console.info("[dev] could not reach the extension to reload it; open a tab, or reload it from the extensions page");
 
+    return;
+  }
+
+  /*
+   * Firefox tears an extension's own pages down when the add-on is reloaded - measured: the new tab
+   * that was open is left at `about:blank`. Nothing here can keep it, so it is said out loud rather
+   * than left looking like the rebuild broke the page.
+   */
   console.info(
-    isReloaded
+    isServedByDevServer
       ? "[dev] extension reloaded - the browser stayed open"
-      : "[dev] could not reach the extension to reload it; open a tab, or reload it from the extensions page"
+      : "[dev] extension reloaded - the window stayed open, but Firefox closed its pages; Ctrl+T for the new build"
   );
 }
 
