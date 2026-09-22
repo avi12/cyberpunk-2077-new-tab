@@ -4,6 +4,11 @@ import { analyticsOptOutItem } from "@/lib/storage/items";
 /**
  * Firefox asks for data collection as a permission of its own, so a build there can be installed
  * with it refused. Chromium has no such key and `getAll` simply omits it, which reads as consent.
+ *
+ * `wxt.config.ts` declares this same string under `data_collection_permissions.optional`, and
+ * unavoidably spells it a second time: a manifest is built by Node before any of this is bundled.
+ * The two have to agree - undeclared there, Firefox never offers the tick and this reads every
+ * install as consent.
  */
 const FIREFOX_TECHNICAL_DATA_COLLECTION = "technicalAndInteraction";
 

@@ -76,6 +76,32 @@ const WEATHER_ORIGIN = "https://www.google.com/*";
 const FIREFOX_ID = "cyberpunk-2077-new-tab@avi12.com";
 
 /**
+ * What leaves the machine, said out loud. Firefox requires this of every new add-on from 3 November
+ * 2025 and refuses the listing without it, so the only real decision is what goes in it.
+ *
+ * `none` was not available. The weather widget is on by default and works out a location on every
+ * load, and those coordinates go to open-meteo for the forecast and to bigdatacloud to be given a
+ * name - both third parties, both reached without asking anyone first. That is location data
+ * leaving, so it is declared, and `required` is what "without asking first" means here: nothing in
+ * the page requests it, so a reader cannot be installed without it.
+ *
+ * `technicalAndInteraction` is the counting, and Firefox only allows that one as optional - a reader
+ * unticks it at install and `permissions.getAll().data_collection` says so afterwards, which
+ * `analytics/consent.ts` already reads as a third way of being counted out. That file spells the
+ * same string a second time and has to: a manifest is built by Node before any of `src/` is bundled.
+ *
+ * Deliberately absent, each for its own reason. The search bar hands a query to the chosen engine by
+ * navigating the tab, which is the browser doing what its address bar does rather than this
+ * gathering anything. The one script that does send typed text somewhere - `compose.ts`, into
+ * claude.ai - is not built for Firefox at all. And the greeting's sign-in asks Google who the reader
+ * is and writes the answer nowhere but their own browser, so nothing is collected there either.
+ */
+const DATA_COLLECTION = {
+  required: ["locationInfo"],
+  optional: ["technicalAndInteraction"]
+};
+
+/**
  * The oldest build that can run this, which is not decided by the same feature on both engines.
  *
  * Chromium is decided by `Temporal`, which shipped in 144: the clock, the freshness checks and every
@@ -175,7 +201,8 @@ export default defineConfig({
         browser_specific_settings: {
           gecko: {
             id: FIREFOX_ID,
-            strict_min_version: MINIMUM_FIREFOX_VERSION
+            strict_min_version: MINIMUM_FIREFOX_VERSION,
+            data_collection_permissions: DATA_COLLECTION
           }
         },
         optional_host_permissions: [WEATHER_ORIGIN]
