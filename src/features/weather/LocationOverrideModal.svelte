@@ -5,7 +5,8 @@
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
   import Modal from "@/ui/Modal.svelte";
   import { GOOGLE_WEATHER_ACCESS, hasGoogleWeatherAccess } from "./google";
-  import { locationAccess, LocationRefusal, roundCoordinate } from "./geolocation";
+  import type { AskedLocation } from "./geolocation";
+  import { locationAccess, LocationRefusal, LocationSource, roundCoordinate } from "./geolocation";
   import { requestAccess } from "@/lib/permissions";
   import { settings } from "@/lib/storage/settings.svelte";
   import { WeatherSourceId } from "./sources";
@@ -21,7 +22,7 @@
     isOpen: boolean;
     onSave: (location: GeoLocation) => void;
     onClose: () => void;
-    onFollowDevice: () => Promise<LocationRefusal | null>;
+    onFollowDevice: () => Promise<AskedLocation>;
     isFollowingDevice: boolean;
   } = $props();
 
@@ -34,9 +35,14 @@
    */
   const REFUSAL_MESSAGES: Record<LocationRefusal, string> = {
     [LocationRefusal.blocked]: "This page is blocked from reading your location - allow it in your browser's site settings",
-    [LocationRefusal.unavailable]: "Your device couldn't work out where it is - type your coordinates below instead",
+    [LocationRefusal.unavailable]: "Nothing here could work out where you are - type your coordinates below instead",
     [LocationRefusal.timedOut]: "Your device took too long to answer - type your coordinates below instead"
   };
+
+  const DEVICE_CAPTION = "Read from this device on every load, and never stored";
+
+  /** A town rather than a spot, and one that follows the connection - so the reader is told both. */
+  const CONNECTION_CAPTION = "This device wouldn't say, so this is where your connection puts you - type coordinates if it is off";
 
   function coordinateSchema({ min, max, label }: {
     min: number;
@@ -92,8 +98,8 @@
    * that await would spend.
    */
   let isGoogleAllowed = $state<boolean | undefined>();
-  /** Why the last press got nothing, or null when it got somewhere - the caption's slot either way. */
-  let refusal = $state<LocationRefusal | null>(null);
+  /** What the last press came back with, or null before there has been one. */
+  let asked = $state<AskedLocation | null>(null);
 
   /**
    * Which source is lit: the device until the coordinates are touched, the coordinates from then on.
@@ -106,12 +112,13 @@
     }
 
     /*
-     * A press that got nothing counts as not handed over, whatever the permission says: a browser
-     * can answer `granted` and still have no way to place the machine, and the lit button would
-     * then be claiming to follow a device the widget is not reading.
+     * The last press outranks the permission, in both directions. A browser can answer `granted` and
+     * still have no way to place the machine, and a lit button would then be claiming to follow a
+     * device the widget is not reading; a browser that never granted anything can still be showing
+     * this reader's own town, by way of their connection, and that is lit.
      */
-    if (refusal) {
-      return false;
+    if (asked) {
+      return asked.isFound && isFollowingDevice;
     }
 
     if (deviceAccess && deviceAccess !== "granted") {
@@ -122,13 +129,13 @@
   });
 
   /**
-   * What the panel says under the button. A page the browser has blocked is said so before the press
-   * rather than after: pressing raises no prompt at all there, and a button that looks like it asked
-   * and then quietly failed is the whole complaint.
+   * The red line, and only when something is actually wrong. A page the browser has blocked is said
+   * so before the press rather than after: the device refuses instantly there, and a button that
+   * looks like it asked and then quietly failed is the whole complaint.
    */
-  const deviceNotice = $derived.by(() => {
-    if (refusal) {
-      return REFUSAL_MESSAGES[refusal];
+  const deviceError = $derived.by(() => {
+    if (asked) {
+      return asked.isFound ? "" : REFUSAL_MESSAGES[asked.refusal];
     }
 
     if (deviceAccess === "denied") {
@@ -136,6 +143,13 @@
     }
 
     return "";
+  });
+
+  /** The quiet line in its place, which says which of the two answers the reading came from. */
+  const deviceCaption = $derived.by(() => {
+    const isFromConnection = asked?.isFound && asked.source === LocationSource.connection;
+
+    return isFromConnection ? CONNECTION_CAPTION : DEVICE_CAPTION;
   });
 
   /** Read again on every open, so a permission taken back in the browser's own settings shows here. */
@@ -152,7 +166,7 @@
 
     draft = emptyDraft();
     error = "";
-    refusal = null;
+    asked = null;
     isEditing = false;
   });
 
@@ -187,28 +201,24 @@
    *
    * A site already handed over answers instantly and raises nothing, so nobody is asked twice.
    *
-   * A device that answers nothing leaves the panel open and says which of the three things went
+   * A press that finds nothing at all leaves the panel open and says which of the three things went
    * wrong, rather than closing on a city that never changed.
+   *
+   * A blocked page is pressed all the same, which it did not used to be. The device refuses that one
+   * instantly and without a prompt, and the connection answers behind it - so there is a town to be
+   * had here, where before there was a dead button.
    */
   async function followDevice() {
-    refusal = null;
-    /*
-     * A blocked page never sees a prompt again, so there is nothing here worth spending a press on -
-     * and asking for Google's site on the way would be a dialog raised for a feature that cannot work.
-     */
-    if (deviceAccess === "denied") {
-      return;
-    }
-
+    asked = null;
     const located = onFollowDevice();
     useGoogleWeather(await requestAccess(GOOGLE_WEATHER_ACCESS));
-    refusal = await located;
-    if (refusal) {
-      return;
-    }
+    asked = await located;
 
-    /* A location only arrives from a device that granted it, which is the freshest answer there is. */
-    deviceAccess = "granted";
+    /* Only the device answering proves the permission; the connection knows nothing about it. */
+    const isDeviceProved = asked.isFound && asked.source === LocationSource.device;
+    if (isDeviceProved) {
+      deviceAccess = "granted";
+    }
   }
 
   /**
@@ -258,10 +268,10 @@
       {@html iconMapPin}
       Follow my location
     </button>
-    {#if deviceNotice}
-      <p class="cyber-error" role="alert">{deviceNotice}</p>
+    {#if deviceError}
+      <p class="cyber-error" role="alert">{deviceError}</p>
     {:else}
-      <p class="location__caption">Read from this device on every load, and never stored</p>
+      <p class="location__caption">{deviceCaption}</p>
     {/if}
 
     <fieldset class="location__fields" class:is-dimmed={isDeviceLit}>

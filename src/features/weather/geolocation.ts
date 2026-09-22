@@ -1,5 +1,7 @@
+import { nonEmptyTextSchema } from "@/features/companion/model";
 import { fetchJson } from "@/lib/fetch";
 import type { GeoLocation } from "@/lib/storage/schema";
+import { LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN } from "@/lib/storage/schema";
 import { z } from "@/lib/zod";
 
 const POSITION_MAX_AGE_MS = 120_000;
@@ -14,6 +16,18 @@ const POSITION_TIMEOUT_MS = 8000;
 const ASKED_TIMEOUT_MS = 120_000;
 
 const REVERSE_GEOCODE_URL = "https://api.bigdatacloud.net/data/reverse-geocode-client";
+
+/**
+ * Where the connection says the reader is, for the devices that will not say themselves - a Firefox
+ * whose position provider cannot reach anything, a desktop with no radios to be placed by, a reader
+ * who told the browser no. Keyless and `Access-Control-Allow-Origin: *`, so it costs no permission
+ * and no host entry, like every other address here.
+ *
+ * City-level and no better, which is all the weather ever needed: open-meteo answers the same
+ * forecast anywhere inside a town. It follows the connection rather than the device, so a VPN moves
+ * it - which is why a reader is told where the reading came from and can type over it.
+ */
+const CONNECTION_LOCATION_URL = "https://ipwho.is/";
 
 const REVERSE_GEOCODE_LANGUAGE = "en";
 
@@ -95,6 +109,39 @@ function currentPosition(timeoutMs: number) {
   });
 }
 
+/** The service answers `success: false` rather than an error status when it will not say. */
+const connectionPlaceSchema = z.object({
+  success: z.literal(true),
+  latitude: z.number().min(LATITUDE_MIN).max(LATITUDE_MAX),
+  longitude: z.number().min(LONGITUDE_MIN).max(LONGITUDE_MAX),
+  city: nonEmptyTextSchema.optional(),
+  region: nonEmptyTextSchema.optional(),
+  country: nonEmptyTextSchema.optional()
+});
+
+/**
+ * A place, near enough, without asking the device anything. Named by what the service already
+ * knows, so this is the one location that costs no reverse geocode.
+ */
+async function connectionLocation() {
+  const place = await fetchJson({
+    url: CONNECTION_LOCATION_URL,
+    schema: connectionPlaceSchema
+  });
+  if (!place) {
+    return null;
+  }
+
+  const latitude = roundCoordinate(place.latitude);
+  const longitude = roundCoordinate(place.longitude);
+
+  return {
+    name: place.city || place.region || place.country || `${latitude}, ${longitude}`,
+    latitude,
+    longitude
+  };
+}
+
 const placeSchema = z.object({
   city: z.string().optional(),
   locality: z.string().optional(),
@@ -122,19 +169,22 @@ async function reverseGeocode({ latitude, longitude }: {
   return place.city || place.locality || place.principalSubdivision || place.countryName || null;
 }
 
+/**
+ * Where the reader is, as well as this page can work it out without asking them anything.
+ *
+ * The device is never touched on a hunch. Where the permission was not granted outright, that read
+ * is not a question the reader ever sees - it is either a prompt raised at a moment they asked for
+ * nothing, or a refusal already decided on and paid for with the timeout. Either way the connection
+ * is asked instead, which raises nothing and is better than the fallback city by a continent.
+ */
 async function detectLocation() {
-  /*
-   * The device is never touched on a hunch. Where the permission was not granted outright, this read
-   * is not a question the reader ever sees - it is either a prompt raised at a moment they asked for
-   * nothing, or a refusal already decided on and paid for with the timeout.
-   */
   if (!await hasLocationAccess()) {
-    return null;
+    return connectionLocation();
   }
 
   const answer = await currentPosition(POSITION_TIMEOUT_MS);
   if (isRefusal(answer)) {
-    return null;
+    return connectionLocation();
   }
 
   return locationFrom(answer);
@@ -163,10 +213,17 @@ async function locationFrom(coords: GeolocationCoordinates) {
  */
 let inFlight: Promise<GeoLocation | null> | null = null;
 
+/** Which of the two answers a reading came from, since the panel says so and they are not equals. */
+export enum LocationSource {
+  device = "device",
+  connection = "connection"
+}
+
 /** A reading, or the reason there is none - which is what the panel has to be able to say out loud. */
 export type AskedLocation =
   | {
     isFound: true;
+    source: LocationSource;
     location: GeoLocation;
   }
   | {
@@ -185,19 +242,32 @@ export type AskedLocation =
 export async function askDeviceLocation(): Promise<AskedLocation> {
   inFlight = null;
   const answer = await currentPosition(ASKED_TIMEOUT_MS);
-  if (isRefusal(answer)) {
+  if (!isRefusal(answer)) {
+    const asked = locationFrom(answer);
+    inFlight = asked;
+
+    return {
+      isFound: true,
+      source: LocationSource.device,
+      location: await asked
+    };
+  }
+
+  /* A press that reached no device is still a reader asking to be found, so the connection answers. */
+  const fromConnection = await connectionLocation();
+  if (!fromConnection) {
     return {
       isFound: false,
       refusal: answer
     };
   }
 
-  const asked = locationFrom(answer);
-  inFlight = asked;
+  inFlight = Promise.resolve(fromConnection);
 
   return {
     isFound: true,
-    location: await asked
+    source: LocationSource.connection,
+    location: fromConnection
   };
 }
 

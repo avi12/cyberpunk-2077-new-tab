@@ -128,7 +128,7 @@ export default defineConfig({
     // browser account alike; `identity` is the greeting's "Use Google account" button, and it is
     // `launchWebAuthFlow` alone - no `identity.email`, so no "know your email address" warning, and
     // no `oauth2` key, which Edge would not honour anyway. No host permissions - open-meteo,
-    // timeapi, allorigins and bigdatacloud all answer with `Access-Control-Allow-Origin: *`, and
+    // allorigins, bigdatacloud and ipwho all answer with `Access-Control-Allow-Origin: *`, and
     // Google's authorize page is opened in a window rather than fetched.
     //
     // Google's weather is asked for at the moment it is used. Where the reader is, though, is asked

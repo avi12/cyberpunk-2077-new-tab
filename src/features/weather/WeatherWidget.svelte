@@ -4,7 +4,7 @@
   import type { WeatherReading } from "./model";
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
-  import { askDeviceLocation, deviceLocation } from "./geolocation";
+  import { askDeviceLocation, deviceLocation, LocationSource } from "./geolocation";
   import { formatTemperature, temperatureUnit, WEATHER_ICONS, WEATHER_REFRESH_MS } from "./model";
   import { fetchWeather } from "./sources";
   import { Glitch } from "@/lib/glitch.svelte";
@@ -55,23 +55,25 @@
    * `detected` is assigned here rather than left to the read below, which only runs where the
    * override was the thing being followed until now.
    *
-   * The modal stays up until there is a fix to show, and hears why there was none - a device that
-   * answers nothing used to close the panel and leave the old city sitting there, which reads as the
-   * button having done nothing at all.
+   * The panel closes on a fix from the device and stays up for one from the connection, which is a
+   * different thing and worth a sentence: the reader can accept the town it names or type over it.
+   * A press that found nothing at all keeps it up too, and hears why - a device that answers nothing
+   * used to close the panel and leave the old city sitting there, which reads as the button having
+   * done nothing at all.
    */
   async function followDevice() {
     const answer = await askDeviceLocation();
     if (!answer.isFound) {
       isEditingLocation = true;
 
-      return answer.refusal;
+      return answer;
     }
 
     detected = answer.location;
     onConfigChange({ location: undefined });
-    isEditingLocation = false;
+    isEditingLocation = answer.source === LocationSource.connection;
 
-    return null;
+    return answer;
   }
 
   $effect(() => {
