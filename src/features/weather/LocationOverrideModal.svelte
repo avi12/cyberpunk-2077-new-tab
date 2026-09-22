@@ -369,15 +369,24 @@
   }
 
   .location__fields {
+    /* One value for the space between every row, the legend included - see `.location__legend`. */
+    --cp-field-gap: 0.5rem;
+
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--cp-field-gap);
     margin: 0;
     padding: 0;
     border: none;
   }
 
   .location__legend {
+    /*
+     * A legend is rendered by its fieldset rather than laid out inside it, so it is not a flex item
+     * and the column `gap` never reaches it - measured the same in Chromium and Firefox, with the
+     * heading sitting directly on top of the first label. The margin is the gap it misses.
+     */
+    margin-bottom: var(--cp-field-gap);
     padding: 0;
     color: var(--cp-primary);
     font-family: var(--cp-mono);
