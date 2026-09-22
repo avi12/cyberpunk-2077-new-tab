@@ -47,15 +47,19 @@
   }
 
   /**
-   * Read again rather than only clear the override: a reader who was already following the device
-   * has just allowed the location, and nothing in the config changed for the effect below to notice.
+   * The device is asked before the override is given up, and the override only goes once there is a
+   * fix to put in its place. Clearing first cost a reader whose device cannot place itself - a
+   * hardened browser, a machine with no radios - the coordinates they had typed, and dropped the
+   * widget onto the fallback city on the way.
+   *
+   * `detected` is assigned here rather than left to the read below, which only runs where the
+   * override was the thing being followed until now.
    *
    * The modal stays up until there is a fix to show, and hears why there was none - a device that
    * answers nothing used to close the panel and leave the old city sitting there, which reads as the
    * button having done nothing at all.
    */
   async function followDevice() {
-    onConfigChange({ location: undefined });
     const answer = await askDeviceLocation();
     if (!answer.isFound) {
       isEditingLocation = true;
@@ -64,6 +68,7 @@
     }
 
     detected = answer.location;
+    onConfigChange({ location: undefined });
     isEditingLocation = false;
 
     return null;

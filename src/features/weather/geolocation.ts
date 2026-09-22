@@ -177,6 +177,10 @@ export type AskedLocation =
 /**
  * The reader asking outright, which is the one moment the prompt belongs: this skips the guard and
  * lets `getCurrentPosition` raise the browser's own question.
+ *
+ * A fix becomes the page's shared reading rather than only this caller's, so whatever asks next is
+ * answered by the press - a second trip to the device could be guarded away by a browser that says
+ * `prompt` even once it has answered, and would then overwrite the fix with nothing.
  */
 export async function askDeviceLocation(): Promise<AskedLocation> {
   inFlight = null;
@@ -188,9 +192,12 @@ export async function askDeviceLocation(): Promise<AskedLocation> {
     };
   }
 
+  const asked = locationFrom(answer);
+  inFlight = asked;
+
   return {
     isFound: true,
-    location: await locationFrom(answer)
+    location: await asked
   };
 }
 
