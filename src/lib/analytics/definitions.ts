@@ -124,8 +124,6 @@ export enum AnalyticsAction {
   companionSetupStarted = "companion_setup_started",
   companionStoreOpened = "companion_store_opened",
   companionPermissionAsked = "companion_permission_asked",
-  composeAccessAllowed = "compose_access_allowed",
-  tipsAccessAllowed = "tips_access_allowed",
   promptTargetOpened = "prompt_target_opened",
   journeysSupportOpened = "journeys_support_opened",
   journeySourceOpened = "journey_source_opened",

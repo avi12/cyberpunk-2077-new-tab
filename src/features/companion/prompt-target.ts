@@ -41,7 +41,7 @@ function engineFor(targetId: PromptTargetId) {
 }
 
 /** What a destination is called, which is what the engine is called - written down once, over there. */
-export function promptTargetLabel(targetId: PromptTargetId) {
+function promptTargetLabel(targetId: PromptTargetId) {
   return engineFor(targetId).name;
 }
 

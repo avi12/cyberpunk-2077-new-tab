@@ -1,7 +1,6 @@
-import { fetchTipCatalogue } from "./catalogue";
 import type { Tip } from "./model";
 import { parseTips } from "./model";
-import { CompanionState, freshSnapshot, readCompanion } from "@/features/companion/bridge";
+import { readCompanion } from "@/features/companion/bridge";
 import { CompanionRequest } from "@/lib/messaging";
 import { tipsSnapshotItem, tipsTurnItem } from "@/lib/storage/items";
 
@@ -14,45 +13,18 @@ import { tipsSnapshotItem, tipsTurnItem } from "@/lib/storage/items";
 const REFRESH_MS = Temporal.Duration.from({ days: 1 }).total("milliseconds");
 
 /**
- * Where the catalogue comes from, in the order worth trying.
+ * This turn's three tips, and the turn moves on. It only moves when there were tips to show: a read
+ * that found nothing has not spent a turn, and burning them on a source that is not answering would
+ * jump the reader forward through the catalogue for nothing.
  *
- * Edge's own endpoint first, because that is where Edge got it and it needs neither the app nor the
- * browser. The companion is asked only when that is not allowed or not answering, which keeps every
- * reader who already has the app exactly where they were.
+ * The app is the only source, as it is for journeys. Edge's tip endpoint is a plain public GET and
+ * was read directly for a while, which was fresher and needed no app - but it answers the same
+ * catalogue to everybody, and what belongs on the row is the catalogue Edge cached for the profile
+ * the reader is actually in. Only the app can see which profile that is.
  */
-async function readCatalogue(turn: number) {
-  const cached = await freshSnapshot({
-    snapshot: tipsSnapshotItem,
-    refreshMs: REFRESH_MS,
-    nowMs: Temporal.Now.instant().epochMilliseconds
-  });
-  if (cached) {
-    return {
-      state: CompanionState.connected,
-      cards: parseTips({
-        raw: cached,
-        turn
-      })
-    };
-  }
-
-  const fetched = await fetchTipCatalogue();
-  if (fetched) {
-    await tipsSnapshotItem.setValue({
-      fetchedAtMs: Temporal.Now.instant().epochMilliseconds,
-      raw: fetched
-    });
-
-    return {
-      state: CompanionState.connected,
-      cards: parseTips({
-        raw: fetched,
-        turn
-      })
-    };
-  }
-
-  return readCompanion<Tip>({
+export async function readTips() {
+  const turn = await tipsTurnItem.getValue();
+  const read = await readCompanion<Tip>({
     request: CompanionRequest.tips,
     snapshot: tipsSnapshotItem,
     refreshMs: REFRESH_MS,
@@ -61,16 +33,6 @@ async function readCatalogue(turn: number) {
       turn
     })
   });
-}
-
-/**
- * This turn's three tips, and the turn moves on. It only moves when there were tips to show: a read
- * that found nothing has not spent a turn, and burning them on a source that is not answering would
- * jump the reader forward through the catalogue for nothing.
- */
-export async function readTips() {
-  const turn = await tipsTurnItem.getValue();
-  const read = await readCatalogue(turn);
   if (read.cards.length > 0) {
     await tipsTurnItem.setValue(turn + 1);
   }

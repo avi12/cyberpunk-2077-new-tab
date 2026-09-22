@@ -85,7 +85,7 @@ function hasRecords(raw: unknown) {
 }
 
 /** The cached snapshot while it is still fresh and still worth something, and nothing once it is not. */
-export async function freshSnapshot({ snapshot, refreshMs, nowMs }: {
+async function freshSnapshot({ snapshot, refreshMs, nowMs }: {
   snapshot: StorageItem<CompanionSnapshot | null>;
   refreshMs: number;
   nowMs: number;

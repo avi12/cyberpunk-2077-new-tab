@@ -64,18 +64,6 @@ const COMPOSE_ORIGIN = "https://claude.ai/*";
 const WEATHER_ORIGIN = "https://www.google.com/*";
 
 /**
- * Where Edge itself gets the Copilot tips. Reverse engineered out of `msedge.dll`, which names the
- * endpoint in one string: Edge fetches this and writes the answer under the profile, which is the
- * file the companion app has been reading second-hand.
- *
- * Asking for it directly is the same read one step earlier - and it is a plain public GET, no
- * account, no Edge headers, so it works on a machine that has never run Edge. It carries no CORS
- * headers, so the origin is what makes the fetch possible at all: measured, without it the request
- * fails outright.
- */
-const TIPS_ORIGIN = "https://edge.microsoft.com/*";
-
-/**
  * Firefox ties `storage.sync` to the add-on's own id: a build without one has no account area to
  * write to, so the backup in System Settings needs this declared rather than assigned at listing
  * time. Chromium pins its id with `key` below instead.
@@ -183,7 +171,7 @@ export default defineConfig({
         key: publicKey,
         minimum_chrome_version: MINIMUM_CHROMIUM_VERSION,
         optional_permissions: [...COMPANION_PERMISSIONS, ...TIP_CONTEXT_PERMISSIONS],
-        optional_host_permissions: [COMPOSE_ORIGIN, WEATHER_ORIGIN, TIPS_ORIGIN, PAGE_TEXT_ORIGIN]
+        optional_host_permissions: [COMPOSE_ORIGIN, WEATHER_ORIGIN, PAGE_TEXT_ORIGIN]
       }),
     author: {
       email: "avi6106@gmail.com"

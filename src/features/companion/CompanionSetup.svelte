@@ -9,11 +9,7 @@
   } from "./bridge";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import { companion } from "./connection.svelte";
-  import { composeAccess } from "@/features/compose/access.svelte";
-  import { composeSiteFor, promptTargetLabel } from "./prompt-target";
-  import { hasTipsAccess, requestTipsAccess } from "@/features/tips/catalogue";
   import { companionAnsweredItem } from "@/lib/storage/items";
-  import { promptDestination } from "./prompt-destination";
   import CompanionNotice from "./CompanionNotice.svelte";
   import { IS_WINDOWS } from "./platform";
   import { slide } from "svelte/transition";
@@ -63,48 +59,20 @@
   const GIVE_UP_AFTER_MS = 45_000;
 
   /**
+   * The states with nothing to say: one where the read has not finished, and one where it has and
+   * the app is answering.
+   *
    * Reaching the app is one story for both card families, so it is told once, above them - two
-   * panels asking for the same permission would be two buttons doing the same thing. It says
-   * nothing until a section has actually asked, and nothing again once one has succeeded.
+   * panels asking for the same permission would be two buttons doing the same thing. That story is
+   * the whole of this panel: a reader whose app is answering has the row itself as the answer, and
+   * is shown the row and nothing above it.
    *
-   * The site is asked for second, and only once the app has answered: nobody should be handing over
-   * a site for a feature that has not proved it works on their machine. Which means this panel has
-   * one more thing to say after connecting, rather than going quiet.
+   * The two permissions a connected reader could still hand over are asked for where they are spent
+   * instead - the site by the press that would use it (`deliver.ts`, `PromptTargetPicker`), which
+   * is the moment it means something. A banner above a full row asks for them where nothing on
+   * screen would change.
    */
-  const isConnected = $derived(companion.state === CompanionState.connected);
-
-  /** Whatever destination the reader picked, since that is the one a card will be asking. */
-  const targetLabel = $derived(promptTargetLabel(promptDestination.targetId));
-  const siteId = $derived(composeSiteFor(promptDestination.targetId));
-
-  /**
-   * An offer is a question worth asking, made ahead of the press that would otherwise raise it - so
-   * whether there is one at all is the same answer a press reads.
-   *
-   * The extra half is the silence: `granted` says nothing at all about a site the browser has not
-   * been asked about yet, and offering on that would put the panel in front of the people who handed
-   * the site over long ago, until the answer arrives.
-   */
-  const isOfferingSite = $derived.by(() => {
-    if (!isConnected || !siteId) {
-      return false;
-    }
-
-    return composeAccess.granted[siteId] !== undefined && composeAccess.isWorthAsking(siteId);
-  });
-
-  /**
-   * Edge's tip catalogue is one public GET, so the page can have it without the app. Offered only
-   * once the app has answered, like the site is: nothing is asked for until the row has proved it
-   * works on this machine. Undefined until the browser has answered, so a silence offers nothing.
-   */
-  let isTipsAllowed = $state<boolean | undefined>();
-
-  const isOfferingTips = $derived(isConnected && isTipsAllowed === false);
-
-  $effect(() => {
-    void hasTipsAccess().then(isAllowed => (isTipsAllowed = isAllowed));
-  });
+  const SILENT_STATES = [CompanionState.loading, CompanionState.connected];
 
   /**
    * Whether the app has ever answered on this machine, which is the whole of whether it is still
@@ -140,22 +108,7 @@
     return () => clearTimeout(giveUp);
   });
 
-  const isVisible = $derived.by(() => {
-    if (!IS_WINDOWS) {
-      return false;
-    }
-
-    if (companion.state === CompanionState.loading) {
-      return false;
-    }
-
-    return !isConnected || isOfferingSite || isOfferingTips;
-  });
-
-  /** The one read of what is already allowed, since this is the only offer made on the answer. */
-  $effect(() => {
-    void composeAccess.refresh();
-  });
+  const isVisible = $derived(IS_WINDOWS && !SILENT_STATES.includes(companion.state));
 
   /**
    * Runs only while something is still missing, and stops itself the moment nothing is.
@@ -230,39 +183,7 @@
     outro is the one that cannot be skipped.
   -->
   <div class="setup" transition:slide={{ duration: motionDuration(COLLAPSE_MS), easing: cubicOut }}>
-    {#if isOfferingSite}
-      <CompanionNotice>
-        Let a card ask {targetLabel} for you, instead of copying the prompt for you to paste
-        {#snippet action()}
-          <!--
-            A browser asked for an origin its loaded manifest has never heard of rejects rather than
-            answering no - which is what an extension that has not been reloaded since it gained one
-            does. That reads as a refusal, so the offer simply stays up rather than the click breaking.
-          -->
-          <button
-            class="cyber-button cyber-button--primary"
-            data-analytics={AnalyticsAction.composeAccessAllowed}
-            onclick={() => siteId && void composeAccess.allow(siteId)}
-            type="button">
-            Allow {targetLabel} site
-          </button>
-        {/snippet}
-      </CompanionNotice>
-    {:else if isOfferingTips}
-      <CompanionNotice>
-        Let the tips come straight from Microsoft, so they stay fresh without the app reading
-        Microsoft Edge
-        {#snippet action()}
-          <button
-            class="cyber-button cyber-button--primary"
-            data-analytics={AnalyticsAction.tipsAccessAllowed}
-            onclick={() => void requestTipsAccess().then(isAllowed => (isTipsAllowed = isAllowed))}
-            type="button">
-            Allow tips source
-          </button>
-        {/snippet}
-      </CompanionNotice>
-    {:else if companion.state === CompanionState.windowsTooOld}
+    {#if companion.state === CompanionState.windowsTooOld}
       <CompanionNotice>
         {COMPANION_NAME} needs Windows 11 - Microsoft Edge still maps where your browsing is heading,
         there's just nothing on this one that can read it
