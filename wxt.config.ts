@@ -196,8 +196,8 @@ export default defineConfig({
         // The dev server watches the project root, which sweeps in the companion's build output. A
         // locked artifact there - MSBuild holding `obj/**/*.dll`, or the tray app holding its own
         // `bin/*.exe` - makes chokidar emit EBUSY, and that kills the whole dev server rather than
-        // skipping the one file. Nothing under `companion/` or `keys/` is bundled, so watching
-        // either buys nothing and costs that.
+        // skipping the one file. Nothing under `companion/` is bundled, so watching it buys
+        // nothing and costs that.
         //
         // A mitigation rather than a fix: measured, a file that appears while the watcher is already
         // running still gets through. Anything held open for as long as it lives belongs outside the
@@ -205,7 +205,7 @@ export default defineConfig({
         //
         // Regexes rather than globs: chokidar 4, which Vite 6 onwards ships, dropped glob support
         // in `ignored`, and a glob there is silently read as a literal path that matches nothing.
-        ignored: [/[\\/]companion[\\/]/, /[\\/]keys[\\/]/]
+        ignored: [/[\\/]companion[\\/]/]
       }
     }
   }),
@@ -220,16 +220,14 @@ export default defineConfig({
   },
   zip: {
     artifactTemplate: "cyberpunk-2077-new-tab-{{versionName}}-{{browser}}.zip",
-    // The companion app is distributed on its own, and `keys/` is the signing key - neither belongs
-    // in a store upload.
+    // The companion app is distributed on its own, so it does not belong in a store upload.
     excludeSources: [
       ".output/**",
       ".wxt/**",
       ".fallow/**",
       "reference/**",
       "scripts/**",
-      "companion/**",
-      "keys/**"
+      "companion/**"
     ]
   }
 });
