@@ -16,6 +16,7 @@
     "ext:build:firefox": "wxt build -b firefox --mv3",
     "ext:zip": "wxt zip",
     "ext:zip:firefox": "wxt zip -b firefox --mv3",
+    "ext:zip:all": "pnpm run ext:zip && pnpm run ext:zip:firefox",
     "ext:dev:hmr": "node scripts/dev.mjs",
     "ext:sideload": "node scripts/sideload.mjs",
     "lint": "oxlint --type-aware --fix -c .oxlintrc.fix.json && eslint --fix && oxlint --type-aware",
