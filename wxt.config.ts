@@ -60,6 +60,11 @@ const COMPOSE_ORIGIN = "https://claude.ai/*";
  * Google's own weather, read off the search page it draws it on. Optional and asked for only by a
  * reader who turns it on, so the default install still reaches nothing but the open APIs it always
  * did - and a refusal costs the widget nothing, since it falls back to the one it was using.
+ *
+ * The one optional origin both engines are given, and the reason it is not filed with the rest:
+ * everything else optional follows the companion, which is Edge on Windows alone, so Firefox has no
+ * card that could ask. The weather widget is on every build and so is the switch that asks for this
+ * - a Firefox left without the origin draws a switch that can only ever refuse to move.
  */
 const WEATHER_ORIGIN = "https://www.google.com/*";
 
@@ -172,7 +177,8 @@ export default defineConfig({
             id: FIREFOX_ID,
             strict_min_version: MINIMUM_FIREFOX_VERSION
           }
-        }
+        },
+        optional_host_permissions: [WEATHER_ORIGIN]
       }
       : {
         author: {

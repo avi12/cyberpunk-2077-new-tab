@@ -82,12 +82,14 @@ Seven, the same seven on Chromium (Chrome and Edge) and on Firefox, and each bac
 `identity` is there on Firefox too, because all three browsers implement `launchWebAuthFlow`, which
 is the whole of how it is used - see "Google account name". `identity.email` is on neither engine.
 
-What is Chromium-only is everything **optional**, and none of it is asked for at install:
+Everything **optional** is asked for at the moment a feature needs it, never at install:
 `nativeMessaging` if you link the companion that reads Copilot Journeys and tips, `tabs` and
 `history` for the tips that ask about your own reading, `<all_urls>` to read the pages such a tip is
 asked about, `claude.ai` to finish a prompt off where it was composed, and `google.com` for Google's
-own weather. Everything but the last follows the companion, which is Edge on Windows only - so an
-install that never links it sees no prompt at all.
+own weather. All but the last are Chromium-only, because all but the last follow the companion,
+which is Edge on Windows only - so an install that never links it sees no prompt at all.
+`google.com` is on both builds instead, because the weather's source switch is on both: a Firefox
+without the origin would draw a switch that can only refuse to move.
 
 ### Permanent extension id
 

@@ -18,8 +18,8 @@
    *
    * The setting only moves once the site is actually granted. A source the page cannot reach is not
    * a source anybody chose, and storing it would leave this switch claiming a reading that never
-   * arrives - the widget would go on drawing open-meteo underneath. That also covers the browsers
-   * this is never offered on: Firefox is given no optional origins, so the answer there is no.
+   * arrives - the widget would go on drawing open-meteo underneath. The switch is drawn on every
+   * build, which is why this origin is the one optional one Firefox is given too.
    */
   async function toggle() {
     if (isOn) {
