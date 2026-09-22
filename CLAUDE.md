@@ -173,7 +173,15 @@ Never build - the dev server is always running and reloads the extension on any 
 Only run a build when explicitly asked.
 
 `pnpm ext:dev:hmr` (`scripts/dev.mjs`) keeps the dev browser alive across rebuilds and exposes CDP on
-port 9223, so the new tab can be driven and screenshotted while it runs.
+port 9223, so the new tab can be driven and screenshotted while it runs. One session per browser, so
+`-b edge` and `-b firefox --mv3` can be up at once - each has its own lock, output directory and port.
+
+`pnpm ext:dev:hmr -b firefox --mv3` is the same loop in a different shape: Firefox refuses to load a
+remote script into an extension page, so there is no dev server there. It builds, keeps the window,
+and rebuilds and reloads on every change under `src/`. It is driven over WebDriver BiDi on port 9224
+(`ws://127.0.0.1:9224/session`) rather than CDP, which Firefox 156 no longer has - and BiDi refuses
+screenshots and real input on an extension page, so drive it with `script.evaluate` and capture the
+window from the OS.
 
 # Companion app
 

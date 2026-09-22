@@ -17,6 +17,41 @@ import webExt from "web-ext";
 
 export const CDP_PORT = 9223;
 
+/**
+ * Firefox's own remote port, which is not the DevTools protocol: Firefox 156 has dropped CDP
+ * entirely and answers WebDriver BiDi here instead. Handed over so the dev Firefox can be driven and
+ * screenshotted the way the dev Chromium is - `web-ext` needs none of it, and does its reloading over
+ * the older RDP socket it opens for itself.
+ *
+ * `--remote-allow-system-access` goes with it, and has to: without it BiDi refuses to navigate to a
+ * `moz-extension://` url at all, which is every page this extension has.
+ */
+export const FIREFOX_BIDI_PORT = 9224;
+
+/**
+ * Where the dev server listens, which is not only Vite's business: the port is baked into the
+ * manifest's content security policy and into every entrypoint's HTML, so a session handed a
+ * different port than it wrote serves that browser nothing.
+ *
+ * One per browser, because `wxt` names 3000 for all of them and then does not check. Two served
+ * sessions at once both write 3000, Vite quietly gives the second one 3001, and that browser spends
+ * the session asking the other session's server for its modules - measured: a blank new tab, nothing
+ * in the console, and the page's scripts pointing at a build for the wrong browser. Edge keeps 3000,
+ * which is the number every note about this project already has.
+ */
+const DEV_SERVER_PORTS = {
+  edge: 3000,
+  chrome: 3001,
+  opera: 3002
+};
+
+/** Firefox is not served at all - `scripts/dev.mjs` says why - so it never asks for one of these. */
+const DEFAULT_DEV_SERVER_PORT = 3000;
+
+export function devServerPort(browser) {
+  return DEV_SERVER_PORTS[browser] ?? DEFAULT_DEV_SERVER_PORT;
+}
+
 export const PROJECT_ROOT = resolve(import.meta.dirname, "..");
 
 /**
@@ -84,7 +119,12 @@ export async function launchBrowser({ browser, sourceDir, port = CDP_PORT }) {
   const firefoxOptions = {
     target: "firefox-desktop",
     firefox: binaries.firefox,
-    firefoxProfile: profile
+    firefoxProfile: profile,
+    args: [
+      "--remote-debugging-port",
+      String(FIREFOX_BIDI_PORT),
+      "--remote-allow-system-access"
+    ]
   };
 
   const chromiumOptions = {
@@ -180,19 +220,37 @@ function evaluateInWorker({ webSocketDebuggerUrl, expression }) {
 }
 
 /**
- * Where the dev server writes the build for this browser, once it has written one.
+ * Where a build for this browser landed, once there is one.
  *
- * Read off disk rather than composed from the arguments. Every target is MV3, so the name is
- * `<browser>-mv3-dev` today - but which browser and which manifest version is the config's to
- * decide, and this script has no business restating that rule to disagree with it later.
+ * Read off disk rather than composed from the arguments. Every target is MV3, so the names are
+ * `<browser>-mv3-dev` and `<browser>-mv3` today - but which browser and which manifest version is
+ * the config's to decide, and this script has no business restating that rule to disagree with it
+ * later.
  */
-export function devOutputDirectory(browser) {
+function outputDirectory({ browser, isDev }) {
   const output = join(PROJECT_ROOT, ".output");
   if (!existsSync(output)) {
     return null;
   }
 
-  const built = readdirSync(output).find(name => name.startsWith(`${browser}-`) && name.endsWith("-dev"));
+  const built = readdirSync(output)
+    .find(name => name.startsWith(`${browser}-`) && name.endsWith("-dev") === isDev);
 
   return built ? join(output, built) : null;
+}
+
+/** The dev server's output, which is what a served browser is pointed at. */
+export function devOutputDirectory(browser) {
+  return outputDirectory({
+    browser,
+    isDev: true
+  });
+}
+
+/** A plain build's output, which is what Firefox gets - see `scripts/dev.mjs` for why. */
+export function buildOutputDirectory(browser) {
+  return outputDirectory({
+    browser,
+    isDev: false
+  });
 }

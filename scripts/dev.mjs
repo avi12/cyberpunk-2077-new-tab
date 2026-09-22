@@ -19,17 +19,26 @@
  * fatal. `wxt.config.ts` asks Vite to ignore the directory, which helps for a file that exists at
  * startup and not for one that appears during a build.
  *
- * Refusing to start twice is not a nicety. Two of these race for the dev server's port, and both
- * build into the same `.output` directory: the manifest ends up naming one server's port while the
- * page it serves names the other's, and the extension loads nothing at all. It has happened, with
- * three at once.
+ * Firefox is the exception to all of that: it has no dev server at all, because an extension page
+ * there refuses remote code and a dev server is remote code. Its loop is a build, a window that
+ * stays, and a rebuild plus reload on every change under `src/` - see `isServedByDevServer`.
  *
- * Usage: `pnpm ext:dev:hmr [-b edge]`
+ * Refusing to start twice is not a nicety, and it is per browser. Two sessions for one browser race
+ * for the dev server's port and build into the same `.output` directory: the manifest ends up naming
+ * one server's port while the page it serves names the other's, and the extension loads nothing at
+ * all. It has happened, with three at once. Two sessions for *different* browsers are fine and
+ * useful - each gets its own lock, its own output directory and its own port - so one change can be
+ * watched landing in Edge and Firefox at the same time.
+ *
+ * Usage: `pnpm ext:dev:hmr [-b edge|firefox --mv3]`
  */
 
 import {
+  buildOutputDirectory,
   CDP_PORT,
   devOutputDirectory,
+  devServerPort,
+  FIREFOX_BIDI_PORT,
   launchBrowser,
   PROJECT_ROOT,
   reloadExtension
@@ -53,9 +62,6 @@ const wxtCli = resolve(dirname(wxtEntry), "../bin/wxt.mjs");
 
 /** Read by `wxt.config.ts` to leave the browser alone, since this script is opening one. */
 const OWNS_BROWSER = "WXT_DEV_OWNS_BROWSER";
-
-/** Under `node_modules`, which is git-ignored and wiped by a reinstall - both true of this too. */
-const LOCK_FILE = join(PROJECT_ROOT, "node_modules", ".cache", "wxt-dev.lock");
 
 /** Long enough that an editor writing a temp file and renaming it counts as one change. */
 const SETTLE_MS = 250;
@@ -81,15 +87,87 @@ const args = process.argv.slice(2);
 const iBrowserFlag = args.findIndex(arg => arg === "-b" || arg === "--browser");
 const browser = iBrowserFlag === -1 ? "chrome" : args[iBrowserFlag + 1];
 
+/**
+ * Under `node_modules`, which is git-ignored and wiped by a reinstall - both true of this too.
+ *
+ * One lock per browser rather than one for the project: what has to be refused is a second session
+ * for the *same* browser, since those two share `.output/<browser>-mv3-dev` and overwrite each
+ * other's manifest. Different browsers write different directories and Vite hands the second server
+ * the next free port, so Edge and Firefox can be up at once - which is the only way to watch one
+ * change land in both.
+ */
+const LOCK_FILE = join(PROJECT_ROOT, "node_modules", ".cache", `wxt-dev-${browser}.lock`);
+
+/**
+ * Firefox is not served, it is rebuilt.
+ *
+ * An extension page in Firefox will not load a remote script, and the dev server is remote: the
+ * manifest's `content_security_policy` naming it is thrown away on install - measured,
+ * `runtime.getManifest().content_security_policy` is `null` - and the policy that applies instead is
+ * `script-src 'self'; upgrade-insecure-requests`, which blocks the page's own module. The new tab
+ * then paints an empty `<div id="app">` and says nothing in the console. Neither manifest version
+ * behaves differently, and no base-policy pref moves it: remote code is what MV3 forbids, and a dev
+ * server is remote code.
+ *
+ * So Firefox gets the other shape of the same loop - build, keep the window, rebuild and reload on
+ * every change - which is what this script already knew how to do for a restart. A rebuild measures
+ * about 1.5 seconds; the module-level state HMR would have kept is the price, and there is no way to
+ * pay less on that engine.
+ */
+const isServedByDevServer = browser !== "firefox";
+
+/** Named here unless the caller named one, since `wxt` would otherwise give every browser 3000. */
+const isPortNamed = args.includes("--port");
+const servedArgs = isPortNamed ? args : [...args, "--port", String(devServerPort(browser))];
+const wxtArgs = isServedByDevServer ? servedArgs : ["build", ...args];
+
 let child = null;
 let runner = null;
+let isBuilding = false;
 let isRestarting = false;
 let settleTimer = null;
 let crashRestarts = 0;
 let firstCrashAtMs = 0;
 
+/** One build, start to finish, and whether it worked - the whole of the Firefox loop's other half. */
+function build() {
+  return new Promise(resolve => {
+    const builder = spawn(process.execPath, [wxtCli, ...wxtArgs], {
+      stdio: ["pipe", "inherit", "inherit"],
+      env: {
+        ...process.env,
+        [OWNS_BROWSER]: "true"
+      }
+    });
+    builder.on("exit", code => resolve(code === 0));
+  });
+}
+
+/**
+ * A change, built and handed to the open window. Overlapping presses of the same save are dropped
+ * rather than queued: the build reads the tree as it is now, so the one already running has it.
+ */
+async function rebuild(filename) {
+  if (isBuilding) {
+    return;
+  }
+
+  isBuilding = true;
+  console.info(`\n[dev] ${filename} changed - rebuilding`);
+  const isBuilt = await build();
+  isBuilding = false;
+
+  if (!isBuilt) {
+    console.info("[dev] the build failed - the window is still running the last one that worked");
+
+    return;
+  }
+
+  await announceReload();
+}
+
 function start() {
-  child = spawn(process.execPath, [wxtCli, ...args], {
+  child = spawn(process.execPath, [wxtCli, ...wxtArgs], {
     stdio: ["pipe", "inherit", "inherit"],
     env: {
       ...process.env,
@@ -146,7 +224,7 @@ async function announceReload() {
 
   const isBuilt = await waitForBuild();
   if (!isBuilt) {
-    console.info("[dev] the dev server wrote no build - leaving the extension as it is");
+    console.info("[dev] no build was written - leaving the extension as it is");
 
     return;
   }
@@ -163,11 +241,16 @@ async function announceReload() {
   );
 }
 
+/** Whichever output this browser is running from: the dev server's, or a plain build's. */
+function sourceDirectory() {
+  return isServedByDevServer ? devOutputDirectory(browser) : buildOutputDirectory(browser);
+}
+
 async function waitForBuild() {
   const deadlineMs = Date.now() + BUILD_WAIT_MS;
 
   while (Date.now() < deadlineMs) {
-    const output = devOutputDirectory(browser);
+    const output = sourceDirectory();
     if (output && existsSync(join(output, "manifest.json"))) {
       return true;
     }
@@ -176,6 +259,17 @@ async function waitForBuild() {
   }
 
   return false;
+}
+
+/** A served session restarts to inline the new values; an unserved one has only the one answer. */
+async function answerChange(filename) {
+  if (!isServedByDevServer) {
+    await rebuild(filename);
+
+    return;
+  }
+
+  restart(filename);
 }
 
 function restart(filename) {
@@ -239,31 +333,43 @@ async function stop(code) {
 const owner = runningOwner();
 if (owner) {
   console.error(
-    `[dev] a dev server is already running as process ${owner}.\n`
-    + "      Two of them race for the port and overwrite each other's build, so this one is stopping.\n"
-    + "      Stop that one first, or use its browser - it is the same extension."
+    `[dev] a ${browser} dev server is already running as process ${owner}.\n`
+    + "      Two for one browser overwrite each other's build, so this one is stopping.\n"
+    + "      Stop that one first, or use its window - it is the same extension.\n"
+    + "      Another browser is fine: each has its own lock, output directory and port."
   );
   process.exit(1);
 }
 
 claimLock();
-start();
+
+if (isServedByDevServer) {
+  start();
+} else {
+  console.info(`[dev] ${browser} cannot be served, so this is a build - see the note at the top`);
+  await build();
+}
 
 const output = await waitForBuild();
 if (!output) {
-  console.error("[dev] the dev server wrote no build in time - not opening a browser");
+  console.error("[dev] there is no build to open - not opening a browser");
   await stop(1);
 }
 
 runner = await launchBrowser({
   browser,
-  sourceDir: devOutputDirectory(browser)
+  sourceDir: sourceDirectory()
 }).catch(async error => {
   console.error(`[dev] the browser would not open: ${error.message}`);
   await stop(1);
 });
 
-console.info(`\n[dev] ${browser} is open on the devtools protocol at http://127.0.0.1:${CDP_PORT}`);
+/** Firefox 156 has no DevTools protocol left to open, so the two announce different addresses. */
+const remoteAddress = browser === "firefox"
+  ? `WebDriver BiDi at ws://127.0.0.1:${FIREFOX_BIDI_PORT}/session`
+  : `the devtools protocol at http://127.0.0.1:${CDP_PORT}`;
+
+console.info(`\n[dev] ${browser} is open on ${remoteAddress}`);
 console.info("[dev] it stays open across restarts; the extension is reloaded instead\n");
 
 /*
@@ -276,8 +382,20 @@ watch(PROJECT_ROOT, (_, filename) => {
   }
 
   clearTimeout(settleTimer);
-  settleTimer = setTimeout(() => restart(filename), SETTLE_MS);
+  settleTimer = setTimeout(() => answerChange(filename), SETTLE_MS);
 });
+
+/* The source tree, for the browser that has no server watching it. Everything under `src/` counts. */
+if (!isServedByDevServer) {
+  watch(join(PROJECT_ROOT, "src"), { recursive: true }, (_, filename) => {
+    if (!filename) {
+      return;
+    }
+
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => answerChange(filename), SETTLE_MS);
+  });
+}
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, () => {
