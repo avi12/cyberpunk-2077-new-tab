@@ -369,24 +369,27 @@
   }
 
   .location__fields {
-    /* One value for the space between every row, the legend included - see `.location__legend`. */
+    /*
+     * One value for the space between every row, the legend included.
+     *
+     * A legend is rendered by its fieldset rather than laid out inside it, so it is not a flex item
+     * and the column `gap` never reaches it - the heading ends up sitting directly on top of the
+     * first label. The space it misses is the content box's own block-start padding, which is where
+     * the two engines agree the legend ends: a margin on the legend is honoured by Chromium and not
+     * reliably by Gecko, which renders it into the border band instead.
+     */
     --cp-field-gap: 0.5rem;
 
     display: flex;
     flex-direction: column;
     gap: var(--cp-field-gap);
     margin: 0;
-    padding: 0;
+    padding-block: var(--cp-field-gap) 0;
+    padding-inline: 0;
     border: none;
   }
 
   .location__legend {
-    /*
-     * A legend is rendered by its fieldset rather than laid out inside it, so it is not a flex item
-     * and the column `gap` never reaches it - measured the same in Chromium and Firefox, with the
-     * heading sitting directly on top of the first label. The margin is the gap it misses.
-     */
-    margin-bottom: var(--cp-field-gap);
     padding: 0;
     color: var(--cp-primary);
     font-family: var(--cp-mono);
