@@ -44,6 +44,17 @@
   /** A town rather than a spot, and one that follows the connection - so the reader is told both. */
   const CONNECTION_CAPTION = "This device wouldn't say, so this is where your connection puts you - type coordinates if it is off";
 
+  /**
+   * Being told no about Google's site, said out loud instead of swallowed. It used to cost nothing
+   * visible, which is the whole complaint: the reader pressed, answered a browser prompt, and the
+   * panel carried on as though they had not been asked.
+   *
+   * What it actually costs is the reading and only the reading, so the line says so - open-meteo
+   * answers the same coordinates and asks for nothing - and it names the way back, which is the
+   * button they just pressed.
+   */
+  const GOOGLE_REFUSED_MESSAGE = "Google's weather needs google.com - open-meteo is answering instead, press again to allow it";
+
   function coordinateSchema({ min, max, label }: {
     min: number;
     max: number;
@@ -98,6 +109,8 @@
    * that await would spend.
    */
   let isGoogleAllowed = $state<boolean | undefined>();
+  /** Whether the last press was told no about that site, which is what keeps the panel up. */
+  let isGoogleRefused = $state(false);
   /** What the last press came back with, or null before there has been one. */
   let asked = $state<AskedLocation | null>(null);
 
@@ -167,6 +180,7 @@
     draft = emptyDraft();
     error = "";
     asked = null;
+    isGoogleRefused = false;
     isEditing = false;
   });
 
@@ -178,10 +192,15 @@
    *
    * Only a site newly handed over moves the source. Somebody who granted it once and then switched
    * Google off in the panel has already answered this question, and setting a location is not them
-   * changing their mind about it.
+   * changing their mind about it - and they are not told no either, since nobody asked them.
    */
   function useGoogleWeather(isGranted: boolean) {
-    if (!isGranted || isGoogleAllowed) {
+    if (isGoogleAllowed) {
+      return;
+    }
+
+    isGoogleRefused = !isGranted;
+    if (!isGranted) {
       return;
     }
 
@@ -207,9 +226,15 @@
    * A blocked page is pressed all the same, which it did not used to be. The device refuses that one
    * instantly and without a prompt, and the connection answers behind it - so there is a town to be
    * had here, where before there was a dead button.
+   *
+   * Closing is what a press that answered both questions well earns, and nothing else does. A town
+   * from the connection is a guess rather than a fix, so it stays up for the reader to accept or
+   * type over; a site refused leaves a sentence on the screen, and a panel that closed over it would
+   * be hiding the one thing the press had to say.
    */
   async function followDevice() {
     asked = null;
+    isGoogleRefused = false;
     const located = onFollowDevice();
     useGoogleWeather(await requestAccess(GOOGLE_WEATHER_ACCESS));
     asked = await located;
@@ -219,15 +244,24 @@
     if (isDeviceProved) {
       deviceAccess = "granted";
     }
+
+    const isSettled = isDeviceProved && !isGoogleRefused;
+    if (isSettled) {
+      onClose();
+    }
   }
 
   /**
    * The site is asked for straight out of the submit, before anything is awaited, and the location is
    * saved either way: the coordinates are what the reader came to set, and Google is the bonus on
    * top. Nothing asks for the device here - they have just said where they are by hand.
+   *
+   * The panel closes on a save unless that site was refused, in which case it stays up carrying the
+   * sentence - with the coordinates still in the fields, so pressing again is the way to allow it.
    */
   async function confirm(e: SubmitEvent) {
     e.preventDefault();
+    isGoogleRefused = false;
     const parsed = coordinatesSchema.safeParse({
       latitude: draft.latitude,
       longitude: draft.longitude
@@ -238,6 +272,7 @@
       return;
     }
 
+    error = "";
     const isGranted = await requestAccess(GOOGLE_WEATHER_ACCESS);
     const latitude = roundCoordinate(parsed.data.latitude);
     const longitude = roundCoordinate(parsed.data.longitude);
@@ -247,6 +282,9 @@
       latitude,
       longitude
     });
+    if (!isGoogleRefused) {
+      onClose();
+    }
   }
 </script>
 
@@ -310,6 +348,10 @@
 
     {#if error}
       <p class="cyber-error" role="alert">{error}</p>
+    {/if}
+
+    {#if isGoogleRefused}
+      <p class="location__notice" role="status">{GOOGLE_REFUSED_MESSAGE}</p>
     {/if}
   </form>
 
@@ -380,11 +422,21 @@
     }
   }
 
-  .location__caption {
-    color: var(--cp-text-dimmer);
+  /* The two quiet lines under the button are one line of type; only their colour says which. */
+  .location__caption,
+  .location__notice {
     font-family: var(--cp-mono);
     font-size: 0.75rem;
     line-height: 1rem;
+  }
+
+  .location__caption {
+    color: var(--cp-text-dimmer);
+  }
+
+  /* Told, not failed - the accent rather than the error colour, which is for something being wrong. */
+  .location__notice {
+    color: var(--cp-accent);
   }
 
   .location__fields {

@@ -4,7 +4,7 @@
   import type { WeatherReading } from "./model";
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
-  import { askDeviceLocation, deviceLocation, LocationSource } from "./geolocation";
+  import { askDeviceLocation, deviceLocation } from "./geolocation";
   import { formatTemperature, temperatureUnit, WEATHER_ICONS, WEATHER_REFRESH_MS } from "./model";
   import { fetchWeather } from "./sources";
   import { Glitch } from "@/lib/glitch.svelte";
@@ -55,23 +55,17 @@
    * `detected` is assigned here rather than left to the read below, which only runs where the
    * override was the thing being followed until now.
    *
-   * The panel closes on a fix from the device and stays up for one from the connection, which is a
-   * different thing and worth a sentence: the reader can accept the town it names or type over it.
-   * A press that found nothing at all keeps it up too, and hears why - a device that answers nothing
-   * used to close the panel and leave the old city sitting there, which reads as the button having
-   * done nothing at all.
+   * Whether the panel closes on this is the panel's call and not the widget's: the same press asks
+   * Google for its site, and the panel is the only thing that knows how that went.
    */
   async function followDevice() {
     const answer = await askDeviceLocation();
     if (!answer.isFound) {
-      isEditingLocation = true;
-
       return answer;
     }
 
     detected = answer.location;
     onConfigChange({ location: undefined });
-    isEditingLocation = answer.source === LocationSource.connection;
 
     return answer;
   }
@@ -148,10 +142,7 @@
   isOpen={isEditingLocation}
   onClose={() => (isEditingLocation = false)}
   onFollowDevice={followDevice}
-  onSave={next => {
-    onConfigChange({ location: next });
-    isEditingLocation = false;
-  }} />
+  onSave={next => onConfigChange({ location: next })} />
 
 <style>
   .weather__row {
