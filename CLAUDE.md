@@ -13,9 +13,12 @@
     appears there. Never re-add it to a browser list - see the README's "Browsers" section for the
     two dead ends and why the background redirect is not worth its permission
   - Single shared code path; branch only when an API genuinely diverges
-  - The manifest is a function of `browser` in `wxt.config.ts`: `identity` and `identity.email` are
-    Chromium-only, so Firefox's manifest omits them
-  - No `oauth2` manifest key - Edge does not support it
+  - The manifest is a function of `browser` in `wxt.config.ts`, but the required `permissions` are
+    one shared list: the split is `author`'s shape, Firefox's `browser_specific_settings` against
+    Chromium's `key` and `minimum_chrome_version`, and the optional permissions and origins, which
+    only Chromium is given
+  - No `oauth2` manifest key - Edge does not support it. `identity` is asked for on both, since
+    Firefox implements `launchWebAuthFlow` too, and `identity.email` on neither
 
 # Code style
 

@@ -67,22 +67,27 @@ against costs nothing.
 
 ## Permissions
 
-Six on Chromium (Chrome and Edge), four on Firefox, and each backs one feature:
+Seven, the same seven on Chromium (Chrome and Edge) and on Firefox, and each backs one feature:
 
-| Permission       | Why                                                                     |
-| ---------------- | ----------------------------------------------------------------------- |
-| `search`         | the "Default" search option runs the browser's own configured engine     |
-| `topSites`       | seeds the netlinks grid on first run                                     |
-| `geolocation`    | the weather's location, whenever it is following this device             |
-| `storage`        | every setting, and the backup you can keep in your browser account       |
-| `identity`       | "USE BROWSER ACCOUNT" names the greeting after the signed-in account     |
-| `identity.email` | that address is the only name any browser API will hand over             |
+| Permission         | Why                                                                     |
+| ------------------ | ----------------------------------------------------------------------- |
+| `search`           | the "Default" search option runs the browser's own configured engine    |
+| `topSites`         | seeds the netlinks grid on first run                                    |
+| `geolocation`      | the weather's location, whenever it is following this device            |
+| `storage`          | every setting, and the backup you can keep in your browser account      |
+| `unlimitedStorage` | lifts the cap on the `local` area, which caches the companion's answers |
+| `identity`         | "Use Google account" fills the greeting in with your real first name    |
+| `scripting`        | types a finished prompt into the tab the compose button opened          |
 
-The last two are Chromium-only: Firefox exposes the `identity` namespace without
-`getProfileUserInfo`, so its manifest omits both and the button reports no account.
+`identity` is there on Firefox too, because all three browsers implement `launchWebAuthFlow`, which
+is the whole of how it is used - see "Google account name". `identity.email` is on neither engine.
 
-`nativeMessaging` is **optional** and Chromium-only: it is asked for only if you link the companion
-that reads Copilot Journeys and tips, so everyone else installs without ever seeing the prompt.
+What is Chromium-only is everything **optional**, and none of it is asked for at install:
+`nativeMessaging` if you link the companion that reads Copilot Journeys and tips, `tabs` and
+`history` for the tips that ask about your own reading, `<all_urls>` to read the pages such a tip is
+asked about, `claude.ai` to finish a prompt off where it was composed, and `google.com` for Google's
+own weather. Everything but the last follows the companion, which is Edge on Windows only - so an
+install that never links it sees no prompt at all.
 
 ### Permanent extension id
 
