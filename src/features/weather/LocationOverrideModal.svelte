@@ -105,6 +105,15 @@
       return false;
     }
 
+    /*
+     * A press that got nothing counts as not handed over, whatever the permission says: a browser
+     * can answer `granted` and still have no way to place the machine, and the lit button would
+     * then be claiming to follow a device the widget is not reading.
+     */
+    if (refusal) {
+      return false;
+    }
+
     if (deviceAccess && deviceAccess !== "granted") {
       return false;
     }
