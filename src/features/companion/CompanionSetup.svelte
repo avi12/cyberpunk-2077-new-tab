@@ -27,7 +27,7 @@
    * a host that is not there, and a tab left open all day would otherwise knock thousands of times.
    *
    * Neither state is reached until the reader has asked for the app, so a new tab on a machine that
-   * never wanted one runs no timer at all - see `isCompanionWorthAsking`.
+   * never wanted one runs no timer at all - see `isSetupStarted` in `readCompanion`.
    *
    * `linking` waits far longer and never drifts: the worker that answered was started before the
    * permission existed, so it will keep saying no however often it is asked, and only a stretch of
