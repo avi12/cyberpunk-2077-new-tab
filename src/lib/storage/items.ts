@@ -108,6 +108,19 @@ export const bookmarksSeededItem = storage.defineItem<boolean>("local:bookmarksS
 export const companionSetupStartedItem = storage.defineItem<boolean>("local:companionSetupStarted", { fallback: false });
 
 /**
+ * Whether the companion has ever answered on this machine, which is the durable proof the reader
+ * actually has the paid app - and so the one thing that decides whether the panel may still offer
+ * to sell it. Written the moment the app speaks, whether it had records to give or was only saying
+ * its resident half is stopped: both are an app that is installed and reachable.
+ *
+ * Not derivable from the snapshots it used to be read off. `tipsSnapshot` is filled by Microsoft's
+ * own public endpoint on machines with no app at all, and `journeysSnapshot` stays empty on an Edge
+ * that has not mapped a journey yet - so one read the app's presence into a reader who lacks it and
+ * the other missed it in a reader who has it.
+ */
+export const companionAnsweredItem = storage.defineItem<boolean>("local:companionAnswered", { fallback: false });
+
+/**
  * Not a setting: the last answer the companion app gave about one family of cards. Reading journeys
  * afresh means snapshotting a database that runs to tens of megabytes and takes a quarter of a
  * second, which is long enough to see, so the answer outlives the browser session - otherwise the

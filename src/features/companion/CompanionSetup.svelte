@@ -12,7 +12,7 @@
   import { composeAccess } from "@/features/compose/access.svelte";
   import { composeSiteFor, promptTargetLabel } from "./prompt-target";
   import { hasTipsAccess, requestTipsAccess } from "@/features/tips/catalogue";
-  import { journeysSnapshotItem, tipsSnapshotItem } from "@/lib/storage/items";
+  import { companionAnsweredItem } from "@/lib/storage/items";
   import { promptDestination } from "./prompt-destination";
   import CompanionNotice from "./CompanionNotice.svelte";
   import { IS_WINDOWS } from "./platform";
@@ -108,16 +108,14 @@
 
   /**
    * Whether the app has ever answered on this machine, which is the whole of whether it is still
-   * worth selling. A snapshot is written only by an answer that held records, so one being there is
-   * the durable mark that the reader has the app - and somebody who has it should never be told to
-   * go and buy it, however the read happens to be going this second. The row proving the app works
-   * while the panel points at the Store was the shape of that bug.
+   * worth selling: somebody who has it should never be told to go and buy it, however the read
+   * happens to be going this second. The row proving the app works while the panel points at the
+   * Store was the shape of that bug.
    */
   let hasCompanionAnswered = $state(false);
 
   $effect(() => {
-    void Promise.all([journeysSnapshotItem.getValue(), tipsSnapshotItem.getValue()])
-      .then(snapshots => (hasCompanionAnswered = snapshots.some(snapshot => snapshot !== null)));
+    void companionAnsweredItem.getValue().then(hasAnswered => (hasCompanionAnswered = hasAnswered));
   });
 
   /**
@@ -208,9 +206,9 @@
 </script>
 
 <!--
-  The way to the Store, on the listening states, and only while the app has never answered here.
-  Nothing to record beyond the press: both of those states are past the permission, so the setup
-  this would mark as started is long since started.
+  The way to the Store, on every state that is still waiting, and only while the app has never
+  answered here. Nothing to record beyond the press: all of those states are past the permission, so
+  the setup this would mark as started is long since started.
 -->
 {#snippet storeLink()}
   <a
@@ -310,9 +308,13 @@
         {COMPANION_NAME} stopped - start it again and this fills itself in
       </CompanionNotice>
     {:else if isConnectionGivenUp}
-      <CompanionNotice action={storeLink}>
-        Couldn't reach the {COMPANION_NAME} - get it from the Microsoft Store, or start it if it is
-        already installed
+      <CompanionNotice action={hasCompanionAnswered ? undefined : storeLink}>
+        {#if hasCompanionAnswered}
+          Couldn't reach the {COMPANION_NAME} - start it, or check it is still installed
+        {:else}
+          Couldn't reach the {COMPANION_NAME} - get it from the Microsoft Store, or start it if it is
+          already installed
+        {/if}
       </CompanionNotice>
     {:else if companion.state === CompanionState.linking}
       <CompanionNotice action={hasCompanionAnswered ? undefined : storeLink}>

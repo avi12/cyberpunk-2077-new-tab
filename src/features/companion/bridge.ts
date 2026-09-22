@@ -1,6 +1,11 @@
 import { IS_EDGE, isWindows11 } from "./platform";
 import { CompanionAnswer, type CompanionRequest, MessageType, sendMessage } from "@/lib/messaging";
-import { companionSetupStartedItem, type CompanionSnapshot, type StorageItem } from "@/lib/storage/items";
+import {
+  companionAnsweredItem,
+  companionSetupStartedItem,
+  type CompanionSnapshot,
+  type StorageItem
+} from "@/lib/storage/items";
 import { z } from "@/lib/zod";
 
 /**
@@ -165,6 +170,13 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
       state: CompanionState.companionOffline,
       cards: []
     };
+  }
+
+  // Anything but silence is the app itself speaking, so this is where having it is proved. An
+  // `unbound` answer never reached it - that is the worker saying it holds no binding to send with.
+  const isAppSpeaking = result.answer !== CompanionAnswer.unbound;
+  if (isAppSpeaking) {
+    await companionAnsweredItem.setValue(true);
   }
 
   if (result.answer === CompanionAnswer.notRunning) {
