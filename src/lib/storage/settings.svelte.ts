@@ -83,13 +83,12 @@ class Setting<TValue> {
   /**
    * The write behind `current`, for a caller that cannot move on until storage has the value.
    *
-   * Every setting is written through here, which is why the copy is taken here and nowhere else. A
-   * caller almost always hands back something it read out of `current` - a list mapped over, a
-   * shape spread into a new one - and what it read was a Svelte proxy, which Firefox refuses to
-   * store. `plainCopy` says why in full.
-   *
-   * The copy is what is kept in memory too, so the value this page is reading and the value on disk
-   * are the same value rather than two that agree for now.
+   * The copy is for what stays in memory, not for the write - `definePlainItem` guards that end,
+   * and every stored value goes through it. A caller almost always hands back something it read out
+   * of `current`, a list mapped over or a shape spread into a new one, and holding their proxy
+   * would leave `current` answering with a value they can still change underneath it. Copying
+   * severs that, and makes the value this page reads and the value on disk one value rather than
+   * two that agree for now.
    */
   async set(value: TValue) {
     const stored = plainCopy(value);

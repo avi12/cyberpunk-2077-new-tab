@@ -1,3 +1,4 @@
+import { definePlainItem } from "./plain-item";
 import { z } from "@/lib/zod";
 import { storage } from "#imports";
 
@@ -41,7 +42,7 @@ export function slicedBackup({ name, maxLength, tooBig }: {
   /** What a reader is told when their snapshot will not fit, in words about their page. */
   tooBig: string;
 }) {
-  const recordItem = storage.defineItem<BackupRecord | null>(`sync:${name}Backup`, { fallback: null });
+  const recordItem = definePlainItem<BackupRecord | null>(`sync:${name}Backup`, { fallback: null });
 
   function sliceKey(index: number) {
     return `sync:${name}BackupSlice${index}` as const;

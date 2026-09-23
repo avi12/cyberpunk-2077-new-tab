@@ -15,6 +15,7 @@ import {
   DEFAULT_WIDGET_ORDER,
   DEFAULT_WIDGETS
 } from "./defaults";
+import { definePlainItem } from "./plain-item";
 import type {
   Bookmark,
   ColorTheme,
@@ -28,67 +29,66 @@ import { BackgroundMediaType, SearchEngineId } from "./schema";
 import type { PromptTargetId } from "@/features/companion/prompt-target";
 import type { ComposeSiteId } from "@/features/compose/sites";
 import type { IconName } from "@/features/netlinks/icons/choices";
-import { storage } from "#imports";
 import type { WxtStorageItem } from "wxt/utils/storage";
 
-/** One stored value as `defineItem` hands it back, for the code that is given one to read or write. */
+/** One stored value as `definePlainItem` hands it back, for code that is given one to read or write. */
 export type StorageItem<TValue> = WxtStorageItem<TValue, Record<string, unknown>>;
 
-export const bookmarksItem = storage.defineItem<Bookmark[]>("local:bookmarks", { fallback: DEFAULT_BOOKMARKS });
+export const bookmarksItem = definePlainItem<Bookmark[]>("local:bookmarks", { fallback: DEFAULT_BOOKMARKS });
 
-export const categoryOrderItem = storage.defineItem<string[]>("local:categoryOrder", { fallback: DEFAULT_CATEGORY_ORDER });
+export const categoryOrderItem = definePlainItem<string[]>("local:categoryOrder", { fallback: DEFAULT_CATEGORY_ORDER });
 
-export const collapsedCategoriesItem = storage.defineItem<Record<string, boolean>>("local:collapsedCategories", {
+export const collapsedCategoriesItem = definePlainItem<Record<string, boolean>>("local:collapsedCategories", {
   fallback: {}
 });
 
-export const customCategoriesItem = storage.defineItem<string[]>("local:customCategories", { fallback: [] });
+export const customCategoriesItem = definePlainItem<string[]>("local:customCategories", { fallback: [] });
 
-export const activeSearchEngineItem = storage.defineItem<SearchEngineId>("local:activeSearchEngine", { fallback: SearchEngineId.browserDefault });
+export const activeSearchEngineItem = definePlainItem<SearchEngineId>("local:activeSearchEngine", { fallback: SearchEngineId.browserDefault });
 
-export const weatherLocationItem = storage.defineItem<GeoLocation>("local:weatherLocation", { fallback: DEFAULT_WEATHER_LOCATION });
+export const weatherLocationItem = definePlainItem<GeoLocation>("local:weatherLocation", { fallback: DEFAULT_WEATHER_LOCATION });
 
-export const temperatureUnitItem = storage.defineItem<boolean>("local:temperatureUnit", { fallback: DEFAULT_TEMPERATURE_UNIT });
+export const temperatureUnitItem = definePlainItem<boolean>("local:temperatureUnit", { fallback: DEFAULT_TEMPERATURE_UNIT });
 
-export const colorThemeItem = storage.defineItem<ColorTheme>("local:colorTheme", { fallback: DEFAULT_COLOR_THEME });
+export const colorThemeItem = definePlainItem<ColorTheme>("local:colorTheme", { fallback: DEFAULT_COLOR_THEME });
 
-export const displayPreferencesItem = storage.defineItem<DisplayPreferences>("local:displayPreferences", { fallback: DEFAULT_DISPLAY_PREFERENCES });
+export const displayPreferencesItem = definePlainItem<DisplayPreferences>("local:displayPreferences", { fallback: DEFAULT_DISPLAY_PREFERENCES });
 
-export const backgroundItem = storage.defineItem<string>("local:background", { fallback: DEFAULT_BACKGROUND });
+export const backgroundItem = definePlainItem<string>("local:background", { fallback: DEFAULT_BACKGROUND });
 
-export const backgroundBrightnessItem = storage.defineItem<number>("local:backgroundBrightness", { fallback: DEFAULT_BACKGROUND_BRIGHTNESS });
+export const backgroundBrightnessItem = definePlainItem<number>("local:backgroundBrightness", { fallback: DEFAULT_BACKGROUND_BRIGHTNESS });
 
-export const backgroundMediaTypeItem = storage.defineItem<BackgroundMediaType>("local:backgroundMediaType", { fallback: BackgroundMediaType.none });
+export const backgroundMediaTypeItem = definePlainItem<BackgroundMediaType>("local:backgroundMediaType", { fallback: BackgroundMediaType.none });
 
-export const backgroundMediaVersionItem = storage.defineItem<number>("local:backgroundMediaVersion", { fallback: 0 });
+export const backgroundMediaVersionItem = definePlainItem<number>("local:backgroundMediaVersion", { fallback: 0 });
 
-export const userNameItem = storage.defineItem<string>("local:userName", { fallback: DEFAULT_USER_NAME });
+export const userNameItem = definePlainItem<string>("local:userName", { fallback: DEFAULT_USER_NAME });
 
-export const widgetsItem = storage.defineItem<Widget[]>("local:widgets", { fallback: DEFAULT_WIDGETS });
+export const widgetsItem = definePlainItem<Widget[]>("local:widgets", { fallback: DEFAULT_WIDGETS });
 
-export const widgetOrderItem = storage.defineItem<string[]>("local:widgetOrder", { fallback: DEFAULT_WIDGET_ORDER });
+export const widgetOrderItem = definePlainItem<string[]>("local:widgetOrder", { fallback: DEFAULT_WIDGET_ORDER });
 
-export const scanLinesModeItem = storage.defineItem<ScanLinesMode>("local:scanLinesMode", { fallback: DEFAULT_SCAN_LINES_MODE });
+export const scanLinesModeItem = definePlainItem<ScanLinesMode>("local:scanLinesMode", { fallback: DEFAULT_SCAN_LINES_MODE });
 
-export const tabTitleItem = storage.defineItem<string>("local:tabTitle", { fallback: DEFAULT_TAB_TITLE });
+export const tabTitleItem = definePlainItem<string>("local:tabTitle", { fallback: DEFAULT_TAB_TITLE });
 
-export const tabFaviconItem = storage.defineItem<IconName>("local:tabFavicon", { fallback: DEFAULT_TAB_FAVICON });
+export const tabFaviconItem = definePlainItem<IconName>("local:tabFavicon", { fallback: DEFAULT_TAB_FAVICON });
 
-export const playSoundsItem = storage.defineItem<boolean>("local:playSounds", { fallback: DEFAULT_PLAY_SOUNDS });
+export const playSoundsItem = definePlainItem<boolean>("local:playSounds", { fallback: DEFAULT_PLAY_SOUNDS });
 
 /**
  * Nothing stored means the clock reads however the reader's locale reads it, which is what it did
  * before there was anything to press. Only a press on the clock itself ever writes here.
  */
-export const hourCycleItem = storage.defineItem<HourCycle | null>("local:hourCycle", { fallback: null });
+export const hourCycleItem = definePlainItem<HourCycle | null>("local:hourCycle", { fallback: null });
 
 /**
  * Nothing stored means a card asks Copilot, which is the automatic mode rather than a second
  * setting that can disagree with the first. Only an explicit pick is ever written here.
  */
-export const promptTargetItem = storage.defineItem<PromptTargetId | null>("local:promptTarget", { fallback: null });
+export const promptTargetItem = definePlainItem<PromptTargetId | null>("local:promptTarget", { fallback: null });
 
-export const bookmarksSeededItem = storage.defineItem<boolean>("local:bookmarksSeeded", { fallback: false });
+export const bookmarksSeededItem = definePlainItem<boolean>("local:bookmarksSeeded", { fallback: false });
 
 /**
  * Whether the reader has asked for the companion app. Nothing is said to the app until they have:
@@ -102,7 +102,7 @@ export const bookmarksSeededItem = storage.defineItem<boolean>("local:bookmarksS
  * cannot be held without having pressed through the same panel. This is only read where the
  * permission is absent, so the two can never be seen disagreeing - see `readCompanion`.
  */
-export const companionSetupStartedItem = storage.defineItem<boolean>("local:companionSetupStarted", { fallback: false });
+export const companionSetupStartedItem = definePlainItem<boolean>("local:companionSetupStarted", { fallback: false });
 
 /**
  * Whether the companion has ever answered on this machine, which is the durable proof the reader
@@ -115,7 +115,7 @@ export const companionSetupStartedItem = storage.defineItem<boolean>("local:comp
  * that has not mapped a journey yet - so one read the app's presence into a reader who lacks it and
  * the other missed it in a reader who has it.
  */
-export const companionAnsweredItem = storage.defineItem<boolean>("local:companionAnswered", { fallback: false });
+export const companionAnsweredItem = definePlainItem<boolean>("local:companionAnswered", { fallback: false });
 
 /**
  * Not a setting: the last answer the companion app gave about one family of cards. Reading journeys
@@ -130,11 +130,11 @@ export type CompanionSnapshot = {
   raw: unknown[];
 };
 
-export const journeysSnapshotItem = storage.defineItem<CompanionSnapshot | null>("local:journeysSnapshot", {
+export const journeysSnapshotItem = definePlainItem<CompanionSnapshot | null>("local:journeysSnapshot", {
   fallback: null
 });
 
-export const tipsSnapshotItem = storage.defineItem<CompanionSnapshot | null>("local:tipsSnapshot", {
+export const tipsSnapshotItem = definePlainItem<CompanionSnapshot | null>("local:tipsSnapshot", {
   fallback: null
 });
 
@@ -147,7 +147,7 @@ export const tipsSnapshotItem = storage.defineItem<CompanionSnapshot | null>("lo
  * browser-account backup carry only those, so the answer never travels to a machine it is not true
  * on.
  */
-export const composeRefusalsItem = storage.defineItem<ComposeSiteId[]>("local:composeRefusals", { fallback: [] });
+export const composeRefusalsItem = definePlainItem<ComposeSiteId[]>("local:composeRefusals", { fallback: [] });
 
 /**
  * How far round the tip rotation this browser run has got. Edge holds the same count in memory and
@@ -155,7 +155,7 @@ export const composeRefusalsItem = storage.defineItem<ComposeSiteId[]>("local:co
  * closed the browser on. A page cannot hold it - the next new tab is a different page - so it lives
  * here.
  */
-export const tipsTurnItem = storage.defineItem<number>("local:tipsTurn", { fallback: 0 });
+export const tipsTurnItem = definePlainItem<number>("local:tipsTurn", { fallback: 0 });
 
 /** Far enough round the catalogue that two runs rarely open on the same three. */
 const TIPS_SHUFFLE_RANGE = 10_000;
@@ -186,11 +186,11 @@ export async function rememberComposeRefusal(siteId: ComposeSiteId) {
  * `local:` rather than `sync:`: an id that followed a browser account would count one person twice
  * over as two installs, and a session is about this machine's last half hour.
  */
-export const analyticsClientIdItem = storage.defineItem<string | null>("local:analyticsClientId", {
+export const analyticsClientIdItem = definePlainItem<string | null>("local:analyticsClientId", {
   fallback: null
 });
 
-export const analyticsSessionItem = storage.defineItem<{
+export const analyticsSessionItem = definePlainItem<{
   sessionId: string;
   atMs: number;
 } | null>(
@@ -199,4 +199,4 @@ export const analyticsSessionItem = storage.defineItem<{
 );
 
 /** The reader's own no. Absent is consent, which is what an untouched install means. */
-export const analyticsOptOutItem = storage.defineItem<boolean>("local:analyticsOptOut", { fallback: false });
+export const analyticsOptOutItem = definePlainItem<boolean>("local:analyticsOptOut", { fallback: false });
