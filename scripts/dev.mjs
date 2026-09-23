@@ -17,12 +17,19 @@
  * which holds `companion/`, and a locked artifact there - MSBuild holding an `obj/**` binary
  * mid-build, or the tray app holding its own exe - makes chokidar raise EBUSY, which Vite treats as
  * fatal. `wxt.config.ts` asks Vite to ignore the directory, which helps for a file that exists at
- * startup and not for one that appears during a build.
+ * startup and not for one that appears during a build. A server lost that way takes its port with it
+ * and leaves its process standing, so the port is polled rather than the process - `pollDevServer`.
  *
  * Firefox is the exception to all of that: it has no dev server at all, because an extension page
  * there refuses remote code and a dev server is remote code. Its loop is a build, a window that
  * stays, and an open new tab that reloads itself as soon as the rebuild lands - see
- * `isServedByDevServer` and `scripts/dev-reload.mjs`.
+ * `isServedByDevServer` and `scripts/dev-reload.mjs`. Where a rebuild does reach the background or
+ * the manifest, the add-on is reloaded and its pages are navigated back into the tabs they were in -
+ * `scripts/firefox-pages.mjs`.
+ *
+ * Nothing here closes a browser. Every failure this script knows how to answer - a dead server, a
+ * build that would not start, a save that landed mid-build, a promise nobody caught - is answered
+ * without the window going anywhere.
  *
  * Refusing to start twice is not a nicety, and it is per browser. Two sessions for one browser race
  * for the dev server's port and build into the same `.output` directory: the manifest ends up naming
@@ -45,6 +52,8 @@ import {
   reloadExtension
 } from "./browser.mjs";
 import { plantReloadClient, startReloadChannel } from "./dev-reload.mjs";
+import { parkExtensionPages, restoreExtensionPages } from "./firefox-pages.mjs";
+import chokidar from "chokidar";
 import { spawn } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
@@ -52,11 +61,17 @@ import {
   mkdirSync,
   readFileSync,
   rmSync,
-  watch,
   writeFileSync
 } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join, resolve } from "node:path";
+import {
+  basename,
+  dirname,
+  join,
+  relative,
+  resolve,
+  sep
+} from "node:path";
 import process from "node:process";
 
 // The package's `exports` map does not expose `bin/`, so the CLI is located relative to the entry.
@@ -66,11 +81,54 @@ const wxtCli = resolve(dirname(wxtEntry), "../bin/wxt.mjs");
 /** Read by `wxt.config.ts` to leave the browser alone, since this script is opening one. */
 const OWNS_BROWSER = "WXT_DEV_OWNS_BROWSER";
 
-/** Long enough that an editor writing a temp file and renaming it counts as one change. */
-const SETTLE_MS = 250;
+/**
+ * How often the tree is looked at, and how long a change waits for its neighbours.
+ *
+ * Polled rather than subscribed. `fs.watch` was what this used, and on Windows it stops delivering:
+ * measured here, a session went an hour answering nothing - the process alive, the port listening,
+ * every save ignored, and not a word said about it. A poll compares mtime and size, so it cannot go
+ * deaf, and it has the second virtue `youtube-time-manager` found first: a *read* is not a change,
+ * so a build bundling its own sources or an editor indexing the tree raises nothing.
+ *
+ * The settle is one poll interval, so a save that lands either side of a tick is still one build.
+ */
+const WATCH_POLL_MS = 500;
+const SETTLE_MS = 500;
+
+/**
+ * How often a served browser's dev server is asked whether it is still there.
+ *
+ * Vite's own watcher raises EBUSY on Windows against a file the browser or a build is holding, and
+ * that takes the server down while leaving the process that owns it running - so `child.on("exit")`
+ * never fires and the loop believes it is healthy. Measured: an Edge session whose page answered
+ * `ERR_CONNECTION_REFUSED` for every module while its `dev.mjs` sat there content. The port is the
+ * only honest signal, so it is the one that is read.
+ */
+const SERVER_HEARTBEAT_MS = 5000;
+const SERVER_MISSES_ALLOWED = 3;
 
 /** Vite never loads the example, so editing the documentation is not a reason to restart. */
 const IGNORED_ENV_FILE = ".env.example";
+
+/*
+ * A hiccup in the background is not a reason to end a session the reader has a browser open on.
+ * Node ends the process on an unhandled rejection, and the ones this loop can raise are all
+ * transient - a socket to the browser that went while a reload was in flight, a poll that lost its
+ * server mid-request. They are printed and survived instead.
+ *
+ * The EBUSY exception is Vite's own watcher losing a race with a file the browser or a build is
+ * holding. The watch fails and the build does not, so saying so every time would only be noise -
+ * the same finding `youtube-time-manager` writes down.
+ */
+process.on("unhandledRejection", reason => {
+  const isWatcherRace = reason?.code === "EBUSY" && reason?.syscall === "watch";
+  if (isWatcherRace) {
+    return;
+  }
+
+  console.info("[dev] something failed in the background and was survived:");
+  console.error(reason);
+});
 
 /**
  * How many times a crash is worth answering with a restart before the crash is the answer. A watcher
@@ -81,6 +139,9 @@ const MAX_CRASH_RESTARTS = 5;
 
 /** A crash later than this is a fresh problem rather than the same one going round. */
 const CRASH_WINDOW_MS = 60_000;
+
+/** How long an extension reload is given to answer before the loop stops waiting on it. */
+const RELOAD_WAIT_MS = 15_000;
 
 /** The dev server writes its build a moment after it starts, and the browser needs it to exist. */
 const BUILD_WAIT_MS = 90_000;
@@ -133,14 +194,24 @@ const wxtArgs = isServedByDevServer ? servedArgs : ["build", ...args];
 let child = null;
 let runner = null;
 let reloadChannel = null;
+let watcher = null;
 let extensionStamp = "";
 let isBuilding = false;
+let pendingChange = null;
 let isRestarting = false;
 let settleTimer = null;
 let crashRestarts = 0;
 let firstCrashAtMs = 0;
 
-/** One build, start to finish, and whether it worked - the whole of the Firefox loop's other half. */
+/**
+ * One build, start to finish, and whether it worked - the whole of the Firefox loop's other half.
+ *
+ * Settled by `error` as well as `exit`, and that is not belt and braces. A spawn that never starts -
+ * a locked binary, a Windows file handle held a beat too long - emits only `error`, and a promise
+ * left unsettled there leaves `isBuilding` true for the life of the session: every later save is
+ * then dropped by the guard below, in silence. That is the shape of the failure this loop was found
+ * in.
+ */
 function build() {
   return new Promise(resolve => {
     const builder = spawn(process.execPath, [wxtCli, ...wxtArgs], {
@@ -150,23 +221,43 @@ function build() {
         [OWNS_BROWSER]: "true"
       }
     });
+    builder.on("error", error => {
+      console.info(`[dev] the build would not start: ${error.message}`);
+      resolve(false);
+    });
     builder.on("exit", code => resolve(code === 0));
   });
 }
 
 /**
- * A change, built and handed to the open window. Overlapping presses of the same save are dropped
- * rather than queued: the build reads the tree as it is now, so the one already running has it.
+ * A change, built and handed to the open window.
+ *
+ * A save that arrives mid-build is remembered rather than dropped. The build already running read
+ * the tree before that save existed, so dropping it loses the edit outright - which reads exactly
+ * like the loop being broken, because for that file it is.
  */
 async function rebuild(filename) {
   if (isBuilding) {
+    pendingChange = filename;
+
     return;
   }
 
   isBuilding = true;
   console.info(`\n[dev] ${filename} changed - rebuilding`);
+  /* Before the build, because the build is what takes the pages - and it takes the tab with them,
+   * which can take the window. `firefox-pages.mjs` says how that was measured. */
+  const openPages = isServedByDevServer ? null : await parkExtensionPages(FIREFOX_BIDI_PORT);
   const isBuilt = await build();
   isBuilding = false;
+
+  if (pendingChange) {
+    const next = pendingChange;
+    pendingChange = null;
+    await rebuild(next);
+
+    return;
+  }
 
   if (!isBuilt) {
     console.info("[dev] the build failed - the window is still running the last one that worked");
@@ -183,21 +274,38 @@ async function rebuild(filename) {
 
   if (isExtensionChanged) {
     await announceReload();
+    await putPagesBack(openPages);
 
     return;
   }
 
   /*
-   * A temporary add-on reads its files off this directory as it needs them, so a page that reloads
-   * is already running the build that just finished - and reloading the add-on, which is what costs
-   * the tab, answers nothing that changed.
+   * A temporary add-on reads its files off this directory as it needs them, so a page that survived
+   * the build is already running it - and reloading the add-on, which is what costs the background
+   * its state, answers nothing that changed. Any page opened since the parking hears it this way;
+   * the parked ones are put back below.
    */
-  const reloadedPages = reloadChannel.broadcast();
-  console.info(
-    reloadedPages
-      ? "[dev] the open new tab reloaded itself - the extension was left alone"
-      : "[dev] no page was listening, so nothing reloaded; Ctrl+T for the new build"
-  );
+  reloadChannel.broadcast();
+  console.info("[dev] the extension was left alone - only its pages came back");
+  await putPagesBack(openPages);
+}
+
+/**
+ * The tabs the build took, pointed back at what they were showing.
+ *
+ * Said out loud only when there was something to do, because most rebuilds leave the page alone and
+ * a line saying nothing happened every time is a line nobody reads.
+ */
+async function putPagesBack(openPages) {
+  const restored = await restoreExtensionPages({
+    port: FIREFOX_BIDI_PORT,
+    pages: openPages
+  });
+  if (!restored) {
+    return;
+  }
+
+  console.info(`[dev] ${restored} page${restored === 1 ? "" : "s"} put back where ${restored === 1 ? "it was" : "they were"}`);
 }
 
 /**
@@ -216,6 +324,10 @@ function readExtensionStamp() {
   }
 
   return stamp.digest("hex");
+}
+
+function wait(delayMs) {
+  return new Promise(resolve => setTimeout(resolve, delayMs));
 }
 
 function start() {
@@ -281,27 +393,27 @@ async function announceReload() {
     return;
   }
 
-  const isReloaded = await reloadExtension({
-    runner,
-    browser
-  }).catch(() => false);
+  /*
+   * Raced, because this one reaches outside the process. `web-ext` asks the add-on to reload over
+   * its own socket and waits for an answer; a browser that has gone - or one busy enough not to
+   * reply - leaves that wait open for good, and an open wait here is `isBuilding` stuck true and
+   * every later save dropped without a word. A reload nobody confirmed is worth saying out loud;
+   * it is not worth the session.
+   */
+  const isReloaded = await Promise.race([
+    reloadExtension({
+      runner,
+      browser
+    }).catch(() => false),
+    wait(RELOAD_WAIT_MS).then(() => false)
+  ]);
   if (!isReloaded) {
     console.info("[dev] could not reach the extension to reload it; open a tab, or reload it from the extensions page");
 
     return;
   }
 
-  /*
-   * Firefox tears an extension's own pages down when the add-on is reloaded - measured: the new tab
-   * that was open is left at `about:blank`. Nothing here can keep it, so it is said out loud rather
-   * than left looking like the rebuild broke the page. A rebuild only comes this far when the
-   * background or the manifest changed; every other change is answered by the page reloading itself.
-   */
-  console.info(
-    isServedByDevServer
-      ? "[dev] extension reloaded - the browser stayed open"
-      : "[dev] extension reloaded - the window stayed open, but Firefox closed its pages; Ctrl+T for the new build"
-  );
+  console.info("[dev] extension reloaded - the browser stayed open");
 }
 
 /** Whichever output this browser is running from: the dev server's, or a plain build's. */
@@ -332,17 +444,81 @@ async function answerChange(filename) {
     return;
   }
 
-  restart(filename);
+  restart(`${filename} changed, and its values are inlined at build time`);
 }
 
-function restart(filename) {
+function restart(reason) {
   if (isRestarting || !child) {
     return;
   }
 
-  console.info(`\n[dev] ${filename} changed - restarting so the new values are inlined`);
+  console.info(`\n[dev] ${reason} - restarting the dev server; the browser stays open`);
   isRestarting = true;
   child.kill();
+}
+
+/**
+ * The dev server, asked every few seconds whether it is still answering.
+ *
+ * Its own process is not the question. Vite can lose its server to an EBUSY on a file the browser is
+ * holding and leave the process standing, so the thing that says a session is alive - `child` not
+ * having exited - is exactly the thing that stays true when it is not. The port is what the browser
+ * actually asks, so the port is what this asks too, and a restart is the same restart an `.env`
+ * change already triggers: a new CLI, the same window, the extension reloaded onto it.
+ *
+ * Two misses rather than one, so a server busy through a rebuild is not mistaken for a dead one.
+ */
+function pollDevServer() {
+  const port = devServerPort(browser);
+  let misses = 0;
+  let hasAnswered = false;
+
+  const timer = setInterval(async () => {
+    const isBusyElsewhere = isRestarting || !child;
+    if (isBusyElsewhere) {
+      return;
+    }
+
+    /*
+     * `localhost`, not `127.0.0.1`. Vite binds `::1` only - measured, and the page's own module
+     * urls say `localhost` for exactly that reason - so a probe that names the v4 address is
+     * refused by a server that is perfectly well. It answered "dead" every single time.
+     */
+    const isAnswering = await fetch(`http://localhost:${port}/@vite/client`, {
+      signal: AbortSignal.timeout(SERVER_HEARTBEAT_MS)
+    }).then(() => true).catch(() => false);
+    if (isAnswering) {
+      hasAnswered = true;
+      misses = 0;
+
+      return;
+    }
+
+    /*
+     * A server that has not answered *yet* is a server still building, and the first build is the
+     * long one. Silence only counts once there has been a voice to lose: without this the first
+     * poll after the window opens reads as a dead server and restarts a CLI that was doing fine -
+     * measured, and it is a loop, since the restart puts the next one back at the same starting
+     * line.
+     */
+    if (!hasAnswered) {
+      return;
+    }
+
+    misses += 1;
+    const isGone = misses >= SERVER_MISSES_ALLOWED;
+    if (!isGone) {
+      return;
+    }
+
+    misses = 0;
+    hasAnswered = false;
+    restart(`the dev server stopped answering on ${port}`);
+  }, SERVER_HEARTBEAT_MS);
+
+  timer.unref();
+
+  return timer;
 }
 
 function isEnvFile(filename) {
@@ -390,6 +566,7 @@ function releaseLock() {
 async function stop(code) {
   releaseLock();
   reloadChannel?.close();
+  await watcher?.close().catch(() => undefined);
   await runner?.exit().catch(() => undefined);
   process.exit(code);
 }
@@ -448,29 +625,38 @@ console.info(`\n[dev] ${browser} is open on ${remoteAddress}`);
 console.info("[dev] it stays open across restarts; the extension is reloaded instead\n");
 
 /*
- * The directory rather than each file: an editor that saves by writing a temp file and renaming it
- * over the original leaves a watch on the old inode, which then never fires again.
+ * The root for its `.env` files, which are baked into a build and so need a restart rather than a
+ * reload; and the source tree too for the browser that has no server watching it - Vite is doing
+ * that job on the others, and two watchers over one tree would only build the same change twice.
+ *
+ * Directories rather than files: an editor that saves by writing a temp file and renaming it over
+ * the original leaves any watch on the old file pointed at nothing.
  */
-watch(PROJECT_ROOT, (_, filename) => {
-  if (!isEnvFile(filename)) {
+const watched = [PROJECT_ROOT, ...isServedByDevServer ? [] : [join(PROJECT_ROOT, "src")]];
+watcher = chokidar.watch(watched, {
+  ignoreInitial: true,
+  usePolling: true,
+  interval: WATCH_POLL_MS,
+  /* The root is wanted for its own files only; `src` brings its own entry and is walked in full. */
+  depth: isServedByDevServer ? 0 : undefined,
+  ignored: path => path.includes("node_modules") || path.includes(`${sep}.output`)
+});
+
+watcher.on("error", error => console.info(`[dev] the watcher complained: ${error.message}`));
+
+if (isServedByDevServer) {
+  pollDevServer();
+}
+
+watcher.on("all", (_event, path) => {
+  const isUnderSource = path.startsWith(join(PROJECT_ROOT, "src"));
+  if (!isUnderSource && !isEnvFile(basename(path))) {
     return;
   }
 
   clearTimeout(settleTimer);
-  settleTimer = setTimeout(() => answerChange(filename), SETTLE_MS);
+  settleTimer = setTimeout(() => answerChange(relative(PROJECT_ROOT, path)), SETTLE_MS);
 });
-
-/* The source tree, for the browser that has no server watching it. Everything under `src/` counts. */
-if (!isServedByDevServer) {
-  watch(join(PROJECT_ROOT, "src"), { recursive: true }, (_, filename) => {
-    if (!filename) {
-      return;
-    }
-
-    clearTimeout(settleTimer);
-    settleTimer = setTimeout(() => answerChange(filename), SETTLE_MS);
-  });
-}
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, () => {

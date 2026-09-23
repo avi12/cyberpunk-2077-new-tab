@@ -2,7 +2,9 @@
   "name": "cyberpunk-2077-new-tab",
   "version": "0.0.1",
   "type": "module",
-  "sideEffects": ["*.css"],
+  "sideEffects": [
+    "*.css"
+  ],
   "description": "A Cyberpunk 2077 themed new tab page: clock, search, quotes, netlinks seeded from your most-visited sites, and drag-ordered widgets.",
   "author": "Avi <avi6106@gmail.com> (https://avi12.com)",
   "license": "GPL-3.0-or-later",
@@ -43,6 +45,7 @@
     "@types/node": "^26.4.1",
     "@typescript/native-preview": "7.0.0-dev.20260707.2",
     "@wxt-dev/module-svelte": "2.0.5",
+    "chokidar": "^5.0.0",
     "eslint": "^10.9.1",
     "eslint-plugin-import-newlines": "^2.0.0",
     "eslint-plugin-perfectionist": "^5.11.0",
