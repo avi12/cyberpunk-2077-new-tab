@@ -168,6 +168,9 @@ const browser = iBrowserFlag === -1 ? "chrome" : args[iBrowserFlag + 1];
  */
 const LOCK_FILE = join(PROJECT_ROOT, "node_modules", ".cache", `wxt-dev-${browser}.lock`);
 
+/** Watched in full for the browser with no server doing it, and named once so both readers agree. */
+const SOURCE_DIRECTORY = join(PROJECT_ROOT, "src");
+
 /**
  * Firefox is not served, it is rebuilt.
  *
@@ -194,7 +197,7 @@ const wxtArgs = isServedByDevServer ? servedArgs : ["build", ...args];
 let child = null;
 let runner = null;
 let reloadChannel = null;
-let watcher = null;
+let watchers = [];
 let extensionStamp = "";
 let isBuilding = false;
 let pendingChange = null;
@@ -566,7 +569,7 @@ function releaseLock() {
 async function stop(code) {
   releaseLock();
   reloadChannel?.close();
-  await watcher?.close().catch(() => undefined);
+  await Promise.all(watchers.map(watcher => watcher.close().catch(() => undefined)));
   await runner?.exit().catch(() => undefined);
   process.exit(code);
 }
@@ -631,32 +634,44 @@ console.info("[dev] it stays open across restarts; the extension is reloaded ins
  *
  * Directories rather than files: an editor that saves by writing a temp file and renaming it over
  * the original leaves any watch on the old file pointed at nothing.
+ *
+ * Two watches rather than one path list, and that is the difference between polling a hundred files
+ * and polling four thousand. chokidar takes a single `depth` for every path it is handed, so "the
+ * root for its own files, and `src` in full" cannot be said in one watch - asked for both, it walks
+ * the whole repository, `companion/` included. That is the directory `wxt.config.ts` already keeps
+ * Vite out of, because a locked MSBuild artifact there raises the EBUSY that loses a watcher.
  */
-const watched = [PROJECT_ROOT, ...isServedByDevServer ? [] : [join(PROJECT_ROOT, "src")]];
-watcher = chokidar.watch(watched, {
+const WATCH_OPTIONS = {
   ignoreInitial: true,
   usePolling: true,
   interval: WATCH_POLL_MS,
-  /* The root is wanted for its own files only; `src` brings its own entry and is walked in full. */
-  depth: isServedByDevServer ? 0 : undefined,
   ignored: path => path.includes("node_modules") || path.includes(`${sep}.output`)
-});
+};
 
-watcher.on("error", error => console.info(`[dev] the watcher complained: ${error.message}`));
+watchers = [
+  chokidar.watch(PROJECT_ROOT, {
+    ...WATCH_OPTIONS,
+    depth: 0
+  }),
+  ...isServedByDevServer ? [] : [chokidar.watch(SOURCE_DIRECTORY, WATCH_OPTIONS)]
+];
 
 if (isServedByDevServer) {
   pollDevServer();
 }
 
-watcher.on("all", (_event, path) => {
-  const isUnderSource = path.startsWith(join(PROJECT_ROOT, "src"));
-  if (!isUnderSource && !isEnvFile(basename(path))) {
-    return;
-  }
+for (const watcher of watchers) {
+  watcher.on("error", error => console.info(`[dev] the watcher complained: ${error.message}`));
+  watcher.on("all", (_event, path) => {
+    const isUnderSource = path.startsWith(SOURCE_DIRECTORY);
+    if (!isUnderSource && !isEnvFile(basename(path))) {
+      return;
+    }
 
-  clearTimeout(settleTimer);
-  settleTimer = setTimeout(() => answerChange(relative(PROJECT_ROOT, path)), SETTLE_MS);
-});
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(() => answerChange(relative(PROJECT_ROOT, path)), SETTLE_MS);
+  });
+}
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
   process.on(signal, () => {
