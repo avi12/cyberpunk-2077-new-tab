@@ -27,8 +27,11 @@ import { z } from "@/lib/zod";
  */
 const SEARCH_URL = "https://www.google.com/search";
 
-export const GOOGLE_WEATHER_ACCESS: AccessRequest = {
-  origins: [`${new URL(SEARCH_URL).origin}/*`]
+/** Named on its own because a permission change is announced as origins rather than as a request. */
+export const GOOGLE_WEATHER_ORIGIN = `${new URL(SEARCH_URL).origin}/*`;
+
+const GOOGLE_WEATHER_ACCESS: AccessRequest = {
+  origins: [GOOGLE_WEATHER_ORIGIN]
 };
 
 export async function hasGoogleWeatherAccess() {

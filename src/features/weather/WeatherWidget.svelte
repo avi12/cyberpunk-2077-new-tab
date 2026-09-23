@@ -6,7 +6,8 @@
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
   import { askDeviceLocation, deviceLocation } from "./geolocation";
   import { formatTemperature, NIGHT_CITY_WEATHER, temperatureUnit, WEATHER_ICONS, WEATHER_REFRESH_MS } from "./model";
-  import { readGoogleWeather } from "./google";
+  import { GOOGLE_WEATHER_ORIGIN, readGoogleWeather } from "./google";
+  import type { AccessRequest } from "@/lib/permissions";
   import { Glitch } from "@/lib/glitch.svelte";
   import LocationOverrideModal from "./LocationOverrideModal.svelte";
   import WidgetCard from "@/features/widgets/WidgetCard.svelte";
@@ -69,6 +70,36 @@
   let weather = $state<Promise<WeatherReading | null>>(readWeather(DEFAULT_WEATHER_LOCATION));
 
   /**
+   * Google's site, handed over or taken back, counted so the read below can depend on it.
+   *
+   * The location is not the only half of a reading and cannot stand in for the other: a reader whose
+   * city was already known allows the site and nothing they can see changes, because the place never
+   * moved and only the place was being watched. That is the whole of what made the button look dead.
+   *
+   * The permission is listened to rather than the press that usually causes it, so a grant made in
+   * the browser's own extension settings lands here too - the same reasoning
+   * `companion/connection.svelte.ts` is built on.
+   */
+  let accessChanges = $state(0);
+
+  $effect(() => {
+    function noteAccessChange(changed: AccessRequest) {
+      const isWeatherOrigin = changed.origins?.includes(GOOGLE_WEATHER_ORIGIN);
+      if (isWeatherOrigin) {
+        accessChanges += 1;
+      }
+    }
+
+    browser.permissions.onAdded.addListener(noteAccessChange);
+    browser.permissions.onRemoved.addListener(noteAccessChange);
+
+    return () => {
+      browser.permissions.onAdded.removeListener(noteAccessChange);
+      browser.permissions.onRemoved.removeListener(noteAccessChange);
+    };
+  });
+
+  /**
    * The device is asked before the override is given up, and the override only goes once there is a
    * fix to put in its place. Clearing first cost a reader whose device cannot place itself - a
    * hardened browser, a machine with no radios - the coordinates they had typed, and dropped the
@@ -103,6 +134,7 @@
   });
 
   $effect(() => {
+    void accessChanges;
     const asked = askedLocation;
     weather = readWeather(asked);
     const timer = setInterval(() => {
