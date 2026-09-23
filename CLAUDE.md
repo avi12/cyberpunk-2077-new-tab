@@ -184,6 +184,16 @@ and rebuilds and reloads on every change under `src/`. It is driven over WebDriv
 screenshots and real input on an extension page, so drive it with `script.evaluate` and capture the
 window from the OS.
 
+**Neither browser ever needs restarting**, and if one does, that is a bug in the loop rather than
+something to work around. A change reloads the page, or the extension, and the window stays. Two
+things follow for anything driving them:
+
+- Firefox allows **one BiDi session at a time**, and `scripts/firefox-pages.mjs` takes one for a
+  moment on every rebuild - so a driver attached from outside is refused while a build is landing.
+  Retry rather than conclude the browser is gone.
+- The Firefox loop parks the extension's pages on `about:blank` for the length of a build and puts
+  them back by address afterwards. A tab reading `about:blank` mid-rebuild is the loop working.
+
 # Companion app
 
 The opposite rule to the extension's: `companion/` has no watcher, so a change there is not running
