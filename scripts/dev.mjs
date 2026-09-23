@@ -143,6 +143,9 @@ const CRASH_WINDOW_MS = 60_000;
 /** How long an extension reload is given to answer before the loop stops waiting on it. */
 const RELOAD_WAIT_MS = 15_000;
 
+/** And how long the browser is given to close, for the same reason and with the same deadline. */
+const BROWSER_EXIT_MS = 5000;
+
 /** The dev server writes its build a moment after it starts, and the browser needs it to exist. */
 const BUILD_WAIT_MS = 90_000;
 const BUILD_POLL_MS = 200;
@@ -352,6 +355,10 @@ function start() {
     }
 
     if (code === 0 || !shouldAnswerCrash()) {
+      console.info(
+        `
+[dev] wxt exited with ${code} and is not coming back - ending the session`
+      );
       await stop(code ?? 0);
 
       return;
@@ -570,7 +577,13 @@ async function stop(code) {
   releaseLock();
   reloadChannel?.close();
   await Promise.all(watchers.map(watcher => watcher.close().catch(() => undefined)));
-  await runner?.exit().catch(() => undefined);
+  /*
+   * Raced, because the alternative was measured: this released the lock and then never reached
+   * `process.exit`, leaving a session that had let go of everything it owned and still held its own
+   * process - the dev server gone, the browser sitting on a page it could no longer load, and
+   * nothing anywhere saying so. A browser that will not close is not a reason to stay half alive.
+   */
+  await Promise.race([runner?.exit().catch(() => undefined), wait(BROWSER_EXIT_MS)]);
   process.exit(code);
 }
 
