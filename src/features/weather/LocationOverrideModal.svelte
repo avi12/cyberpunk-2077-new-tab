@@ -64,17 +64,15 @@
   const CONNECTION_CAPTION = "This device wouldn't say, so this is where your connection puts you - type coordinates if it is off";
 
   /**
-   * Where Google's site stands, in both directions.
+   * Where Google's site stands, said only where it is not this extension's.
    *
-   * A no used to be the only thing said here, and that turned out to be half an answer: someone who
-   * had refused once and pressed again was left reading a line that had simply vanished, with
-   * nothing in its place saying whether the second press had worked. A press has to be able to say
-   * yes as loudly as it says no, so the line is always there and only its wording changes.
+   * A yes was printed here too for a while, so that a press could answer as loudly in the
+   * affirmative as in the negative. It reads as noise: a reader who has handed the site over has
+   * nothing to do about it, and is told again on every open of a panel they came to for something
+   * else. A press that gets the site is answered by this sentence going, which is the same way
+   * every other thing on the panel answers a press that worked.
    */
-  const GOOGLE_MESSAGES = {
-    allowed: "Google reads the sky for you - google.com is allowed",
-    refused: "To display the weather, you must grant access to google.com"
-  };
+  const GOOGLE_REFUSED = "To display the weather, you must grant access to google.com";
 
   function coordinateSchema({ min, max, label }: {
     min: number;
@@ -125,8 +123,8 @@
   /** Undefined until the browser has answered - a "not looked yet" is no reason to say anything. */
   let deviceAccess = $state<PermissionState | undefined>();
   /**
-   * Whether Google's site is this extension's, which is the one fact the two lines below are drawn
-   * from and the one that decides whether a press is finished. Read ahead of the press rather than
+   * Whether Google's site is this extension's, which decides both whether the line below is drawn
+   * and whether a press is finished with the panel. Read ahead of the press rather than
    * at it, because checking costs an await and the request underneath needs the gesture that await
    * would spend - and read again afterwards, since the browser's own answer is what settles it.
    *
@@ -382,10 +380,8 @@
       <p class="cyber-error" role="alert">{error}</p>
     {/if}
 
-    {#if isGoogleAllowed !== undefined}
-      <p class="location__notice" class:is-allowed={isGoogleAllowed} role="status">
-        {isGoogleAllowed ? GOOGLE_MESSAGES.allowed : GOOGLE_MESSAGES.refused}
-      </p>
+    {#if isGoogleAllowed === false}
+      <p class="location__notice" role="status">{GOOGLE_REFUSED}</p>
     {/if}
   </form>
 
@@ -473,17 +469,9 @@
     color: var(--cp-text-dimmer);
   }
 
-  /*
-   * Told, not failed - the accent rather than the error colour, which is for something being wrong.
-   * A yes is the same sentence in the quiet colour every settled line on this panel wears, so the
-   * two read as one status that changed rather than as a warning that came and went.
-   */
+  /* Told, not failed - the accent rather than the error colour, which is for something being wrong. */
   .location__notice {
     color: var(--cp-accent);
-
-    &.is-allowed {
-      color: var(--cp-primary);
-    }
   }
 
   .location__fields {
