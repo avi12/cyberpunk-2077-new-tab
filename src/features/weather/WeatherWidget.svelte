@@ -22,6 +22,15 @@
   let isEditingLocation = $state(false);
 
   const isAutomatic = $derived(!config.location);
+
+  /**
+   * Whether the widget is on a place this machine actually produced, which is not the same thing as
+   * being in automatic mode. Automatic with nothing found is the fallback city on show, and a lit
+   * "follow my location" over Night City claims a fix that does not exist - which on Chromium was
+   * every cold start, since the permission is granted by the manifest and reads `granted` whether
+   * or not the device can place anything.
+   */
+  const isFollowingDevice = $derived(isAutomatic && detected !== null);
   const askedLocation = $derived(config.location ?? detected ?? DEFAULT_WEATHER_LOCATION);
   const isCelsius = $derived(config.temperatureUnit !== false);
   const unit = $derived(temperatureUnit(isCelsius));
@@ -185,7 +194,7 @@
 </WidgetCard>
 
 <LocationOverrideModal
-  isFollowingDevice={isAutomatic}
+  {isFollowingDevice}
   isOpen={isEditingLocation}
   onClose={() => (isEditingLocation = false)}
   onFollowDevice={followDevice}
