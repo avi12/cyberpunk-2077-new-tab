@@ -4,10 +4,9 @@
   import { LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN } from "@/lib/storage/schema";
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
   import Modal from "@/ui/Modal.svelte";
-  import { GOOGLE_WEATHER_ACCESS, hasGoogleWeatherAccess } from "./google";
+  import { hasGoogleWeatherAccess, requestGoogleWeatherAccess } from "./google";
   import type { AskedLocation } from "./geolocation";
   import { locationAccess, LocationRefusal, LocationSource, roundCoordinate } from "./geolocation";
-  import { requestAccess } from "@/lib/permissions";
   import { z } from "@/lib/zod";
 
   const {
@@ -43,14 +42,17 @@
   const CONNECTION_CAPTION = "This device wouldn't say, so this is where your connection puts you - type coordinates if it is off";
 
   /**
-   * Being told no about Google's site, said out loud instead of swallowed. It used to cost nothing
-   * visible, which was the first complaint, and then it named a second source, which was the next -
-   * there is no second source. Google reads the sky or nothing does.
+   * Where Google's site stands, in both directions.
    *
-   * So the line says what a no actually leaves them with, which is Night City and its invented
-   * weather, and it names the way back: the button they just pressed.
+   * A no used to be the only thing said here, and that turned out to be half an answer: someone who
+   * had refused once and pressed again was left reading a line that had simply vanished, with
+   * nothing in its place saying whether the second press had worked. A press has to be able to say
+   * yes as loudly as it says no, so the line is always there and only its wording changes.
    */
-  const GOOGLE_REFUSED_MESSAGE = "Google's weather needs google.com - without it the widget only shows Night City, press again to allow it";
+  const GOOGLE_MESSAGES = {
+    allowed: "Google reads the sky for you - google.com is allowed",
+    refused: "To display the weather, you must grant access to google.com"
+  };
 
   function coordinateSchema({ min, max, label }: {
     min: number;
@@ -101,13 +103,14 @@
   /** Undefined until the browser has answered - a "not looked yet" is no reason to say anything. */
   let deviceAccess = $state<PermissionState | undefined>();
   /**
-   * Whether Google's site was already theirs before this panel asked. Read ahead of the press
-   * rather than at it, because checking costs an await and the request underneath needs the gesture
-   * that await would spend.
+   * Whether Google's site is this extension's, which is the one fact the two lines below are drawn
+   * from and the one that decides whether a press is finished. Read ahead of the press rather than
+   * at it, because checking costs an await and the request underneath needs the gesture that await
+   * would spend - and read again afterwards, since the browser's own answer is what settles it.
+   *
+   * Undefined until the browser has said, so a panel that has not looked yet says nothing.
    */
   let isGoogleAllowed = $state<boolean | undefined>();
-  /** Whether the last press was told no about that site, which is what keeps the panel up. */
-  let isGoogleRefused = $state(false);
   /** What the last press came back with, or null before there has been one. */
   let asked = $state<AskedLocation | null>(null);
 
@@ -177,7 +180,6 @@
     draft = emptyDraft();
     error = "";
     asked = null;
-    isGoogleRefused = false;
     isEditing = false;
   });
 
@@ -185,16 +187,16 @@
    * Google answers the weather and nothing else does, so its site is what decides whether setting a
    * location changes anything at all - which makes the moment one is set the moment to ask for it.
    *
-   * Nobody is asked twice. A site already handed over answers instantly and raises no prompt, and
-   * somebody in that position is not told no either, since no question was put to them.
+   * What the request itself answered is thrown away and the permission read instead. A request can
+   * come back false for reasons that are not a refusal - a browser that would not take the question
+   * from where it was asked is the one that caught this out - and a panel that believed the
+   * question rather than the answer would then tell a reader they had been refused something they
+   * in fact hold. Nobody is asked twice either way: a site already handed over resolves at once and
+   * raises no prompt.
    */
-  function noteGoogleAnswer(isGranted: boolean) {
-    if (isGoogleAllowed) {
-      return;
-    }
-
-    isGoogleRefused = !isGranted;
-    isGoogleAllowed = isGranted;
+  async function askGoogleAccess() {
+    await requestGoogleWeatherAccess();
+    isGoogleAllowed = await hasGoogleWeatherAccess();
   }
 
   /**
@@ -218,14 +220,13 @@
    *
    * Closing is what a press that answered both questions well earns, and nothing else does. A town
    * from the connection is a guess rather than a fix, so it stays up for the reader to accept or
-   * type over; a site refused leaves a sentence on the screen, and a panel that closed over it would
-   * be hiding the one thing the press had to say.
+   * type over; a site still not handed over leaves a sentence on the screen, and a panel that closed
+   * over it would be hiding the one thing the press had to say.
    */
   async function followDevice() {
     asked = null;
-    isGoogleRefused = false;
     const located = onFollowDevice();
-    noteGoogleAnswer(await requestAccess(GOOGLE_WEATHER_ACCESS));
+    await askGoogleAccess();
     asked = await located;
 
     /* Only the device answering proves the permission; the connection knows nothing about it. */
@@ -234,7 +235,7 @@
       deviceAccess = "granted";
     }
 
-    const isSettled = isDeviceProved && !isGoogleRefused;
+    const isSettled = isDeviceProved && isGoogleAllowed;
     if (isSettled) {
       onClose();
     }
@@ -245,12 +246,12 @@
    * saved either way: the coordinates are what the reader came to set, and Google is the bonus on
    * top. Nothing asks for the device here - they have just said where they are by hand.
    *
-   * The panel closes on a save unless that site was refused, in which case it stays up carrying the
-   * sentence - with the coordinates still in the fields, so pressing again is the way to allow it.
+   * The panel closes on a save unless that site is still not handed over, in which case it stays up
+   * carrying the sentence - with the coordinates still in the fields, so pressing again is the way
+   * to allow it.
    */
   async function confirm(e: SubmitEvent) {
     e.preventDefault();
-    isGoogleRefused = false;
     const parsed = coordinatesSchema.safeParse({
       latitude: draft.latitude,
       longitude: draft.longitude
@@ -262,16 +263,16 @@
     }
 
     error = "";
-    const isGranted = await requestAccess(GOOGLE_WEATHER_ACCESS);
+    const asking = askGoogleAccess();
     const latitude = roundCoordinate(parsed.data.latitude);
     const longitude = roundCoordinate(parsed.data.longitude);
-    noteGoogleAnswer(isGranted);
     onSave({
       name: draft.name.trim() || `${latitude}, ${longitude}`,
       latitude,
       longitude
     });
-    if (!isGoogleRefused) {
+    await asking;
+    if (isGoogleAllowed) {
       onClose();
     }
   }
@@ -339,8 +340,10 @@
       <p class="cyber-error" role="alert">{error}</p>
     {/if}
 
-    {#if isGoogleRefused}
-      <p class="location__notice" role="status">{GOOGLE_REFUSED_MESSAGE}</p>
+    {#if isGoogleAllowed !== undefined}
+      <p class="location__notice" class:is-allowed={isGoogleAllowed} role="status">
+        {isGoogleAllowed ? GOOGLE_MESSAGES.allowed : GOOGLE_MESSAGES.refused}
+      </p>
     {/if}
   </form>
 
@@ -423,9 +426,17 @@
     color: var(--cp-text-dimmer);
   }
 
-  /* Told, not failed - the accent rather than the error colour, which is for something being wrong. */
+  /*
+   * Told, not failed - the accent rather than the error colour, which is for something being wrong.
+   * A yes is the same sentence in the quiet colour every settled line on this panel wears, so the
+   * two read as one status that changed rather than as a warning that came and went.
+   */
   .location__notice {
     color: var(--cp-accent);
+
+    &.is-allowed {
+      color: var(--cp-primary);
+    }
   }
 
   .location__fields {
