@@ -21,7 +21,8 @@
  *
  * Firefox is the exception to all of that: it has no dev server at all, because an extension page
  * there refuses remote code and a dev server is remote code. Its loop is a build, a window that
- * stays, and a rebuild plus reload on every change under `src/` - see `isServedByDevServer`.
+ * stays, and an open new tab that reloads itself as soon as the rebuild lands - see
+ * `isServedByDevServer` and `scripts/dev-reload.mjs`.
  *
  * Refusing to start twice is not a nicety, and it is per browser. Two sessions for one browser race
  * for the dev server's port and build into the same `.output` directory: the manifest ends up naming
@@ -43,7 +44,9 @@ import {
   PROJECT_ROOT,
   reloadExtension
 } from "./browser.mjs";
+import { plantReloadClient, startReloadChannel } from "./dev-reload.mjs";
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -82,6 +85,12 @@ const CRASH_WINDOW_MS = 60_000;
 /** The dev server writes its build a moment after it starts, and the browser needs it to exist. */
 const BUILD_WAIT_MS = 90_000;
 const BUILD_POLL_MS = 200;
+
+/**
+ * The two files a reloading page cannot answer for: code that runs outside it, and the document the
+ * browser read once at install. Everything else the new tab uses, it fetches when it loads.
+ */
+const EXTENSION_OWNED_FILES = ["background.js", "manifest.json"];
 
 const args = process.argv.slice(2);
 const iBrowserFlag = args.findIndex(arg => arg === "-b" || arg === "--browser");
@@ -123,6 +132,8 @@ const wxtArgs = isServedByDevServer ? servedArgs : ["build", ...args];
 
 let child = null;
 let runner = null;
+let reloadChannel = null;
+let extensionStamp = "";
 let isBuilding = false;
 let isRestarting = false;
 let settleTimer = null;
@@ -163,7 +174,48 @@ async function rebuild(filename) {
     return;
   }
 
-  await announceReload();
+  /* The build emptied the output directory, so the page's way of hearing about the next one is gone. */
+  plantReloadClient({ outputDir: sourceDirectory() });
+
+  const stamp = readExtensionStamp();
+  const isExtensionChanged = stamp !== extensionStamp;
+  extensionStamp = stamp;
+
+  if (isExtensionChanged) {
+    await announceReload();
+
+    return;
+  }
+
+  /*
+   * A temporary add-on reads its files off this directory as it needs them, so a page that reloads
+   * is already running the build that just finished - and reloading the add-on, which is what costs
+   * the tab, answers nothing that changed.
+   */
+  const reloadedPages = reloadChannel.broadcast();
+  console.info(
+    reloadedPages
+      ? "[dev] the open new tab reloaded itself - the extension was left alone"
+      : "[dev] no page was listening, so nothing reloaded; Ctrl+T for the new build"
+  );
+}
+
+/**
+ * What the build left in the files only an extension reload can replace.
+ *
+ * Read off the output rather than guessed from the path that changed: which sources reach the
+ * background is the bundler's graph, and a second copy of it here would drift the first time an
+ * import moved.
+ */
+function readExtensionStamp() {
+  const output = sourceDirectory();
+  const stamp = createHash("sha1");
+
+  for (const name of EXTENSION_OWNED_FILES) {
+    stamp.update(readFileSync(join(output, name)));
+  }
+
+  return stamp.digest("hex");
 }
 
 function start() {
@@ -242,7 +294,8 @@ async function announceReload() {
   /*
    * Firefox tears an extension's own pages down when the add-on is reloaded - measured: the new tab
    * that was open is left at `about:blank`. Nothing here can keep it, so it is said out loud rather
-   * than left looking like the rebuild broke the page.
+   * than left looking like the rebuild broke the page. A rebuild only comes this far when the
+   * background or the manifest changed; every other change is answered by the page reloading itself.
    */
   console.info(
     isServedByDevServer
@@ -336,6 +389,7 @@ function releaseLock() {
 
 async function stop(code) {
   releaseLock();
+  reloadChannel?.close();
   await runner?.exit().catch(() => undefined);
   process.exit(code);
 }
@@ -364,6 +418,17 @@ const output = await waitForBuild();
 if (!output) {
   console.error("[dev] there is no build to open - not opening a browser");
   await stop(1);
+}
+
+/*
+ * Before the browser, because the add-on is installed from this directory: the page has to already
+ * carry the line that listens, and what this build left in the extension's own files is the
+ * baseline every later rebuild is measured against.
+ */
+if (!isServedByDevServer) {
+  reloadChannel = startReloadChannel();
+  plantReloadClient({ outputDir: sourceDirectory() });
+  extensionStamp = readExtensionStamp();
 }
 
 runner = await launchBrowser({
