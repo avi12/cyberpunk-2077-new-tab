@@ -17,8 +17,6 @@
 
   const glitch = new Glitch();
 
-  let reading = $state<WeatherReading | null>(null);
-  let isLoading = $state(true);
   let detected = $state<GeoLocation | null>(null);
   let isEditingLocation = $state(false);
 
@@ -28,30 +26,47 @@
   const unit = $derived(temperatureUnit(isCelsius));
 
   /**
-   * The pair the widget actually draws. A reading and the place it is for are one thing, so they
-   * fall back together: without Google's answer the city on show is Night City too, rather than the
-   * reader's own town wearing a sky nobody measured.
+   * The place a reading is for. A reading and its city are one thing, so they fall back together:
+   * without Google's answer the city on show is Night City too, rather than the reader's own town
+   * wearing a sky nobody measured.
    */
-  const shownLocation = $derived.by(() => {
+  function placeFor(reading: WeatherReading | null) {
     if (!reading) {
       return DEFAULT_WEATHER_LOCATION;
     }
 
     return askedLocation;
-  });
-  const shownReading = $derived(reading ?? NIGHT_CITY_WEATHER);
+  }
 
   /**
    * No failure branch, because there is no failure to draw. Google is the only source and it answers
    * null rather than throwing for every way it can come up empty - the site was never handed over,
    * the place has no name it can find, the search came back without its block - and null is what
    * `NIGHT_CITY_WEATHER` is for.
+   *
+   * The fallback city is the one place Google is never asked about: it cannot find Night City, so
+   * the request could only ever come back empty, and that answer is already written down.
    */
-  async function refresh() {
-    isLoading = true;
-    reading = await readGoogleWeather(askedLocation);
-    isLoading = false;
+  function readWeather(asked: GeoLocation) {
+    const isAskable = asked !== DEFAULT_WEATHER_LOCATION;
+    if (!isAskable) {
+      return Promise.resolve(null);
+    }
+
+    return readGoogleWeather(asked);
   }
+
+  /**
+   * The reading in flight, held rather than awaited here: the template awaits it, and a block
+   * handed a new promise forgets the one before it. That forgetting is the whole staleness guard,
+   * and it has to exist - every load asks twice, because the widget opens on the fallback and
+   * learns where the reader is a moment later. The first answer used to come back last and paint
+   * over the second, so a city that had just been found wore Night City's sky, which is what made
+   * the location button look like it did nothing.
+   *
+   * It starts on the fallback's own answer, because that is the place the widget opens on.
+   */
+  let weather = $state<Promise<WeatherReading | null>>(readWeather(DEFAULT_WEATHER_LOCATION));
 
   /**
    * The device is asked before the override is given up, and the override only goes once there is a
@@ -88,10 +103,10 @@
   });
 
   $effect(() => {
-    void askedLocation;
-    void refresh();
+    const asked = askedLocation;
+    weather = readWeather(asked);
     const timer = setInterval(() => {
-      void refresh();
+      weather = readWeather(asked);
     }, WEATHER_REFRESH_MS);
 
     return () => {
@@ -106,14 +121,15 @@
 </script>
 
 <WidgetCard>
-  {#if isLoading}
+  {#await weather}
     <div class="weather__row">
       <span class="weather__icon weather__icon--loading pulse">{@html iconCloud}</span>
       <p class="weather__temp weather__temp--muted">--{unit}</p>
     </div>
-    <WidgetLocation name={shownLocation.name} onEdit={openLocation} />
+    <WidgetLocation name={askedLocation.name} onEdit={openLocation} />
     <p class="weather__desc weather__desc--muted">Scanning...</p>
-  {:else}
+  {:then reading}
+    {@const shownReading = reading ?? NIGHT_CITY_WEATHER}
     {@const icon = WEATHER_ICONS[shownReading.condition]}
     {@const temperature = formatTemperature({
       celsius: shownReading.temperature,
@@ -131,9 +147,9 @@
         {temperature}
       </button>
     </div>
-    <WidgetLocation name={shownLocation.name} onEdit={openLocation} />
+    <WidgetLocation name={placeFor(reading).name} onEdit={openLocation} />
     <p class="weather__desc">{shownReading.description}</p>
-  {/if}
+  {/await}
 </WidgetCard>
 
 <LocationOverrideModal
