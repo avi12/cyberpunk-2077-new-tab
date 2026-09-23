@@ -89,6 +89,7 @@
 
     function show() {
       companion.state = result.state;
+      companion.isRowFilled = result.cards.length > 0;
       companion.reportLink(result.state);
       cards = result.cards;
     }

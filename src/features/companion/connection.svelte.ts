@@ -14,6 +14,17 @@ class Companion {
    */
   state = $state(CompanionState.loading);
 
+  /**
+   * Whether the row under the panel is actually showing anything.
+   *
+   * A cache outlives the app that filled it - tips hold for a day - so a machine whose app has
+   * stopped answering goes on dealing a full row for as long as that lasts, and the read above it
+   * still says, correctly, that it could not be reached. What must not happen in that gap is the
+   * panel offering to sell an app the row is visibly running on, which is why this and not
+   * `companionAnswered` decides whether the way to the Store is drawn.
+   */
+  isRowFilled = $state(false);
+
   /** Reported once per page, not once per read: every section writes `state` and they all agree. */
   #isLinkReported = false;
 

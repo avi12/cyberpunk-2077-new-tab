@@ -75,10 +75,13 @@
   const SILENT_STATES = [CompanionState.loading, CompanionState.connected];
 
   /**
-   * Whether the app has ever answered on this machine, which is the whole of whether it is still
-   * worth selling: somebody who has it should never be told to go and buy it, however the read
-   * happens to be going this second. The row proving the app works while the panel points at the
-   * Store was the shape of that bug.
+   * Whether the app has ever answered on this machine, which is how a silence gets worded: somebody
+   * who has had it working is told to start it rather than told it is on the Store.
+   *
+   * It is not what decides whether the way to the Store is drawn - `companion.isRowFilled` is, and
+   * has to be. This one is true for good once it has been true, so a reader who has the app, loses
+   * it, and waits out the cache would be left with a panel that could no longer offer them the one
+   * thing that would fix it.
    */
   let hasCompanionAnswered = $state(false);
 
@@ -159,9 +162,9 @@
 </script>
 
 <!--
-  The way to the Store, on every state that is still waiting, and only while the app has never
-  answered here. Nothing to record beyond the press: all of those states are past the permission, so
-  the setup this would mark as started is long since started.
+  The way to the Store, on every state that is still waiting and with nothing dealt under it.
+  Nothing to record beyond the press: all of those states are past the permission, so the setup this
+  would mark as started is long since started.
 -->
 {#snippet storeLink()}
   <a
@@ -229,7 +232,7 @@
         {COMPANION_NAME} stopped - start it again and this fills itself in
       </CompanionNotice>
     {:else if isConnectionGivenUp}
-      <CompanionNotice action={hasCompanionAnswered ? undefined : storeLink}>
+      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink}>
         {#if hasCompanionAnswered}
           Couldn't reach the {COMPANION_NAME} - start it, or check it is still installed
         {:else}
@@ -238,11 +241,11 @@
         {/if}
       </CompanionNotice>
     {:else if companion.state === CompanionState.linking}
-      <CompanionNotice action={hasCompanionAnswered ? undefined : storeLink}>
+      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink}>
         Listening for the {COMPANION_NAME} - this fills itself in the moment it answers
       </CompanionNotice>
     {:else}
-      <CompanionNotice action={hasCompanionAnswered ? undefined : storeLink}>
+      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink}>
         {COMPANION_NAME} offline - install it and this fills itself in
       </CompanionNotice>
     {/if}
