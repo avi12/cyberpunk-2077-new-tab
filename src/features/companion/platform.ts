@@ -11,6 +11,8 @@ const AGENT = navigator.userAgent;
 
 const EDGE_PATTERN = /\bEdg\//;
 
+const FIREFOX_PATTERN = /\bFirefox\//;
+
 const WINDOWS_PATTERN = /Windows NT/;
 
 const MAC_PATTERN = /Macintosh/;
@@ -22,6 +24,33 @@ export const IS_EDGE = EDGE_PATTERN.test(AGENT);
 export const IS_WINDOWS = WINDOWS_PATTERN.test(AGENT);
 
 export const IS_MAC = MAC_PATTERN.test(AGENT);
+
+/**
+ * What an install calls itself when it is counted. Edge and Chrome share the one Chromium build, so
+ * only the agent can tell them apart, and Firefox is the build that is never either.
+ *
+ * The values are a GA4 user dimension's, so a rename splits every install ever counted into two
+ * names and needs the property changed to match.
+ */
+enum BrowserName {
+  edge = "edge",
+  firefox = "firefox",
+  chromium = "chromium"
+}
+
+function detectBrowserName() {
+  if (IS_EDGE) {
+    return BrowserName.edge;
+  }
+
+  if (FIREFOX_PATTERN.test(AGENT)) {
+    return BrowserName.firefox;
+  }
+
+  return BrowserName.chromium;
+}
+
+export const BROWSER_NAME = detectBrowserName();
 
 /**
  * The user agent string says `Windows NT 10.0` on Windows 11 as well, and always will - Microsoft

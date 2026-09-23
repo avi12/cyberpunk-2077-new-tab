@@ -9,7 +9,7 @@ import {
   MAX_USER_PROPERTY_VALUE_LENGTH
 } from "./definitions";
 import type { AnalyticsEvent } from "./definitions";
-import { IS_EDGE } from "@/features/companion/platform";
+import { BROWSER_NAME } from "@/features/companion/platform";
 import { analyticsSessionItem } from "@/lib/storage/items";
 
 /**
@@ -88,7 +88,7 @@ function sendableParams(params: ReportedParams) {
 function userProperties() {
   const values: Record<AnalyticsUserProperty, string> = {
     [AnalyticsUserProperty.extensionVersion]: browser.runtime.getManifest().version,
-    [AnalyticsUserProperty.browserName]: IS_EDGE ? "edge" : "chromium",
+    [AnalyticsUserProperty.browserName]: BROWSER_NAME,
     [AnalyticsUserProperty.uiLanguage]: browser.i18n.getUILanguage()
   };
 
