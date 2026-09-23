@@ -1,5 +1,6 @@
 import { COMPOSE_SITES } from "@/features/compose/sites";
 import { MessageType, sendMessage } from "@/lib/messaging";
+import { wait } from "@/lib/wait";
 import { defineUnlistedScript } from "#imports";
 
 /**
@@ -19,10 +20,6 @@ import { defineUnlistedScript } from "#imports";
 const APPEAR_TIMEOUT_MS = 20_000;
 const SETTLE_TIMEOUT_MS = 8000;
 const POLL_MS = 120;
-
-function wait(delayMs: number) {
-  return new Promise(resolve => setTimeout(resolve, delayMs));
-}
 
 async function appearing<TFound>({ find, timeoutMs }: {
   find: () => TFound | null;

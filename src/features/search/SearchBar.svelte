@@ -9,6 +9,7 @@
   import { handOffPrompt } from "@/features/compose/deliver";
   import { settings } from "@/lib/storage/settings.svelte";
   import { TabDisposition } from "@/lib/messaging";
+  import { wait } from "@/lib/wait";
 
   const { glitching = false }: { glitching?: boolean } = $props();
 
@@ -84,7 +85,7 @@
 
     isScanning = true;
     isScanFailed = false;
-    await new Promise(resolve => setTimeout(resolve, EMPTY_SCAN_MS));
+    await wait(EMPTY_SCAN_MS);
     isScanning = false;
     isScanFailed = true;
   }

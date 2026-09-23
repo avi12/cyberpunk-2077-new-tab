@@ -1,6 +1,7 @@
 import { composeAccess } from "./access.svelte";
 import { COMPOSE_SITES, type ComposeSiteId, isComposerFillable } from "./sites";
 import { MessageType, sendMessage, TabDisposition } from "@/lib/messaging";
+import { wait } from "@/lib/wait";
 
 /**
  * Handing a prompt over to a destination, and deciding what carries it there.
@@ -44,10 +45,6 @@ export function promptBudgetFor(siteId: ComposeSiteId | null) {
 
 /** Long enough to read six words, short enough that nobody thinks the click was ignored. */
 const NOTICE_MS = 1800;
-
-function wait(delayMs: number) {
-  return new Promise(resolve => setTimeout(resolve, delayMs));
-}
 
 async function toClipboard(prompt: string) {
   try {

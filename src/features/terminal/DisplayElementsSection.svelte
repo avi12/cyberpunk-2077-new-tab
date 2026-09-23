@@ -10,6 +10,7 @@
   import PanelSection from "@/ui/PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
   import ToggleOption from "@/ui/ToggleOption.svelte";
+  import { wait } from "@/lib/wait";
   import { withViewTransition } from "@/lib/view-transition";
 
   const { onElementGlitch }: { onElementGlitch: (key: keyof DisplayPreferences | null) => void } = $props();
@@ -68,10 +69,6 @@
     };
   }
 
-  function beat(durationMs: number) {
-    return new Promise(resolve => setTimeout(resolve, durationMs));
-  }
-
   /**
    * The element glitches on its way out, and the mount or unmount itself happens inside a view
    * transition - every element in the page stack carries a `view-transition-name`, so the one
@@ -82,7 +79,7 @@
    */
   async function hide(key: keyof DisplayPreferences) {
     onElementGlitch(key);
-    await beat(GLITCH_SHORT_MS);
+    await wait(GLITCH_SHORT_MS);
     await withViewTransition(() => {
       commit({
         key,
@@ -99,7 +96,7 @@
       isVisible: true
     }));
     onElementGlitch(key);
-    await beat(GLITCH_SHORT_MS);
+    await wait(GLITCH_SHORT_MS);
     onElementGlitch(null);
   }
 
