@@ -30,7 +30,7 @@
  * useful - each gets its own lock, its own output directory and its own port - so one change can be
  * watched landing in Edge and Firefox at the same time.
  *
- * Usage: `pnpm ext:dev:hmr [-b edge|firefox --mv3]`
+ * Usage: `pnpm ext:dev:hmr [-b edge|firefox]`
  */
 
 import {

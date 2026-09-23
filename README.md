@@ -44,8 +44,10 @@ pnpm fallow           # dead code, duplication, complexity
 
 ## Browsers
 
-Two builds, not three: Chrome and Edge install the Chromium one, Firefox has its own. Every script
-that touches Firefox passes `--mv3`, because there is no MV2 build of anything here.
+Two builds, not three: Chrome and Edge install the Chromium one, Firefox has its own. Both are MV3,
+and `manifestVersion: 3` in `wxt.config.ts` is what guarantees it: `wxt` still defaults Firefox to
+MV2, so saying it once there is what keeps a command from quietly building something this project
+does not ship.
 
 Opera is not a target, and cannot be. It refuses `chrome_url_overrides` outright - the key is
 whitelisted per extension id, and an id that is not on the list gets *"'chrome_url_overrides' is not

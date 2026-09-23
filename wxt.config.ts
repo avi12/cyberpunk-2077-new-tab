@@ -142,6 +142,16 @@ const { publicKey } = extensionIdentity;
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   srcDir: "src",
+  /**
+   * There is no MV2 build of anything here, and this is what makes that true rather than a habit.
+   *
+   * `wxt` still defaults Firefox to MV2, so every Firefox command had to carry `--mv3` and a single
+   * one left without it would build, install and zip an extension this project does not ship - with
+   * a background page instead of an event page, `browser_action` instead of nothing, and optional
+   * host permissions Firefox reads differently. Said once here, it cannot be forgotten at a call
+   * site, and the flag is gone from all three Firefox scripts.
+   */
+  manifestVersion: 3,
   // `srcDir` does not carry `publicDir` with it - that one still resolves against the project root.
   publicDir: "src/public",
   modules: ["@wxt-dev/module-svelte"],

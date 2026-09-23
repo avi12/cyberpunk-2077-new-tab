@@ -8,7 +8,8 @@
 - @webext-core/messaging for message passing
 - Chrome, Edge and Firefox, all MV3 - there is no MV2 build of anything
   - Two builds, not three: Chrome and Edge install the Chromium one. Firefox is the only separate
-    build, and every Firefox script passes `--mv3`
+    build. `manifestVersion: 3` in `wxt.config.ts` is what makes that true - no command carries an
+    `--mv3` flag and none may need one
   - Opera is not a target: it blocks `chrome_url_overrides` per extension id, so the new tab never
     appears there. Never re-add it to a browser list - see the README's "Browsers" section for the
     two dead ends and why the background redirect is not worth its permission
@@ -174,9 +175,9 @@ Only run a build when explicitly asked.
 
 `pnpm ext:dev:hmr` (`scripts/dev.mjs`) keeps the dev browser alive across rebuilds and exposes CDP on
 port 9223, so the new tab can be driven and screenshotted while it runs. One session per browser, so
-`-b edge` and `-b firefox --mv3` can be up at once - each has its own lock, output directory and port.
+`-b edge` and `-b firefox` can be up at once - each has its own lock, output directory and port.
 
-`pnpm ext:dev:hmr -b firefox --mv3` is the same loop in a different shape: Firefox refuses to load a
+`pnpm ext:dev:hmr -b firefox` is the same loop in a different shape: Firefox refuses to load a
 remote script into an extension page, so there is no dev server there. It builds, keeps the window,
 and rebuilds and reloads on every change under `src/`. It is driven over WebDriver BiDi on port 9224
 (`ws://127.0.0.1:9224/session`) rather than CDP, which Firefox 156 no longer has - and BiDi refuses
