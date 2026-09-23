@@ -7,6 +7,7 @@
   import { hasGoogleWeatherAccess, requestGoogleWeatherAccess } from "./google";
   import type { AskedLocation } from "./geolocation";
   import { locationAccess, LocationRefusal, LocationSource, roundCoordinate } from "./geolocation";
+  import { wait } from "@/lib/wait";
   import { z } from "@/lib/zod";
 
   const {
@@ -37,6 +38,27 @@
   };
 
   const DEVICE_CAPTION = "Read from this device on every load, and never stored";
+
+  const FOLLOW_LABEL = "Follow my location";
+
+  /**
+   * What the button says while it is working, which it used to say nothing at all. A device can take
+   * seconds to place itself and a browser prompt takes as long as the reader does, and through all of
+   * that the button sat there looking pressed and idle - which is the complaint this panel exists to
+   * answer.
+   */
+  const LOCATING_LABEL = "Locating...";
+
+  /**
+   * The shortest a press is allowed to look like a press.
+   *
+   * Measured on Firefox: the whole thing can finish in twenty-one milliseconds - a device that
+   * refuses without leaving the machine, a connection answer served from cache, a site already
+   * handed over - and a state that exists for twenty-one milliseconds is a flicker, not feedback.
+   * The reader presses and sees nothing, which is the complaint this panel was built to answer, so
+   * a press that beats the eye is held until the eye catches up.
+   */
+  const LOCATING_FLOOR_MS = 400;
 
   /** A town rather than a spot, and one that follows the connection - so the reader is told both. */
   const CONNECTION_CAPTION = "This device wouldn't say, so this is where your connection puts you - type coordinates if it is off";
@@ -111,6 +133,8 @@
    * Undefined until the browser has said, so a panel that has not looked yet says nothing.
    */
   let isGoogleAllowed = $state<boolean | undefined>();
+  /** Whether a press is still out, asking the device and the site. Nothing else may be pressed on it. */
+  let isLocating = $state(false);
   /** What the last press came back with, or null before there has been one. */
   let asked = $state<AskedLocation | null>(null);
 
@@ -180,6 +204,7 @@
     draft = emptyDraft();
     error = "";
     asked = null;
+    isLocating = false;
     isEditing = false;
   });
 
@@ -224,10 +249,18 @@
    * over it would be hiding the one thing the press had to say.
    */
   async function followDevice() {
+    if (isLocating) {
+      return;
+    }
+
+    isLocating = true;
     asked = null;
     const located = onFollowDevice();
+    const shown = wait(LOCATING_FLOOR_MS);
     await askGoogleAccess();
     asked = await located;
+    await shown;
+    isLocating = false;
 
     /* Only the device answering proves the permission; the connection knows nothing about it. */
     const isDeviceProved = asked.isFound && asked.source === LocationSource.device;
@@ -252,6 +285,10 @@
    */
   async function confirm(e: SubmitEvent) {
     e.preventDefault();
+    if (isLocating) {
+      return;
+    }
+
     const parsed = coordinatesSchema.safeParse({
       latitude: draft.latitude,
       longitude: draft.longitude
@@ -290,11 +327,12 @@
       class:is-dimmed={!isDeviceLit}
       aria-pressed={isDeviceLit}
       data-analytics={AnalyticsAction.weatherFollowDevice}
+      disabled={isLocating}
       onclick={() => void followDevice()}
       onfocusin={e => e.stopPropagation()}
       type="button">
-      {@html iconMapPin}
-      Follow my location
+      <span class="location__sync-icon" class:pulse={isLocating}>{@html iconMapPin}</span>
+      {isLocating ? LOCATING_LABEL : FOLLOW_LABEL}
     </button>
     {#if deviceError}
       <p class="cyber-error" role="alert">{deviceError}</p>
@@ -331,7 +369,11 @@
         </p>
       </div>
 
-      <button class="cyber-button cyber-button--primary location__confirm" data-analytics={AnalyticsAction.weatherCoordinatesUsed} type="submit">
+      <button
+        class="cyber-button cyber-button--primary location__confirm"
+        data-analytics={AnalyticsAction.weatherCoordinatesUsed}
+        disabled={isLocating}
+        type="submit">
         Use these coordinates
       </button>
     </fieldset>
@@ -394,6 +436,11 @@
     :global(svg) {
       width: 16px;
       height: 16px;
+    }
+
+    /* The pin is its own box only so the press can breathe it while the device is being asked. */
+    .location__sync-icon {
+      display: flex;
     }
 
     &:hover {
