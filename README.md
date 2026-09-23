@@ -71,15 +71,15 @@ against costs nothing.
 
 Seven, the same seven on Chromium (Chrome and Edge) and on Firefox, and each backs one feature:
 
-| Permission         | Why                                                                     |
-| ------------------ | ----------------------------------------------------------------------- |
-| `search`           | the "Default" search option runs the browser's own configured engine    |
-| `topSites`         | seeds the netlinks grid on first run                                    |
-| `geolocation`      | the weather's location, whenever it is following this device            |
-| `storage`          | every setting, and the backup you can keep in your browser account      |
-| `unlimitedStorage` | lifts the cap on the `local` area, which caches the companion's answers |
-| `identity`         | "Use Google account" fills the greeting in with your real first name    |
-| `scripting`        | types a finished prompt into the tab the compose button opened          |
+| Permission         | Why                                                                  |
+| ------------------ | -------------------------------------------------------------------- |
+| `search`           | the "Default" search option runs the browser's own configured engine |
+| `topSites`         | seeds the netlinks grid on first run                                 |
+| `geolocation`      | the weather's location, whenever it is following this device         |
+| `storage`          | every setting, and the backup you can keep in your browser account   |
+| `unlimitedStorage` | lifts the cap on IndexedDB, where a background you upload lives      |
+| `identity`         | "Use Google account" fills the greeting in with your real first name |
+| `scripting`        | types a finished prompt into the tab the compose button opened       |
 
 `identity` is there on Firefox too, because all three browsers implement `launchWebAuthFlow`, which
 is the whole of how it is used - see "Google account name". `identity.email` is on neither engine.
