@@ -1,7 +1,7 @@
 import { nonEmptyTextSchema } from "@/features/companion/model";
 import { fetchJson } from "@/lib/fetch";
 import type { GeoLocation } from "@/lib/storage/schema";
-import { LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN } from "@/lib/storage/schema";
+import { geoLocationSchema } from "@/lib/storage/schema";
 import { z } from "@/lib/zod";
 
 const POSITION_MAX_AGE_MS = 120_000;
@@ -110,15 +110,37 @@ function currentPosition(timeoutMs: number) {
   });
 }
 
+/**
+ * Where a place is, which is the half of `GeoLocation` that is a measurement rather than a word -
+ * taken off the one schema that already says what a coordinate may be, so the bounds are stated in
+ * exactly one file however a reading arrived.
+ */
+const coordinatesSchema = geoLocationSchema.omit({ name: true });
+
 /** The service answers `success: false` rather than an error status when it will not say. */
-const connectionPlaceSchema = z.object({
+const connectionPlaceSchema = coordinatesSchema.extend({
   success: z.literal(true),
-  latitude: z.number().min(LATITUDE_MIN).max(LATITUDE_MAX),
-  longitude: z.number().min(LONGITUDE_MIN).max(LONGITUDE_MAX),
   city: nonEmptyTextSchema.optional(),
   region: nonEmptyTextSchema.optional(),
   country: nonEmptyTextSchema.optional()
 });
+
+/**
+ * The one way a place is built here, so the connection's town and the device's fix cannot end up
+ * shaped differently. A name nothing could find falls back to the coordinates themselves, which is
+ * the only naming rule there is and is therefore written down once.
+ */
+function placeNamed({ latitude, longitude, name }: {
+  latitude: number;
+  longitude: number;
+  name?: string;
+}) {
+  return {
+    name: name ?? `${latitude}, ${longitude}`,
+    latitude,
+    longitude
+  };
+}
 
 /**
  * A place, near enough, without asking the device anything. Named by what the service already
@@ -133,27 +155,23 @@ async function connectionLocation() {
     return null;
   }
 
-  const latitude = roundCoordinate(place.latitude);
-  const longitude = roundCoordinate(place.longitude);
-
-  return {
-    name: place.city || place.region || place.country || `${latitude}, ${longitude}`,
-    latitude,
-    longitude
-  };
+  return placeNamed({
+    latitude: roundCoordinate(place.latitude),
+    longitude: roundCoordinate(place.longitude),
+    name: place.city ?? place.region ?? place.country
+  });
 }
 
+/** Every field optional and none of them allowed to be empty, which is what `??` below relies on. */
 const placeSchema = z.object({
-  city: z.string().optional(),
-  locality: z.string().optional(),
-  principalSubdivision: z.string().optional(),
-  countryName: z.string().optional()
+  city: nonEmptyTextSchema.optional(),
+  locality: nonEmptyTextSchema.optional(),
+  principalSubdivision: nonEmptyTextSchema.optional(),
+  countryName: nonEmptyTextSchema.optional()
 });
 
-async function reverseGeocode({ latitude, longitude }: {
-  latitude: number;
-  longitude: number;
-}) {
+/** Only ever handed coordinates that satisfied `coordinatesSchema`, so nonsense never goes out. */
+async function reverseGeocode({ latitude, longitude }: z.infer<typeof coordinatesSchema>) {
   const url = new URL(REVERSE_GEOCODE_URL);
   url.searchParams.set("latitude", String(latitude));
   url.searchParams.set("longitude", String(longitude));
@@ -163,11 +181,8 @@ async function reverseGeocode({ latitude, longitude }: {
     url,
     schema: placeSchema
   });
-  if (!place) {
-    return null;
-  }
 
-  return place.city || place.locality || place.principalSubdivision || place.countryName || null;
+  return place?.city ?? place?.locality ?? place?.principalSubdivision ?? place?.countryName;
 }
 
 /**
@@ -191,20 +206,29 @@ async function detectLocation() {
   return locationFrom(answer);
 }
 
-/** Coordinates given a name, or named after themselves where nothing can be found to call them. */
+/**
+ * Coordinates given a name, or named after themselves where nothing can be found to call them.
+ *
+ * The device's own numbers are checked before they are used for anything, which the connection's
+ * already were: they arrive from an implementation this page does not own, they are about to be
+ * sent to a third party to be named, and they end up written into a setting. A fix that fails the
+ * check is no fix, and the caller falls back the same way it would for a refusal.
+ */
 async function locationFrom(coords: GeolocationCoordinates) {
-  const latitude = roundCoordinate(coords.latitude);
-  const longitude = roundCoordinate(coords.longitude);
-  const name = await reverseGeocode({
-    latitude,
-    longitude
+  const parsed = coordinatesSchema.safeParse({
+    latitude: roundCoordinate(coords.latitude),
+    longitude: roundCoordinate(coords.longitude)
   });
+  if (!parsed.success) {
+    return null;
+  }
 
-  return {
-    name: name ?? `${latitude}, ${longitude}`,
-    latitude,
-    longitude
-  };
+  const name = await reverseGeocode(parsed.data);
+
+  return placeNamed({
+    ...parsed.data,
+    name
+  });
 }
 
 /**
@@ -232,6 +256,27 @@ export type AskedLocation =
     refusal: LocationRefusal;
   };
 
+/** The device's answer as a place, where it gave one - a no of either kind is simply no place. */
+function devicePlace(answer: GeolocationCoordinates | LocationRefusal) {
+  if (isRefusal(answer)) {
+    return Promise.resolve(null);
+  }
+
+  return locationFrom(answer);
+}
+
+/**
+ * Why there is no reading, for the panel to say out loud. A device that answered with coordinates
+ * nothing could make a place of is `unavailable` rather than any of the nos it never gave.
+ */
+function refusalOf(answer: GeolocationCoordinates | LocationRefusal) {
+  if (isRefusal(answer)) {
+    return answer;
+  }
+
+  return LocationRefusal.unavailable;
+}
+
 /**
  * The reader asking outright, which is the one moment the prompt belongs: this skips the guard and
  * lets `getCurrentPosition` raise the browser's own question.
@@ -243,14 +288,15 @@ export type AskedLocation =
 export async function askDeviceLocation(): Promise<AskedLocation> {
   inFlight = null;
   const answer = await currentPosition(ASKED_TIMEOUT_MS);
-  if (!isRefusal(answer)) {
-    const asked = locationFrom(answer);
+  const asked = devicePlace(answer);
+  const fromDevice = await asked;
+  if (fromDevice) {
     inFlight = asked;
 
     return {
       isFound: true,
       source: LocationSource.device,
-      location: await asked
+      location: fromDevice
     };
   }
 
@@ -259,7 +305,7 @@ export async function askDeviceLocation(): Promise<AskedLocation> {
   if (!fromConnection) {
     return {
       isFound: false,
-      refusal: answer
+      refusal: refusalOf(answer)
     };
   }
 
