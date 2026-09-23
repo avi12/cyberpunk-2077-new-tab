@@ -85,9 +85,10 @@ is the whole of how it is used - see "Google account name". `identity.email` is 
 Everything **optional** is asked for at the moment a feature needs it, never at install:
 `nativeMessaging` if you link the companion that reads Copilot Journeys and tips, `tabs` and
 `history` for the tips that ask about your own reading, `<all_urls>` to read the pages such a tip is
-asked about, `claude.ai` to finish a prompt off where it was composed, and `google.com` for Google's
-own weather. All but the last are Chromium-only, because all but the last follow the companion,
-which is Edge on Windows only - so an install that never links it sees no prompt at all.
+asked about, `claude.ai` and `copilot.com` to finish a prompt off at its destination, and
+`google.com` for Google's own weather. All but the last are Chromium-only: the companion is Edge on
+Windows only, and the script that types a prompt is not built for Firefox at all - so an install
+that never sends a prompt or links the app sees no prompt of its own.
 `google.com` is on both builds instead, because the weather's source switch is on both: a Firefox
 without the origin would draw a switch that can only refuse to move.
 

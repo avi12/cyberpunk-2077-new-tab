@@ -83,8 +83,8 @@ export const playSoundsItem = storage.defineItem<boolean>("local:playSounds", { 
 export const hourCycleItem = storage.defineItem<HourCycle | null>("local:hourCycle", { fallback: null });
 
 /**
- * Nothing stored means the destination follows the engine the reader searches with, rather than a
- * second setting that can disagree with the first. Only an explicit pick is ever written here.
+ * Nothing stored means a card asks Copilot, which is the automatic mode rather than a second
+ * setting that can disagree with the first. Only an explicit pick is ever written here.
  */
 export const promptTargetItem = storage.defineItem<PromptTargetId | null>("local:promptTarget", { fallback: null });
 

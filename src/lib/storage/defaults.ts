@@ -53,7 +53,6 @@ export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
     name: "Google",
     action: "https://www.google.com/search",
     queryParam: "q",
-    aiEngineId: SearchEngineId.googleAiMode,
     placeholder: "Search the Net..."
   },
   {
@@ -98,6 +97,18 @@ export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
     placeholder: "Think it through with an AI..."
   },
   {
+    id: SearchEngineId.copilot,
+    name: "Copilot",
+    action: "https://copilot.com/chat",
+    queryParam: "q",
+    /*
+     * The one engine whose query parameter is decoration: the address keeps `q` through the redirect
+     * and the page never reads it - measured - so the prompt only arrives by the script that types it.
+     */
+    composeSiteId: ComposeSiteId.copilot,
+    placeholder: "Ask Copilot..."
+  },
+  {
     id: SearchEngineId.perplexity,
     name: "Perplexity",
     action: "https://www.perplexity.ai/search",
@@ -109,7 +120,6 @@ export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
     name: "Brave Search",
     action: "https://search.brave.com/search",
     queryParam: "q",
-    aiEngineId: SearchEngineId.braveAi,
     placeholder: "Search the Net securely..."
   },
   {
@@ -127,8 +137,6 @@ export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
     params: {
       enable_research: "true"
     },
-    /* Already an AI, and the destination on offer is the plain ask at the same address. */
-    aiEngineId: SearchEngineId.braveAi,
     placeholder: "Research with an AI..."
   }
 ];

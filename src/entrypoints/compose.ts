@@ -1,4 +1,4 @@
-import { COMPOSE_SITES } from "@/features/compose/sites";
+import { COMPOSE_SITES, ComposerInsert } from "@/features/compose/sites";
 import { MessageType, sendMessage } from "@/lib/messaging";
 import { wait } from "@/lib/wait";
 import { defineUnlistedScript } from "#imports";
@@ -41,6 +41,9 @@ async function appearing<TFound>({ find, timeoutMs }: {
   }
 }
 
+/** What a pasted prompt is, since a prompt is words and nothing else. */
+const PLAIN_TEXT = "text/plain";
+
 /**
  * React holds the composer's value itself and only believes the setter it installed, so writing to
  * `value` directly leaves the box looking full and the send button still disabled. The prototype's
@@ -65,9 +68,10 @@ function fillField({ composer, prompt }: {
  * Selecting the box first makes it a replacement, so a prompt the URL already delivered is written
  * over rather than doubled.
  */
-function insertIntoEditor({ composer, prompt }: {
+function insertIntoEditor({ composer, prompt, insert }: {
   composer: HTMLElement;
   prompt: string;
+  insert: ComposerInsert;
 }) {
   composer.focus();
   const range = document.createRange();
@@ -75,12 +79,34 @@ function insertIntoEditor({ composer, prompt }: {
   const selection = getSelection();
   selection?.removeAllRanges();
   selection?.addRange(range);
-  document.execCommand("insertText", false, prompt);
+
+  const isPasted = insert === ComposerInsert.pasted;
+  if (!isPasted) {
+    document.execCommand("insertText", false, prompt);
+
+    return;
+  }
+
+  /*
+   * The prompt arrives as a clipboard of its own rather than through the system one, which is never
+   * read and never written: a page that helped itself to what the reader had copied, or left a
+   * prompt sitting there afterwards, would be taking something it was not offered.
+   */
+  const transfer = new DataTransfer();
+  transfer.setData(PLAIN_TEXT, prompt);
+  composer.dispatchEvent(
+    new ClipboardEvent("paste", {
+      bubbles: true,
+      cancelable: true,
+      clipboardData: transfer
+    })
+  );
 }
 
-async function fill({ selector, prompt }: {
+async function fill({ selector, prompt, insert }: {
   selector: string;
   prompt: string;
+  insert: ComposerInsert;
 }) {
   const composer = await appearing({
     find: () => document.querySelector<HTMLElement>(selector),
@@ -102,7 +128,8 @@ async function fill({ selector, prompt }: {
 
   insertIntoEditor({
     composer,
-    prompt
+    prompt,
+    insert
   });
 
   return true;
@@ -111,9 +138,9 @@ async function fill({ selector, prompt }: {
 export default defineUnlistedScript({
   /*
    * Not built for Firefox at all. The only optional origin `wxt.config.ts` gives that build is
-   * Google's weather, so the one site this script exists to type into can never be granted there -
-   * the search bar's Claude engine falls back to the clipboard instead, and this file could only
-   * ever sit in the package unread. The two have to agree: the manifest is why, and this is the
+   * Google's weather, so the sites this script exists to type into can never be granted there - the
+   * search bar's Claude and Copilot engines fall back to the clipboard instead, and this file could
+   * only ever sit in the package unread. The two have to agree: the manifest is why, and this is the
    * consequence.
    */
   exclude: ["firefox"],
@@ -125,18 +152,19 @@ export default defineUnlistedScript({
       return "nothing to send";
     }
 
-    const { composerSelector, submitSelector } = COMPOSE_SITES[request.siteId];
+    const { composerSelector, composerInsert, submitSelector } = COMPOSE_SITES[request.siteId];
     const isComposerFilled = !composerSelector || await fill({
       selector: composerSelector,
-      prompt: request.prompt
+      prompt: request.prompt,
+      insert: composerInsert ?? ComposerInsert.typed
     });
     if (!isComposerFilled) {
       return "no composer";
     }
 
     /*
-     * The button lights up only once the box holds something the site will accept, so waiting for it
-     * to be enabled is also how a prompt carried in the URL is confirmed to have landed.
+     * The button lights up, or turns up, only once the box holds something the site will accept - so
+     * waiting for it is also how a prompt carried in the URL is confirmed to have landed.
      */
     const submit = await appearing({
       find() {

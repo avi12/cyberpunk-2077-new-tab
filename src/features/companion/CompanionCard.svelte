@@ -44,10 +44,12 @@
 
   /**
    * One address for the link and the hand-off alike, so a middle-click cannot land anywhere a plain
-   * click would not. Every destination now carries the prompt in its own URL, so there is always one.
+   * click would not. There is always one, though what it is worth differs: most destinations read
+   * the prompt out of it, and Copilot reads nothing out of anything, so there the link is only the
+   * door and the press is the whole question.
    *
-   * What it cannot hold is the reader's own context, since that is only true at the moment it is
-   * pressed. The href is the question on its own, which is what a middle-click gets and what the
+   * What no address can hold is the reader's own context, since that is only true at the moment it
+   * is pressed. The href is the question on its own, which is what a middle-click gets and what the
    * click improves on.
    */
   const destination = $derived(promptUrl({

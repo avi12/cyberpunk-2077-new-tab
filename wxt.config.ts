@@ -40,21 +40,21 @@ const TIP_CONTEXT_PERMISSIONS = ["tabs", "history"];
 const PAGE_TEXT_ORIGIN = "<all_urls>";
 
 /**
- * The one site a prompt can be finished off at, so it need not go by way of the clipboard. Spelled
- * out again here, and unavoidably: a manifest is built by Node before any of `src/` is bundled, so
- * `compose/sites.ts` cannot be the one that says it - only the one that has to agree with it.
- * Optional and never asked for at install: the reader is only offered it once the companion app has
- * actually answered, and a refusal costs only the typing.
+ * The sites a prompt can be finished off at, so it need not go by way of the clipboard. Spelled out
+ * again here, and unavoidably: a manifest is built by Node before any of `src/` is bundled, so
+ * `compose/sites.ts` cannot be the one that says them - only the one that has to agree with it.
+ * Optional and never asked for at install: the reader is only offered one once they send a prompt
+ * somewhere that needs it, and a refusal costs only the typing.
  *
- * Beside `nativeMessaging` and for the same reason - the offer only ever follows a companion that
- * answered, and Firefox is never given the permission that lets one answer.
+ * Chromium only, because the script that uses them is not built for Firefox at all - so an origin
+ * offered there could be granted and still reach nothing.
  *
  * It used to cost a `strict_min_version` as well, since Firefox only learned this key in 128, and
  * that was reason enough on its own. `Temporal` has since set the floor at 139 regardless, so that
  * half of the argument is spent: what keeps these off Firefox now is only that nothing there can
  * reach them.
  */
-const COMPOSE_ORIGIN = "https://claude.ai/*";
+const COMPOSE_ORIGINS = ["https://claude.ai/*", "https://copilot.com/*"];
 
 /**
  * Google's own weather, read off the search page it draws it on. Optional and asked for only by a
@@ -184,8 +184,8 @@ export default defineConfig({
       "storage",
       "unlimitedStorage",
       "identity",
-      // Typing a prompt into Claude, which is a script the background injects into the tab it
-      // opened. Required rather than optional: an API binding is fixed when a context is created,
+      // Typing a prompt into Claude or Copilot, which is a script the background injects into the
+      // tab it opened. Required rather than optional: a binding is fixed when a context is created,
       // so a worker that started before the grant could never reach it - the same trap the
       // companion's own permission documents. It carries no warning of its own; the site does.
       "scripting",
@@ -216,7 +216,7 @@ export default defineConfig({
         key: publicKey,
         minimum_chrome_version: MINIMUM_CHROMIUM_VERSION,
         optional_permissions: [...COMPANION_PERMISSIONS, ...TIP_CONTEXT_PERMISSIONS],
-        optional_host_permissions: [COMPOSE_ORIGIN, WEATHER_ORIGIN, PAGE_TEXT_ORIGIN]
+        optional_host_permissions: [...COMPOSE_ORIGINS, WEATHER_ORIGIN, PAGE_TEXT_ORIGIN]
       }),
     homepage_url: "https://avi12.com"
   }),

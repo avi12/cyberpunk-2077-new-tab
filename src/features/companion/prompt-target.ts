@@ -1,3 +1,4 @@
+import { composeSiteUrl, isPromptCarriedToSite } from "@/features/compose/sites";
 import { engineById, searchUrl } from "@/features/search/search";
 import type { SelectOption } from "@/lib/storage/defaults";
 import { SearchEngineId } from "@/lib/storage/schema";
@@ -5,19 +6,18 @@ import { SearchEngineId } from "@/lib/storage/schema";
 /**
  * Where a card's action hands its prompt.
  *
- * Two kinds. Most answer a prompt carried in their URL the moment they open, and a link is the whole
- * feature. Claude reads the prompt out of the URL but waits to be told to send it, which is the same
- * problem with a different half missing, and has the same answer: ask for the site, and let a script
- * press the button. Whichever site that is, `compose/sites.ts` knows how.
- *
- * Copilot is not among them. It discards every query parameter, so a link cannot carry a prompt
- * there at all - and Bing's AI mode is Copilot, which is why Bing names no AI mode either.
+ * Three kinds. Most answer a prompt carried in their URL the moment they open, and a link is the
+ * whole feature. Claude reads the prompt out of the URL but waits to be told to send it, which is
+ * the same problem with a different half missing. Copilot is the third: its address holds `q` and
+ * the page pays it no attention - measured - so a link carries nothing there and the script does all
+ * of the work, writing the prompt as well as sending it. Whichever site that is,
+ * `compose/sites.ts` knows how.
  *
  * Nothing about a destination is restated here beyond which engine it is. That table already knows
  * what it is called, where to post, under what field name, and whether arriving is the same as
- * asking - the same knowledge either way. Every destination names one, which is the rule rather than
- * a coincidence: one no engine speaks for is one no link could carry a prompt to, and that is
- * exactly the kind this build does not offer.
+ * asking - the same knowledge either way. Every destination names an engine, which is the rule
+ * rather than a coincidence: the engine table is where an address and a compose site are written
+ * down, so a destination that named none would have nowhere to keep either.
  */
 
 export enum PromptTargetId {
@@ -25,7 +25,8 @@ export enum PromptTargetId {
   claude = "claude",
   perplexity = "perplexity",
   googleAiMode = "google-ai",
-  askBrave = "brave-ai"
+  askBrave = "brave-ai",
+  copilot = "copilot"
 }
 
 const PROMPT_TARGET_ENGINES: Record<PromptTargetId, SearchEngineId> = {
@@ -33,7 +34,8 @@ const PROMPT_TARGET_ENGINES: Record<PromptTargetId, SearchEngineId> = {
   [PromptTargetId.claude]: SearchEngineId.claude,
   [PromptTargetId.perplexity]: SearchEngineId.perplexity,
   [PromptTargetId.googleAiMode]: SearchEngineId.googleAiMode,
-  [PromptTargetId.askBrave]: SearchEngineId.braveAi
+  [PromptTargetId.askBrave]: SearchEngineId.braveAi,
+  [PromptTargetId.copilot]: SearchEngineId.copilot
 };
 
 function engineFor(targetId: PromptTargetId) {
@@ -45,29 +47,19 @@ function promptTargetLabel(targetId: PromptTargetId) {
   return engineFor(targetId).name;
 }
 
-/** Where a reader lands who has picked nothing and searches with an engine that has no AI mode. */
-const DEFAULT_PROMPT_TARGET = PromptTargetId.googleAiMode;
-
 /**
- * The destination that matches how the reader already searches: Google's reader gets Google AI Mode,
- * Brave's gets Ask Brave. An engine that is itself an AI mode answers for itself, so picking Ask
- * Brave in the bar and then asking a card does not send them somewhere else.
+ * Where a reader lands who has picked nothing.
  *
- * Bing names none. Its AI mode is Copilot, which redirects and drops the query on the way - measured
- * - so there is nothing to hand a prompt to, and its reader falls back like anyone else's.
+ * Copilot, because these cards are Copilot's. The journeys and the tips are read out of Edge's own
+ * files, so a card asked without a pick goes back to the assistant that wrote it. The search bar is
+ * not consulted: which engine a reader searches the web with says nothing about who they want
+ * reading a prompt, and a pick is the only thing that sends a card anywhere else.
  */
-export function promptTargetForEngine(engineId: SearchEngineId) {
-  const engine = engineById(engineId);
-  const wanted = engine.aiEngineId ?? engine.id;
-
-  return Object.values(PromptTargetId).find(id => PROMPT_TARGET_ENGINES[id] === wanted)
-    ?? DEFAULT_PROMPT_TARGET;
-}
+export const DEFAULT_PROMPT_TARGET = PromptTargetId.copilot;
 
 /**
- * A pick this build no longer offers - Copilot, for anyone who chose it while it was on the list -
- * reads as no pick at all, which puts the reader back on the engine they search with rather than on
- * some third destination they never asked for.
+ * A pick this build no longer offers reads as no pick at all, which puts the reader back on Copilot
+ * rather than on some third destination they never asked for.
  */
 export function withShippedPromptTarget(stored: PromptTargetId | null) {
   return stored && stored in PROMPT_TARGET_ENGINES ? stored : null;
@@ -87,11 +79,21 @@ export function composeSiteFor(targetId: PromptTargetId) {
   return engineFor(targetId).composeSiteId ?? null;
 }
 
-/** The link a card points at, with the prompt already in it - which every destination accepts. */
+/**
+ * The link a card points at. The prompt travels in it wherever the address does anything with one;
+ * where it does not - Copilot, which keeps the parameter and ignores it - the link is the plain way
+ * in, so a middle-click opens an honest empty box rather than one dressed as a question.
+ */
 export function promptUrl({ targetId, prompt }: {
   targetId: PromptTargetId;
   prompt: string;
 }) {
+  const siteId = composeSiteFor(targetId);
+  const isCarried = !siteId || isPromptCarriedToSite(siteId);
+  if (!isCarried) {
+    return composeSiteUrl(siteId);
+  }
+
   return searchUrl({
     engine: engineFor(targetId),
     query: prompt
