@@ -39,6 +39,7 @@ import {
 } from "./schema";
 import { PromptTargetId, withShippedPromptTarget } from "@/features/companion/prompt-target";
 import { ICON_NAMES } from "@/features/netlinks/icons/choices";
+import { plainCopy } from "@/lib/plain";
 import { z } from "@/lib/zod";
 
 /**
@@ -79,10 +80,21 @@ class Setting<TValue> {
     void this.set(value);
   }
 
-  /** The write behind `current`, for a caller that cannot move on until storage has the value. */
+  /**
+   * The write behind `current`, for a caller that cannot move on until storage has the value.
+   *
+   * Every setting is written through here, which is why the copy is taken here and nowhere else. A
+   * caller almost always hands back something it read out of `current` - a list mapped over, a
+   * shape spread into a new one - and what it read was a Svelte proxy, which Firefox refuses to
+   * store. `plainCopy` says why in full.
+   *
+   * The copy is what is kept in memory too, so the value this page is reading and the value on disk
+   * are the same value rather than two that agree for now.
+   */
   async set(value: TValue) {
-    this.#value = value;
-    await this.#item.setValue(value);
+    const stored = plainCopy(value);
+    this.#value = stored;
+    await this.#item.setValue(stored);
   }
 
   /**
