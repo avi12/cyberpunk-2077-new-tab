@@ -5,7 +5,16 @@
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
   import { askDeviceLocation, deviceLocation } from "./geolocation";
-  import { formatTemperature, NIGHT_CITY_WEATHER, temperatureUnit, WEATHER_ICONS, WEATHER_REFRESH_MS } from "./model";
+  import {
+    formatTemperature,
+    isWeatherRefusal,
+    NIGHT_CITY_WEATHER,
+    temperatureUnit,
+    WEATHER_ICONS,
+    WEATHER_REFRESH_MS,
+    WEATHER_REFUSAL_WORDING,
+    WeatherRefusal
+  } from "./model";
   import { GOOGLE_WEATHER_ORIGIN, readGoogleWeather } from "./google";
   import type { AccessRequest } from "@/lib/permissions";
   import { Glitch } from "@/lib/glitch.svelte";
@@ -40,12 +49,35 @@
    * without Google's answer the city on show is Night City too, rather than the reader's own town
    * wearing a sky nobody measured.
    */
-  function placeFor(reading: WeatherReading | null) {
-    if (!reading) {
+  function placeFor(answer: WeatherReading | WeatherRefusal) {
+    if (isWeatherRefusal(answer)) {
       return DEFAULT_WEATHER_LOCATION;
     }
 
     return askedLocation;
+  }
+
+  /**
+   * What the line under the city says. A refusal spends it on the reason, because the reader's one
+   * question at that moment is why this is not their weather - and Night City's own line is a joke
+   * that answers nothing. The invented temperature and city stay: they are what is on show, and
+   * pretending otherwise would leave the card blank.
+   */
+  function describe(answer: WeatherReading | WeatherRefusal) {
+    if (isWeatherRefusal(answer)) {
+      return WEATHER_REFUSAL_WORDING[answer];
+    }
+
+    return answer.description;
+  }
+
+  /** The reading to draw, which is the fallback's whenever there is no real one. */
+  function readingFor(answer: WeatherReading | WeatherRefusal) {
+    if (isWeatherRefusal(answer)) {
+      return NIGHT_CITY_WEATHER;
+    }
+
+    return answer;
   }
 
   /**
@@ -60,7 +92,7 @@
   function readWeather(asked: GeoLocation) {
     const isAskable = asked !== DEFAULT_WEATHER_LOCATION;
     if (!isAskable) {
-      return Promise.resolve(null);
+      return Promise.resolve(WeatherRefusal.noPlace);
     }
 
     return readGoogleWeather(asked);
@@ -76,7 +108,7 @@
    *
    * It starts on the fallback's own answer, because that is the place the widget opens on.
    */
-  let weather = $state<Promise<WeatherReading | null>>(readWeather(DEFAULT_WEATHER_LOCATION));
+  let weather = $state<Promise<WeatherReading | WeatherRefusal>>(readWeather(DEFAULT_WEATHER_LOCATION));
 
   /**
    * Google's site, handed over or taken back, counted so the read below can depend on it.
@@ -170,7 +202,7 @@
     <WidgetLocation name={askedLocation.name} onEdit={openLocation} />
     <p class="weather__desc weather__desc--muted">Scanning...</p>
   {:then reading}
-    {@const shownReading = reading ?? NIGHT_CITY_WEATHER}
+    {@const shownReading = readingFor(reading)}
     {@const icon = WEATHER_ICONS[shownReading.condition]}
     {@const temperature = formatTemperature({
       celsius: shownReading.temperature,
@@ -189,7 +221,7 @@
       </button>
     </div>
     <WidgetLocation name={placeFor(reading).name} onEdit={openLocation} />
-    <p class="weather__desc">{shownReading.description}</p>
+    <p class="weather__desc" class:weather__desc--refused={isWeatherRefusal(reading)}>{describe(reading)}</p>
   {/await}
 </WidgetCard>
 
@@ -247,5 +279,10 @@
 
   .weather__desc--muted {
     color: var(--cp-primary);
+  }
+
+  /* A reason rather than a reading, so it is dimmed the way the panel dims its own notices. */
+  .weather__desc--refused {
+    color: var(--cp-text-dimmer);
   }
 </style>

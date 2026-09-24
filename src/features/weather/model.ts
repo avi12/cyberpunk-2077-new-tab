@@ -51,6 +51,34 @@ export const NIGHT_CITY_WEATHER: WeatherReading = {
   description: "Acid rain over Watson"
 };
 
+/**
+ * Why there is no reading, because the four reasons want four different sentences and the widget
+ * used to give them all the same one: Night City's invented sky, with nothing to say it was a
+ * stand-in. A reader who had simply never handed the site over saw the same thing as one Google had
+ * refused, and neither could tell that anything had gone wrong at all.
+ *
+ * Only `siteWithheld` is the reader's to fix, which is the whole reason for telling them apart.
+ */
+export enum WeatherRefusal {
+  noPlace = "no-place",
+  siteWithheld = "site-withheld",
+  unreachable = "unreachable",
+  noReading = "no-reading"
+}
+
+/** What each refusal says, in the widget's own register - one line, no full stop. */
+export const WEATHER_REFUSAL_WORDING: Record<WeatherRefusal, string> = {
+  [WeatherRefusal.noPlace]: "Nowhere to read the sky over yet",
+  [WeatherRefusal.siteWithheld]: "Allow google.com for a real forecast",
+  [WeatherRefusal.unreachable]: "Couldn't reach Google",
+  [WeatherRefusal.noReading]: "Google had no forecast for here"
+};
+
+/** A reading is an object and a refusal is a word, which is the whole of the test. */
+export function isWeatherRefusal(answer: WeatherReading | WeatherRefusal): answer is WeatherRefusal {
+  return typeof answer === "string";
+}
+
 export const WEATHER_REFRESH_MS = Temporal.Duration.from({ minutes: 15 }).total("milliseconds");
 
 /**

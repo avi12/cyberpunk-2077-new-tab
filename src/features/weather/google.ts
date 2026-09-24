@@ -1,4 +1,4 @@
-import { toFahrenheit, WeatherCondition, weatherReadingSchema } from "./model";
+import { toFahrenheit, WeatherCondition, weatherReadingSchema, WeatherRefusal } from "./model";
 import { nonEmptyTextSchema } from "@/features/companion/model";
 import { fetchDocument } from "@/lib/fetch";
 import type { AccessRequest } from "@/lib/permissions";
@@ -224,11 +224,11 @@ function readReading(page: Document) {
 export async function readGoogleWeather(location: GeoLocation) {
   const placeName = location.name.trim();
   if (!placeName) {
-    return null;
+    return WeatherRefusal.noPlace;
   }
 
   if (!await hasGoogleWeatherAccess()) {
-    return null;
+    return WeatherRefusal.siteWithheld;
   }
 
   const page = await fetchDocument({
@@ -239,8 +239,13 @@ export async function readGoogleWeather(location: GeoLocation) {
     timeoutMs: REQUEST_TIMEOUT_MS
   });
   if (!page) {
-    return null;
+    return WeatherRefusal.unreachable;
   }
 
-  return readReading(page);
+  /*
+   * A page that came back without the block is not a failure to reach Google - it is Google
+   * answering with something this cannot read. On Firefox that is the ordinary case: the search
+   * returns a 92 kB script-only shell and the forecast is never in the markup, measured.
+   */
+  return readReading(page) ?? WeatherRefusal.noReading;
 }
