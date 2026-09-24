@@ -114,46 +114,58 @@
       mode still transitions: that moves the whole column at once.
     -->
     {#each ordered as widget (widget.id)}
-      <li
-        class="widgets__slot view-item"
-        class:is-disabled={!widget.enabled}
-        data-sortable-id={widget.id}>
-        {#if isEditing}
-          <div class="widgets__row">
-            <div class="widgets__row-label">
-              <span class="widgets__grip">{@html iconGrip}</span>
-              <span class="widgets__name">{WIDGETS[widget.type].label}</span>
+      {@const isShown = isEditing || widget.enabled}
+      <!--
+        A slot with nothing in it is not drawn at all, and that is load-bearing rather than tidy.
+        Off, outside edit mode, this `li` held neither the switch nor the widget and stood there as
+        an empty box - captured by the view transition all the same, because the name is on the slot.
+        Firefox then animated those groups to translate(0, 0) instead of to where the empty box sat -
+        read straight off `getAnimations()` - so on leaving edit mode the switched-off rows flew out
+        of the column towards the corner of the screen. Chromium held their place and hid it.
+        A slot that is not there is not captured, and an exit fades where it stood on both.
+      -->
+      {#if isShown}
+        <li
+          class="widgets__slot view-item"
+          class:is-disabled={!widget.enabled}
+          data-sortable-id={widget.id}>
+          {#if isEditing}
+            <div class="widgets__row">
+              <div class="widgets__row-label">
+                <span class="widgets__grip">{@html iconGrip}</span>
+                <span class="widgets__name">{WIDGETS[widget.type].label}</span>
+              </div>
+              <button
+                class="widgets__toggle"
+                class:is-on={widget.enabled}
+                aria-pressed={widget.enabled}
+                data-analytics={AnalyticsAction.widgetToggled}
+                onclick={() => updateWidget({
+                  id: widget.id,
+                  change: current => ({
+                    ...current,
+                    enabled: !current.enabled
+                  })
+                })}
+                type="button">
+                {widget.enabled ? "ON" : "OFF"}
+              </button>
             </div>
-            <button
-              class="widgets__toggle"
-              class:is-on={widget.enabled}
-              aria-pressed={widget.enabled}
-              data-analytics={AnalyticsAction.widgetToggled}
-              onclick={() => updateWidget({
-                id: widget.id,
-                change: current => ({
-                  ...current,
-                  enabled: !current.enabled
-                })
-              })}
-              type="button">
-              {widget.enabled ? "ON" : "OFF"}
-            </button>
-          </div>
-        {/if}
+          {/if}
 
-        {#if widget.enabled}
-          {@const WidgetView = WIDGETS[widget.type].view}
-          <div transition:slide={{ duration: motionDuration(REVEAL_MS), easing: cubicOut }}>
-            <WidgetView
-              config={widget.config}
-              onConfigChange={patch => patchConfig({
-                id: widget.id,
-                patch
-              })} />
-          </div>
-        {/if}
-      </li>
+          {#if widget.enabled}
+            {@const WidgetView = WIDGETS[widget.type].view}
+            <div transition:slide={{ duration: motionDuration(REVEAL_MS), easing: cubicOut }}>
+              <WidgetView
+                config={widget.config}
+                onConfigChange={patch => patchConfig({
+                  id: widget.id,
+                  patch
+                })} />
+            </div>
+          {/if}
+        </li>
+      {/if}
     {/each}
   </ul>
 </section>
