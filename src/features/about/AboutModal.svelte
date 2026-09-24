@@ -106,7 +106,7 @@
     </a>
   </div>
   <!-- Always rendered: a live region added at the same moment as its text is one a screen reader can miss. -->
-  <p class="about__result" role="status">{result}</p>
+  <output class="about__result">{result}</output>
 </Modal>
 
 <style>
@@ -154,6 +154,7 @@
 
   /* The height is held whether or not there is anything to say, so an answer never moves the panel. */
   .about__result {
+    display: block;
     min-height: 1.25rem;
     margin-top: 0.75rem;
     color: var(--cp-text-dim);

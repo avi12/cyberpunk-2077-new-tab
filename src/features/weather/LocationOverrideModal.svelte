@@ -395,7 +395,7 @@
     {/if}
 
     {#if isGoogleRefused}
-      <p class="location__notice" role="status">{GOOGLE_REFUSED}</p>
+      <output class="location__notice">{GOOGLE_REFUSED}</output>
     {/if}
   </form>
 
@@ -474,6 +474,7 @@
   /* The two quiet lines under the button are one line of type; only their colour says which. */
   .location__caption,
   .location__notice {
+    display: block;
     font-family: var(--cp-mono);
     font-size: 0.75rem;
     line-height: 1rem;

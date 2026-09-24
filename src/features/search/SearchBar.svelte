@@ -193,7 +193,7 @@
     </button>
   </form>
 
-  <p class="search__notice" role="status">{notice}</p>
+  <output class="search__notice">{notice}</output>
 </search>
 
 <style>
@@ -397,6 +397,7 @@
    * that arrives with its own text is a region nobody hears.
    */
   .search__notice {
+    display: block;
     margin: 0;
     margin-top: 0.5rem;
     color: var(--cp-accent);

@@ -148,7 +148,7 @@
     {@html iconChevronRight}
   </a>
 
-  <p class="card__notice" role="status">{notice}</p>
+  <output class="card__notice">{notice}</output>
 </article>
 
 <style>
@@ -248,6 +248,7 @@
 
   /* Under the action rather than over it, so what was clickable a moment ago is not covered up. */
   .card__notice {
+    display: block;
     color: var(--cp-accent);
     font-family: var(--cp-mono);
     font-size: 0.75rem;
