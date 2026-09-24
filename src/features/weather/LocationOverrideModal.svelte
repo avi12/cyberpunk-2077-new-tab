@@ -3,7 +3,9 @@
   import type { GeoLocation } from "@/lib/storage/schema";
   import { LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN } from "@/lib/storage/schema";
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
+  import iconSparkles from "@/assets/icons/sparkles.svg?raw";
   import Modal from "@/ui/Modal.svelte";
+  import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
   import { hasGoogleWeatherAccess, requestGoogleWeatherAccess } from "./google";
   import type { AskedLocation } from "./geolocation";
   import { locationAccess, LocationRefusal, LocationSource, roundCoordinate } from "./geolocation";
@@ -15,13 +17,16 @@
     onSave,
     onClose,
     onFollowDevice,
-    isFollowingDevice
+    isFollowingDevice,
+    isNightCity
   }: {
     isOpen: boolean;
     onSave: (location: GeoLocation) => void;
     onClose: () => void;
     onFollowDevice: () => Promise<AskedLocation>;
     isFollowingDevice: boolean;
+    /** Whether the fiction is what the reader asked for, rather than what they were left with. */
+    isNightCity: boolean;
   } = $props();
 
   const COORDINATES_ERROR = "Enter valid coordinates";
@@ -40,6 +45,18 @@
   const DEVICE_CAPTION = "Read from this device on every load, and never stored";
 
   const FOLLOW_LABEL = "Follow my location";
+
+  const NIGHT_CITY_LABEL = "Stay in Night City";
+
+  /**
+   * The fiction, offered rather than fallen into.
+   *
+   * It is what the widget already draws when nothing can place this machine, and some readers want
+   * exactly that and nothing else - no device read, no connection lookup, no search sent to Google.
+   * Picking it is therefore the one setting here that asks the network for nothing at all, and the
+   * caption says so, because "made up" is the whole appeal rather than a warning.
+   */
+  const NIGHT_CITY_CAPTION = "An invented sky over an invented city - nothing is read, looked up or asked of anyone";
 
   /**
    * What the button says while it is working, which it used to say nothing at all. A device can take
@@ -352,7 +369,22 @@
       <p class="location__caption">{deviceCaption}</p>
     {/if}
 
-    <fieldset class="location__fields" class:is-dimmed={isDeviceLit}>
+    <button
+      class="location__sync"
+      class:is-active={isNightCity}
+      class:is-dimmed={!isNightCity}
+      aria-pressed={isNightCity}
+      data-analytics={AnalyticsAction.weatherNightCityUsed}
+      disabled={isLocating}
+      onclick={() => onSave(DEFAULT_WEATHER_LOCATION)}
+      onfocusin={e => e.stopPropagation()}
+      type="button">
+      <span class="location__sync-icon">{@html iconSparkles}</span>
+      {NIGHT_CITY_LABEL}
+    </button>
+    <p class="location__caption">{NIGHT_CITY_CAPTION}</p>
+
+    <fieldset class="location__fields" class:is-dimmed={isDeviceLit || isNightCity}>
       <legend class="location__legend">Coordinates</legend>
 
       <p class="location__field">

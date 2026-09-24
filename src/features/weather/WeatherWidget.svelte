@@ -60,6 +60,16 @@
   const isPlaceKnown = $derived(askedLocation !== DEFAULT_WEATHER_LOCATION);
 
   /**
+   * Whether the reader asked for Night City, rather than being left with it.
+   *
+   * The two look identical on the card and could not be more different underneath: one is a setting
+   * they chose and the other is everything having failed. Told apart by the stored location, which
+   * is the only thing that differs - a pinned place is a pick, and its absence is automatic. No
+   * second flag, so the two cannot disagree.
+   */
+  const isNightCityChosen = $derived(config.location?.name === DEFAULT_WEATHER_LOCATION.name);
+
+  /**
    * The reason to print under the city, or nothing where this widget has no business giving one.
    *
    * Null for a reading, obviously, and null for the one refusal that is a permission: a card cannot
@@ -103,6 +113,14 @@
    * the request could only ever come back empty, and that answer is already written down.
    */
   function readWeather(asked: GeoLocation) {
+    /*
+     * Asked for, so it is an answer rather than the absence of one: the invented sky is what this
+     * place has, it is never going to change, and nothing is sent anywhere to find that out.
+     */
+    if (isNightCityChosen) {
+      return Promise.resolve(NIGHT_CITY_WEATHER);
+    }
+
     const isAskable = asked !== DEFAULT_WEATHER_LOCATION;
     if (!isAskable) {
       return Promise.resolve(WeatherRefusal.noPlace);
@@ -249,6 +267,7 @@
 
 <LocationOverrideModal
   {isFollowingDevice}
+  isNightCity={isNightCityChosen}
   isOpen={isEditingLocation}
   onClose={() => (isEditingLocation = false)}
   onFollowDevice={followDevice}
