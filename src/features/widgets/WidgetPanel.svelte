@@ -76,8 +76,8 @@
   }
 </script>
 
-<div class="widgets">
-  <div class="widgets__header">
+<section class="widgets">
+  <header class="widgets__header">
     {#if isAnyEnabled || isEditing}
       <h2 class="widgets__title"><span class="hover-glitch" data-text="WIDGETS">WIDGETS</span></h2>
     {/if}
@@ -95,7 +95,7 @@
         </button>
       {/if}
     </div>
-  </div>
+  </header>
 
   <ul
     class="widgets__list"
@@ -156,7 +156,7 @@
       </li>
     {/each}
   </ul>
-</div>
+</section>
 
 <style>
   /*

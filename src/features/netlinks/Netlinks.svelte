@@ -268,7 +268,7 @@
 {/snippet}
 
 <nav class="netlinks" aria-label="Netlinks">
-  <div class="netlinks__header">
+  <header class="netlinks__header">
     <h2 class="netlinks__title"><span class="hover-glitch" data-text="NETLINKS">NETLINKS</span></h2>
     <div class="netlinks__controls">
       {#if isEditing}
@@ -299,7 +299,7 @@
         </button>
       {/if}
     </div>
-  </div>
+  </header>
 
   <div
     {@attach arrowFocus}
@@ -412,10 +412,10 @@
 <NetlinksTransferModal isOpen={isTransferOpen} onClose={() => (isTransferOpen = false)} />
 
 <Modal isOpen={pendingDelete !== null} onClose={() => (pendingDelete = null)} variant="warning">
-  <div class="warning__heading">
+  <header class="warning__heading">
     {@html iconTriangleAlert}
     <h2 class="warning__title">Warning</h2>
-  </div>
+  </header>
   <p class="warning__body">
     Deleting the category "{pendingDelete}" will also delete all {pendingDeleteCount} bookmark(s) in it.
     This can't be undone

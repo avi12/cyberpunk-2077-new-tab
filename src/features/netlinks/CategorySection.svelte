@@ -63,7 +63,7 @@
 </script>
 
 <section class="category view-item">
-  <div class="category__header">
+  <header class="category__header">
     {#if isEditing}
       <span class="category__grip" aria-hidden="true">{@html iconGrip}</span>
     {/if}
@@ -100,7 +100,7 @@
         </button>
       </div>
     {/if}
-  </div>
+  </header>
 
   {#if !isCollapsed}
     <ul

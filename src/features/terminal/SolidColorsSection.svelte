@@ -111,14 +111,20 @@
             type="range"
             value={darkness} />
         </label>
-        <div class="picker__hex">
+        <!-- A form rather than a key handler: Enter is what submits one, and the browser says so. -->
+        <form
+          class="picker__hex"
+          novalidate
+          onsubmit={e => {
+            e.preventDefault();
+            applyHex(customColor);
+          }}>
           <label class="visually-hidden" for="custom-background-color">Custom background hex code</label>
           <input
             id="custom-background-color"
             class="cyber-input picker__hex-input"
             maxlength="9"
             onblur={() => applyHex(customColor)}
-            onkeydown={e => e.key === "Enter" && applyHex(customColor)}
             placeholder={FALLBACK_SWATCH}
             spellcheck="false"
             type="text"
@@ -131,7 +137,7 @@
             type="button">
             {@html iconXMark}
           </button>
-        </div>
+        </form>
       </div>
     {/if}
 

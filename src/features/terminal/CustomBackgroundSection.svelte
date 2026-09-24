@@ -194,7 +194,18 @@
         {/if}
       </div>
     {:else}
-      <div class="stack--tight">
+      <!-- A form, so the address is applied by the Enter the field already invites. -->
+      <form
+        class="stack--tight"
+        novalidate
+        onsubmit={e => {
+          e.preventDefault();
+          if (isFetching) {
+            return;
+          }
+
+          void keepLinked(urlEntry ?? "");
+        }}>
         <label class="visually-hidden" for="background-url">Background URL</label>
         <!-- svelte-ignore a11y_autofocus -->
         <input
@@ -209,15 +220,14 @@
             class="cyber-button cyber-button--primary cyber-button--grow custom__small"
             data-analytics={AnalyticsAction.backgroundLinked}
             disabled={isFetching}
-            onclick={() => void keepLinked(urlEntry ?? "")}
-            type="button">
+            type="submit">
             {isFetching ? "Fetching" : "Apply"}
           </button>
           <button class="cyber-button cyber-button--muted custom__small" data-analytics={AnalyticsAction.backgroundUrlCancelled} onclick={() => (urlEntry = null)} type="button">
             {@html iconXMark}
           </button>
         </div>
-      </div>
+      </form>
     {/if}
 
     {#if error}
