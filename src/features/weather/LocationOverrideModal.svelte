@@ -64,7 +64,12 @@
   const CONNECTION_CAPTION = "This device wouldn't say, so this is where your connection puts you - type coordinates if it is off";
 
   /**
-   * Where Google's site stands, said only where it is not this extension's.
+   * Where Google's site stands, said only to a reader who was asked for it and said no.
+   *
+   * Not merely to one who does not hold it. Somebody opening this panel for the first time holds it
+   * just as little, and has been offered nothing to refuse - telling them they must grant something
+   * is an accusation where there has not yet been a question. The sentence is an answer to a press,
+   * so it waits for one.
    *
    * A yes was printed here too for a while, so that a press could answer as loudly in the
    * affirmative as in the negative. It reads as noise: a reader who has handed the site over has
@@ -123,14 +128,21 @@
   /** Undefined until the browser has answered - a "not looked yet" is no reason to say anything. */
   let deviceAccess = $state<PermissionState | undefined>();
   /**
-   * Whether Google's site is this extension's, which decides both whether the line below is drawn
-   * and whether a press is finished with the panel. Read ahead of the press rather than
-   * at it, because checking costs an await and the request underneath needs the gesture that await
-   * would spend - and read again afterwards, since the browser's own answer is what settles it.
+   * Whether Google's site is this extension's, which decides whether a press is finished with the
+   * panel. Read ahead of the press rather than at it, because checking costs an await and the
+   * request underneath needs the gesture that await would spend - and read again afterwards, since
+   * the browser's own answer is what settles it.
    *
    * Undefined until the browser has said, so a panel that has not looked yet says nothing.
    */
   let isGoogleAllowed = $state<boolean | undefined>();
+
+  /**
+   * Whether a press put the question and came back without the site, which is the only thing that
+   * earns the sentence about it. Kept apart from `isGoogleAllowed` deliberately: that one is false
+   * for a reader who has never been asked, and this one is not.
+   */
+  let isGoogleRefused = $state(false);
   /** Whether a press is still out, asking the device and the site. Nothing else may be pressed on it. */
   let isLocating = $state(false);
   /** What the last press came back with, or null before there has been one. */
@@ -204,6 +216,7 @@
     asked = null;
     isLocating = false;
     isEditing = false;
+    isGoogleRefused = false;
   });
 
   /**
@@ -220,6 +233,7 @@
   async function askGoogleAccess() {
     await requestGoogleWeatherAccess();
     isGoogleAllowed = await hasGoogleWeatherAccess();
+    isGoogleRefused = !isGoogleAllowed;
   }
 
   /**
@@ -380,7 +394,7 @@
       <p class="cyber-error" role="alert">{error}</p>
     {/if}
 
-    {#if isGoogleAllowed === false}
+    {#if isGoogleRefused}
       <p class="location__notice" role="status">{GOOGLE_REFUSED}</p>
     {/if}
   </form>
