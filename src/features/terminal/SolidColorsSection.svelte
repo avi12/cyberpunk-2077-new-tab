@@ -247,14 +247,13 @@
     }
   }
 
+  /*
+   * No thumb offset on either of these. There was one here - `margin-top: 0.75rem` on the spectrum's
+   * Chromium thumb - and it was what pushed that thumb off the middle of its own track: both engines
+   * already centre a thumb against the track, so the nudge could only ever move it away from centre.
+   */
   .cyber-color-slider {
     background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
-
-    /* No Firefox twin, and deliberately: it centres a thumb on the track already, so the nudge
-       Chromium needs would push that one off. */
-    &::-webkit-slider-thumb {
-      margin-top: 0.75rem;
-    }
   }
 
   .cyber-darkness-slider {
