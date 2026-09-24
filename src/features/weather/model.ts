@@ -80,7 +80,13 @@ export enum WeatherRefusal {
 export const WEATHER_REFUSAL_WORDING: Partial<Record<WeatherRefusal, string>> = {
   [WeatherRefusal.noPlace]: "Nowhere to read the sky over yet",
   [WeatherRefusal.unreachable]: "Couldn't reach Google",
-  [WeatherRefusal.noReading]: "Google had no forecast for here"
+  /*
+   * Not "for here", which is what this said first and what made it wrong: a reading and its city
+   * fall back together, so by the time the line is read the card says Night City - and Night City is
+   * the one place Google is never asked about. The sentence pointed at the fiction and blamed Google
+   * for it. None of these three may name or imply a place for that reason.
+   */
+  [WeatherRefusal.noReading]: "Google wouldn't say"
 };
 
 /** A reading is an object and a refusal is a word, which is the whole of the test. */
