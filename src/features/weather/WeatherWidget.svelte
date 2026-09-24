@@ -49,13 +49,15 @@
    * without Google's answer the city on show is Night City too, rather than the reader's own town
    * wearing a sky nobody measured.
    */
-  function placeFor(answer: WeatherReading | WeatherRefusal) {
-    if (isWeatherRefusal(answer)) {
-      return DEFAULT_WEATHER_LOCATION;
-    }
-
-    return askedLocation;
-  }
+  /**
+   * Whether this machine worked out a real place, which is what a failure is allowed to draw.
+   *
+   * The city used to fall back with the reading, so a reader whose forecast failed was shown Night
+   * City however well the page knew where they were - and then a line blaming Google for having no
+   * forecast for a city Google is never asked about. The place is known or it is not, and that
+   * answer does not depend on whether the sky came back.
+   */
+  const isPlaceKnown = $derived(askedLocation !== DEFAULT_WEATHER_LOCATION);
 
   /**
    * The reason to print under the city, or nothing where this widget has no business giving one.
@@ -72,13 +74,23 @@
     return WEATHER_REFUSAL_WORDING[answer] ?? null;
   }
 
-  /** The reading to draw, which is the fallback's whenever there is no real one. */
+  /**
+   * The reading to draw, and null where there is none to draw.
+   *
+   * Night City's sky is only for Night City. Over a place this machine actually found, an invented
+   * temperature would be the one thing on the card passing itself off as measured - so the card
+   * says it has no number instead, the way it does while it is still looking.
+   */
   function readingFor(answer: WeatherReading | WeatherRefusal) {
-    if (isWeatherRefusal(answer)) {
-      return NIGHT_CITY_WEATHER;
+    if (!isWeatherRefusal(answer)) {
+      return answer;
     }
 
-    return answer;
+    if (isPlaceKnown) {
+      return null;
+    }
+
+    return NIGHT_CITY_WEATHER;
   }
 
   /**
@@ -204,26 +216,34 @@
     <p class="weather__desc weather__desc--muted">Scanning...</p>
   {:then reading}
     {@const shownReading = readingFor(reading)}
-    {@const icon = WEATHER_ICONS[shownReading.condition]}
-    {@const temperature = formatTemperature({
-      celsius: shownReading.temperature,
-      isCelsius
-    })}
-    <div class="weather__row">
-      <span style:color={icon.color} class="weather__icon">{@html icon.svg}</span>
-      <button
-        class="weather__temp weather__temp--button"
-        class:glitch={glitch.active}
-        data-analytics={AnalyticsAction.weatherSourceChanged}
-        data-text={temperature}
-        onclick={() => glitch.fire({ onDone: () => onConfigChange({ temperatureUnit: !isCelsius }) })}
-        type="button">
-        {temperature}
-      </button>
-    </div>
     {@const wording = refusalWording(reading)}
-    <WidgetLocation name={placeFor(reading).name} onEdit={openLocation} />
-    <p class="weather__desc" class:weather__desc--refused={wording !== null}>{wording ?? shownReading.description}</p>
+    {#if shownReading}
+      {@const icon = WEATHER_ICONS[shownReading.condition]}
+      {@const temperature = formatTemperature({
+        celsius: shownReading.temperature,
+        isCelsius
+      })}
+      <div class="weather__row">
+        <span style:color={icon.color} class="weather__icon">{@html icon.svg}</span>
+        <button
+          class="weather__temp weather__temp--button"
+          class:glitch={glitch.active}
+          data-analytics={AnalyticsAction.weatherSourceChanged}
+          data-text={temperature}
+          onclick={() => glitch.fire({ onDone: () => onConfigChange({ temperatureUnit: !isCelsius }) })}
+          type="button">
+          {temperature}
+        </button>
+      </div>
+    {:else}
+      <!-- No number rather than an invented one, and no button: there is no reading to flip. -->
+      <div class="weather__row">
+        <span class="weather__icon weather__icon--loading">{@html iconCloud}</span>
+        <p class="weather__temp weather__temp--muted">--{unit}</p>
+      </div>
+    {/if}
+    <WidgetLocation name={askedLocation.name} onEdit={openLocation} />
+    <p class="weather__desc" class:weather__desc--refused={wording !== null}>{wording ?? shownReading?.description}</p>
   {/await}
 </WidgetCard>
 
