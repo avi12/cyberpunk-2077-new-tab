@@ -34,24 +34,6 @@ export const weatherReadingSchema = z.object({
 export type WeatherReading = z.infer<typeof weatherReadingSchema>;
 
 /**
- * What the widget says when Google has nothing to say: the site was never handed over, the place has
- * no name Google can find, or the search came back without its weather block.
- *
- * Invented rather than measured, and it has to look invented - this is the one reading on the page
- * that is not weather. A real city's number under a sky nobody asked about would be a lie; Night
- * City's is the shipped fiction the widget already falls back to for a location, so the sky it gets
- * is the same fiction. It never changes, which is the other half of saying so.
- *
- * It travels with `DEFAULT_WEATHER_LOCATION` and only with it - the widget draws the pair or neither,
- * so this never appears under the reader's own city.
- */
-export const NIGHT_CITY_WEATHER: WeatherReading = {
-  temperature: 31,
-  condition: WeatherCondition.rain,
-  description: "Acid rain over Watson"
-};
-
-/**
  * Why there is no reading, because the four reasons want four different sentences and the widget
  * used to give them all the same one: Night City's invented sky, with nothing to say it was a
  * stand-in. A reader who had simply never handed the site over saw the same thing as one Google had

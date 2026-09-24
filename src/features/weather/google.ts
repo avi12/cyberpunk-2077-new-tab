@@ -53,7 +53,7 @@ const SEARCH_LANGUAGE = "en";
  * The block only appears for a place Google can name. Coordinates are searched as text and answer
  * with ordinary web results - measured, both bare and spelt out as a query - so the query is the
  * location's name. A name Google cannot place, the shipped "Night City" among them, simply has no
- * reading here - and since nothing else answers, that is what `NIGHT_CITY_WEATHER` is for.
+ * reading here - and since nothing else answers, that is what `nightCitySky` is for.
  *
  * `hl` pins the answer to English, because the condition arrives as words and the words matched
  * below are English ones.

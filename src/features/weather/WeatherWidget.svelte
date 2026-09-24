@@ -8,13 +8,13 @@
   import {
     formatTemperature,
     isWeatherRefusal,
-    NIGHT_CITY_WEATHER,
     temperatureUnit,
     WEATHER_ICONS,
     WEATHER_REFRESH_MS,
     WEATHER_REFUSAL_WORDING,
     WeatherRefusal
   } from "./model";
+  import { nightCitySky } from "./night-city";
   import { GOOGLE_WEATHER_ORIGIN, readGoogleWeather } from "./google";
   import type { AccessRequest } from "@/lib/permissions";
   import { Glitch } from "@/lib/glitch.svelte";
@@ -44,11 +44,6 @@
   const isCelsius = $derived(config.temperatureUnit !== false);
   const unit = $derived(temperatureUnit(isCelsius));
 
-  /**
-   * The place a reading is for. A reading and its city are one thing, so they fall back together:
-   * without Google's answer the city on show is Night City too, rather than the reader's own town
-   * wearing a sky nobody measured.
-   */
   /**
    * Whether this machine worked out a real place, which is what a failure is allowed to draw.
    *
@@ -100,25 +95,24 @@
       return null;
     }
 
-    return NIGHT_CITY_WEATHER;
+    return nightCitySky();
   }
 
   /**
-   * No failure branch, because there is no failure to draw. Google is the only source and it answers
-   * null rather than throwing for every way it can come up empty - the site was never handed over,
-   * the place has no name it can find, the search came back without its block - and null is what
-   * `NIGHT_CITY_WEATHER` is for.
+   * No throwing branch, because there is nothing to throw. Google is the only source and it names
+   * the way it came up empty rather than raising - the site was never handed over, it could not be
+   * reached, or the search came back without its block - and the card says which.
    *
-   * The fallback city is the one place Google is never asked about: it cannot find Night City, so
-   * the request could only ever come back empty, and that answer is already written down.
+   * Night City is the one place Google is never asked about, either way round: it cannot find it, so
+   * the request could only come back empty.
    */
   function readWeather(asked: GeoLocation) {
     /*
-     * Asked for, so it is an answer rather than the absence of one: the invented sky is what this
-     * place has, it is never going to change, and nothing is sent anywhere to find that out.
+     * Asked for, so it is an answer rather than the absence of one - and nothing is sent anywhere to
+     * work it out. The sky drifts on the same beat a real forecast is re-read on.
      */
     if (isNightCityChosen) {
-      return Promise.resolve(NIGHT_CITY_WEATHER);
+      return Promise.resolve(nightCitySky());
     }
 
     const isAskable = asked !== DEFAULT_WEATHER_LOCATION;
