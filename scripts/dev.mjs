@@ -110,6 +110,9 @@ const SERVER_MISSES_ALLOWED = 3;
 /** Vite never loads the example, so editing the documentation is not a reason to restart. */
 const IGNORED_ENV_FILE = ".env.example";
 
+/** Where the manifest comes from, which is the other root file a build is the only reader of. */
+const CONFIG_FILE = "wxt.config.ts";
+
 /*
  * A hiccup in the background is not a reason to end a session the reader has a browser open on.
  * Node ends the process on an unhandled rejection, and the ones this loop can raise are all
@@ -454,7 +457,7 @@ async function answerChange(filename) {
     return;
   }
 
-  restart(`${filename} changed, and its values are inlined at build time`);
+  restart(`${filename} changed, and a build is the only thing that reads it`);
 }
 
 function restart(reason) {
@@ -536,6 +539,19 @@ function isEnvFile(filename) {
   const isEnvName = filename === ".env" || filename.startsWith(".env.");
 
   return Boolean(filename) && isEnvName && filename !== IGNORED_ENV_FILE;
+}
+
+/**
+ * A root file a running session cannot absorb, so the session is rebuilt around it instead.
+ *
+ * The `.env` files for their values, and the config for the manifest it generates - a permission
+ * added or dropped there is not something Vite can hand to a page, because the browser read it when
+ * the extension was loaded. Left out of this, the only sign of a manifest change is that the browser
+ * carries on behaving like the build before it, which is indistinguishable from the change not
+ * working.
+ */
+function isBuiltIn(filename) {
+  return isEnvFile(filename) || filename === CONFIG_FILE;
 }
 
 /**
@@ -641,9 +657,10 @@ console.info(`\n[dev] ${browser} is open on ${remoteAddress}`);
 console.info("[dev] it stays open across restarts; the extension is reloaded instead\n");
 
 /*
- * The root for its `.env` files, which are baked into a build and so need a restart rather than a
- * reload; and the source tree too for the browser that has no server watching it - Vite is doing
- * that job on the others, and two watchers over one tree would only build the same change twice.
+ * The root for its `.env` files and its config, which are baked into a build and so need a restart
+ * rather than a reload; and the source tree too for the browser that has no server watching it -
+ * Vite is doing that job on the others, and two watchers over one tree would only build the same
+ * change twice.
  *
  * Directories rather than files: an editor that saves by writing a temp file and renaming it over
  * the original leaves any watch on the old file pointed at nothing.
@@ -677,7 +694,7 @@ for (const watcher of watchers) {
   watcher.on("error", error => console.info(`[dev] the watcher complained: ${error.message}`));
   watcher.on("all", (_event, path) => {
     const isUnderSource = path.startsWith(SOURCE_DIRECTORY);
-    if (!isUnderSource && !isEnvFile(basename(path))) {
+    if (!isUnderSource && !isBuiltIn(basename(path))) {
       return;
     }
 
