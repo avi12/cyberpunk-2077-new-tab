@@ -15,6 +15,7 @@
   import { slide } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
   import { motionDuration } from "@/lib/motion";
+  import { Glitch } from "@/lib/glitch.svelte";
 
   /** Long enough to read as the section leaving, short enough not to sit in the way of the row. */
   const COLLAPSE_MS = 220;
@@ -113,6 +114,49 @@
 
   const isVisible = $derived(IS_WINDOWS && !SILENT_STATES.includes(companion.state));
 
+  const glitch = new Glitch();
+
+  /**
+   * What the panel is currently saying, which the state alone does not answer: giving up rewords a
+   * waiting state without leaving it, and that wording turns on whether the app has ever answered.
+   *
+   * Only what is on show counts. `hasCompanionAnswered` resolves out of storage a moment after the
+   * page is built, and reading it here unconditionally would tear a panel whose words never moved.
+   */
+  const wording = $derived.by(() => {
+    if (isListening && isConnectionGivenUp) {
+      return `gaveUp:${hasCompanionAnswered}`;
+    }
+
+    return companion.state;
+  });
+
+  /** What the panel said last. Nothing renders it, so it is a plain variable rather than state. */
+  let saidWording: string | undefined;
+
+  /**
+   * The notice tears as it changes, which is the page's way of saying a value just moved - and the
+   * one this exists for is the permission being granted, where the panel stops asking and starts
+   * listening with nothing else on screen to show for the press.
+   *
+   * The first run only records what the panel opened on, so appearing is not a change: the section
+   * already slides in for that, and tearing over its own entrance would read as a fault rather than
+   * as an answer.
+   */
+  $effect(() => {
+    const isReworded = saidWording !== undefined && wording !== saidWording;
+
+    saidWording = wording;
+    if (!isReworded) {
+      return;
+    }
+
+    glitch.fire();
+  });
+
+  /** Unmount alone - a tear outliving the panel would go on running against nothing. */
+  $effect(() => () => glitch.stop());
+
   /**
    * Runs only while something is still missing, and stops itself the moment nothing is.
    *
@@ -187,12 +231,12 @@
   -->
   <div class="setup" transition:slide={{ duration: motionDuration(COLLAPSE_MS), easing: cubicOut }}>
     {#if companion.state === CompanionState.windowsTooOld}
-      <CompanionNotice>
+      <CompanionNotice isTearing={glitch.active}>
         {COMPANION_NAME} needs Windows 11 - Microsoft Edge still maps where your browsing is heading,
         there's just nothing on this one that can read it
       </CompanionNotice>
     {:else if companion.state === CompanionState.setupNeeded}
-      <CompanionNotice>
+      <CompanionNotice isTearing={glitch.active}>
         Microsoft Edge already mapped where your browsing is heading - the {COMPANION_NAME} that reads it
         is on the Microsoft Store
         {#snippet action()}
@@ -215,7 +259,7 @@
         {/snippet}
       </CompanionNotice>
     {:else if companion.state === CompanionState.permissionNeeded}
-      <CompanionNotice>
+      <CompanionNotice isTearing={glitch.active}>
         Let the {COMPANION_NAME} through and this fills itself in
         {#snippet action()}
           <button
@@ -228,11 +272,11 @@
         {/snippet}
       </CompanionNotice>
     {:else if companion.state === CompanionState.companionNotRunning}
-      <CompanionNotice>
+      <CompanionNotice isTearing={glitch.active}>
         {COMPANION_NAME} stopped - start it again and this fills itself in
       </CompanionNotice>
     {:else if isConnectionGivenUp}
-      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink}>
+      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>
         {#if hasCompanionAnswered}
           Couldn't reach the {COMPANION_NAME} - start it, or check it is still installed
         {:else}
@@ -241,11 +285,11 @@
         {/if}
       </CompanionNotice>
     {:else if companion.state === CompanionState.linking}
-      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink}>
+      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>
         Listening for the {COMPANION_NAME} - this fills itself in the moment it answers
       </CompanionNotice>
     {:else}
-      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink}>
+      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>
         {COMPANION_NAME} offline - install it and this fills itself in
       </CompanionNotice>
     {/if}
