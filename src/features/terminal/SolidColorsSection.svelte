@@ -10,6 +10,9 @@
 
   const FALLBACK_SWATCH = "#00ffff";
   const DEFAULT_CUSTOM_COLOR = "#003333";
+
+  /** One wording for the hint and the accessible name, so the two cannot drift apart. */
+  const CLOSE_PICKER_LABEL = "Close custom color";
   const HUE_MAX = 360;
   const DARKNESS_MAX = 100;
 
@@ -131,8 +134,9 @@
             bind:value={customColor} />
           <button
             class="picker__hex-close"
-            aria-label="Close custom color picker"
+            aria-label={CLOSE_PICKER_LABEL}
             data-analytics={AnalyticsAction.colorPickerClosed}
+            data-tooltip={CLOSE_PICKER_LABEL}
             onclick={() => (isPickerOpen = false)}
             type="button">
             {@html iconXMark}
