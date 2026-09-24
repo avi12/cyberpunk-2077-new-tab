@@ -204,6 +204,17 @@
     border: 1px solid var(--cp-glitch-b);
     outline: none;
 
+    /*
+     * The one place this codebase writes an engine's own pseudo-element, and it is written twice.
+     *
+     * A range thumb has no standard selector in either engine, and `accent-color` is not the way
+     * out: it only tints a control that still has its native appearance, and taking `appearance`
+     * back hands the track to the browser - measured, and the hue spectrum disappears behind a
+     * plain fill, which is the one thing this slider exists to show.
+     *
+     * Two rules rather than a selector list. A list holding a pseudo-element the engine does not
+     * know is invalid whole, so pairing these would drop the thumb on both.
+     */
     &::-webkit-slider-thumb {
       appearance: none;
       width: 0.8rem;
@@ -212,11 +223,22 @@
       background: var(--cp-surface);
       box-shadow: 0 0 1px color-mix(in sRGB, var(--cp-accent-vivid) 45%, transparent);
     }
+
+    &::-moz-range-thumb {
+      width: 0.8rem;
+      height: 1.25rem;
+      border: 2px solid var(--cp-accent-vivid);
+      border-radius: 0;
+      background: var(--cp-surface);
+      box-shadow: 0 0 1px color-mix(in sRGB, var(--cp-accent-vivid) 45%, transparent);
+    }
   }
 
   .cyber-color-slider {
     background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
 
+    /* No Firefox twin, and deliberately: it centres a thumb on the track already, so the nudge
+       Chromium needs would push that one off. */
     &::-webkit-slider-thumb {
       margin-top: 0.75rem;
     }

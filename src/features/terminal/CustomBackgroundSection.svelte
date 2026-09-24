@@ -353,8 +353,18 @@
       );
     outline: none;
 
+    /* Two rules, not a list: a list holding a pseudo-element the engine cannot read is invalid
+       whole, and would cost both engines the thumb. See `SolidColorsSection` for the long version. */
     &::-webkit-slider-thumb {
       appearance: none;
+      width: 20px;
+      height: 10px;
+      border: none;
+      border-radius: 0;
+      background: var(--cp-slider-thumb);
+    }
+
+    &::-moz-range-thumb {
       width: 20px;
       height: 10px;
       border: none;
