@@ -66,10 +66,19 @@ export enum WeatherRefusal {
   noReading = "no-reading"
 }
 
-/** What each refusal says, in the widget's own register - one line, no full stop. */
-export const WEATHER_REFUSAL_WORDING: Record<WeatherRefusal, string> = {
+/**
+ * What each refusal says on the widget, in its own register - one line, no full stop.
+ *
+ * `siteWithheld` is deliberately absent, and that absence is the rule: the widget is not where a
+ * permission is discussed. A reader who has not handed the site over would otherwise be told to on
+ * every new tab they open, by a card that cannot even ask - and the asking is what makes the
+ * sentence worth reading. That conversation belongs to the location panel alone, where a press puts
+ * the question and a refusal is answered on the spot.
+ *
+ * A refusal with nothing to say here leaves the fallback's own line, exactly as before.
+ */
+export const WEATHER_REFUSAL_WORDING: Partial<Record<WeatherRefusal, string>> = {
   [WeatherRefusal.noPlace]: "Nowhere to read the sky over yet",
-  [WeatherRefusal.siteWithheld]: "Allow google.com for a real forecast",
   [WeatherRefusal.unreachable]: "Couldn't reach Google",
   [WeatherRefusal.noReading]: "Google had no forecast for here"
 };

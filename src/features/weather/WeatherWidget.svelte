@@ -58,17 +58,18 @@
   }
 
   /**
-   * What the line under the city says. A refusal spends it on the reason, because the reader's one
-   * question at that moment is why this is not their weather - and Night City's own line is a joke
-   * that answers nothing. The invented temperature and city stay: they are what is on show, and
-   * pretending otherwise would leave the card blank.
+   * The reason to print under the city, or nothing where this widget has no business giving one.
+   *
+   * Null for a reading, obviously, and null for the one refusal that is a permission: a card cannot
+   * ask for a site, so telling a reader to hand one over is an instruction they have to carry
+   * somewhere else to follow. The location panel does the asking and answers a no itself.
    */
-  function describe(answer: WeatherReading | WeatherRefusal) {
-    if (isWeatherRefusal(answer)) {
-      return WEATHER_REFUSAL_WORDING[answer];
+  function refusalWording(answer: WeatherReading | WeatherRefusal) {
+    if (!isWeatherRefusal(answer)) {
+      return null;
     }
 
-    return answer.description;
+    return WEATHER_REFUSAL_WORDING[answer] ?? null;
   }
 
   /** The reading to draw, which is the fallback's whenever there is no real one. */
@@ -220,8 +221,9 @@
         {temperature}
       </button>
     </div>
+    {@const wording = refusalWording(reading)}
     <WidgetLocation name={placeFor(reading).name} onEdit={openLocation} />
-    <p class="weather__desc" class:weather__desc--refused={isWeatherRefusal(reading)}>{describe(reading)}</p>
+    <p class="weather__desc" class:weather__desc--refused={wording !== null}>{wording ?? shownReading.description}</p>
   {/await}
 </WidgetCard>
 
