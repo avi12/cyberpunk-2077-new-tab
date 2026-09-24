@@ -30,6 +30,17 @@
     return FALLBACK_SWATCH;
   });
 
+  /**
+   * The hue on its own, which is what the spectrum slider is choosing - full value, so it is the
+   * colour directly under the thumb rather than the darkened one further down the panel. Darkness
+   * has its own slider and `swatch` is where that lands.
+   */
+  const hueSwatch = $derived(hsvToHex({
+    hue,
+    saturation: 1,
+    value: 1
+  }));
+
   $effect(() => {
     if (!isHexColor(background)) {
       return;
@@ -91,6 +102,7 @@
         <label class="cyber-slider-label">
           <span>Color Spectrum</span>
           <input
+            style:--cp-thumb={hueSwatch}
             class="cyber-color-slider"
             max={HUE_MAX}
             min="0"
@@ -104,6 +116,7 @@
         <label class="cyber-slider-label">
           <span class="picker__row"><span>Darkness</span><span>{darkness}%</span></span>
           <input
+            style:--cp-thumb={swatch}
             class="cyber-darkness-slider"
             max={DARKNESS_MAX}
             min="0"
@@ -220,7 +233,7 @@
       width: 0.8rem;
       height: 1.25rem;
       border: 2px solid var(--cp-accent-vivid);
-      background: var(--cp-surface);
+      background: var(--cp-thumb, var(--cp-surface));
       box-shadow: 0 0 1px color-mix(in sRGB, var(--cp-accent-vivid) 45%, transparent);
     }
 
@@ -229,7 +242,7 @@
       height: 1.25rem;
       border: 2px solid var(--cp-accent-vivid);
       border-radius: 0;
-      background: var(--cp-surface);
+      background: var(--cp-thumb, var(--cp-surface));
       box-shadow: 0 0 1px color-mix(in sRGB, var(--cp-accent-vivid) 45%, transparent);
     }
   }
