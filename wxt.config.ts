@@ -23,21 +23,16 @@ const COMPANION_PERMISSIONS = ["nativeMessaging"];
  */
 const TIP_CONTEXT_PERMISSIONS = ["tabs", "history"];
 
-/**
- * Reading the pages themselves, which is the only way to answer the tips that ask about them.
+/*
+ * There is deliberately no origin here for reading the pages themselves.
  *
- * Reverse engineered from `msedge.dll`: Edge's own context is not a list of links. `PageContext`
- * carries `url`, `title`, `inner_text`, `tab_screenshot`, `pdf_data` and `page_passages`, and
- * `HistoryVisitItem` carries `page_title`, `page_url` and `passages` - so Copilot is handed the text
- * of what the reader read, cut into passages and ranked against the question by
- * `AnnotationReducerLiveTabResolverRequest { query, passage_context }`. A title cannot answer "pull
- * the key takeaways"; only the words on the page can.
- *
- * Edge has that access by being the browser. An extension has to ask, and this is the heaviest thing
- * it can ask for - so it is optional, requested by the card that needs it, and refusing drops back to
- * titles and addresses, which is what the previous build sent.
+ * Edge's own context is not a list of links - reverse engineered from `msedge.dll`, `PageContext`
+ * carries `inner_text` and `page_passages` beside the address - so a build that matched it would
+ * send the words on the page rather than a way to reach them. Matching it costs `<all_urls>`, and a
+ * wildcard is not a permission this extension asks for: Chromium refuses `permissions.request` for
+ * any origin a wildcard does not already cover, so a page nobody can name in advance cannot be read
+ * at all here. That is the whole of the trade, and the addresses go out on their own.
  */
-const PAGE_TEXT_ORIGIN = "<all_urls>";
 
 /**
  * The sites a prompt can be finished off at, so it need not go by way of the clipboard. Spelled out
@@ -226,7 +221,7 @@ export default defineConfig({
         key: publicKey,
         minimum_chrome_version: MINIMUM_CHROMIUM_VERSION,
         optional_permissions: [...COMPANION_PERMISSIONS, ...TIP_CONTEXT_PERMISSIONS],
-        optional_host_permissions: [...COMPOSE_ORIGINS, WEATHER_ORIGIN, PAGE_TEXT_ORIGIN]
+        optional_host_permissions: [...COMPOSE_ORIGINS, WEATHER_ORIGIN]
       }),
     homepage_url: "https://avi12.com"
   }),
