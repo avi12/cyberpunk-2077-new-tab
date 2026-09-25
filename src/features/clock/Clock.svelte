@@ -116,6 +116,21 @@
     margin-bottom: 1.5rem;
   }
 
+  /*
+   * The two readings are named apart from the clock that holds them, because hiding the date
+   * changes the box the clock occupies and a snapshot is redrawn at whatever size its group has
+   * reached. Under one name the old capture - time and date together - was squeezed into the
+   * narrower box the time alone needs, so the time was painted a second time at about three
+   * quarters size, anchored to the top of the group, and cross-faded over itself.
+   *
+   * Measured in Edge: the group runs 350.9x146.4 -> 220.7x110.4 and shifts 65px right as it
+   * recentres, while the time's own box does not move by a pixel. Named separately, the time
+   * morphs between two identical boxes and only the date animates.
+   *
+   * Naming these is safe for the hint hanging off the button inside: `view-transition-name` makes a
+   * stacking context but *not* a containing block for a `fixed` descendant - asked of both engines
+   * rather than assumed - so the hint is still placed against the viewport.
+   */
   .clock__time {
     color: var(--cp-primary);
     font-family: var(--cp-mono);
@@ -123,6 +138,7 @@
     font-size: 3.75rem;
     line-height: 1;
     letter-spacing: 0.025em;
+    view-transition-name: clock-time;
 
     @media (width >= 768px) {
       font-size: 6rem;
@@ -158,6 +174,7 @@
     color: var(--cp-accent);
   }
 
+  /* Its own name, so it is the only thing that fades when it goes. */
   .clock__date {
     margin-top: 0.5rem;
     color: var(--cp-accent);
@@ -166,6 +183,7 @@
     line-height: 1.75rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
+    view-transition-name: clock-date;
 
     @media (width >= 768px) {
       font-size: 1.25rem;
