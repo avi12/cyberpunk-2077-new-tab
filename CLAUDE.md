@@ -179,10 +179,13 @@ port 9223, so the new tab can be driven and screenshotted while it runs. One ses
 
 `pnpm ext:dev:hmr -b firefox` is the same loop in a different shape: Firefox refuses to load a
 remote script into an extension page, so there is no dev server there. It builds, keeps the window,
-and rebuilds and reloads on every change under `src/`. It is driven over WebDriver BiDi on port 9224
-(`ws://127.0.0.1:9224/session`) rather than CDP, which Firefox 156 no longer has - and BiDi refuses
-screenshots and real input on an extension page, so drive it with `script.evaluate` and capture the
-window from the OS.
+and answers a change three ways. A `.svelte` edit is swapped into the running page and nothing
+reloads, state included - `scripts/dev-hmr.mjs` builds a second, hot copy of the new tab's graph into
+the extension, so the modules are the add-on's own and only the word "changed" goes over a socket.
+Anything else under `src/` reloads the page. A change reaching the background or the manifest reloads
+the add-on. It is driven over WebDriver BiDi on port 9224 (`ws://127.0.0.1:9224/session`) rather than
+CDP, which Firefox 156 no longer has - and BiDi refuses screenshots and real input on an extension
+page, so drive it with `script.evaluate` and capture the window from the OS.
 
 **Neither browser ever needs restarting**, and if one does, that is a bug in the loop rather than
 something to work around. A change reloads the page, or the extension, and the window stays. Two
@@ -192,7 +195,8 @@ things follow for anything driving them:
   moment on every rebuild - so a driver attached from outside is refused while a build is landing.
   Retry rather than conclude the browser is gone.
 - The Firefox loop parks the extension's pages on `about:blank` for the length of a build and puts
-  them back by address afterwards. A tab reading `about:blank` mid-rebuild is the loop working.
+  them back by address afterwards. A tab reading `about:blank` mid-rebuild is the loop working. A
+  component edit skips the build and so skips the parking: the page is never navigated at all.
 
 # Companion app
 
