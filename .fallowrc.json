@@ -4,7 +4,10 @@
   // all - a glob that matches nothing there is the intended state for a clone of the extension.
   // The tray is a third way in: the packaging scripts spawn it by path rather than importing it, so
   // nothing statically reaches it.
-  "entry": ["src/entrypoints/**", "scripts/*.mjs", "companion/packaging/*.mjs"],
+  //
+  // `dev-hmr-client.js` is named rather than swept in: it is the input of the second Vite build
+  // `scripts/dev-hmr.mjs` runs, so nothing in this repository imports it and it is still an entry.
+  "entry": ["src/entrypoints/**", "scripts/*.mjs", "scripts/dev-hmr-client.js", "companion/packaging/*.mjs"],
   // Svelte 5 rune modules are `*.svelte.ts`, imported without the `.ts`. Fallow's resolver reads
   // `foo.svelte` as a component file and cannot follow the edge, so the modules are declared
   // reachable here and their specifiers exempted from the unresolved-import check.
@@ -13,7 +16,10 @@
   "ignoreUnresolvedImports": ["@/assets/icons/*.svg?raw", "@/features/companion/connection.svelte", "@/lib/glitch.svelte", "@/lib/sortable.svelte", "@/lib/storage/settings.svelte", "./widget.svelte", "@/features/widgets/widget.svelte", "@/features/compose/access.svelte"],
   // Both are used through tooling rather than an import: the Svelte Vite plugin by
   // @wxt-dev/module-svelte, postcss-html as stylelint's customSyntax.
-  "ignoreDependencies": ["@sveltejs/vite-plugin-svelte", "postcss-html"],
+  //
+  // `cp:hmr-entry` is not a package at all - it is the virtual specifier `scripts/dev-hmr.mjs`
+  // resolves to the new tab's own entry, so the hot client can import it without naming a path.
+  "ignoreDependencies": ["@sveltejs/vite-plugin-svelte", "cp:hmr-entry", "postcss-html"],
   "health": {
     "maxCognitive": 30,
     "maxCrap": 10000
