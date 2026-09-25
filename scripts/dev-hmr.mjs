@@ -44,7 +44,8 @@ const HOT_CONTEXT = "__cpHotContext";
  * real `App` with this build's own Svelte instance and hands the page back a way to unmount, which
  * is what a full swap needs when a change lands somewhere HMR cannot patch.
  */
-const ENTRY_ID = "\0cp:hmr-entry";
+const ENTRY_SPECIFIER = "cp:hmr-entry";
+const ENTRY_ID = `\0${ENTRY_SPECIFIER}`;
 
 /**
  * WXT's auto-import module, which only its own plugin knows how to resolve - without it the build
@@ -138,6 +139,11 @@ function svelteHotPlugin() {
 
 /** The two modules this build has to conjure: its own entry, and the one WXT would have resolved. */
 function virtualModulesPlugin() {
+  /** What a source file may write, against what the graph holds it under. */
+  const specifiers = {
+    [ENTRY_SPECIFIER]: ENTRY_ID,
+    [WXT_IMPORTS_ID]: WXT_IMPORTS_ID
+  };
   const modules = {
     [ENTRY_ID]: ENTRY_CODE,
     [WXT_IMPORTS_ID]: WXT_IMPORTS_CODE
@@ -152,7 +158,7 @@ function virtualModulesPlugin() {
      */
     enforce: "pre",
     resolveId(id) {
-      return id in modules ? id : null;
+      return specifiers[id] ?? null;
     },
     load(id) {
       return modules[id] ?? null;
@@ -174,6 +180,17 @@ export async function buildHotGraph({ outputDirectory }) {
     root: PROJECT_ROOT,
     configFile: false,
     logLevel: "error",
+    /*
+     * Relative, because this graph is loaded from a subdirectory of the extension rather than from
+     * its root. Left absolute, Vite writes the stylesheet preloads as `/assets/...` and the page
+     * resolves them against `moz-extension://<id>/` - one directory above where they were written,
+     * where the first import fails on a stylesheet that is not there.
+     */
+    base: "./",
+    /* The client asks the runtime for its own directory, and this is where that name comes from. */
+    define: {
+      __CP_HMR_DIR__: JSON.stringify(HMR_DIRECTORY)
+    },
     resolve: {
       alias: {
         "@": SOURCE_DIRECTORY
@@ -187,7 +204,12 @@ export async function buildHotGraph({ outputDirectory }) {
       sourcemap: true,
       target: "firefox139",
       rollupOptions: {
-        input: ENTRY_ID,
+        /*
+         * The client is the input rather than the entry, and the entry only reachable through it:
+         * every hot module registers itself as it evaluates, so the registry has to exist before
+         * the graph is touched. The client is what guarantees that ordering.
+         */
+        input: join(dirname(fileURLToPath(import.meta.url)), "dev-hmr-client.js"),
         preserveEntrySignatures: "allow-extension",
         output: {
           format: "es",
