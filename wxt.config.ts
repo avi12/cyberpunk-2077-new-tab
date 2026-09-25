@@ -78,11 +78,10 @@ const FIREFOX_ID = "cyberpunk-2077-new-tab@avi12.com";
  * 2025 and refuses the listing without it, so the only real decision is what goes in it.
  *
  * `none` was not available. The weather widget is on by default and works out a location on every
- * load, and those coordinates go to bigdatacloud to be given a name - a third party, reached without
- * asking anyone first. The name then goes to Google, which is the only thing that reads the sky
- * here, though that one is behind a site the reader hands over. Either way it is location data
+ * load, and those coordinates go to bigdatacloud to be given a name and to open-meteo to be given a
+ * sky - two third parties, both reached without anyone being asked first. That is location data
  * leaving, so it is declared, and `required` is what "without asking first" means: nothing in the
- * page requests the first of those, so a reader cannot install without it.
+ * page requests either of them, so a reader cannot install without it.
  *
  * `technicalAndInteraction` is the counting, and Firefox only allows that one as optional - a reader
  * unticks it at install and `permissions.getAll().data_collection` says so afterwards, which
@@ -167,12 +166,12 @@ export default defineConfig({
     // seeds the netlinks on first run; `storage` holds every setting, local and the backup in the
     // browser account alike; `identity` is the greeting's "Use Google account" button, and it is
     // `launchWebAuthFlow` alone - no `identity.email`, so no "know your email address" warning, and
-    // no `oauth2` key, which Edge would not honour anyway. No host permissions at install -
-    // allorigins, bigdatacloud and ipwho all answer with `Access-Control-Allow-Origin: *`, and
-    // Google's authorize page is opened in a window rather than fetched.
+    // no `oauth2` key, which Edge would not honour anyway. No host permissions at install, and none
+    // afterwards either - allorigins, bigdatacloud, ipwho and open-meteo all answer with
+    // `Access-Control-Allow-Origin: *`, and Google's authorize page is opened in a window rather
+    // than fetched.
     //
-    // Google's weather is the one address that does need declaring, and it is asked for at the
-    // moment it is used. Where the reader is, though, is asked
+    // Where the reader is, though, is asked
     // for here, at install, and has to be: `geolocation` is one of the permissions Chromium refuses
     // to make optional - requesting it produced "only permissions specified in the manifest may be
     // requested" at the click - so the only two choices are declaring it or going without.

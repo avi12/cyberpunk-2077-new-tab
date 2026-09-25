@@ -48,8 +48,8 @@
    * Whether this machine worked out a real place, which is what a failure is allowed to draw.
    *
    * The city used to fall back with the reading, so a reader whose forecast failed was shown Night
-   * City however well the page knew where they were - and then a line blaming Google for having no
-   * forecast for a city Google is never asked about. The place is known or it is not, and that
+   * City however well the page knew where they were - and then a line blaming the source for having
+   * no forecast for a city it was never asked about. The place is known or it is not, and that
    * answer does not depend on whether the sky came back.
    */
   const isPlaceKnown = $derived(askedLocation !== DEFAULT_WEATHER_LOCATION);

@@ -10,10 +10,10 @@ import { z } from "@/lib/zod";
 /**
  * What a reading is.
  *
- * Google describes the sky in English words and the widget reads none of them directly: the phrase
- * is bucketed into one of six conditions, which is what the icon is chosen by, and Google's own
- * words travel beside it as the line the reader sees. The temperature is always Celsius, so the unit
- * the reader asked for is the only conversion left to make.
+ * The source answers with a numeric code rather than a sentence, so both halves are decided here:
+ * the code picks one of six conditions, which is what the icon is chosen by, and the words that
+ * travel beside it are this page's own. The temperature is always Celsius, so the unit the reader
+ * asked for is the only conversion left to make.
  */
 
 export enum WeatherCondition {
@@ -117,10 +117,7 @@ export const WEATHER_ICONS: Record<WeatherCondition, {
   }
 };
 
-/**
- * The one conversion. The number the widget prints and the arithmetic Google's page is read by are
- * the same scale, so they are the same function.
- */
+/** The one conversion. Everything upstream is Celsius, so this is the only place that is not. */
 function toFahrenheit(celsius: number) {
   return Math.round((celsius * 9) / 5 + 32);
 }
