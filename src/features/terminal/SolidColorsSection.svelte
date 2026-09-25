@@ -86,19 +86,18 @@
     selected={background} />
 
   <div class="custom-color-picker">
-    <div class="picker__row">
-      <span class="picker__label">Custom Color</span>
-      <button
-        style:background-color={swatch}
-        class="custom-color-swatch"
-        aria-label="{isPickerOpen ? 'Close' : 'Open'} custom color picker"
-        data-analytics={AnalyticsAction.colorPickerToggled}
-        onclick={() => (isPickerOpen = !isPickerOpen)}
-        type="button"></button>
-    </div>
+    <!--
+      A `<details>` rather than a button and an `{#if}`: this is a disclosure, so the state, the
+      keyboard and the expanded/collapsed announcement all come from the element, and `.disclosure`
+      rolls it open and shut the way every section in this panel already does.
+    -->
+    <details class="disclosure" bind:open={isPickerOpen}>
+      <summary class="picker__row picker__summary" data-analytics={AnalyticsAction.colorPickerToggled}>
+        <span class="picker__label">Custom Color</span>
+        <span style:background-color={swatch} class="custom-color-swatch"></span>
+      </summary>
 
-    {#if isPickerOpen}
-      <div class="cyber-color-panel">
+      <div class="cyber-color-panel disclosure__body">
         <label class="cyber-slider-label">
           <span>Color Spectrum</span>
           <input
@@ -156,7 +155,7 @@
           </button>
         </form>
       </div>
-    {/if}
+    </details>
 
     <div style:background-color={swatch} class="picker__bar"></div>
   </div>
@@ -174,6 +173,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+  }
+
+  /*
+   * `display: flex` from `picker__row` already takes the marker off in both engines; `list-style`
+   * says so out loud rather than leaving the triangle's absence resting on a layout mode.
+   */
+  .picker__summary {
+    list-style: none;
   }
 
   .picker__label {
