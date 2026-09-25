@@ -3,6 +3,7 @@
   import type { GeoLocation } from "@/lib/storage/schema";
   import { LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN } from "@/lib/storage/schema";
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
+  import iconGlobe from "@/assets/icons/globe.svg?raw";
   import iconSparkles from "@/assets/icons/sparkles.svg?raw";
   import Modal from "@/ui/Modal.svelte";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
@@ -47,6 +48,14 @@
   const FOLLOW_LABEL = "Follow my location";
 
   const NIGHT_CITY_LABEL = "Stay in Night City";
+
+  /**
+   * Plain on purpose, where everything around it is in character. A host permission is the one thing
+   * on this panel the browser will ask about in its own words, so the button that raises it names the
+   * site exactly as the prompt will - the same wording the terminal panel uses for the same grant.
+   */
+  const GOOGLE_LABEL = "Allow google.com";
+  const GOOGLE_CAPTION = "Google reads the sky for whichever place you pick - without its site both roads end in Night City";
 
   /**
    * The fiction, offered rather than fallen into.
@@ -429,6 +438,26 @@
           <p class="cyber-error" role="alert">{error}</p>
         {/if}
       </fieldset>
+
+      <!--
+        Asked for on its own, because it belongs to the whole group rather than to either half:
+        Google is what turns a place - found or typed - into a sky, and without it both roads end at
+        Night City. Drawn only while it is still to be had. A reader who has handed it over has
+        nothing to do about it, and a panel that said so on every open would be noise.
+      -->
+      {#if isGoogleAllowed === false}
+        <button
+          class="location__sync location__sync--quiet"
+          data-analytics={AnalyticsAction.weatherGoogleAllowed}
+          disabled={isLocating}
+          onclick={() => void askGoogleAccess()}
+          onfocusin={e => e.stopPropagation()}
+          type="button">
+          <span class="location__sync-icon">{@html iconGlobe}</span>
+          {GOOGLE_LABEL}
+        </button>
+        <p class="location__caption">{GOOGLE_CAPTION}</p>
+      {/if}
     </fieldset>
 
     <fieldset class="location__group">
@@ -549,6 +578,22 @@
         border-color: var(--cp-accent-hi);
         background: var(--cp-accent-hi);
       }
+    }
+  }
+
+  /*
+   * The site is a thing to hand over, not a place to read from, so it sits a step below the two
+   * that answer the question this panel asks - dashed and dimmer, and never lit, because holding it
+   * is not a location the widget can be on.
+   */
+  .location__sync--quiet {
+    border-color: var(--cp-outline);
+    border-style: dashed;
+    color: var(--cp-text-dim);
+
+    &:hover {
+      border-color: var(--cp-primary);
+      color: var(--cp-primary);
     }
   }
 
