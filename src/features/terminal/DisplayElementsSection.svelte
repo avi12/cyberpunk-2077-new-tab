@@ -5,7 +5,7 @@
   import iconEyeOff from "@/assets/icons/eye-off.svg?raw";
   import { GLITCH_SHORT_MS } from "@/lib/glitch.svelte";
   import { isCopilotShowing } from "@/features/companion/visibility";
-  import { IS_EDGE } from "@/features/companion/platform";
+  import { BROWSER_LABEL, IS_EDGE } from "@/features/companion/platform";
   import Modal from "@/ui/Modal.svelte";
   import PanelSection from "@/ui/PanelSection.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -150,7 +150,7 @@
 <Modal isOpen={isEdgeOnlyOpen} onClose={() => (isEdgeOnlyOpen = false)} title="Microsoft Edge only">
   <p class="edge-only">
     Copilot Journeys and Tips are Microsoft Edge's own, read out of its profile by the companion
-    app - so there's nothing for this section to show in another browser
+    app - so there's nothing for this section to show in {BROWSER_LABEL}
   </p>
   <div class="row">
     <button

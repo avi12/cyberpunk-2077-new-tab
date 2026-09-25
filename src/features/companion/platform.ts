@@ -53,6 +53,38 @@ function detectBrowserName() {
 export const BROWSER_NAME = detectBrowserName();
 
 /**
+ * What to call this browser to its reader's face, as against `BROWSER_NAME`, which is the word an
+ * analytics property is keyed by and must never change.
+ *
+ * Chromium is the one that cannot be named from a list: the build is shared by Chrome, Brave,
+ * Vivaldi and the rest, and calling all of them "Chrome" would be wrong for most of them. So the
+ * browser is asked instead - `userAgentData.brands` carries its real brand - and the family name is
+ * what is left when nothing answers. The list always includes a deliberately nonsense brand, with
+ * punctuation that varies by design, so it is matched loosely rather than spelt out.
+ */
+const BROWSER_LABELS: Record<BrowserName, string> = {
+  [BrowserName.edge]: "Microsoft Edge",
+  [BrowserName.firefox]: "Firefox",
+  [BrowserName.chromium]: "Chromium"
+};
+
+const GREASE_BRAND = /not.?a.?brand/i;
+
+function detectBrowserLabel() {
+  const family = BROWSER_LABELS[BROWSER_NAME];
+  if (BROWSER_NAME !== BrowserName.chromium) {
+    return family;
+  }
+
+  const branded = navigator.userAgentData?.brands
+    .find(({ brand }) => !GREASE_BRAND.test(brand) && brand !== family);
+
+  return branded?.brand ?? family;
+}
+
+export const BROWSER_LABEL = detectBrowserLabel();
+
+/**
  * The user agent string says `Windows NT 10.0` on Windows 11 as well, and always will - Microsoft
  * froze it there on purpose. The one thing that tells the two apart is a high-entropy client hint,
  * which the DOM library does not describe yet, so the single hint this asks for is declared here.
@@ -60,6 +92,10 @@ export const BROWSER_NAME = detectBrowserName();
 declare global {
   interface Navigator {
     readonly userAgentData?: {
+      readonly brands: {
+        brand: string;
+        version: string;
+      }[];
       getHighEntropyValues: (hints: string[]) => Promise<Partial<Record<string, string>>>;
     };
   }
