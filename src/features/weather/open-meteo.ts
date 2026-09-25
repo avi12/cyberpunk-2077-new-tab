@@ -23,7 +23,7 @@ import { z } from "@/lib/zod";
  * and answers a browser it does not recognise with a shell carrying `enablejs` - so a scraped
  * reading needs an aged Google cookie jar, which a fresh profile, cleared cookies, a container tab
  * or any Firefox never has. This is a JSON API that answers every reader the same way, and it
- * refuses `credentials` outright, so nothing identifying can be attached even by accident.
+ * sends no cookies: a cross-origin fetch carries none unless it is asked to, and nothing here asks.
  *
  * It is asked by **coordinate**, which is the other thing Google could not do: a search is by place
  * name, so bare coordinates typed into the panel were named after themselves and had no forecast at
