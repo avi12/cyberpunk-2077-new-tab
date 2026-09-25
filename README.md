@@ -226,32 +226,43 @@ they are optional, and the Firefox build does not carry them.
 
 ## Layout
 
+A feature is one folder, and its markup lives beside the logic that feeds it - there is no parallel
+`components/` tree to keep in step.
+
 ```
 src/
   app.css                  reset, theme tokens, cross-component effects (glitch, scan lines, tooltip)
   controls.css             shared control primitives (dialogs, inputs, buttons, option tiles)
   entrypoints/
     background.ts          topSites, default-engine search, the companion call - @webext-core/messaging
+    compose.ts             typed into Claude or Copilot to finish a prompt off; not built for Firefox
     newtab/                the page itself
-  lib/
+  features/
+    weather/               where the reader is, the open API that reads the sky, Night City's fallback
     companion/             the app the two Copilot card families are read through, and the page's state
     journeys/              Edge's generated cards: their shape, and where they exist at all
     tips/                  Edge's cached prompt catalogue, and the day's three out of it
-    icons/                 lucide path data (generated), the <svg> wrapper, the 40-icon picker list
+    compose/               the destinations a prompt can be sent to, and the origin each one costs
+    netlinks/              the grid, its categories, the icon picker, and the file/account transfers
+    widgets/               the RSS, task and scratch pad cards, and the panel that orders them
+    terminal/              the display panel's sections: background, colours, sound, tab identity
+    settings/              the settings snapshot, out to a file and into the browser account
+    ...                    clock, quotes, search, identity, page background, capture, about
+  ui/                      what every feature draws with: modal, panel section, toggles, backup
+  lib/
     storage/               zod schemas -> defaults -> wxt/storage items -> a rune-backed store
-    settings-file.ts       the settings snapshot, out to a file and back
-    settings-sync.ts       the same snapshot, kept in the browser account instead
+    analytics/             GA4 over the Measurement Protocol, and the three ways to be counted out
     sortable.ts            one pointer-driven reorder action, shared by all three drag lists
     sound.ts               the menu's hover tick and press, synthesised from measurements
-    ...                    time, quotes, weather, geolocation, colour, search, top-sites, glitch
-  components/
-    companion/ journeys/ tips/ netlinks/ widgets/ terminal/ modals/
+    ...                    fetch, zod, colour, motion, permissions, view transitions, glitch
+  assets/icons/            one lucide glyph per .svg, imported ?raw and coloured by currentColor
   public/
     icon/                  the toolbar/store PNGs and the terminal glyph the tab favicon uses
 scripts/
   cyberpunk-logo.ico       the brand mark, the one source every icon size is scaled from
   generate-icons.mjs       renders src/public/icon/*.png from cyberpunk-logo.ico
-  generate-key.mjs         mints the keypair behind the permanent extension id
+  dev.mjs                  the dev loop that keeps one browser alive across rebuilds
+  dev-hmr.mjs              Firefox's component swap, built into the add-on rather than served to it
 companion/                 the paid Store app that reads Edge's journeys and tips (its own README)
 ```
 
