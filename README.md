@@ -86,13 +86,16 @@ is the whole of how it is used - see "Google account name". `identity.email` is 
 
 Everything **optional** is asked for at the moment a feature needs it, never at install:
 `nativeMessaging` if you link the companion that reads Copilot Journeys and tips, `tabs` and
-`history` for the tips that ask about your own reading, `<all_urls>` to read the pages such a tip is
-asked about, `claude.ai` and `copilot.com` to finish a prompt off at its destination, and
-`google.com` for Google's own weather. All but the last are Chromium-only: the companion is Edge on
-Windows only, and the script that types a prompt is not built for Firefox at all - so an install
-that never sends a prompt or links the app sees no prompt of its own.
-`google.com` is on both builds instead, because the weather's source switch is on both: a Firefox
-without the origin would draw a switch that can only refuse to move.
+`history` for the tips that ask about your own reading, and `claude.ai` and `copilot.com` to finish a
+prompt off at its destination. Every one of them is Chromium-only: the companion is Edge on Windows
+only, and the script that types a prompt is not built for Firefox at all - so the Firefox build
+declares nothing optional at all, and a Chromium install that never sends a prompt or links the app
+sees no prompt of its own.
+
+There is no optional origin for the weather, and there used to be: `google.com`, on both builds,
+because the sky was scraped off Google's search page. It reads an open API by coordinate now, which
+answers any browser without a site being handed over - see
+[How it differs from the original](#how-it-differs-from-the-original).
 
 ### Permanent extension id
 
@@ -216,10 +219,10 @@ The button fills the field - a `given_name` is a first name, and if you would ra
 something else it is one keystroke away. There is nothing to save: the field is the setting, and the
 greeting follows it as you type, falling back to `V` while it stands empty.
 
-No host permissions at install: allorigins, bigdatacloud and ipwho all answer with
-`Access-Control-Allow-Origin: *`, and an extension page follows ordinary CORS. The one address that
-does need declaring is `google.com`, which the weather is read off - optional, and asked for at the
-moment it is used.
+No host permissions at install, and none granted afterwards either: allorigins, bigdatacloud, ipwho
+and open-meteo all answer with `Access-Control-Allow-Origin: *`, and an extension page follows
+ordinary CORS. The only origins declared anywhere are the two a finished prompt can be typed into,
+they are optional, and the Firefox build does not carry them.
 
 ## Layout
 
@@ -305,15 +308,16 @@ its slot.
   a latitude and longitude pins those instead. Whichever one the widget is reading is lit and the
   other is dimmed, though both stay usable; a stored location *is* the override, so following the
   device again clears it.
-- **Google reads the sky, and nothing else does.** The reading is scraped out of the search page
-  Google draws it on, which is why it takes a site: the block is only in the markup when the request
-  goes out as the signed-in browser, so the fetch carries cookies, and that is what the host
-  permission buys. It is asked for at the moment a location is set rather than at install, and the
-  panel says so out loud when it is refused instead of quietly carrying on.
-  Without it there is no weather to show, so the widget shows Night City's instead - a fixed,
-  invented reading that travels with the fallback city and never appears under a real one. Acid rain
-  over Watson, permanently. That is the honest shape of a single-source widget: either Google
-  answers for your town, or the fiction does.
+- **The sky comes from an open API, asked by coordinate.** Google used to answer it, scraped out of
+  the search page it draws the block on - and that took the `google.com` host permission, because
+  the block is only in the markup when the request goes out as a signed-in browser carrying its
+  cookies. A fresh profile, cleared cookies, a container tab or any Firefox has no such jar, so
+  those readers got a 92KB script-only shell with no weather in it and no way to tell. open-meteo
+  answers every browser the same way, wants no key and no site, and takes a latitude and longitude
+  rather than a place name - so coordinates typed straight into the panel have a forecast now, which
+  under Google they never did, since a search could only be run on a name. Where a reading still
+  cannot be had the widget says which way it came up empty and keeps the town it found; Night City's
+  invented sky is left for the one case where nothing placed the machine at all.
 - **No world clock, and no hand-written AM/PM.** The header clock is the only clock, and `Intl`
   formats it - which day period the locale uses, and whether it has one at all - as it formats the
   temperature's degree sign and unit. A fresh install starts on whatever hour cycle the locale
