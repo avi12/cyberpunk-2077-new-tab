@@ -25,8 +25,17 @@ export enum WeatherCondition {
   severe = "severe"
 }
 
+/**
+ * The coldest and hottest air ever recorded on the surface are -89.2 and 56.7, so this is the range
+ * with room to spare either side. It is not decoration: a reading arrives from a service this page
+ * does not own and ends up drawn as a number over a real town, and a schema that accepts anything a
+ * `number` can hold would pass a temperature of 1e308 straight through to the card.
+ */
+export const TEMPERATURE_CELSIUS_MIN = -100;
+export const TEMPERATURE_CELSIUS_MAX = 70;
+
 export const weatherReadingSchema = z.object({
-  temperature: z.number(),
+  temperature: z.number().min(TEMPERATURE_CELSIUS_MIN).max(TEMPERATURE_CELSIUS_MAX),
   condition: z.enum(WeatherCondition),
   description: nonEmptyTextSchema
 });
