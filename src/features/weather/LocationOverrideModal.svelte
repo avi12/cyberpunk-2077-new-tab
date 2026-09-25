@@ -3,11 +3,8 @@
   import type { GeoLocation } from "@/lib/storage/schema";
   import { LATITUDE_MAX, LATITUDE_MIN, LONGITUDE_MAX, LONGITUDE_MIN } from "@/lib/storage/schema";
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
-  import iconGlobe from "@/assets/icons/globe.svg?raw";
   import iconSparkles from "@/assets/icons/sparkles.svg?raw";
   import Modal from "@/ui/Modal.svelte";
-  import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
-  import { hasGoogleWeatherAccess, requestGoogleWeatherAccess } from "./google";
   import type { AskedLocation } from "./geolocation";
   import { locationAccess, LocationRefusal, LocationSource, roundCoordinate } from "./geolocation";
   import { wait } from "@/lib/wait";
@@ -18,6 +15,7 @@
     onSave,
     onClose,
     onFollowDevice,
+    onStayDark,
     isFollowingDevice,
     isNightCity
   }: {
@@ -25,6 +23,8 @@
     onSave: (location: GeoLocation) => void;
     onClose: () => void;
     onFollowDevice: () => Promise<AskedLocation>;
+    /** Going off the grid, which forgets the reading rather than only pinning the city over it. */
+    onStayDark: () => void;
     isFollowingDevice: boolean;
     /** Whether the fiction is what the reader asked for, rather than what they were left with. */
     isNightCity: boolean;
@@ -49,19 +49,12 @@
 
   const NIGHT_CITY_LABEL = "Stay in Night City";
 
-  /**
-   * Plain on purpose, where everything around it is in character. A host permission is the one thing
-   * on this panel the browser will ask about in its own words, so the button that raises it names the
-   * site exactly as the prompt will - the same wording the terminal panel uses for the same grant.
-   */
-  const GOOGLE_LABEL = "Allow google.com";
-  const GOOGLE_CAPTION = "Google reads the sky for whichever place you pick - without its site both roads end in Night City";
 
   /**
    * The fiction, offered rather than fallen into.
    *
    * It is what the widget already draws when nothing can place this machine, and some readers want
-   * exactly that and nothing else - no device read, no connection lookup, no search sent to Google.
+   * exactly that and nothing else - no device read, no connection lookup, nothing asked of anyone.
    * Picking it is the one setting here that asks the network for nothing at all.
    *
    * Said from inside the city rather than about it. The line used to call the sky invented and the
@@ -93,21 +86,6 @@
   /** A town rather than a spot, and one that follows the connection - so the reader is told both. */
   const CONNECTION_CAPTION = "This device wouldn't say, so this is where your connection puts you - type coordinates if it is off";
 
-  /**
-   * Where Google's site stands, said only to a reader who was asked for it and said no.
-   *
-   * Not merely to one who does not hold it. Somebody opening this panel for the first time holds it
-   * just as little, and has been offered nothing to refuse - telling them they must grant something
-   * is an accusation where there has not yet been a question. The sentence is an answer to a press,
-   * so it waits for one.
-   *
-   * A yes was printed here too for a while, so that a press could answer as loudly in the
-   * affirmative as in the negative. It reads as noise: a reader who has handed the site over has
-   * nothing to do about it, and is told again on every open of a panel they came to for something
-   * else. A press that gets the site is answered by this sentence going, which is the same way
-   * every other thing on the panel answers a press that worked.
-   */
-  const GOOGLE_REFUSED = "To display the weather, you must grant access to google.com";
 
   function coordinateSchema({ min, max, label }: {
     min: number;
@@ -141,8 +119,8 @@
    * Empty, not the location already showing. The fields are where a reader says somewhere new, and
    * a form that opens holding the answer it already has asks nothing.
    *
-   * The name goes with them, and has to: Google is asked for the weather by name, so coordinates
-   * typed under a name left over from the last place would fetch that place's weather instead.
+   * The name goes with them, because it is what the card shows - coordinates left under the last
+   * place's name would put this reader's sky over somebody else's city.
    */
   function emptyDraft() {
     return {
@@ -157,22 +135,6 @@
   let isEditing = $state(false);
   /** Undefined until the browser has answered - a "not looked yet" is no reason to say anything. */
   let deviceAccess = $state<PermissionState | undefined>();
-  /**
-   * Whether Google's site is this extension's, which decides whether a press is finished with the
-   * panel. Read ahead of the press rather than at it, because checking costs an await and the
-   * request underneath needs the gesture that await would spend - and read again afterwards, since
-   * the browser's own answer is what settles it.
-   *
-   * Undefined until the browser has said, so a panel that has not looked yet says nothing.
-   */
-  let isGoogleAllowed = $state<boolean | undefined>();
-
-  /**
-   * Whether a press put the question and came back without the site, which is the only thing that
-   * earns the sentence about it. Kept apart from `isGoogleAllowed` deliberately: that one is false
-   * for a reader who has never been asked, and this one is not.
-   */
-  let isGoogleRefused = $state(false);
   /** Whether a press is still out, asking the device and the site. Nothing else may be pressed on it. */
   let isLocating = $state(false);
   /** What the last press came back with, or null before there has been one. */
@@ -233,7 +195,6 @@
   $effect(() => {
     void isOpen;
     void locationAccess().then(access => (deviceAccess = access));
-    void hasGoogleWeatherAccess().then(isAllowed => (isGoogleAllowed = isAllowed));
   });
 
   $effect(() => {
@@ -246,37 +207,15 @@
     asked = null;
     isLocating = false;
     isEditing = false;
-    isGoogleRefused = false;
   });
 
-  /**
-   * Google answers the weather and nothing else does, so its site is what decides whether setting a
-   * location changes anything at all - which makes the moment one is set the moment to ask for it.
-   *
-   * What the request itself answered is thrown away and the permission read instead. A request can
-   * come back false for reasons that are not a refusal - a browser that would not take the question
-   * from where it was asked is the one that caught this out - and a panel that believed the
-   * question rather than the answer would then tell a reader they had been refused something they
-   * in fact hold. Nobody is asked twice either way: a site already handed over resolves at once and
-   * raises no prompt.
-   */
-  async function askGoogleAccess() {
-    await requestGoogleWeatherAccess();
-    isGoogleAllowed = await hasGoogleWeatherAccess();
-    isGoogleRefused = !isGoogleAllowed;
-  }
 
   /**
-   * Pressing this is the reader asking to be asked, so both questions are put to them, in the order
-   * the button reads: where they are, and then whether Google may answer for it.
+   * Pressing this puts the one question there is left to put: where they are.
    *
-   * The device is started rather than awaited, which is what makes that order possible.
-   * `getCurrentPosition` goes out synchronously, so its prompt is already up, while the press is
-   * still live for the site request underneath it - measured: a request made 6s later is refused
-   * outright with "must be called during a user gesture", and reading a browser prompt takes longer
-   * than that. Awaiting the device first would cost the site the gesture that paid for it.
-   *
-   * A site already handed over answers instantly and raises nothing, so nobody is asked twice.
+   * It used to put a second - whether Google's site could be handed over - because the sky was read
+   * off a search page. The sky comes from an open API answered by coordinate now, so there is no
+   * site to ask for and nothing to sequence against the device's answer.
    *
    * A press that finds nothing at all leaves the panel open and says which of the three things went
    * wrong, rather than closing on a city that never changed.
@@ -285,10 +224,8 @@
    * instantly and without a prompt, and the connection answers behind it - so there is a town to be
    * had here, where before there was a dead button.
    *
-   * Closing is what a press that answered both questions well earns, and nothing else does. A town
-   * from the connection is a guess rather than a fix, so it stays up for the reader to accept or
-   * type over; a site still not handed over leaves a sentence on the screen, and a panel that closed
-   * over it would be hiding the one thing the press had to say.
+   * Closing is what a fix from the device earns, and nothing else does: a town from the connection
+   * is a guess rather than an answer, so it stays up for the reader to accept or type over.
    */
   async function followDevice() {
     if (isLocating) {
@@ -297,35 +234,23 @@
 
     isLocating = true;
     asked = null;
-    const located = onFollowDevice();
     const shown = wait(LOCATING_FLOOR_MS);
-    await askGoogleAccess();
-    asked = await located;
+    asked = await onFollowDevice();
     await shown;
     isLocating = false;
 
     /* Only the device answering proves the permission; the connection knows nothing about it. */
     const isDeviceProved = asked.isFound && asked.source === LocationSource.device;
-    if (isDeviceProved) {
-      deviceAccess = "granted";
+    if (!isDeviceProved) {
+      return;
     }
 
-    const isSettled = isDeviceProved && isGoogleAllowed;
-    if (isSettled) {
-      onClose();
-    }
+    deviceAccess = "granted";
+    onClose();
   }
 
-  /**
-   * The site is asked for straight out of the submit, before anything is awaited, and the location is
-   * saved either way: the coordinates are what the reader came to set, and Google is the bonus on
-   * top. Nothing asks for the device here - they have just said where they are by hand.
-   *
-   * The panel closes on a save unless that site is still not handed over, in which case it stays up
-   * carrying the sentence - with the coordinates still in the fields, so pressing again is the way
-   * to allow it.
-   */
-  async function confirm(e: SubmitEvent) {
+  /** The coordinates are what the reader came to set, so saving them is the whole of the press. */
+  function confirm(e: SubmitEvent) {
     e.preventDefault();
     if (isLocating) {
       return;
@@ -342,7 +267,6 @@
     }
 
     error = "";
-    const asking = askGoogleAccess();
     const latitude = roundCoordinate(parsed.data.latitude);
     const longitude = roundCoordinate(parsed.data.longitude);
     onSave({
@@ -350,10 +274,7 @@
       latitude,
       longitude
     });
-    await asking;
-    if (isGoogleAllowed) {
-      onClose();
-    }
+    onClose();
   }
 </script>
 
@@ -363,7 +284,7 @@
     <h2 class="cyber-dialog__title location__title">Weather location</h2>
   </header>
 
-  <form class="stack" onfocusin={() => (isEditing = true)} onsubmit={e => void confirm(e)}>
+  <form class="stack" onfocusin={() => (isEditing = true)} onsubmit={confirm}>
     <!--
       Grouped by what the answer is made of rather than by how it is entered. Following the device
       and typing coordinates are two ways of naming a real place and belong together; the invented
@@ -439,25 +360,6 @@
         {/if}
       </fieldset>
 
-      <!--
-        Asked for on its own, because it belongs to the whole group rather than to either half:
-        Google is what turns a place - found or typed - into a sky, and without it both roads end at
-        Night City. Drawn only while it is still to be had. A reader who has handed it over has
-        nothing to do about it, and a panel that said so on every open would be noise.
-      -->
-      {#if isGoogleAllowed === false}
-        <button
-          class="location__sync location__sync--quiet"
-          data-analytics={AnalyticsAction.weatherGoogleAllowed}
-          disabled={isLocating}
-          onclick={() => void askGoogleAccess()}
-          onfocusin={e => e.stopPropagation()}
-          type="button">
-          <span class="location__sync-icon">{@html iconGlobe}</span>
-          {GOOGLE_LABEL}
-        </button>
-        <p class="location__caption">{GOOGLE_CAPTION}</p>
-      {/if}
     </fieldset>
 
     <fieldset class="location__group">
@@ -470,7 +372,7 @@
         aria-pressed={isNightCity}
         data-analytics={AnalyticsAction.weatherNightCityUsed}
         disabled={isLocating}
-        onclick={() => onSave(DEFAULT_WEATHER_LOCATION)}
+        onclick={onStayDark}
         onfocusin={e => e.stopPropagation()}
         type="button">
         <span class="location__sync-icon">{@html iconSparkles}</span>
@@ -479,9 +381,6 @@
       <p class="location__caption">{NIGHT_CITY_CAPTION}</p>
     </fieldset>
 
-    {#if isGoogleRefused}
-      <output class="location__notice">{GOOGLE_REFUSED}</output>
-    {/if}
   </form>
 
   <footer class="location__actions">
@@ -581,38 +480,12 @@
     }
   }
 
-  /*
-   * The site is a thing to hand over, not a place to read from, so it sits a step below the two
-   * that answer the question this panel asks - dashed and dimmer, and never lit, because holding it
-   * is not a location the widget can be on.
-   */
-  .location__sync--quiet {
-    border-color: var(--cp-outline);
-    border-style: dashed;
-    color: var(--cp-text-dim);
-
-    &:hover {
-      border-color: var(--cp-primary);
-      color: var(--cp-primary);
-    }
-  }
-
-  /* The two quiet lines under the button are one line of type; only their colour says which. */
-  .location__caption,
-  .location__notice {
+  .location__caption {
     display: block;
+    color: var(--cp-text-dimmer);
     font-family: var(--cp-mono);
     font-size: 0.75rem;
     line-height: 1rem;
-  }
-
-  .location__caption {
-    color: var(--cp-text-dimmer);
-  }
-
-  /* Told, not failed - the accent rather than the error colour, which is for something being wrong. */
-  .location__notice {
-    color: var(--cp-accent);
   }
 
   .location__fields {

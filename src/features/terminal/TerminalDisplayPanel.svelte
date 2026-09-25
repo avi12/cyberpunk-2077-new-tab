@@ -12,7 +12,6 @@
   import SolidColorsSection from "./SolidColorsSection.svelte";
   import SoundSection from "./SoundSection.svelte";
   import TabIdentitySection from "./TabIdentitySection.svelte";
-  import WeatherSourceSection from "./WeatherSourceSection.svelte";
 
   const { onElementGlitch }: { onElementGlitch: (key: keyof DisplayPreferences | null) => void } = $props();
 
@@ -30,44 +29,45 @@
   </button>
 
   <div id={PANEL_ID} class="terminal__popup scrollbar-cyberpunk" popover="auto">
-    <h2 class="terminal__title">Terminal Display</h2>
+    <div class="terminal__panel">
+      <h2 class="terminal__title">Terminal Display</h2>
 
-    <DisplayElementsSection {onElementGlitch} />
+      <DisplayElementsSection {onElementGlitch} />
 
-    <SoundSection />
+      <SoundSection />
 
-    <WeatherSourceSection />
 
-    <PanelSection title="Scan Lines">
-      <OptionGroup
-        label="Scan line mode"
-        onSelect={value => withViewTransition(() => (settings.scanLinesMode.current = value))}
-        options={SCAN_LINES_MODES}
-        selected={settings.scanLinesMode.current} />
-    </PanelSection>
+      <PanelSection title="Scan Lines">
+        <OptionGroup
+          label="Scan line mode"
+          onSelect={value => withViewTransition(() => (settings.scanLinesMode.current = value))}
+          options={SCAN_LINES_MODES}
+          selected={settings.scanLinesMode.current} />
+      </PanelSection>
 
-    <TabIdentitySection />
+      <TabIdentitySection />
 
-    <PanelSection title="Color Theme">
-      <OptionGroup
-        label="Colour theme"
-        onSelect={value => withViewTransition(() => (settings.colorTheme.current = value))}
-        options={COLOR_THEMES}
-        selected={settings.colorTheme.current} />
-    </PanelSection>
+      <PanelSection title="Color Theme">
+        <OptionGroup
+          label="Colour theme"
+          onSelect={value => withViewTransition(() => (settings.colorTheme.current = value))}
+          options={COLOR_THEMES}
+          selected={settings.colorTheme.current} />
+      </PanelSection>
 
-    <SolidColorsSection />
+      <SolidColorsSection />
 
-    <PanelSection title="Background Images">
-      <OptionGroup
-        columns={2}
-        label="Background image"
-        onSelect={value => withViewTransition(() => (settings.background.current = value))}
-        options={BACKGROUND_IMAGES}
-        selected={settings.background.current} />
-    </PanelSection>
+      <PanelSection title="Background Images">
+        <OptionGroup
+          columns={2}
+          label="Background image"
+          onSelect={value => withViewTransition(() => (settings.background.current = value))}
+          options={BACKGROUND_IMAGES}
+          selected={settings.background.current} />
+      </PanelSection>
 
-    <CustomBackgroundSection />
+      <CustomBackgroundSection />
+    </div>
   </div>
 </div>
 

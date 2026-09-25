@@ -51,17 +51,20 @@ const TIP_CONTEXT_PERMISSIONS = ["tabs", "history"];
  */
 const COMPOSE_ORIGINS = ["https://claude.ai/*", "https://copilot.com/*"];
 
-/**
- * Google's own weather, read off the search page it draws it on. Optional and asked for only by a
- * reader who turns it on, so the default install still reaches nothing but the open APIs it always
- * did - and a refusal costs the widget nothing, since it falls back to the one it was using.
- *
- * The one optional origin both engines are given, and the reason it is not filed with the rest:
- * everything else optional follows the companion, which is Edge on Windows alone, so Firefox has no
- * card that could ask. The weather widget is on every build and so is the switch that asks for this
- * - a Firefox left without the origin draws a switch that can only ever refuse to move.
- */
-const WEATHER_ORIGIN = "https://www.google.com/*";
+/** What both builds ask for at install - the same list on each, since neither needs more. */
+const SHARED_PERMISSIONS = [
+  "search",
+  "topSites",
+  "storage",
+  "unlimitedStorage",
+  "identity",
+  // Typing a prompt into Claude or Copilot, which is a script the background injects into the
+  // tab it opened. Required rather than optional: a binding is fixed when a context is created,
+  // so a worker that started before the grant could never reach it - the same trap the
+  // companion's own permission documents. It carries no warning of its own; the site does.
+  "scripting",
+  "geolocation"
+];
 
 /**
  * Firefox ties `storage.sync` to the add-on's own id: a build without one has no account area to
@@ -183,19 +186,7 @@ export default defineConfig({
     //
     // An offscreen document was tried and is not needed: it wants this very permission, and once
     // this is here the page can read the device itself.
-    permissions: [
-      "search",
-      "topSites",
-      "storage",
-      "unlimitedStorage",
-      "identity",
-      // Typing a prompt into Claude or Copilot, which is a script the background injects into the
-      // tab it opened. Required rather than optional: a binding is fixed when a context is created,
-      // so a worker that started before the grant could never reach it - the same trap the
-      // companion's own permission documents. It carries no warning of its own; the site does.
-      "scripting",
-      "geolocation"
-    ],
+    permissions: SHARED_PERMISSIONS,
     ...(browser === "firefox"
       ? {
         /**
@@ -212,7 +203,7 @@ export default defineConfig({
             data_collection_permissions: DATA_COLLECTION
           }
         },
-        optional_host_permissions: [WEATHER_ORIGIN]
+        permissions: SHARED_PERMISSIONS
       }
       : {
         author: {
@@ -221,7 +212,7 @@ export default defineConfig({
         key: publicKey,
         minimum_chrome_version: MINIMUM_CHROMIUM_VERSION,
         optional_permissions: [...COMPANION_PERMISSIONS, ...TIP_CONTEXT_PERMISSIONS],
-        optional_host_permissions: [...COMPOSE_ORIGINS, WEATHER_ORIGIN]
+        optional_host_permissions: [...COMPOSE_ORIGINS]
       }),
     homepage_url: "https://avi12.com"
   }),

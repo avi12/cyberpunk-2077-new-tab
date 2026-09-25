@@ -4,7 +4,7 @@
   import type { WeatherReading } from "./model";
   import iconCloud from "@/assets/icons/cloud.svg?raw";
   import { DEFAULT_WEATHER_LOCATION } from "@/lib/storage/defaults";
-  import { askDeviceLocation, deviceLocation } from "./geolocation";
+  import { askDeviceLocation, deviceLocation, forgetDeviceLocation } from "./geolocation";
   import {
     formatTemperature,
     isWeatherRefusal,
@@ -15,9 +15,7 @@
     WeatherRefusal
   } from "./model";
   import { nightCitySky } from "./night-city";
-  import { GOOGLE_WEATHER_ORIGIN } from "./google";
   import { readOpenMeteoWeather } from "./open-meteo";
-  import type { AccessRequest } from "@/lib/permissions";
   import { Glitch } from "@/lib/glitch.svelte";
   import LocationOverrideModal from "./LocationOverrideModal.svelte";
   import WidgetCard from "@/features/widgets/WidgetCard.svelte";
@@ -137,36 +135,6 @@
   let weather = $state<Promise<WeatherReading | WeatherRefusal>>(readWeather(DEFAULT_WEATHER_LOCATION));
 
   /**
-   * Google's site, handed over or taken back, counted so the read below can depend on it.
-   *
-   * The location is not the only half of a reading and cannot stand in for the other: a reader whose
-   * city was already known allows the site and nothing they can see changes, because the place never
-   * moved and only the place was being watched. That is the whole of what made the button look dead.
-   *
-   * The permission is listened to rather than the press that usually causes it, so a grant made in
-   * the browser's own extension settings lands here too - the same reasoning
-   * `companion/connection.svelte.ts` is built on.
-   */
-  let accessChanges = $state(0);
-
-  $effect(() => {
-    function noteAccessChange(changed: AccessRequest) {
-      const isWeatherOrigin = changed.origins?.includes(GOOGLE_WEATHER_ORIGIN);
-      if (isWeatherOrigin) {
-        accessChanges += 1;
-      }
-    }
-
-    browser.permissions.onAdded.addListener(noteAccessChange);
-    browser.permissions.onRemoved.addListener(noteAccessChange);
-
-    return () => {
-      browser.permissions.onAdded.removeListener(noteAccessChange);
-      browser.permissions.onRemoved.removeListener(noteAccessChange);
-    };
-  });
-
-  /**
    * The device is asked before the override is given up, and the override only goes once there is a
    * fix to put in its place. Clearing first cost a reader whose device cannot place itself - a
    * hardened browser, a machine with no radios - the coordinates they had typed, and dropped the
@@ -201,7 +169,6 @@
   });
 
   $effect(() => {
-    void accessChanges;
     const asked = askedLocation;
     weather = readWeather(asked);
     const timer = setInterval(() => {
@@ -216,6 +183,21 @@
 
   function openLocation() {
     isEditingLocation = true;
+  }
+
+  /**
+   * Going off the grid, which is the one pick here that takes something away rather than setting it.
+   *
+   * The caption promises nothing is scanned, traced or sent anywhere, and a remembered fix is a
+   * standing contradiction of that - so it is forgotten rather than merely out-ranked by the city.
+   * The permission the device reads through cannot go with it: the manifest requires that one,
+   * because Chromium refuses to make it optional, and neither browser will drop it. Pinning the city
+   * is what actually stops the reading, since nothing asks the device once it is off automatic.
+   */
+  function stayDark() {
+    forgetDeviceLocation();
+    detected = null;
+    onConfigChange({ location: DEFAULT_WEATHER_LOCATION });
   }
 </script>
 
@@ -266,7 +248,8 @@
   isOpen={isEditingLocation}
   onClose={() => (isEditingLocation = false)}
   onFollowDevice={followDevice}
-  onSave={next => onConfigChange({ location: next })} />
+  onSave={next => onConfigChange({ location: next })}
+  onStayDark={stayDark} />
 
 <style>
   .weather__row {

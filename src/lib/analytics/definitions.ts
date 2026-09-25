@@ -84,7 +84,6 @@ export enum AnalyticsAction {
   weatherFollowDevice = "weather_follow_device",
   weatherCoordinatesUsed = "weather_coordinates_used",
   weatherNightCityUsed = "weather_night_city_used",
-  weatherGoogleAllowed = "weather_google_allowed",
   weatherLocationClosed = "weather_location_closed",
 
   /* Widgets */

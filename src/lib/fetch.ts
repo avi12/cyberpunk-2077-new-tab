@@ -9,7 +9,7 @@ import type { z } from "./zod";
  * instead; it never decides what a response is.
  *
  * The schema is not optional decoration. Everything on the other end of these calls belongs to
- * somebody else - Google's search page, bigdatacloud, Microsoft's catalogue, a stranger's RSS - and a
+ * somebody else - open-meteo, bigdatacloud, Microsoft's catalogue, a stranger's RSS - and a
  * response that stops matching has to fail here, where it is one null, rather than three files later
  * as a property that turned out to be undefined.
  */
@@ -88,34 +88,4 @@ export async function fetchBytes({ url, init, timeoutMs }: Request) {
   }
 
   return response.blob().catch(() => null);
-}
-
-/** What the server called it, since a PDF decoded as text parses into a document all the same. */
-const HTML_CONTENT_TYPE = "text/html";
-
-/**
- * Markup as a document. Nothing is executed and nothing is attached - `DOMParser` builds an inert
- * tree - so a stranger's page can be read for the two or three things wanted from it without any of
- * it ever becoming part of this one.
- *
- * The content type is checked here rather than guessed at afterwards. `DOMParser` reports every
- * document it builds as HTML whatever went in, so a caller handed the document has no way left to
- * tell that it was really a PDF - this is the last point where the answer still exists.
- */
-export async function fetchDocument({ url, init, timeoutMs }: Request) {
-  const response = await fetchOk({
-    url,
-    init,
-    timeoutMs
-  });
-  if (!response?.headers.get("content-type")?.includes(HTML_CONTENT_TYPE)) {
-    return null;
-  }
-
-  const markup = await response.text().catch(() => null);
-  if (markup === null) {
-    return null;
-  }
-
-  return new DOMParser().parseFromString(markup, HTML_CONTENT_TYPE);
 }

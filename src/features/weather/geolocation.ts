@@ -278,6 +278,18 @@ function refusalOf(answer: GeolocationCoordinates | LocationRefusal) {
 }
 
 /**
+ * Forget what this machine worked out about where it is.
+ *
+ * The fix is never written to storage, so the page holding it is the whole of what is remembered -
+ * and picking Night City is a reader saying they would rather it were not. It cannot hand the
+ * geolocation permission back with it: the manifest declares that one outright, because Chromium
+ * refuses to make it optional, and neither browser will drop it.
+ */
+export function forgetDeviceLocation() {
+  inFlight = null;
+}
+
+/**
  * The reader asking outright, which is the one moment the prompt belongs: this skips the guard and
  * lets `getCurrentPosition` raise the browser's own question.
  *
