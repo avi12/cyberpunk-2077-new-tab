@@ -15,7 +15,8 @@
     WeatherRefusal
   } from "./model";
   import { nightCitySky } from "./night-city";
-  import { GOOGLE_WEATHER_ORIGIN, readGoogleWeather } from "./google";
+  import { GOOGLE_WEATHER_ORIGIN } from "./google";
+  import { readOpenMeteoWeather } from "./open-meteo";
   import type { AccessRequest } from "@/lib/permissions";
   import { Glitch } from "@/lib/glitch.svelte";
   import LocationOverrideModal from "./LocationOverrideModal.svelte";
@@ -100,12 +101,11 @@
   }
 
   /**
-   * No throwing branch, because there is nothing to throw. Google is the only source and it names
-   * the way it came up empty rather than raising - the site was never handed over, it could not be
-   * reached, or the search came back without its block - and the card says which.
+   * No throwing branch, because there is nothing to throw: the source names the way it came up empty
+   * rather than raising, and the card says which.
    *
-   * Night City is the one place Google is never asked about, either way round: it cannot find it, so
-   * the request could only come back empty.
+   * Night City is the one place never asked about. It is a fiction with invented coordinates, so a
+   * real forecast for it would be a reading of somewhere that is not there.
    */
   function readWeather(asked: GeoLocation) {
     /*
@@ -121,7 +121,7 @@
       return Promise.resolve(WeatherRefusal.noPlace);
     }
 
-    return readGoogleWeather(asked);
+    return readOpenMeteoWeather(asked);
   }
 
   /**

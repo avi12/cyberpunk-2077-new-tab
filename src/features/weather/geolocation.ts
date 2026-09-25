@@ -115,7 +115,7 @@ function currentPosition(timeoutMs: number) {
  * taken off the one schema that already says what a coordinate may be, so the bounds are stated in
  * exactly one file however a reading arrived.
  */
-const coordinatesSchema = geoLocationSchema.omit({ name: true });
+export const coordinatesSchema = geoLocationSchema.omit({ name: true });
 
 /** The service answers `success: false` rather than an error status when it will not say. */
 const connectionPlaceSchema = coordinatesSchema.extend({
