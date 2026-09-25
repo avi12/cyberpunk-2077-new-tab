@@ -397,7 +397,8 @@ export async function withTipContext({ title, prompt, budget }: {
   const context = namedContextFor({
     title,
     prompt
-  }) ?? DEFAULT_CONTEXT;  if (!await requestTipContextAccess(context)) {
+  }) ?? DEFAULT_CONTEXT;
+  if (!await requestTipContextAccess(context)) {
     return prompt;
   }
 
