@@ -346,85 +346,105 @@
 
 <Modal {isOpen} {onClose}>
   <header class="location__heading">
-    <h2 class="cyber-dialog__title location__title">Location Override</h2>
+    <!-- Named for the thing rather than the mechanism: a reader came here to set where, not to override. -->
+    <h2 class="cyber-dialog__title location__title">Weather location</h2>
   </header>
 
   <form class="stack" onfocusin={() => (isEditing = true)} onsubmit={e => void confirm(e)}>
-    <button
-      class="location__sync"
-      class:is-active={isDeviceLit}
-      class:is-dimmed={!isDeviceLit}
-      aria-pressed={isDeviceLit}
-      data-analytics={AnalyticsAction.weatherFollowDevice}
-      disabled={isLocating}
-      onclick={() => void followDevice()}
-      onfocusin={e => e.stopPropagation()}
-      type="button">
-      <span class="location__sync-icon" class:pulse={isLocating}>{@html iconMapPin}</span>
-      {isLocating ? LOCATING_LABEL : FOLLOW_LABEL}
-    </button>
-    {#if deviceError}
-      <p class="cyber-error" role="alert">{deviceError}</p>
-    {:else}
-      <p class="location__caption">{deviceCaption}</p>
-    {/if}
+    <!--
+      Grouped by what the answer is made of rather than by how it is entered. Following the device
+      and typing coordinates are two ways of naming a real place and belong together; the invented
+      sky is a different kind of answer and sits on its own below, instead of being wedged between
+      the two things it has nothing to do with.
 
-    <button
-      class="location__sync"
-      class:is-active={isNightCity}
-      class:is-dimmed={!isNightCity}
-      aria-pressed={isNightCity}
-      data-analytics={AnalyticsAction.weatherNightCityUsed}
-      disabled={isLocating}
-      onclick={() => onSave(DEFAULT_WEATHER_LOCATION)}
-      onfocusin={e => e.stopPropagation()}
-      type="button">
-      <span class="location__sync-icon">{@html iconSparkles}</span>
-      {NIGHT_CITY_LABEL}
-    </button>
-    <p class="location__caption">{NIGHT_CITY_CAPTION}</p>
-
-    <fieldset class="location__fields" class:is-dimmed={isDeviceLit || isNightCity}>
-      <legend class="location__legend">Coordinates</legend>
-
-      <p class="location__field">
-        <label class="location__label" for="location-name">Name</label>
-        <input id="location-name" class="cyber-input" type="text" bind:value={draft.name} />
-      </p>
-
-      <div class="location__pair">
-        <p class="location__field">
-          <label class="location__label" for="location-latitude">Latitude</label>
-          <input
-            id="location-latitude"
-            class="cyber-input"
-            inputmode="decimal"
-            type="text"
-            bind:value={draft.latitude} />
-        </p>
-        <p class="location__field">
-          <label class="location__label" for="location-longitude">Longitude</label>
-          <input
-            id="location-longitude"
-            class="cyber-input"
-            inputmode="decimal"
-            type="text"
-            bind:value={draft.longitude} />
-        </p>
-      </div>
+      Every option keeps its own controls on show. What each one costs - a permission prompt, three
+      fields - is the thing a reader is choosing between, so hiding it behind a selection would make
+      them pick before they could see what they were picking.
+    -->
+    <fieldset class="location__group">
+      <legend class="location__legend">Somewhere real</legend>
 
       <button
-        class="cyber-button cyber-button--primary location__confirm"
-        data-analytics={AnalyticsAction.weatherCoordinatesUsed}
+        class="location__sync"
+        class:is-active={isDeviceLit}
+        class:is-dimmed={!isDeviceLit}
+        aria-pressed={isDeviceLit}
+        data-analytics={AnalyticsAction.weatherFollowDevice}
         disabled={isLocating}
-        type="submit">
-        Use these coordinates
+        onclick={() => void followDevice()}
+        onfocusin={e => e.stopPropagation()}
+        type="button">
+        <span class="location__sync-icon" class:pulse={isLocating}>{@html iconMapPin}</span>
+        {isLocating ? LOCATING_LABEL : FOLLOW_LABEL}
       </button>
+      {#if deviceError}
+        <p class="cyber-error" role="alert">{deviceError}</p>
+      {:else}
+        <p class="location__caption">{deviceCaption}</p>
+      {/if}
+
+      <!-- The fields name their own group, so "or" is the legend rather than a line floating above it. -->
+      <fieldset class="location__fields" class:is-dimmed={isDeviceLit || isNightCity}>
+        <legend class="location__or">Or type it</legend>
+
+        <p class="location__field">
+          <label class="location__label" for="location-name">Name</label>
+          <input id="location-name" class="cyber-input" type="text" bind:value={draft.name} />
+        </p>
+
+        <div class="location__pair">
+          <p class="location__field">
+            <label class="location__label" for="location-latitude">Latitude</label>
+            <input
+              id="location-latitude"
+              class="cyber-input"
+              inputmode="decimal"
+              type="text"
+              bind:value={draft.latitude} />
+          </p>
+          <p class="location__field">
+            <label class="location__label" for="location-longitude">Longitude</label>
+            <input
+              id="location-longitude"
+              class="cyber-input"
+              inputmode="decimal"
+              type="text"
+              bind:value={draft.longitude} />
+          </p>
+        </div>
+
+        <button
+          class="cyber-button cyber-button--primary location__confirm"
+          data-analytics={AnalyticsAction.weatherCoordinatesUsed}
+          disabled={isLocating}
+          type="submit">
+          Use these coordinates
+        </button>
+
+        {#if error}
+          <p class="cyber-error" role="alert">{error}</p>
+        {/if}
+      </fieldset>
     </fieldset>
 
-    {#if error}
-      <p class="cyber-error" role="alert">{error}</p>
-    {/if}
+    <fieldset class="location__group">
+      <legend class="location__legend">Somewhere invented</legend>
+
+      <button
+        class="location__sync"
+        class:is-active={isNightCity}
+        class:is-dimmed={!isNightCity}
+        aria-pressed={isNightCity}
+        data-analytics={AnalyticsAction.weatherNightCityUsed}
+        disabled={isLocating}
+        onclick={() => onSave(DEFAULT_WEATHER_LOCATION)}
+        onfocusin={e => e.stopPropagation()}
+        type="button">
+        <span class="location__sync-icon">{@html iconSparkles}</span>
+        {NIGHT_CITY_LABEL}
+      </button>
+      <p class="location__caption">{NIGHT_CITY_CAPTION}</p>
+    </fieldset>
 
     {#if isGoogleRefused}
       <output class="location__notice">{GOOGLE_REFUSED}</output>
@@ -447,6 +467,31 @@
   .location__title {
     margin-bottom: 1rem;
     text-align: left;
+  }
+
+  /*
+   * A group is a kind of answer, not a step - so it is separated by its own rule and heading rather
+   * than boxed, which would make the panel three nested frames deep.
+   */
+  .location__group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    padding-top: 0.75rem;
+    border: none;
+    border-top: 1px solid var(--cp-outline);
+  }
+
+  /* The two real ways are alternatives to each other, and this is the word that says so. */
+  .location__or {
+    padding: 0;
+    color: var(--cp-text-dimmer);
+    font-family: var(--cp-mono);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    text-transform: uppercase;
   }
 
   /* Both sources stay usable; the dim only says which one the widget is reading right now. */
