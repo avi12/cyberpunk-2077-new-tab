@@ -216,12 +216,17 @@ svg {
 
 /*
  * Fields are where inheritance stops: the UA stylesheet declares `cursor: auto` on every input
- * and textarea, which would hand a text field the platform caret and a range slider the platform
- * arrow - the only stock cursors on the page. They keep the page's own arrow instead. The rule
- * below still outranks this one, so submit and button inputs stay on the reticle.
+ * and textarea, and `cursor: default` on every label - measured in both engines - which would hand
+ * a text field the platform caret and a label the platform arrow, the only stock cursors on the
+ * page. They keep the page's own arrow instead. The rule below still outranks this one, so submit
+ * and button inputs stay on the reticle.
+ *
+ * A label goes to the arrow rather than the reticle on purpose: clicking one reaches the field it
+ * names, and that field is on the arrow too. The reticle stays for the things that act.
  */
 input,
-textarea {
+textarea,
+label {
   cursor: var(--cp-cursor);
 }
 
