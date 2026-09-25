@@ -286,7 +286,18 @@
  * The fraction is what carries the "as tall as whatever it holds" that `auto` was there for: a grid
  * row of `1fr` is exactly its content, which is still not a number this file could name.
  */
+
+/*
+ * `contain: layout` is what stops a scrollbar flashing on whatever is scrolling around this.
+ *
+ * On the first frame of a roll the box reports its full content height to its ancestors' scroll
+ * height while its own clipped height has only just started moving - measured in the terminal panel,
+ * a 12px overshoot for exactly one frame, which is long enough to paint a scrollbar and take it
+ * away. Containment is the promise that nothing inside here changes anything outside, and that
+ * promise is what the clip already makes visually; this is the same thing said to layout.
+ */
 .disclosure::details-content {
+  contain: layout;
   display: grid;
   grid-template-rows: 0fr;
   overflow: hidden;
