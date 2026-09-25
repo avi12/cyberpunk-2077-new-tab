@@ -296,9 +296,20 @@ label {
 ::view-transition-group(*.above-scan-lines),
 ::view-transition-group(widgets),
 ::view-transition-group(system-button),
-::view-transition-group(terminal),
-::view-transition-group(terminal-panel) {
+::view-transition-group(terminal) {
   z-index: 30;
+}
+
+/*
+ * The panel is a popover, so on the page it paints in the top layer - above every z-index there is,
+ * rather than at one of them. Captured, it is an ordinary group again and has to be given a number
+ * that says the same thing, and it has to be a number rather than the 30 its button carries: groups
+ * that tie are painted in tree order, and `widgets` sorts after `terminal-panel`. Firefox drew the
+ * weather card over the open menu for exactly that reason, on any transition that moved the page -
+ * toggling a display element is one, since the row it removes changes the height of everything.
+ */
+::view-transition-group(terminal-panel) {
+  z-index: 50;
 }
 
 /*
