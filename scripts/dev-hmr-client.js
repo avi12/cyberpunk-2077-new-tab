@@ -72,14 +72,8 @@ globalThis.__cpHmr = {
 };
 
 /*
- * After the registry exists and not before: every module in the graph calls `hotContext` while it
- * is still evaluating, so the entry cannot be a static import of this file.
+ * The page's own entry, run last and not first: every module in the graph calls `hotContext` while
+ * it is still evaluating, so this cannot be a static import - the registry has to exist by the time
+ * the first one does. It mounts itself, exactly as it does in the shipped build.
  */
-const entry = await import("cp:hmr-entry");
-
-entry.mountApp(document.querySelector("#app"));
-
-globalThis.__cpHmr.remount = () => {
-  entry.unmountApp();
-  entry.mountApp(document.querySelector("#app"));
-};
+await import("cp:hmr-entry");

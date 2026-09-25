@@ -21,8 +21,13 @@
  */
 
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
-import { existsSync, rmSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import {
+  dirname,
+  join,
+  relative,
+  resolve,
+  sep
+} from "node:path";
 import { fileURLToPath } from "node:url";
 import { compile, compileModule, preprocess } from "svelte/compiler";
 import { build, transformWithOxc } from "vite";
@@ -33,16 +38,22 @@ const SOURCE_DIRECTORY = join(PROJECT_ROOT, "src");
 /** Where the hot modules land, beside the shipped build rather than inside it. */
 export const HMR_DIRECTORY = "newtab-hmr";
 
-/** What the page calls to get a module its hot hook can talk to. Spelled the same on both sides. */
-const HOT_REGISTRY = "__cpHmr";
+/**
+ * What the page calls to get a module its hot hook can talk to. Spelled the same on both sides, and
+ * exported for the third reader - the reload client, which is what tells it a module changed.
+ */
+export const HOT_REGISTRY = "__cpHmr";
 
 /** The local const `import.meta.hot` becomes, since the token itself cannot survive a build. */
 const HOT_CONTEXT = "__cpHotContext";
 
 /**
- * The entry, kept virtual so the source tree gains nothing for a dev-only feature. It mounts the
- * real `App` with this build's own Svelte instance and hands the page back a way to unmount, which
- * is what a full swap needs when a change lands somewhere HMR cannot patch.
+ * The entry, kept virtual so the source tree gains nothing for a dev-only feature.
+ *
+ * It is the page's own entry and nothing else - the same module the shipped build runs, compiled
+ * against this build's Svelte instead of that one's. Anything else would be a second boot to keep in
+ * step with the first: the cached tab title, the beacon and the mount all live there, and a dev page
+ * that mounted `App` itself would quietly stop matching the page being developed.
  */
 const ENTRY_SPECIFIER = "cp:hmr-entry";
 const ENTRY_ID = `\0${ENTRY_SPECIFIER}`;
@@ -61,25 +72,40 @@ const WXT_IMPORTS_CODE = [
   `export { storage } from "wxt/utils/storage";`
 ].join("\n");
 
-const ENTRY_CODE = [
-  `import App from "@/entrypoints/newtab/App.svelte";`,
-  `import "@/app.css";`,
-  `import "@/controls.css";`,
-  `import { mount, unmount } from "svelte";`,
-  `let app;`,
-  `export function mountApp(target) {`,
-  `  app = mount(App, { target });`,
-  `}`,
-  `export function unmountApp() {`,
-  `  if (app) { unmount(app); app = undefined; }`,
-  `}`
-].join("\n");
+/*
+ * Imported rather than mounted, and dynamically rather than statically: `sideEffects` in
+ * `package.json` names only `*.css`, so a bare `import "main.ts"` is a module Rollup is entitled to
+ * drop - and it does, leaving an entry chunk that is literally empty. A dynamic import is a chunk
+ * boundary rather than a reference, so nothing can shake it out.
+ */
+const ENTRY_CODE = `await import("@/entrypoints/newtab/main.ts");`;
+
+/**
+ * The client's path in the repository, which `preserveModules` reproduces inside the graph - so this
+ * build's input and the page's entry tag are one string said once.
+ */
+const CLIENT_SOURCE_PATH = "scripts/dev-hmr-client.js";
+
+/** What the built page is pointed at instead of its own bundle, for as long as a graph is there. */
+export const HOT_CLIENT_PATH = `${HMR_DIRECTORY}/${CLIENT_SOURCE_PATH}`;
 
 const sveltePreprocessor = vitePreprocess({ script: true });
 
 /** Stable across rebuilds and identical on both sides of the socket, so a change can be named. */
-function toModuleId(id) {
-  return relative(PROJECT_ROOT, id).replaceAll("\\", "/");
+export function hotModuleId(repoRelativePath) {
+  return repoRelativePath.replaceAll(sep, "/");
+}
+
+/**
+ * Whether a change is one the page can take without reloading.
+ *
+ * Components only, because `hmr: true` wraps those and nothing else: a store or a plain module is
+ * compiled into the graph with no hook to hand a new copy to. This is the cheap half of the answer
+ * rather than the whole of it - the page is asked too, and a swap it cannot apply is answered
+ * `false` so the loop can fall back to a reload.
+ */
+export function isHotModule(repoRelativePath) {
+  return repoRelativePath.endsWith(".svelte");
 }
 
 /**
@@ -127,7 +153,7 @@ function svelteHotPlugin() {
         css: "injected"
       });
       const rewritten = js.code.replaceAll("import.meta.hot", HOT_CONTEXT);
-      const moduleId = JSON.stringify(toModuleId(id));
+      const moduleId = JSON.stringify(hotModuleId(relative(PROJECT_ROOT, id)));
 
       return {
         code: `const ${HOT_CONTEXT} = globalThis.${HOT_REGISTRY}.hotContext(${moduleId});\n${rewritten}`,
@@ -187,9 +213,20 @@ export async function buildHotGraph({ outputDirectory }) {
      * where the first import fails on a stylesheet that is not there.
      */
     base: "./",
-    /* The client asks the runtime for its own directory, and this is where that name comes from. */
     define: {
-      __CP_HMR_DIR__: JSON.stringify(HMR_DIRECTORY)
+      /* The client asks the runtime for its own directory, and this is where that name comes from. */
+      __CP_HMR_DIR__: JSON.stringify(HMR_DIRECTORY),
+      /*
+       * What WXT's own plugin would have set, said again because this build does not have it. Left
+       * out, every one of them reads `undefined`: the right answer for two of them by accident, and
+       * the wrong one for `FIREFOX` on the only engine that ever loads this graph. A Firefox-only
+       * branch would then be dead in the hot page and live in the built one, which is exactly the
+       * kind of difference this mechanism exists to stop.
+       */
+      "import.meta.env.BROWSER": JSON.stringify("firefox"),
+      "import.meta.env.CHROME": "false",
+      "import.meta.env.EDGE": "false",
+      "import.meta.env.FIREFOX": "true"
     },
     resolve: {
       alias: {
@@ -203,13 +240,20 @@ export async function buildHotGraph({ outputDirectory }) {
       minify: false,
       sourcemap: true,
       target: "firefox139",
+      /*
+       * Nothing is shaken out of a graph that exists to be swapped into. `sideEffects` in
+       * `package.json` names only `*.css`, which is true of a build with real entries and a lie
+       * here: the page's entry is reached through an import, so Rollup is entitled to drop its body
+       * outright - and it does, leaving a `main.js` of three comments and no mount at all.
+       */
       rollupOptions: {
+        treeshake: false,
         /*
          * The client is the input rather than the entry, and the entry only reachable through it:
          * every hot module registers itself as it evaluates, so the registry has to exist before
          * the graph is touched. The client is what guarantees that ordering.
          */
-        input: join(dirname(fileURLToPath(import.meta.url)), "dev-hmr-client.js"),
+        input: join(PROJECT_ROOT, CLIENT_SOURCE_PATH),
         preserveEntrySignatures: "allow-extension",
         output: {
           format: "es",
@@ -223,15 +267,4 @@ export async function buildHotGraph({ outputDirectory }) {
   });
 
   return outDir;
-}
-
-/** A build that failed leaves nothing half-written for the page to import. */
-export function clearHotGraph({ outputDirectory }) {
-  const outDir = join(outputDirectory, HMR_DIRECTORY);
-  if (existsSync(outDir)) {
-    rmSync(outDir, {
-      recursive: true,
-      force: true
-    });
-  }
 }
