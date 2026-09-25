@@ -31,22 +31,57 @@
 
   /*
    * The body has a box of its own that the browser owns - `::details-content` - so unrolling it is
-   * a height, not a swap. `content-visibility` goes discretely alongside so the contents are still
-   * there to watch on the way out, and `interpolate-size` is what lets the open state stay `auto`:
-   * a section is as tall as whatever it holds, which is not a number this file could name.
+   * a size, not a swap. `content-visibility` goes discretely alongside so the contents are still
+   * there to watch on the way out.
+   *
+   * A single grid row from `0fr` to `1fr` rather than a height from `0` to `auto`, and the reason
+   * is Firefox: it has no `interpolate-size`, so `auto` is not a value it can animate towards and
+   * the section snapped fully open in one frame there. Measured, same page, 150px of content:
+   * height gave 19 -> 169 on the first frame, and the grid row gave 19 -> 61 -> 102 -> 144 -> 169.
+   * Chromium draws the two identically, so this costs it nothing.
+   *
+   * The fraction is what carries the "as tall as whatever it holds" that `auto` was there for: a
+   * grid row of `1fr` is exactly its content, which is still not a number this file could name.
    */
   .section::details-content {
+    display: grid;
+    grid-template-rows: 0fr;
     overflow: hidden;
-    block-size: 0;
     transition:
-      block-size 200ms cubic-bezier(0.2, 0, 0, 1),
+      grid-template-rows 200ms cubic-bezier(0.2, 0, 0, 1),
       content-visibility 200ms allow-discrete;
-    interpolate-size: allow-keywords;
   }
 
   /* `open` is the browser's to set rather than the markup's, so the compiler cannot see it. */
   .section:global([open])::details-content {
-    block-size: auto;
+    grid-template-rows: 1fr;
+  }
+
+  /* A grid item will not shrink below its content without this, which would defeat the `0fr`. */
+  .section__body {
+    min-height: 0;
+  }
+
+  /*
+   * Where `auto` can be animated towards, animate a height towards it: a real length eases the way
+   * the curve says, where a flex fraction has its own relationship to the pixels it resolves to and
+   * rolls at a subtly different rate. Chromium therefore keeps exactly the animation it always had,
+   * and the grid above is the fallback for engines - Firefox today - that have no `interpolate-size`
+   * and so cannot animate towards `auto` at all.
+   */
+  @supports (interpolate-size: allow-keywords) {
+    .section::details-content {
+      display: block;
+      block-size: 0;
+      transition:
+        block-size 200ms cubic-bezier(0.2, 0, 0, 1),
+        content-visibility 200ms allow-discrete;
+      interpolate-size: allow-keywords;
+    }
+
+    .section:global([open])::details-content {
+      block-size: auto;
+    }
   }
 
   .section__summary {

@@ -100,6 +100,26 @@
    */
   .terminal__popup {
     /*
+     * Closed is the base state and it is nothing at all: no height, and no block padding or border
+     * either, or the panel would sit there as a 36px bar waiting to grow. `display` and `overlay`
+     * transition discretely so the panel is still there to watch on the way out.
+     *
+     * The roll is a single grid row from `0fr` to `1fr` rather than a height from `0` to `auto`,
+     * because Firefox has no `interpolate-size` and so cannot animate towards `auto` at all - the
+     * panel arrived fully open in one frame there. Measured: 0 -> 480 of its 516 on the first frame
+     * before this, and an eased ramp after. A `1fr` row is its content's height, which is the thing
+     * `auto` was here for and still not a number this file could name.
+     *
+     * A panel that is a scroll container while it grows is one its own contents overflow for those
+     * 200ms, so the scrollbar appears for the roll and goes again. It is taken away for exactly as
+     * long as the panel is moving: `scrollbar-width` flips discretely, held back by the length of
+     * the roll on the way open and by nothing at all on the way shut, since a transition reads its
+     * timing from the state being moved into. Only the closed value is spelt here - open belongs
+     * to `.scrollbar-cyberpunk`, which is where this panel gets its scrollbar from.
+     */
+    --terminal-roll-property: grid-template-rows;
+
+    /*
      * Fixed, not absolute. In the top layer an absolutely positioned box still resolves its insets
      * against the initial containing block, which does not move with the page - so on a scrolled
      * page the panel rose by exactly `scrollY` and left a gap between itself and the button it
@@ -109,24 +129,10 @@
     inset: auto;
     right: anchor(right);
     bottom: anchor(top);
+    display: grid;
+    grid-template-rows: 0fr;
     overflow-y: auto;
     width: 16rem;
-
-    /*
-     * Closed is the base state and it is nothing at all: no height, and no block padding or border
-     * either, or the panel would sit there as a 36px bar waiting to grow. `interpolate-size` is
-     * what lets the open state stay `auto` - the panel is as tall as its own contents, up to the
-     * cap above, and neither is a number this file could name. `display` and `overlay` transition
-     * discretely so the panel is still there to watch on the way out.
-     *
-     * A panel that is a scroll container while it grows is one its own contents overflow for those
-     * 200ms, so the scrollbar appears for the roll and goes again. It is taken away for exactly as
-     * long as the panel is moving: `scrollbar-width` flips discretely, held back by the length of
-     * the roll on the way open and by nothing at all on the way shut, since a transition reads its
-     * timing from the state being moved into. Only the closed value is spelt here - open belongs
-     * to `.scrollbar-cyberpunk`, which is where this panel gets its scrollbar from.
-     */
-    height: 0;
     max-height: calc(100dvh - anchor-size(height) - var(--terminal-corner-inset) - var(--terminal-panel-gap));
     margin: 0;
     margin-bottom: var(--terminal-panel-gap);
@@ -136,7 +142,7 @@
     border-block-width: 0;
     background: var(--cp-surface);
     transition:
-      height 200ms cubic-bezier(0.2, 0, 0, 1),
+      var(--terminal-roll-property) 200ms cubic-bezier(0.2, 0, 0, 1),
       padding-block 200ms cubic-bezier(0.2, 0, 0, 1),
       border-block-width 200ms cubic-bezier(0.2, 0, 0, 1),
       scrollbar-width 0ms var(--terminal-scrollbar-delay, 0ms) allow-discrete,
@@ -152,7 +158,6 @@
     view-transition-name: terminal-panel;
     position-anchor: --terminal-display-button;
     position-try-fallbacks: flip-block;
-    interpolate-size: allow-keywords;
 
     &:not(:popover-open) {
       scrollbar-width: none;
@@ -161,7 +166,7 @@
     &:popover-open {
       --terminal-scrollbar-delay: 200ms;
 
-      height: auto;
+      grid-template-rows: 1fr;
       padding-block: 1rem;
       border-block-width: 2px;
     }
@@ -175,10 +180,40 @@
    */
   @starting-style {
     .terminal__popup:popover-open {
-      height: 0;
+      grid-template-rows: 0fr;
       padding-block: 0;
       border-block-width: 0;
       scrollbar-width: none;
+    }
+  }
+
+  /* A grid item will not shrink below its content without this, which would defeat the `0fr`. */
+  .terminal__panel {
+    min-height: 0;
+  }
+
+  /*
+   * Chromium keeps the height it always rolled on - see `PanelSection.svelte` for why a real length
+   * is preferred to a fraction wherever `auto` can be animated towards at all.
+   */
+  @supports (interpolate-size: allow-keywords) {
+    @starting-style {
+      .terminal__popup:popover-open {
+        height: 0;
+      }
+    }
+
+    /* Only the property that rolls differs; the list it sits in is written once above. */
+    .terminal__popup {
+      --terminal-roll-property: height;
+
+      display: block;
+      height: 0;
+      interpolate-size: allow-keywords;
+
+      &:popover-open {
+        height: auto;
+      }
     }
   }
 
