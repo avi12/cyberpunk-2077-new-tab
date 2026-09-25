@@ -21,11 +21,11 @@
  * and leaves its process standing, so the port is polled rather than the process - `pollDevServer`.
  *
  * Firefox is the exception to all of that: it has no dev server at all, because an extension page
- * there refuses remote code and a dev server is remote code. Its loop is a build, a window that
- * stays, and an open new tab that reloads itself as soon as the rebuild lands - see
- * `isServedByDevServer` and `scripts/dev-reload.mjs`. Where a rebuild does reach the background or
- * the manifest, the add-on is reloaded and its pages are navigated back into the tabs they were in -
- * `scripts/firefox-pages.mjs`.
+ * there refuses remote code and a dev server is remote code. What it has instead is a build, a window
+ * that stays, and three answers rather than one. A component is swapped into the running page and
+ * nothing reloads - `scripts/dev-hmr.mjs`. Anything else the page can absorb reloads the page -
+ * `scripts/dev-reload.mjs`. A change that reaches the background or the manifest reloads the add-on
+ * and puts its pages back into the tabs they were in - `scripts/firefox-pages.mjs`.
  *
  * Nothing here closes a browser. Every failure this script knows how to answer - a dead server, a
  * build that would not start, a save that landed mid-build, a promise nobody caught - is answered
@@ -51,7 +51,8 @@ import {
   PROJECT_ROOT,
   reloadExtension
 } from "./browser.mjs";
-import { plantReloadClient, startReloadChannel } from "./dev-reload.mjs";
+import { buildHotGraph, hotModuleId, isHotModule } from "./dev-hmr.mjs";
+import { plantHotEntry, plantReloadClient, startReloadChannel } from "./dev-reload.mjs";
 import { parkExtensionPages, restoreExtensionPages } from "./firefox-pages.mjs";
 import chokidar from "chokidar";
 import { spawn } from "node:child_process";
@@ -188,10 +189,14 @@ const SOURCE_DIRECTORY = join(PROJECT_ROOT, "src");
  * behaves differently, and no base-policy pref moves it: remote code is what MV3 forbids, and a dev
  * server is remote code.
  *
- * So Firefox gets the other shape of the same loop - build, keep the window, rebuild and reload on
- * every change - which is what this script already knew how to do for a restart. A rebuild measures
- * about 1.5 seconds; the module-level state HMR would have kept is the price, and there is no way to
- * pay less on that engine.
+ * So Firefox gets the other shape of the same loop - build, keep the window, rebuild on every change
+ * - which is what this script already knew how to do for a restart.
+ *
+ * What that rules out is a dev *server*, and it was read for a long time as ruling out hot reload
+ * too. It does not. An extension page may import its own `moz-extension://` modules, and a module
+ * re-imported under a fresh query string is a fresh module - so the modules are built into the
+ * extension and only the word "changed" goes over a socket. `scripts/dev-hmr.mjs` builds that graph,
+ * and a component edit costs the open page nothing at all.
  */
 const isServedByDevServer = browser !== "firefox";
 
@@ -208,6 +213,7 @@ let extensionStamp = "";
 let isBuilding = false;
 let pendingChange = null;
 let isRestarting = false;
+let isHotPlanted = false;
 let settleTimer = null;
 let crashRestarts = 0;
 let firstCrashAtMs = 0;
@@ -239,6 +245,32 @@ function build() {
 }
 
 /**
+ * The hot graph, rebuilt, and a failure said out loud rather than thrown.
+ *
+ * Measured: Vite writes nothing when a component will not compile, so the graph on disk is still the
+ * last one that worked. The open page goes on running it, which is exactly what the cold half does
+ * with a build that failed.
+ */
+function refreshHotGraph() {
+  return buildHotGraph({ outputDirectory: sourceDirectory() })
+    .then(() => true)
+    .catch(error => {
+      console.info(`[dev] the hot graph would not build: ${error.message.split("\n")[0]}`);
+
+      return false;
+    });
+}
+
+/** The graph, and the page pointed at it - the pair a cold build wipes and so has to redo. */
+async function plantHotGraph() {
+  const isBuilt = await refreshHotGraph();
+
+  return isBuilt && plantHotEntry({
+    outputDir: sourceDirectory()
+  });
+}
+
+/**
  * A change, built and handed to the open window.
  *
  * A save that arrives mid-build is remembered rather than dropped. The build already running read
@@ -253,11 +285,18 @@ async function rebuild(filename) {
   }
 
   isBuilding = true;
-  console.info(`\n[dev] ${filename} changed - rebuilding`);
+  /*
+   * A component is the one change nothing outside the page can see, so the cold build is skipped
+   * along with the parking - parking navigates the tab away, which would lose the very state the
+   * swap is here to keep. The cold bundle goes stale meanwhile and that costs nothing: the page is
+   * pointed at the hot graph, so the bundle is not what it is running.
+   */
+  const isSwappable = isHotPlanted && isHotModule(filename);
+  console.info(`\n[dev] ${filename} changed - ${isSwappable ? "swapping" : "rebuilding"}`);
   /* Before the build, because the build is what takes the pages - and it takes the tab with them,
    * which can take the window. `firefox-pages.mjs` says how that was measured. */
-  const openPages = isServedByDevServer ? null : await parkExtensionPages(FIREFOX_BIDI_PORT);
-  const isBuilt = await build();
+  const openPages = isServedByDevServer || isSwappable ? null : await parkExtensionPages(FIREFOX_BIDI_PORT);
+  const isBuilt = isSwappable ? await refreshHotGraph() : await build();
   isBuilding = false;
 
   if (pendingChange) {
@@ -274,8 +313,20 @@ async function rebuild(filename) {
     return;
   }
 
+  if (isSwappable) {
+    const isHeard = reloadChannel.swap(hotModuleId(filename)) > 0;
+    console.info(
+      isHeard
+        ? "[dev] swapped into the open page - nothing reloaded"
+        : "[dev] no open page heard the swap"
+    );
+
+    return;
+  }
+
   /* The build emptied the output directory, so the page's way of hearing about the next one is gone. */
   plantReloadClient({ outputDir: sourceDirectory() });
+  isHotPlanted = await plantHotGraph();
 
   const stamp = readExtensionStamp();
   const isExtensionChanged = stamp !== extensionStamp;
@@ -637,6 +688,7 @@ if (!output) {
 if (!isServedByDevServer) {
   reloadChannel = startReloadChannel();
   plantReloadClient({ outputDir: sourceDirectory() });
+  isHotPlanted = await plantHotGraph();
   extensionStamp = readExtensionStamp();
 }
 
