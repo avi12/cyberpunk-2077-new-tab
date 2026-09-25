@@ -7,9 +7,9 @@ import type { Browser } from "wxt/browser";
  * use something, so an install prompt never lists a capability for a feature they may never touch.
  *
  * Both answers are booleans, including the ones the browser gives by throwing. A browser that was
- * never offered the permission - Firefox is given one optional origin, Google's weather, and none of
- * the rest, since everything else optional follows a companion it has no way to run - refuses the
- * question rather than the permission, and to a caller those are the same no.
+ * never offered the permission - the Firefox build declares nothing optional at all, since every one
+ * of them follows a companion or a script it has no way to run - refuses the question rather than
+ * the permission, and to a caller those are the same no.
  */
 
 /** What a permission is asked for as, named here so a caller needs one import rather than two. */

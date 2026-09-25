@@ -3,8 +3,8 @@
   import iconMapPin from "@/assets/icons/map-pin.svg?raw";
 
   /**
-   * Always the place and never an error. There is no failed reading to report any more: Google
-   * answers or Night City does, and either way what belongs here is the name of the city on show.
+   * Always the place and never an error. A failed reading is said under the city rather than on
+   * this row, so what belongs here is the name of the place on show and nothing else.
    */
   const {
     name,

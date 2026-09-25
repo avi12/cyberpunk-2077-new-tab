@@ -65,18 +65,19 @@
   const isNightCityChosen = $derived(config.location?.name === DEFAULT_WEATHER_LOCATION.name);
 
   /**
-   * The reason to print under the city, or nothing where this widget has no business giving one.
+   * The reason to print under the city, and null for a reading, which has nothing to explain.
    *
-   * Null for a reading, obviously, and null for the one refusal that is a permission: a card cannot
-   * ask for a site, so telling a reader to hand one over is an instruction they have to carry
-   * somewhere else to follow. The location panel does the asking and answers a no itself.
+   * Every refusal has a line now, and one used to have none on purpose: the sky was read off a site
+   * the reader had to hand over, and a card cannot ask for a site, so the one refusal that was a
+   * permission was left wordless rather than sending them somewhere else to act on it. The open API
+   * asks for nothing, so there is no such refusal and the wording covers the whole enum.
    */
   function refusalWording(answer: WeatherReading | WeatherRefusal) {
     if (!isWeatherRefusal(answer)) {
       return null;
     }
 
-    return WEATHER_REFUSAL_WORDING[answer] ?? null;
+    return WEATHER_REFUSAL_WORDING[answer];
   }
 
   /**
@@ -143,8 +144,9 @@
    * `detected` is assigned here rather than left to the read below, which only runs where the
    * override was the thing being followed until now.
    *
-   * Whether the panel closes on this is the panel's call and not the widget's: the same press asks
-   * Google for its site, and the panel is the only thing that knows how that went.
+   * Whether the panel closes on this is the panel's call and not the widget's: a fix from the
+   * device earns a close and a town from the connection does not, and the panel is the only thing
+   * that knows which of the two came back.
    */
   async function followDevice() {
     const answer = await askDeviceLocation();
