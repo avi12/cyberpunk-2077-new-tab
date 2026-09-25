@@ -1,4 +1,4 @@
-import type { WeatherReading } from "./model";
+import type { WeatherSky } from "./model";
 import { WEATHER_REFRESH_MS, WeatherCondition } from "./model";
 
 /**
@@ -9,11 +9,8 @@ import { WEATHER_REFRESH_MS, WeatherCondition } from "./model";
  * measurement.
  */
 
-/** A sky without its temperature, which is the half that is written down rather than worked out. */
-type NightCitySky = Pick<WeatherReading, "condition" | "description">;
-
 /** Every one names a district and a kind of weather no real forecast would ever file. */
-const NIGHT_CITY_SKIES: [NightCitySky, ...NightCitySky[]] = [
+const NIGHT_CITY_SKIES: [WeatherSky, ...WeatherSky[]] = [
   {
     condition: WeatherCondition.rain,
     description: "Acid rain over Watson"

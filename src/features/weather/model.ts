@@ -34,6 +34,14 @@ export const weatherReadingSchema = z.object({
 export type WeatherReading = z.infer<typeof weatherReadingSchema>;
 
 /**
+ * A reading's two halves that are decided together and never separately: what the sky is doing and
+ * what to call it. A source works this pair out from one answer of its own - a WMO code, a district
+ * of Night City - so keeping them in one type is what stops an icon drifting from the words beside
+ * it.
+ */
+export type WeatherSky = Pick<WeatherReading, "condition" | "description">;
+
+/**
  * Why there is no reading, because the four reasons want four different sentences and the widget
  * used to give them all the same one: Night City's invented sky, with nothing to say it was a
  * stand-in. A reader who had simply never handed the site over saw the same thing as one Google had
