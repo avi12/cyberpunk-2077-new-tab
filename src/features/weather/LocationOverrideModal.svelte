@@ -53,10 +53,14 @@
    *
    * It is what the widget already draws when nothing can place this machine, and some readers want
    * exactly that and nothing else - no device read, no connection lookup, no search sent to Google.
-   * Picking it is therefore the one setting here that asks the network for nothing at all, and the
-   * caption says so, because "made up" is the whole appeal rather than a warning.
+   * Picking it is the one setting here that asks the network for nothing at all.
+   *
+   * Said from inside the city rather than about it. The line used to call the sky invented and the
+   * city invented, which is the page stepping out of its own fiction to explain itself - and saying
+   * the same thing twice while it did. The fact a reader needs is that nothing leaves the machine,
+   * and Night City has its own words for that.
    */
-  const NIGHT_CITY_CAPTION = "An invented sky over an invented city - nothing is read, looked up or asked of anyone";
+  const NIGHT_CITY_CAPTION = "Stay dark - nothing scanned, traced or sent anywhere";
 
   /**
    * What the button says while it is working, which it used to say nothing at all. A device can take
@@ -362,7 +366,7 @@
       them pick before they could see what they were picking.
     -->
     <fieldset class="location__group">
-      <legend class="location__legend">Somewhere real</legend>
+      <legend class="location__legend">On the grid</legend>
 
       <button
         class="location__sync"
@@ -428,7 +432,7 @@
     </fieldset>
 
     <fieldset class="location__group">
-      <legend class="location__legend">Somewhere invented</legend>
+      <legend class="location__legend">Off the grid</legend>
 
       <button
         class="location__sync"
