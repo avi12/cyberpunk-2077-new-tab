@@ -41,7 +41,8 @@
    */
   const isFollowingDevice = $derived(isAutomatic && detected !== null);
   const askedLocation = $derived(config.location ?? detected ?? DEFAULT_WEATHER_LOCATION);
-  const isCelsius = $derived(config.temperatureUnit !== false);
+  /** Unset is celsius, which `!== false` used to say in a way nobody could read at a glance. */
+  const isCelsius = $derived(config.temperatureUnit ?? true);
   const unit = $derived(temperatureUnit(isCelsius));
 
   /**
