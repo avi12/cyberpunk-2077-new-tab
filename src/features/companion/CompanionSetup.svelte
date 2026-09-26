@@ -125,6 +125,16 @@
 
   let isConnectionGivenUp = $state(false);
 
+  /**
+   * The two ways of having waited long enough, which are not the same fault and must not be worded
+   * as one. `companionOffline` asked the app and heard nothing, so the app is what to look at.
+   * `linking` never got as far as asking: the worker holding the answer predates the permission, so
+   * telling that reader to check their installation sends them after something that is not wrong.
+   */
+  const isAppUnreachable = $derived(isConnectionGivenUp && companion.state === CompanionState.companionOffline);
+
+  const isLinkStalled = $derived(isConnectionGivenUp && companion.state === CompanionState.linking);
+
   $effect(() => {
     if (!isWaitingOnApp) {
       isConnectionGivenUp = false;
@@ -149,8 +159,12 @@
    * page is built, and reading it here unconditionally would tear a panel whose words never moved.
    */
   const wording = $derived.by(() => {
-    if (isWaitingOnApp && isConnectionGivenUp) {
+    if (isAppUnreachable) {
       return `gaveUp:${hasCompanionAnswered}`;
+    }
+
+    if (isLinkStalled) {
+      return "linkStalled";
     }
 
     return companion.state;
@@ -340,7 +354,22 @@
           </button>
         {/snippet}
       </CompanionNotice>
-    {:else if isConnectionGivenUp}
+    {:else if companion.state === CompanionState.linking}
+      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>
+        {#if isLinkStalled}
+          <!--
+            Nothing about the app is wrong here, so nothing about the app is said. The worker that
+            holds the answer was started before the permission was, and only a browser that has let
+            it go idle replaces it with one that can reach the app - which is why restarting is the
+            one thing that always ends this, and why waiting usually does.
+          -->
+          Still linking the {COMPANION_NAME} - Microsoft Edge picks it up shortly on its own, or
+          restart the browser to hurry it along
+        {:else}
+          Listening for the {COMPANION_NAME} - this fills itself in the moment it answers
+        {/if}
+      </CompanionNotice>
+    {:else if isAppUnreachable}
       <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>
         {#if hasCompanionAnswered}
           Couldn't reach the {COMPANION_NAME} - start it, or check it is still installed
@@ -348,10 +377,6 @@
           Couldn't reach the {COMPANION_NAME} - get it from the Microsoft Store, or start it if it is
           already installed
         {/if}
-      </CompanionNotice>
-    {:else if companion.state === CompanionState.linking}
-      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>
-        Listening for the {COMPANION_NAME} - this fills itself in the moment it answers
       </CompanionNotice>
     {:else}
       <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>
