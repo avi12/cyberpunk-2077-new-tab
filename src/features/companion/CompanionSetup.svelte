@@ -14,6 +14,7 @@
   import {
     COPILOT_MODE_SETTING,
     COPILOT_SETTINGS_SECTION,
+    COPILOT_SETTINGS_URL,
     JOURNEYS_SETTING,
     openCopilotSettings
   } from "./edge-copilot";
@@ -309,13 +310,16 @@
         writes once {COPILOT_MODE_SETTING} and {JOURNEYS_SETTING} are on under {COPILOT_SETTINGS_SECTION}
         {#snippet action()}
           <div class="row">
-            <button
-              class="cyber-button cyber-button--ghost"
+            <a
+              class="cyber-button cyber-button--ghost cyber-button--link"
               data-analytics={AnalyticsAction.copilotSettingsOpened}
-              onclick={() => void openCopilotSettings()}
-              type="button">
+              href={COPILOT_SETTINGS_URL}
+              onclick={e => {
+                e.preventDefault();
+                void openCopilotSettings();
+              }}>
               Open Copilot settings
-            </button>
+            </a>
             <button
               class="cyber-button cyber-button--primary"
               data-analytics={AnalyticsAction.companionPermissionAsked}
@@ -341,17 +345,16 @@
         Nothing from Microsoft Edge yet - it needs {COPILOT_MODE_SETTING}, then {JOURNEYS_SETTING} under
         {COPILOT_SETTINGS_SECTION}, and a little browsing after that
         {#snippet action()}
-          <!--
-            A button rather than a link, and it has to be: Chromium refuses to navigate page content
-            to a browser page, so the address can only be opened from the extension's own side.
-          -->
-          <button
-            class="cyber-button cyber-button--primary"
+          <a
+            class="cyber-button cyber-button--primary cyber-button--link"
             data-analytics={AnalyticsAction.copilotSettingsOpened}
-            onclick={() => void openCopilotSettings()}
-            type="button">
+            href={COPILOT_SETTINGS_URL}
+            onclick={e => {
+              e.preventDefault();
+              void openCopilotSettings();
+            }}>
             Open Copilot settings
-          </button>
+          </a>
         {/snippet}
       </CompanionNotice>
     {:else if companion.state === CompanionState.linking}
