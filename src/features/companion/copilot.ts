@@ -48,20 +48,7 @@ export type CopilotCard =
     id: string;
     kind: CopilotKind.tip;
     tip: Tip;
-  }
-  | {
-    id: string;
-    kind: typeof UNREAD;
-    /** Which family is missing, since the stand-in wears that family's name and mark. */
-    unread: CopilotKind;
   };
-
-/**
- * A card standing in for a family that could not be read, drawn where that family's cards would
- * have been. Deliberately not a `CopilotKind`: the stand-in belongs to a family and says which, so
- * the kind it wears is that family's and this says what shape it is instead.
- */
-const UNREAD = "unread";
 
 /** A journey id and a tip id are Microsoft's, from two different catalogues, so the kind keeps them apart. */
 function journeyCard(journey: Journey): CopilotCard {
@@ -81,38 +68,26 @@ function tipCard(tip: Tip): CopilotCard {
 }
 
 /**
- * Journeys take the row, and tips fill whatever is left of it.
+ * Whose row it is. Not a mixture of the two, and never one family padding out the other.
  *
- * A seat used to be held back so a tip was always on show, on the grounds that a busy profile would
- * otherwise never let one through. Edge does not do that - measured, three live journeys filled all
- * three of its seats and no tip appeared - and holding that seat was why the two rows disagreed
- * about how many journeys to show. A reader with three journeys has three journeys worth reading.
- */
-function unreadCard(family: CopilotKind): CopilotCard {
-  return {
-    id: `${UNREAD}:${family}`,
-    kind: UNREAD,
-    unread: family
-  };
-}
-
-/**
- * One family's share of the row: its cards, or the one stand-in that says they could not be had.
+ * Edge deals its own row this way: journeys have it whenever there are any, measured at three of
+ * three with no tip appearing, and a profile with only one journey is shown one card and a row that
+ * simply ends there rather than one topped up to three with tips. Tips have the row when there are
+ * no journeys to have it.
  *
- * A rejection is the whole of "not read" - there is no list of state names to keep in step with
- * what each of them means, because the read that never happened is the one that threw.
+ * A family that could not be read has nothing to show, the same as one that had nothing - what
+ * happened is the panel's to say, above the row, and it does.
  */
-function familyPart<TItem>({ read, family, room, toCard }: {
+/** What a family actually has to show. A read that never happened has nothing, like one that found nothing. */
+function cardsOf<TItem>({ read, toCard }: {
   read: PromiseSettledResult<CompanionRead<TItem>>;
-  family: CopilotKind;
-  room: number;
   toCard: (item: TItem) => CopilotCard;
 }) {
   if (read.status === "rejected") {
-    return [unreadCard(family)];
+    return [];
   }
 
-  return read.value.cards.slice(0, room).map(toCard);
+  return read.value.cards.slice(0, MAX_CARDS).map(toCard);
 }
 
 /**
@@ -136,33 +111,18 @@ function deal({ journeys, tips }: {
   journeys: PromiseSettledResult<CompanionRead<Journey>>;
   tips: PromiseSettledResult<CompanionRead<Tip>>;
 }) {
-  const dealt = familyPart({
+  const dealt = cardsOf({
     read: journeys,
-    family: CopilotKind.journey,
-    room: MAX_CARDS,
     toCard: journeyCard
   });
-  const row = [
-    ...dealt,
-    ...familyPart({
-      read: tips,
-      family: CopilotKind.tip,
-      room: MAX_CARDS - dealt.length,
-      toCard: tipCard
-    })
-  ].slice(0, MAX_CARDS);
-
-  /*
-   * A row of nothing but stand-ins is no row at all. With neither family read there is nothing the
-   * reader is missing out of something - they are missing the lot, which is the panel's story and
-   * not a card's, so the section stays off the page as it always did.
-   */
-  const hasRealCard = row.some(card => card.kind !== UNREAD);
-  if (!hasRealCard) {
-    return [];
+  if (dealt.length > 0) {
+    return dealt;
   }
 
-  return row;
+  return cardsOf({
+    read: tips,
+    toCard: tipCard
+  });
 }
 
 /**
