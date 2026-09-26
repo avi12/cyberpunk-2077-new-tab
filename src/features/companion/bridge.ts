@@ -21,6 +21,14 @@ export const NATIVE_MESSAGING = "nativeMessaging";
 export const COMPANION_NAME = "Copilot Journeys companion";
 
 /**
+ * The app's own tray menu item for mending its registration, quoted rather than described: a reader
+ * being sent to press something is being sent to look for those exact words. It is the fix for the
+ * one failure that looks like every other - an update moved the executable Edge was pointed at, so
+ * the app is installed, running, and unreachable.
+ */
+export const RECONNECT_ITEM = "Reconnect to Edge";
+
+/**
  * Where the app is bought. The product id is the Store's own and is permanent - it was reserved
  * when the submission was created, so the address outlives any renaming of the listing behind it.
  */

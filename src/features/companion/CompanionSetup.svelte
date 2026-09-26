@@ -4,6 +4,7 @@
     COMPANION_NAME,
     COMPANION_STORE_URL,
     CompanionState,
+    RECONNECT_ITEM,
     requestCompanionPermission,
     startCompanionSetup
   } from "./bridge";
@@ -370,7 +371,12 @@
     {:else if isAppUnreachable}
       <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>
         {#if hasCompanionAnswered}
-          Couldn't reach the {COMPANION_NAME} - start it, or check it is still installed
+          <!--
+            The app has answered on this machine before, so it is installed and the link to it is
+            what broke - an update that moves the executable Edge was pointed at is the ordinary way
+            that happens. The app mends it from its own tray menu, so the item is named.
+          -->
+          Couldn't reach the {COMPANION_NAME} - start it, then choose {RECONNECT_ITEM} in its tray menu
         {:else}
           Couldn't reach the {COMPANION_NAME} - get it from the Microsoft Store, or start it if it is
           already installed
