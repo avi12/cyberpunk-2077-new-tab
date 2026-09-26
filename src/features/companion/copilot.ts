@@ -1,5 +1,5 @@
 import type { CompanionRead } from "./bridge";
-import { CompanionState, MAX_CARDS } from "./bridge";
+import { CompanionState, CompanionUnreachable, MAX_CARDS } from "./bridge";
 import iconMap from "@/assets/icons/map.svg?raw";
 import iconSparkles from "@/assets/icons/sparkles.svg?raw";
 import { readJourneys } from "@/features/journeys/bridge";
@@ -63,18 +63,6 @@ export type CopilotCard =
  */
 const UNREAD = "unread";
 
-/**
- * The states where a family was not read, as against read and found empty. `edgeHasNothing` is the
- * app answering that Edge has written nothing, which is an answer and needs no stand-in. These
- * three are the app not being reached at all - the only case where cards are missing rather than
- * absent, and the reader cannot tell from the row which it was.
- */
-const UNREAD_STATES = [
-  CompanionState.companionOffline,
-  CompanionState.companionNotRunning,
-  CompanionState.linking
-];
-
 /** A journey id and a tip id are Microsoft's, from two different catalogues, so the kind keeps them apart. */
 function journeyCard(journey: Journey): CopilotCard {
   return {
@@ -108,23 +96,45 @@ function unreadCard(family: CopilotKind): CopilotCard {
   };
 }
 
-/** One family's share of the row: its cards, or the one stand-in that says they could not be had. */
+/**
+ * One family's share of the row: its cards, or the one stand-in that says they could not be had.
+ *
+ * A rejection is the whole of "not read" - there is no list of state names to keep in step with
+ * what each of them means, because the read that never happened is the one that threw.
+ */
 function familyPart<TItem>({ read, family, room, toCard }: {
-  read: CompanionRead<TItem>;
+  read: PromiseSettledResult<CompanionRead<TItem>>;
   family: CopilotKind;
   room: number;
   toCard: (item: TItem) => CopilotCard;
 }) {
-  if (UNREAD_STATES.includes(read.state)) {
+  if (read.status === "rejected") {
     return [unreadCard(family)];
   }
 
-  return read.cards.slice(0, room).map(toCard);
+  return read.value.cards.slice(0, room).map(toCard);
+}
+
+/**
+ * Which state a settled read stands for. A read that happened says so itself; one that threw says
+ * it in the error it threw - and anything that threw for a reason this does not know is a read
+ * that did not happen either, which is what `companionOffline` has always meant.
+ */
+function stateOf(read: PromiseSettledResult<CompanionRead<unknown>>) {
+  if (read.status === "fulfilled") {
+    return read.value.state;
+  }
+
+  if (read.reason instanceof CompanionUnreachable) {
+    return read.reason.state;
+  }
+
+  return CompanionState.companionOffline;
 }
 
 function deal({ journeys, tips }: {
-  journeys: CompanionRead<Journey>;
-  tips: CompanionRead<Tip>;
+  journeys: PromiseSettledResult<CompanionRead<Journey>>;
+  tips: PromiseSettledResult<CompanionRead<Tip>>;
 }) {
   const dealt = familyPart({
     read: journeys,
@@ -195,12 +205,16 @@ function louder({ first, second }: {
  * one still had.
  */
 export async function readCopilot() {
-  const [journeys, tips] = await Promise.all([readJourneys(), readTips()]);
+  /*
+   * Settled rather than all: one family failing must not take the other's cards down with it, which
+   * is the whole reason the row can show a stand-in beside real cards at all.
+   */
+  const [journeys, tips] = await Promise.allSettled([readJourneys(), readTips()]);
 
   return {
     state: louder({
-      first: journeys.state,
-      second: tips.state
+      first: stateOf(journeys),
+      second: stateOf(tips)
     }),
     cards: deal({
       journeys,

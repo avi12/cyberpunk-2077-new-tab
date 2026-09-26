@@ -56,10 +56,28 @@ export enum CompanionState {
   linking = "linking"
 }
 
+/**
+ * A read that happened. The app was reached, and what it said is either cards or Edge having
+ * written nothing - the ways of not reaching it at all are thrown instead, so a caller never has to
+ * know which states mean "no answer" to tell the two apart.
+ */
 export type CompanionRead<TCard> = {
   state: CompanionState;
   cards: TCard[];
 };
+
+/**
+ * The app not reached, carrying which of the ways it was. Thrown rather than returned so that
+ * "this family was not read" is the shape of the answer instead of a list of state names kept in
+ * step by hand - and so `Promise.allSettled` can hold one family's failure beside the other's
+ * cards without either having to describe the other.
+ */
+export class CompanionUnreachable extends Error {
+  constructor(readonly state: CompanionState) {
+    super(state);
+    this.name = "CompanionUnreachable";
+  }
+}
 
 export async function requestCompanionPermission() {
   return browser.permissions.request({ permissions: [NATIVE_MESSAGING] });
@@ -126,17 +144,11 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
   const isCompanionAllowed = await browser.permissions.contains({ permissions: [NATIVE_MESSAGING] });
   const isSetupStarted = isCompanionAllowed || await companionSetupStartedItem.getValue();
   if (!isSetupStarted) {
-    return {
-      state: CompanionState.setupNeeded,
-      cards: []
-    };
+    throw new CompanionUnreachable(CompanionState.setupNeeded);
   }
 
   if (!isCompanionAllowed) {
-    return {
-      state: CompanionState.permissionNeeded,
-      cards: []
-    };
+    throw new CompanionUnreachable(CompanionState.permissionNeeded);
   }
 
   const nowMs = Temporal.Now.instant().epochMilliseconds;
@@ -157,10 +169,7 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
 
   const result = await sendMessage(MessageType.readCompanion, request).catch(() => null);
   if (!result || result.answer === CompanionAnswer.silent) {
-    return {
-      state: CompanionState.companionOffline,
-      cards: []
-    };
+    throw new CompanionUnreachable(CompanionState.companionOffline);
   }
 
   // Anything but silence is the app itself speaking, so this is where having it is proved. An
@@ -171,10 +180,7 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
   }
 
   if (result.answer === CompanionAnswer.notRunning) {
-    return {
-      state: CompanionState.companionNotRunning,
-      cards: []
-    };
+    throw new CompanionUnreachable(CompanionState.companionNotRunning);
   }
 
   if (result.answer === CompanionAnswer.nothingToRead) {
@@ -185,10 +191,7 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
   }
 
   if (result.answer === CompanionAnswer.unbound) {
-    return {
-      state: CompanionState.linking,
-      cards: []
-    };
+    throw new CompanionUnreachable(CompanionState.linking);
   }
 
   if (hasRecords(result.records)) {
