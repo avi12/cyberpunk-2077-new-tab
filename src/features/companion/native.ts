@@ -16,14 +16,31 @@ const HOST_NAME = "com.avi12.cyberpunk_journeys";
 /**
  * The app says whether it managed the read at all; what it read is filed under the name asked for.
  *
- * `isRunning` is the app telling the difference between the two ways of failing that look alike from
- * here: it answered, so it is installed, and it says whether the resident half is up. An app older
- * than the tray never sends it, and a missing marker reads as the silence it always did.
+ * Two markers tell apart the ways of failing that look alike from here, and both are proof in
+ * themselves that the app is installed, since only the app can send them: `isRunning` says whether
+ * the resident half is up, and `hasEdgeData` says the read worked and Edge had written nothing.
  */
 const answerSchema = z.looseObject({
   ok: z.boolean(),
-  isRunning: z.boolean().optional()
+  isRunning: z.boolean().optional(),
+  hasEdgeData: z.boolean().optional()
 });
+
+/**
+ * Which of the three ways of not answering this was. An app too old to carry either marker sends
+ * neither, and a missing marker reads as the silence it always did.
+ */
+function refusal({ isRunning, hasEdgeData }: z.infer<typeof answerSchema>) {
+  if (isRunning === false) {
+    return CompanionAnswer.notRunning;
+  }
+
+  if (hasEdgeData === false) {
+    return CompanionAnswer.nothingToRead;
+  }
+
+  return CompanionAnswer.silent;
+}
 
 /**
  * An app older than the request it was handed answers about journeys whatever it was asked, so a
@@ -54,7 +71,7 @@ export async function readCompanionRecords(request: CompanionRequest) {
 
   if (!parsed.data.ok) {
     return {
-      answer: parsed.data.isRunning === false ? CompanionAnswer.notRunning : CompanionAnswer.silent,
+      answer: refusal(parsed.data),
       records: []
     };
   }

@@ -127,6 +127,7 @@ export enum AnalyticsAction {
   companionPermissionAsked = "companion_permission_asked",
   promptTargetOpened = "prompt_target_opened",
   journeysSupportOpened = "journeys_support_opened",
+  copilotSettingsOpened = "copilot_settings_opened",
   journeySourceOpened = "journey_source_opened",
 
   /* Shared controls whose parent does not name them */

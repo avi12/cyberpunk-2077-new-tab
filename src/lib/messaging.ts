@@ -25,7 +25,9 @@ export enum CompanionAnswer {
   silent = "silent",
   unbound = "unbound",
   /** The app is installed - it answered - but it has been quit, so it is not reading anything. */
-  notRunning = "notRunning"
+  notRunning = "notRunning",
+  /** The app read fine and Edge has written nothing of this kind, which is a browser setting away. */
+  nothingToRead = "nothingToRead"
 }
 
 type CompanionResult = {

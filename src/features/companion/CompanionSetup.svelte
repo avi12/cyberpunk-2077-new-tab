@@ -11,6 +11,12 @@
   import { companion } from "./connection.svelte";
   import { companionAnsweredItem } from "@/lib/storage/items";
   import CompanionNotice from "./CompanionNotice.svelte";
+  import {
+    COPILOT_MODE_SETTING,
+    COPILOT_SETTINGS_SECTION,
+    JOURNEYS_SETTING,
+    openCopilotSettings
+  } from "./edge-copilot";
   import { IS_WINDOWS } from "./platform";
   import { slide } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
@@ -27,7 +33,7 @@
    * left open. It spreads out as it goes because every ask wakes the background worker to knock on
    * a host that is not there, and a tab left open all day would otherwise knock thousands of times.
    *
-   * Neither state is reached until the reader has asked for the app, so a new tab on a machine that
+   * None of these is reached until the reader has asked for the app, so a new tab on a machine that
    * never wanted one runs no timer at all - see `isSetupStarted` in `readCompanion`.
    *
    * `linking` waits far longer and never drifts: the worker that answered was started before the
@@ -41,6 +47,15 @@
   }>> = {
     [CompanionState.companionOffline]: {
       firstMs: 3000,
+      ceilingMs: 60_000
+    },
+    /*
+     * The settings page is the other tab here, the way the Store is above: a switch flipped there
+     * and a look back at this one is what fills the row in. Calmer than knocking for an app that
+     * may not exist, since this one is answering and simply has nothing yet.
+     */
+    [CompanionState.edgeHasNothing]: {
+      firstMs: 5000,
       ceilingMs: 60_000
     },
     [CompanionState.linking]: {
@@ -76,6 +91,14 @@
   const SILENT_STATES = [CompanionState.loading, CompanionState.connected];
 
   /**
+   * The waiting that is waiting on the app, as against waiting for a browser to write something.
+   * Only the first can be given up on: an app that answered to say Edge is empty has been reached,
+   * however long it goes on saying it, and the panel that offers the Store instead would be selling
+   * a reader the one thing they already have.
+   */
+  const SILENT_WAITS = [CompanionState.companionOffline, CompanionState.linking];
+
+  /**
    * Whether the app has ever answered on this machine, which is how a silence gets worded: somebody
    * who has had it working is told to start it rather than told it is on the Store.
    *
@@ -91,17 +114,19 @@
   });
 
   /**
-   * Whether the panel is still waiting on an app that has not answered, which is the same question
-   * the retry schedule already answers - a state worth asking about again is a state still waiting.
-   * A boolean rather than the state itself, so moving between the two waiting states does not read
-   * as the waiting having started over.
+   * Whether the panel is still short of something, which is the same question the retry schedule
+   * already answers - a state worth asking about again is a state still waiting. A boolean rather
+   * than the state itself, so moving between two waiting states does not read as the waiting having
+   * started over.
    */
   const isListening = $derived(RETRY_SCHEDULE[companion.state] !== undefined);
+
+  const isWaitingOnApp = $derived(SILENT_WAITS.includes(companion.state));
 
   let isConnectionGivenUp = $state(false);
 
   $effect(() => {
-    if (!isListening) {
+    if (!isWaitingOnApp) {
       isConnectionGivenUp = false;
 
       return;
@@ -124,7 +149,7 @@
    * page is built, and reading it here unconditionally would tear a panel whose words never moved.
    */
   const wording = $derived.by(() => {
-    if (isListening && isConnectionGivenUp) {
+    if (isWaitingOnApp && isConnectionGivenUp) {
       return `gaveUp:${hasCompanionAnswered}`;
     }
 
@@ -237,8 +262,8 @@
       </CompanionNotice>
     {:else if companion.state === CompanionState.setupNeeded}
       <CompanionNotice isTearing={glitch.active}>
-        Microsoft Edge already mapped where your browsing is heading - the {COMPANION_NAME} that reads it
-        is on the Microsoft Store
+        Microsoft Edge maps where your browsing is heading once {COPILOT_MODE_SETTING} and {JOURNEYS_SETTING}
+        are on under {COPILOT_SETTINGS_SECTION} - the {COMPANION_NAME} that reads it is on the Microsoft Store
         {#snippet action()}
           <!--
             The press does two things at once, and it has to: the Store opens in its own tab, and the
@@ -274,6 +299,30 @@
     {:else if companion.state === CompanionState.companionNotRunning}
       <CompanionNotice isTearing={glitch.active}>
         {COMPANION_NAME} stopped - start it again and this fills itself in
+      </CompanionNotice>
+    {:else if companion.state === CompanionState.edgeHasNothing}
+      <!--
+        Worded for both ways of having nothing, because the app cannot tell them apart and neither
+        can this: a reader with the switches off, and one who turned them on a minute ago and has
+        not browsed since. Microsoft says the first journey takes a little activity, so "then a
+        little browsing" is the whole of the difference.
+      -->
+      <CompanionNotice isTearing={glitch.active}>
+        Nothing from Microsoft Edge yet - it needs {COPILOT_MODE_SETTING}, then {JOURNEYS_SETTING} under
+        {COPILOT_SETTINGS_SECTION}, and a little browsing after that
+        {#snippet action()}
+          <!--
+            A button rather than a link, and it has to be: Chromium refuses to navigate page content
+            to a browser page, so the address can only be opened from the extension's own side.
+          -->
+          <button
+            class="cyber-button cyber-button--primary"
+            data-analytics={AnalyticsAction.copilotSettingsOpened}
+            onclick={() => void openCopilotSettings()}
+            type="button">
+            Open Copilot settings
+          </button>
+        {/snippet}
       </CompanionNotice>
     {:else if isConnectionGivenUp}
       <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>

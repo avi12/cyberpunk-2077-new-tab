@@ -45,6 +45,12 @@ export enum CompanionState {
   companionOffline = "companionOffline",
   /** Installed and answering, but quit from its tray - the one state the reader fixes in a click. */
   companionNotRunning = "companionNotRunning",
+  /**
+   * The app is running and reading, and Edge has written nothing for it to read. Both families come
+   * from switches the reader owns - Copilot mode, and Journeys under it - so this is the one silence
+   * that is fixed in the browser rather than here.
+   */
+  edgeHasNothing = "edgeHasNothing",
   /** Granted, but the worker that answered predates the grant - see `CompanionAnswer.unbound`. */
   linking = "linking"
 }
@@ -182,6 +188,13 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
   if (result.answer === CompanionAnswer.notRunning) {
     return {
       state: CompanionState.companionNotRunning,
+      cards: []
+    };
+  }
+
+  if (result.answer === CompanionAnswer.nothingToRead) {
+    return {
+      state: CompanionState.edgeHasNothing,
       cards: []
     };
   }

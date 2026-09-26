@@ -91,6 +91,13 @@ function deal({ journeys, tips }: {
  * only ever disagree when one of them still has a fresh snapshot and the other does not.
  */
 const STATE_ORDER = [
+  /*
+   * Quieter than being connected, and deliberately: either family having something to show is the
+   * answer to how the browser is set, so this only ever speaks when both of them found nothing.
+   * Loud enough to sit above a full row, it would tell a reader watching their own journeys to go
+   * and switch journeys on.
+   */
+  CompanionState.edgeHasNothing,
   CompanionState.connected,
   CompanionState.companionOffline,
   CompanionState.companionNotRunning,
