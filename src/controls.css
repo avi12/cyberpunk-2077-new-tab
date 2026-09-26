@@ -302,8 +302,8 @@
   grid-template-rows: 0fr;
   overflow: hidden;
   transition:
-    grid-template-rows 200ms cubic-bezier(0.2, 0, 0, 1),
-    content-visibility 200ms allow-discrete;
+    grid-template-rows var(--cp-roll) var(--cp-ease),
+    content-visibility var(--cp-roll) allow-discrete;
 }
 
 .disclosure[open]::details-content {
@@ -327,8 +327,8 @@
     display: block;
     block-size: 0;
     transition:
-      block-size 200ms cubic-bezier(0.2, 0, 0, 1),
-      content-visibility 200ms allow-discrete;
+      block-size var(--cp-roll) var(--cp-ease),
+      content-visibility var(--cp-roll) allow-discrete;
     interpolate-size: allow-keywords;
   }
 

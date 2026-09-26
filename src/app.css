@@ -27,6 +27,9 @@
   --cp-neon-yellow: #f9f002;
   --cp-ease: cubic-bezier(0.2, 0, 0, 1);
 
+  /* How long a disclosure takes to roll, read by everything that has to move with one. */
+  --cp-roll: 200ms;
+
   /*
    * The page replaces the system cursor outright, as the original does: a cyan arrow over everything,
    * and a neon plus reticle over anything interactive. Only the reticle is themed - the arrow is the

@@ -51,7 +51,7 @@
       margin-left: auto;
       border-right: 2px solid currentColor;
       border-bottom: 2px solid currentColor;
-      transition: rotate 200ms cubic-bezier(0.2, 0, 0, 1);
+      transition: rotate var(--cp-roll) var(--cp-ease);
       rotate: -45deg;
     }
 
