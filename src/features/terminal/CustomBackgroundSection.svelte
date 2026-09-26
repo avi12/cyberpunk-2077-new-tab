@@ -133,7 +133,7 @@
 </script>
 
 <PanelSection badge={isCustom ? "Active" : undefined} title="Custom Background">
-  <div class="custom">
+  <div class="stack stack--tight">
     <div class="row">
       {#each MEDIA_KIND_OPTIONS as option (option.value)}
         <button
@@ -244,12 +244,6 @@
 </PanelSection>
 
 <style>
-  .custom {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
   .custom__kind {
     display: flex;
     flex: 1;

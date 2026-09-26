@@ -5,7 +5,7 @@
 </script>
 
 <PanelSection title="Tab Title">
-  <div class="tab-identity">
+  <div class="stack stack--tight">
     <label class="visually-hidden" for="tab-title">Tab title</label>
     <input
       id="tab-title"
@@ -21,12 +21,6 @@
 </PanelSection>
 
 <style>
-  .tab-identity {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
   .tab-identity__input {
     font-size: 0.875rem;
     line-height: 1.25rem;

@@ -100,7 +100,7 @@
   {#if !feedUrl}
     <p class="rss__message rss__message--empty">No feed configured</p>
   {:else if isLoading}
-    <div class="rss__skeletons">
+    <div class="stack stack--tight">
       {#each SKELETON_ROWS as i (i)}
         <div class="rss__skeleton pulse"></div>
       {/each}
@@ -212,12 +212,6 @@
 
   .rss__message--error {
     color: var(--cp-secondary);
-  }
-
-  .rss__skeletons {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
   }
 
   .rss__skeleton {
