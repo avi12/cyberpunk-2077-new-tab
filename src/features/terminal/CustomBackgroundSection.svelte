@@ -149,7 +149,7 @@
     </div>
 
     <div>
-      <div class="row-split">
+      <div class="custom__row">
         <span class="cyber-row-label">Boost Brightness</span>
         <span class="custom__value">{brightness}%</span>
       </div>
@@ -267,6 +267,12 @@
       width: 14px;
       height: 14px;
     }
+  }
+
+  .custom__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .custom__value {

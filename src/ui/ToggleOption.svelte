@@ -19,7 +19,7 @@
 </script>
 
 <button
-  class="option-button row-split toggle"
+  class="option-button toggle"
   aria-pressed={isOn}
   data-analytics={AnalyticsAction.displayElementToggled}
   disabled={!isEnabled}
@@ -31,6 +31,9 @@
 
 <style>
   .toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
 
     :global(svg) {

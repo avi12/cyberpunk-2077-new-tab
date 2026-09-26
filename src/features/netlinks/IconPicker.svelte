@@ -20,7 +20,7 @@
 <div class="picker">
   <button
     style:anchor-name={anchorName}
-    class="row-split picker__trigger"
+    class="picker__trigger"
     data-analytics={AnalyticsAction.iconPickerOpened}
     popovertarget={panelId}
     type="button">
@@ -66,6 +66,9 @@
   }
 
   .picker__trigger {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
     padding: 0.5rem;
     border: 1px solid var(--cp-primary);

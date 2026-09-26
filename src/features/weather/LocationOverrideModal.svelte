@@ -279,7 +279,7 @@
 </script>
 
 <Modal {isOpen} {onClose}>
-  <header class="row-split location__heading">
+  <header class="location__heading">
     <!-- Named for the thing rather than the mechanism: a reader came here to set where, not to override. -->
     <h2 class="cyber-dialog__title location__title">Weather location</h2>
   </header>
@@ -390,7 +390,10 @@
 
 <style>
   .location__heading {
+    display: flex;
     gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
   }
 
   .location__title {

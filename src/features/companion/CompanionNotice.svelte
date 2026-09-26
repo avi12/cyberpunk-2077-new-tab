@@ -14,7 +14,7 @@
   } = $props();
 </script>
 
-<div class="row-split notice">
+<div class="notice">
   <p class="notice__text" class:glitch={isTearing}>{@render children()}</p>
   {@render action?.()}
 </div>
@@ -22,8 +22,11 @@
 <style>
   /* One height for every panel, so switching between them never moves the page. */
   .notice {
+    display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
+    justify-content: space-between;
+    align-items: center;
     min-height: 3.5rem;
     padding: 0.75rem;
     border: 1px solid var(--cp-outline);

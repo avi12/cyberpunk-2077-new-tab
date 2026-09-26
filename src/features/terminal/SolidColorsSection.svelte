@@ -92,7 +92,7 @@
       rolls it open and shut the way every section in this panel already does.
     -->
     <details class="disclosure" bind:open={isPickerOpen}>
-      <summary class="row-split picker__summary disclosure__gap" data-analytics={AnalyticsAction.colorPickerToggled}>
+      <summary class="picker__row picker__summary disclosure__gap" data-analytics={AnalyticsAction.colorPickerToggled}>
         <span class="cyber-row-label">Custom Color</span>
         <span style:background-color={swatch} class="custom-color-swatch"></span>
       </summary>
@@ -114,7 +114,7 @@
               value={hue} />
           </label>
           <label class="cyber-slider-label">
-            <span class="row-split"><span>Darkness</span><span>{darkness}%</span></span>
+            <span class="picker__row"><span>Darkness</span><span>{darkness}%</span></span>
             <input
               style:--cp-thumb={swatch}
               class="cyber-darkness-slider"
@@ -171,8 +171,14 @@
     background: color-mix(in sRGB, var(--cp-surface) 70%, transparent);
   }
 
+  .picker__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
   /*
-   * `display: flex` from `row-split` already takes the marker off in both engines; `list-style`
+   * `display: flex` from `picker__row` already takes the marker off in both engines; `list-style`
    * says so out loud rather than leaving the triangle's absence resting on a layout mode.
    */
   .picker__summary {
