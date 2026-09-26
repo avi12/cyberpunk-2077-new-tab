@@ -310,9 +310,34 @@
   grid-template-rows: 1fr;
 }
 
-/* A grid item will not shrink below its content without this, which would defeat the `0fr`. */
+/*
+ * The box that rolls, and nothing else: no margin, no padding, no border of its own. Put those on
+ * something inside it.
+ *
+ * `min-height: 0` is what lets a grid item shrink below its content, which the `0fr` above needs.
+ * It says nothing about padding or a border, though - those are a floor no track can take a box
+ * below, so Firefox ran the picker's close down to the panel's own 12px of padding and 1px rule,
+ * sat there for seven frames and dropped the last 13px in a single one when the roll ended.
+ */
 .disclosure__body {
   min-height: 0;
+}
+
+/*
+ * The gap above a body belongs to the summary, not to the body's own top margin.
+ *
+ * A margin inside the rolling box is blank space, and the clip uncovers it first and hides it last -
+ * measured on the colour picker in Chromium, the closing 12px were still collapsing for eight frames
+ * after the last of the content had gone, which spends the slow end of the curve on an empty strip.
+ * Carried here the same gap shrinks in step with the roll, so whatever the body opens with - a rule,
+ * in that case - stays against the summary the whole way down.
+ */
+.disclosure__gap {
+  transition: margin-block-end var(--cp-roll) var(--cp-ease);
+}
+
+.disclosure[open] > .disclosure__gap {
+  margin-block-end: 0.75rem;
 }
 
 /*

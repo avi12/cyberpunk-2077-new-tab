@@ -92,68 +92,70 @@
       rolls it open and shut the way every section in this panel already does.
     -->
     <details class="disclosure" bind:open={isPickerOpen}>
-      <summary class="picker__row picker__summary" data-analytics={AnalyticsAction.colorPickerToggled}>
+      <summary class="picker__row picker__summary disclosure__gap" data-analytics={AnalyticsAction.colorPickerToggled}>
         <span class="picker__label">Custom Color</span>
         <span style:background-color={swatch} class="custom-color-swatch"></span>
       </summary>
 
-      <div class="cyber-color-panel disclosure__body">
-        <label class="cyber-slider-label">
-          <span>Color Spectrum</span>
-          <input
-            style:--cp-thumb={hueSwatch}
-            class="cyber-color-slider"
-            max={HUE_MAX}
-            min="0"
-            oninput={e => applySliders({
-              hue: Number(e.currentTarget.value),
-              darkness
-            })}
-            type="range"
-            value={hue} />
-        </label>
-        <label class="cyber-slider-label">
-          <span class="picker__row"><span>Darkness</span><span>{darkness}%</span></span>
-          <input
-            style:--cp-thumb={swatch}
-            class="cyber-darkness-slider"
-            max={DARKNESS_MAX}
-            min="0"
-            oninput={e => applySliders({
-              hue,
-              darkness: Number(e.currentTarget.value)
-            })}
-            type="range"
-            value={darkness} />
-        </label>
-        <!-- A form rather than a key handler: Enter is what submits one, and the browser says so. -->
-        <form
-          class="picker__hex"
-          novalidate
-          onsubmit={e => {
-            e.preventDefault();
-            applyHex(customColor);
-          }}>
-          <label class="visually-hidden" for="custom-background-color">Custom background hex code</label>
-          <input
-            id="custom-background-color"
-            class="cyber-input picker__hex-input"
-            maxlength="9"
-            onblur={() => applyHex(customColor)}
-            placeholder={FALLBACK_SWATCH}
-            spellcheck="false"
-            type="text"
-            bind:value={customColor} />
-          <button
-            class="picker__hex-close"
-            aria-label={CLOSE_PICKER_LABEL}
-            data-analytics={AnalyticsAction.colorPickerClosed}
-            data-tooltip={CLOSE_PICKER_LABEL}
-            onclick={() => (isPickerOpen = false)}
-            type="button">
-            {@html iconXMark}
-          </button>
-        </form>
+      <div class="disclosure__body">
+        <div class="cyber-color-panel">
+          <label class="cyber-slider-label">
+            <span>Color Spectrum</span>
+            <input
+              style:--cp-thumb={hueSwatch}
+              class="cyber-color-slider"
+              max={HUE_MAX}
+              min="0"
+              oninput={e => applySliders({
+                hue: Number(e.currentTarget.value),
+                darkness
+              })}
+              type="range"
+              value={hue} />
+          </label>
+          <label class="cyber-slider-label">
+            <span class="picker__row"><span>Darkness</span><span>{darkness}%</span></span>
+            <input
+              style:--cp-thumb={swatch}
+              class="cyber-darkness-slider"
+              max={DARKNESS_MAX}
+              min="0"
+              oninput={e => applySliders({
+                hue,
+                darkness: Number(e.currentTarget.value)
+              })}
+              type="range"
+              value={darkness} />
+          </label>
+          <!-- A form rather than a key handler: Enter is what submits one, and the browser says so. -->
+          <form
+            class="picker__hex"
+            novalidate
+            onsubmit={e => {
+              e.preventDefault();
+              applyHex(customColor);
+            }}>
+            <label class="visually-hidden" for="custom-background-color">Custom background hex code</label>
+            <input
+              id="custom-background-color"
+              class="cyber-input picker__hex-input"
+              maxlength="9"
+              onblur={() => applyHex(customColor)}
+              placeholder={FALLBACK_SWATCH}
+              spellcheck="false"
+              type="text"
+              bind:value={customColor} />
+            <button
+              class="picker__hex-close"
+              aria-label={CLOSE_PICKER_LABEL}
+              data-analytics={AnalyticsAction.colorPickerClosed}
+              data-tooltip={CLOSE_PICKER_LABEL}
+              onclick={() => (isPickerOpen = false)}
+              type="button">
+              {@html iconXMark}
+            </button>
+          </form>
+        </div>
       </div>
     </details>
 
@@ -202,7 +204,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    margin-top: 0.75rem;
     padding-top: 0.75rem;
     border-top: 1px solid color-mix(in sRGB, var(--cp-glitch-a) 70%, transparent);
   }
