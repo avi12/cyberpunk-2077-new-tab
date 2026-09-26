@@ -93,7 +93,7 @@
     -->
     <details class="disclosure" bind:open={isPickerOpen}>
       <summary class="picker__row picker__summary disclosure__gap" data-analytics={AnalyticsAction.colorPickerToggled}>
-        <span class="picker__label">Custom Color</span>
+        <span class="cyber-row-label">Custom Color</span>
         <span style:background-color={swatch} class="custom-color-swatch"></span>
       </summary>
 
@@ -183,14 +183,6 @@
    */
   .picker__summary {
     list-style: none;
-  }
-
-  .picker__label {
-    color: var(--cp-primary);
-    font-family: var(--cp-mono);
-    font-size: 0.75rem;
-    line-height: 1rem;
-    text-transform: uppercase;
   }
 
   .custom-color-swatch {

@@ -150,7 +150,7 @@
 
     <div>
       <div class="custom__row">
-        <span class="custom__label">Boost Brightness</span>
+        <span class="cyber-row-label">Boost Brightness</span>
         <span class="custom__value">{brightness}%</span>
       </div>
       <input
@@ -273,14 +273,6 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-  }
-
-  .custom__label {
-    color: var(--cp-primary);
-    font-family: var(--cp-mono);
-    font-size: 0.75rem;
-    line-height: 1rem;
-    text-transform: uppercase;
   }
 
   .custom__value {

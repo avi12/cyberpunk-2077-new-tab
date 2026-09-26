@@ -47,6 +47,19 @@
   text-transform: uppercase;
 }
 
+/*
+ * The name half of a labelled row - a control's name beside its swatch or its reading. `.cyber-label`
+ * is the heading above a field and carries the size and the space that go with standing alone; this
+ * one sits on a line with something else, so it has neither.
+ */
+.cyber-row-label {
+  color: var(--cp-primary);
+  font-family: var(--cp-mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-transform: uppercase;
+}
+
 /* The small muted line a panel explains itself with, under a heading or beside a control. */
 .cyber-note {
   color: var(--cp-text-dim);
