@@ -151,13 +151,13 @@
     {#if !isReadable}
       {@render unavailable()}
     {:else if cards.length > 0}
-      <ul class="section__list" {@attach measureRow}>
+      <ul style:--cp-row-seats={MAX_CARDS} class="section__list" {@attach measureRow}>
         {#each cards as item (item.id)}
           <li>{@render card(item)}</li>
         {/each}
       </ul>
     {:else}
-      <ul class="section__list" {@attach reserveRow} aria-hidden="true">
+      <ul style:--cp-row-seats={MAX_CARDS} class="section__list" {@attach reserveRow} aria-hidden="true">
         {#each PLACEHOLDERS as placeholder (placeholder)}
           <li>
             <div class="section__placeholder">
@@ -206,10 +206,22 @@
     }
   }
 
+  /*
+   * As many columns as the row can ever hold, not as many as it happens to have. `auto-fit` collapses
+   * the empty tracks, so a row with one card in it stretched that card the whole width of the page -
+   * a short row has to read as short, the way Edge's own does.
+   */
   .section__list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    grid-template-columns: repeat(var(--cp-row-seats), minmax(0, 1fr));
     gap: 1rem;
+  }
+
+  /* Narrow enough that three of anything is unreadable, so the row becomes a column. */
+  @media (width < 48rem) {
+    .section__list {
+      grid-template-columns: 1fr;
+    }
   }
 
   /*
