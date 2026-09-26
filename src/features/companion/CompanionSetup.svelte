@@ -284,16 +284,32 @@
         {/snippet}
       </CompanionNotice>
     {:else if companion.state === CompanionState.permissionNeeded}
+      <!--
+        The switches are named here as well as in the two notices either side of it, because this is
+        the one panel a reader passes through on the way in: granting is a single press, and a reader
+        who grants without them on lands straight on "nothing from Microsoft Edge yet". Both presses
+        are offered at once so the order does not matter.
+      -->
       <CompanionNotice isTearing={glitch.active}>
-        Let the {COMPANION_NAME} through and this fills itself in
+        Let the {COMPANION_NAME} through and this fills itself in - it reads what Microsoft Edge
+        writes once {COPILOT_MODE_SETTING} and {JOURNEYS_SETTING} are on under {COPILOT_SETTINGS_SECTION}
         {#snippet action()}
-          <button
-            class="cyber-button cyber-button--primary"
-            data-analytics={AnalyticsAction.companionPermissionAsked}
-            onclick={() => void requestCompanionPermission()}
-            type="button">
-            Link companion
-          </button>
+          <div class="row">
+            <button
+              class="cyber-button cyber-button--ghost"
+              data-analytics={AnalyticsAction.copilotSettingsOpened}
+              onclick={() => void openCopilotSettings()}
+              type="button">
+              Open Copilot settings
+            </button>
+            <button
+              class="cyber-button cyber-button--primary"
+              data-analytics={AnalyticsAction.companionPermissionAsked}
+              onclick={() => void requestCompanionPermission()}
+              type="button">
+              Link companion
+            </button>
+          </div>
         {/snippet}
       </CompanionNotice>
     {:else if companion.state === CompanionState.companionNotRunning}
