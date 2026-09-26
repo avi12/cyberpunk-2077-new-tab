@@ -167,7 +167,7 @@
     </div>
 
     {#if urlEntry === null}
-      <div class="stack--tight">
+      <div class="stack stack--tight">
         <label
           class="drop-zone"
           {@attach dropZone({
@@ -196,7 +196,7 @@
     {:else}
       <!-- A form, so the address is applied by the Enter the field already invites. -->
       <form
-        class="stack--tight"
+        class="stack stack--tight"
         novalidate
         onsubmit={e => {
           e.preventDefault();
