@@ -169,7 +169,8 @@
       return "linkStalled";
     }
 
-    return companion.state;
+    // The row filling under a panel rewords it without changing its state, the same way giving up does.
+    return `${companion.state}:${companion.isRowFilled}`;
   });
 
   /** What the panel said last. Nothing renders it, so it is a plain variable rather than state. */
@@ -328,7 +329,11 @@
       </CompanionNotice>
     {:else if companion.state === CompanionState.companionNotRunning}
       <CompanionNotice isTearing={glitch.active}>
-        {COMPANION_NAME} stopped - start it again and this fills itself in
+        {#if companion.isRowFilled}
+          {COMPANION_NAME} stopped - start it again; what is below it is the last read
+        {:else}
+          {COMPANION_NAME} stopped - start it again and this fills itself in
+        {/if}
       </CompanionNotice>
     {:else if companion.state === CompanionState.edgeHasNothing}
       <!--
@@ -364,6 +369,13 @@
           -->
           Still linking the {COMPANION_NAME} - Microsoft Edge picks it up shortly on its own, or
           restart the browser to hurry it along
+        {:else if companion.isRowFilled}
+          <!--
+            A panel promising to fill a row in is nonsense above one that is already full. What the
+            reader cannot see is that those cards are the other family's, kept from an earlier read -
+            so that, and not the promise, is what a filled row is told.
+          -->
+          Listening for the {COMPANION_NAME} - what is below it is the last read, not this one
         {:else}
           Listening for the {COMPANION_NAME} - this fills itself in the moment it answers
         {/if}
@@ -384,7 +396,11 @@
       </CompanionNotice>
     {:else}
       <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>
-        {COMPANION_NAME} offline - install it and this fills itself in
+        {#if companion.isRowFilled}
+          Can't reach the {COMPANION_NAME} - what is below it is the last read
+        {:else}
+          {COMPANION_NAME} offline - install it and this fills itself in
+        {/if}
       </CompanionNotice>
     {/if}
   </div>
