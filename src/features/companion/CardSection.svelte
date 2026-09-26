@@ -139,7 +139,7 @@
 {#if isVisible}
   <section style:view-transition-name={id} class="page-section section" class:glitch={glitching}>
     <div class="row-split section__head">
-      <h2 class="row row--center cyber-section-title section__title">
+      <h2 class="cyber-section-title section__title">
         {@html icon}
         <span class="hover-glitch" data-text={title}>{title}</span>
       </h2>
@@ -193,6 +193,10 @@
   }
 
   .section__title {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+
     :global(svg) {
       width: 22px;
       height: 22px;

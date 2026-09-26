@@ -36,7 +36,7 @@
         {@html header.icon}
         {header.label}
       </h3>
-      <div class="row row--center">
+      <div class="widget-card__actions">
         {@render meta?.()}
         <button
           class="widget-card__icon-button"
@@ -79,6 +79,12 @@
       width: 20px;
       height: 20px;
     }
+  }
+
+  .widget-card__actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
   }
 
   .widget-card__icon-button {
