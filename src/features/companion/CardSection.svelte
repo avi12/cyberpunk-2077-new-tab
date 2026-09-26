@@ -138,7 +138,7 @@
 
 {#if isVisible}
   <section style:view-transition-name={id} class="page-section section" class:glitch={glitching}>
-    <div class="section__head">
+    <div class="row-split section__head">
       <h2 class="section__title">
         {@html icon}
         <span class="hover-glitch" data-text={title}>{title}</span>
@@ -189,9 +189,6 @@
   }
 
   .section__head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 1rem;
   }
 

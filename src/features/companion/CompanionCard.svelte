@@ -136,7 +136,7 @@
     background then opens a second one.
   -->
   <a
-    class="card__action"
+    class="row-split card__action"
     href={destination}
     onclick={e => {
       e.preventDefault();
@@ -221,10 +221,7 @@
 
   /* The one thing the card is for, so it carries the theme's brightest weight. */
   .card__action {
-    display: flex;
     gap: 0.25rem;
-    justify-content: space-between;
-    align-items: center;
     padding: 0.5rem 0.625rem;
     background: var(--cp-secondary);
     color: var(--cp-on-accent);

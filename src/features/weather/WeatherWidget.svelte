@@ -205,7 +205,7 @@
 
 <WidgetCard>
   {#await weather}
-    <div class="weather__row">
+    <div class="row-split">
       <span class="weather__icon weather__icon--loading pulse">{@html iconCloud}</span>
       <p class="weather__temp weather__temp--muted">--{unit}</p>
     </div>
@@ -220,7 +220,7 @@
         celsius: shownReading.temperature,
         isCelsius
       })}
-      <div class="weather__row">
+      <div class="row-split">
         <span style:color={icon.color} class="weather__icon">{@html icon.svg}</span>
         <button
           class="weather__temp weather__temp--button"
@@ -234,7 +234,7 @@
       </div>
     {:else}
       <!-- No number rather than an invented one, and no button: there is no reading to flip. -->
-      <div class="weather__row">
+      <div class="row-split">
         <span class="weather__icon weather__icon--loading">{@html iconCloud}</span>
         <p class="weather__temp weather__temp--muted">--{unit}</p>
       </div>
@@ -254,12 +254,6 @@
   onStayDark={stayDark} />
 
 <style>
-  .weather__row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
   .weather__icon :global(svg) {
     width: 32px;
     height: 32px;

@@ -31,7 +31,7 @@
 
 <article class="widget-card glitch-border">
   {#if header}
-    <header class="widget-card__header">
+    <header class="row-split widget-card__header">
       <h3 class="widget-card__label">
         {@html header.icon}
         {header.label}
@@ -62,9 +62,6 @@
   }
 
   .widget-card__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 0.75rem;
   }
 

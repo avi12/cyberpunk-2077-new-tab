@@ -77,7 +77,7 @@
 </script>
 
 <section class="widgets">
-  <header class="widgets__header">
+  <header class="row-split widgets__header">
     {#if isAnyEnabled || isEditing}
       <h2 class="widgets__title"><span class="hover-glitch" data-text="WIDGETS">WIDGETS</span></h2>
     {/if}
@@ -130,7 +130,7 @@
           class:is-disabled={!widget.enabled}
           data-sortable-id={widget.id}>
           {#if isEditing}
-            <div class="widgets__row">
+            <div class="row-split widgets__row">
               <div class="widgets__row-label">
                 <span class="widgets__grip">{@html iconGrip}</span>
                 <span class="widgets__name">{WIDGETS[widget.type].label}</span>
@@ -179,9 +179,6 @@
   .widgets__header {
     --widgets-header-size: 1.75rem;
 
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 1rem;
   }
 
@@ -238,9 +235,6 @@
   }
 
   .widgets__row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 0.5rem;
     padding: 0.5rem;
     border: 1px solid var(--cp-primary);

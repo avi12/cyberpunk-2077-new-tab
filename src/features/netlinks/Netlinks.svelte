@@ -268,7 +268,7 @@
 {/snippet}
 
 <nav class="page-section netlinks" aria-label="Netlinks">
-  <header class="netlinks__header">
+  <header class="row-split netlinks__header">
     <h2 class="netlinks__title"><span class="hover-glitch" data-text="NETLINKS">NETLINKS</span></h2>
     <div class="netlinks__controls">
       {#if isEditing}
@@ -440,9 +440,6 @@
 
 <style>
   .netlinks__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin-bottom: 1rem;
   }
 
