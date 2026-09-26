@@ -6,6 +6,7 @@
   import CompanionNotice from "./CompanionNotice.svelte";
   import type { CopilotCard } from "./copilot";
   import { CopilotKind, readCopilot } from "./copilot";
+  import UnreadCard from "./UnreadCard.svelte";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import PromptTargetPicker from "./PromptTargetPicker.svelte";
   import { IS_COMPANION_REACHABLE } from "./platform";
@@ -39,8 +40,10 @@
 {#snippet copilotCard(card: CopilotCard)}
   {#if card.kind === CopilotKind.journey}
     <JourneyCard journey={card.journey} />
-  {:else}
+  {:else if card.kind === CopilotKind.tip}
     <TipCard tip={card.tip} />
+  {:else}
+    <UnreadCard family={card.unread} />
   {/if}
 {/snippet}
 

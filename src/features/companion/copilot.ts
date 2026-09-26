@@ -1,3 +1,4 @@
+import type { CompanionRead } from "./bridge";
 import { CompanionState, MAX_CARDS } from "./bridge";
 import iconMap from "@/assets/icons/map.svg?raw";
 import iconSparkles from "@/assets/icons/sparkles.svg?raw";
@@ -47,7 +48,32 @@ export type CopilotCard =
     id: string;
     kind: CopilotKind.tip;
     tip: Tip;
+  }
+  | {
+    id: string;
+    kind: typeof UNREAD;
+    /** Which family is missing, since the stand-in wears that family's name and mark. */
+    unread: CopilotKind;
   };
+
+/**
+ * A card standing in for a family that could not be read, drawn where that family's cards would
+ * have been. Deliberately not a `CopilotKind`: the stand-in belongs to a family and says which, so
+ * the kind it wears is that family's and this says what shape it is instead.
+ */
+const UNREAD = "unread";
+
+/**
+ * The states where a family was not read, as against read and found empty. `edgeHasNothing` is the
+ * app answering that Edge has written nothing, which is an answer and needs no stand-in. These
+ * three are the app not being reached at all - the only case where cards are missing rather than
+ * absent, and the reader cannot tell from the row which it was.
+ */
+const UNREAD_STATES = [
+  CompanionState.companionOffline,
+  CompanionState.companionNotRunning,
+  CompanionState.linking
+];
 
 /** A journey id and a tip id are Microsoft's, from two different catalogues, so the kind keeps them apart. */
 function journeyCard(journey: Journey): CopilotCard {
@@ -74,16 +100,59 @@ function tipCard(tip: Tip): CopilotCard {
  * three of its seats and no tip appeared - and holding that seat was why the two rows disagreed
  * about how many journeys to show. A reader with three journeys has three journeys worth reading.
  */
-function deal({ journeys, tips }: {
-  journeys: Journey[];
-  tips: Tip[];
-}) {
-  const dealt = journeys.slice(0, MAX_CARDS).map(journeyCard);
+function unreadCard(family: CopilotKind): CopilotCard {
+  return {
+    id: `${UNREAD}:${family}`,
+    kind: UNREAD,
+    unread: family
+  };
+}
 
-  return [
+/** One family's share of the row: its cards, or the one stand-in that says they could not be had. */
+function familyPart<TItem>({ read, family, room, toCard }: {
+  read: CompanionRead<TItem>;
+  family: CopilotKind;
+  room: number;
+  toCard: (item: TItem) => CopilotCard;
+}) {
+  if (UNREAD_STATES.includes(read.state)) {
+    return [unreadCard(family)];
+  }
+
+  return read.cards.slice(0, room).map(toCard);
+}
+
+function deal({ journeys, tips }: {
+  journeys: CompanionRead<Journey>;
+  tips: CompanionRead<Tip>;
+}) {
+  const dealt = familyPart({
+    read: journeys,
+    family: CopilotKind.journey,
+    room: MAX_CARDS,
+    toCard: journeyCard
+  });
+  const row = [
     ...dealt,
-    ...tips.slice(0, MAX_CARDS - dealt.length).map(tipCard)
-  ];
+    ...familyPart({
+      read: tips,
+      family: CopilotKind.tip,
+      room: MAX_CARDS - dealt.length,
+      toCard: tipCard
+    })
+  ].slice(0, MAX_CARDS);
+
+  /*
+   * A row of nothing but stand-ins is no row at all. With neither family read there is nothing the
+   * reader is missing out of something - they are missing the lot, which is the panel's story and
+   * not a card's, so the section stays off the page as it always did.
+   */
+  const hasRealCard = row.some(card => card.kind !== UNREAD);
+  if (!hasRealCard) {
+    return [];
+  }
+
+  return row;
 }
 
 /**
@@ -134,8 +203,8 @@ export async function readCopilot() {
       second: tips.state
     }),
     cards: deal({
-      journeys: journeys.cards,
-      tips: tips.cards
+      journeys,
+      tips
     })
   };
 }
