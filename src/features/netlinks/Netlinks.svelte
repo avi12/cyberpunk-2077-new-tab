@@ -269,7 +269,7 @@
 
 <nav class="page-section netlinks" aria-label="Netlinks">
   <header class="row-split netlinks__header">
-    <h2 class="netlinks__title"><span class="hover-glitch" data-text="NETLINKS">NETLINKS</span></h2>
+    <h2 class="cyber-section-title"><span class="hover-glitch" data-text="NETLINKS">NETLINKS</span></h2>
     <div class="netlinks__controls">
       {#if isEditing}
         <!-- Named by the same words the hint shows: a `::after` joins the name of the element it
@@ -441,15 +441,6 @@
 <style>
   .netlinks__header {
     margin-bottom: 1rem;
-  }
-
-  .netlinks__title {
-    color: var(--cp-accent);
-    font-family: var(--cp-mono);
-    font-size: 1.5rem;
-    line-height: 2rem;
-    letter-spacing: 0.025em;
-    text-transform: uppercase;
   }
 
   .netlinks__controls {
