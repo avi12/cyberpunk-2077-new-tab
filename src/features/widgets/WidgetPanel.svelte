@@ -131,7 +131,7 @@
           data-sortable-id={widget.id}>
           {#if isEditing}
             <div class="row-split widgets__row">
-              <div class="widgets__row-label">
+              <div class="row row--center">
                 <span class="widgets__grip">{@html iconGrip}</span>
                 <span class="widgets__name">{WIDGETS[widget.type].label}</span>
               </div>
@@ -239,12 +239,6 @@
     padding: 0.5rem;
     border: 1px solid var(--cp-primary);
     background: var(--cp-surface-2);
-  }
-
-  .widgets__row-label {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
   }
 
   .widgets__grip {

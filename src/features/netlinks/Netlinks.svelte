@@ -270,7 +270,7 @@
 <nav class="page-section netlinks" aria-label="Netlinks">
   <header class="row-split netlinks__header">
     <h2 class="cyber-section-title"><span class="hover-glitch" data-text="NETLINKS">NETLINKS</span></h2>
-    <div class="netlinks__controls">
+    <div class="row row--center">
       {#if isEditing}
         <!-- Named by the same words the hint shows: a `::after` joins the name of the element it
              hangs off, so a button named by its own text would be read as "SORT" and then the whole
@@ -441,12 +441,6 @@
 <style>
   .netlinks__header {
     margin-bottom: 1rem;
-  }
-
-  .netlinks__controls {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
   }
 
   .netlinks__save,
