@@ -973,6 +973,24 @@ label {
     animation-iteration-count: 1 !important;
   }
 
+  /*
+   * `*` reaches every element and its own `::before` and `::after`. A pseudo-element the browser
+   * owns is none of those, so the roll on a disclosure's `::details-content` and the fade on a
+   * dialog's `::backdrop` ran their full curve with motion turned off - measured in Edge, 200ms of
+   * roll under the picker while the gap above it snapped shut on the first frame.
+   *
+   * A second block rather than two more selectors on the one above: a list holding a pseudo-element
+   * an engine does not know is invalid whole, and that list is the blanket itself.
+   */
+  ::backdrop,
+  ::details-content {
+    transition-delay: 0ms !important;
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
   /* A view transition's pseudo-elements are not in the tree, so `*` never reaches them. */
   ::view-transition-group(*),
   ::view-transition-old(*),
