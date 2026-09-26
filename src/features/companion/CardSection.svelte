@@ -137,7 +137,7 @@
 </script>
 
 {#if isVisible}
-  <section style:view-transition-name={id} class="section" class:glitch={glitching}>
+  <section style:view-transition-name={id} class="page-section section" class:glitch={glitching}>
     <div class="section__head">
       <h2 class="section__title">
         {@html icon}
@@ -186,11 +186,6 @@
      * own leading.
      */
     --cp-card-summary-height: 3.9375rem;
-
-    width: 100%;
-    max-width: var(--cp-column);
-    margin: 0 auto;
-    margin-bottom: 2rem;
   }
 
   .section__head {

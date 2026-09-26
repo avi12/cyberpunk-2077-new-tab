@@ -267,7 +267,7 @@
   {/key}
 {/snippet}
 
-<nav class="netlinks" aria-label="Netlinks">
+<nav class="page-section netlinks" aria-label="Netlinks">
   <header class="netlinks__header">
     <h2 class="netlinks__title"><span class="hover-glitch" data-text="NETLINKS">NETLINKS</span></h2>
     <div class="netlinks__controls">
@@ -439,14 +439,6 @@
 </Modal>
 
 <style>
-  .netlinks {
-    display: block;
-    width: 100%;
-    max-width: var(--cp-column);
-    margin: 0 auto;
-    margin-bottom: 2rem;
-  }
-
   .netlinks__header {
     display: flex;
     justify-content: space-between;

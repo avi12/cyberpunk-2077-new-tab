@@ -377,6 +377,17 @@
 
 /* ---------- Layout helpers used by more than one component ---------- */
 
+/*
+ * One of the page's stacked sections - the column it runs in, and the air under it. The netlinks
+ * and either family of Copilot cards are the same column, so the width is decided once here.
+ */
+.page-section {
+  width: 100%;
+  max-width: var(--cp-column);
+  margin: 0 auto;
+  margin-bottom: 2rem;
+}
+
 .stack {
   display: flex;
   flex-direction: column;
