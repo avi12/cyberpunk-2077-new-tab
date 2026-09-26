@@ -4,8 +4,7 @@
  *
  * Copilot Journeys and Copilot tips are both Edge's own: it generates the one on the device and
  * caches the other, and files both under the browser profile. Reading either needs the companion
- * app, which ships through the Microsoft Store and so is Windows-only for now - Windows 11 only,
- * at that.
+ * app, which ships through the Microsoft Store and so is Windows-only for now.
  */
 const AGENT = navigator.userAgent;
 
@@ -85,9 +84,8 @@ function detectBrowserLabel() {
 export const BROWSER_LABEL = detectBrowserLabel();
 
 /**
- * The user agent string says `Windows NT 10.0` on Windows 11 as well, and always will - Microsoft
- * froze it there on purpose. The one thing that tells the two apart is a high-entropy client hint,
- * which the DOM library does not describe yet, so the single hint this asks for is declared here.
+ * `userAgentData.brands` is what names a Chromium build to its reader, and the DOM library does not
+ * describe it yet.
  */
 declare global {
   interface Navigator {
@@ -96,43 +94,19 @@ declare global {
         brand: string;
         version: string;
       }[];
-      getHighEntropyValues: (hints: string[]) => Promise<Partial<Record<string, string>>>;
     };
   }
 }
 
-const PLATFORM_VERSION_HINT = "platformVersion";
-
 /**
- * Windows 11 reports 13 or higher and Windows 10 reports 1 to 10. The numbers are
- * `Windows.Foundation.UniversalApiContract` versions rather than Windows ones, which is why 11 is
- * 13, and Microsoft documents that boundary and nothing finer - so this tells the two generations
- * apart and no more. The exact build the app needs is the Store package's `MinVersion`, which is
- * where a build older than Copilot Journeys is actually turned away.
+ * Whether the companion could be reached from here at all.
+ *
+ * Two facts, and both are about the machine rather than the moment. The app is a Microsoft Store
+ * package, so the platform has to be Windows; and it registers itself under Edge's own native
+ * messaging key, so Chrome - which installs the same build of this extension - can never reach it,
+ * whatever else is true.
+ *
+ * Which Windows is the Store's question, not this one: a page can tell Windows 11 from Windows 10
+ * and no finer, and the floor now sits inside Windows 10.
  */
-const WINDOWS_11_CONTRACT = 13;
-
-async function detectWindows11() {
-  if (!IS_WINDOWS) {
-    return false;
-  }
-
-  const hints = await navigator.userAgentData?.getHighEntropyValues([PLATFORM_VERSION_HINT]).catch(() => null);
-  if (!hints) {
-    return false;
-  }
-
-  return Number.parseInt(hints[PLATFORM_VERSION_HINT] ?? "") >= WINDOWS_11_CONTRACT;
-}
-
-let windowsGeneration: Promise<boolean> | undefined;
-
-/**
- * Whether the companion could run here at all. Asked once and shared, because the hint is a promise
- * and every section would otherwise ask the browser the same question on every read.
- */
-export async function isWindows11() {
-  windowsGeneration ??= detectWindows11();
-
-  return windowsGeneration;
-}
+export const IS_COMPANION_REACHABLE = IS_EDGE && IS_WINDOWS;

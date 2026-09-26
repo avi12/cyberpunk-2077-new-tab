@@ -1,4 +1,3 @@
-import { IS_EDGE, isWindows11 } from "./platform";
 import { CompanionAnswer, type CompanionRequest, MessageType, sendMessage } from "@/lib/messaging";
 import {
   companionAnsweredItem,
@@ -33,12 +32,6 @@ export const MAX_CARDS = 3;
 export enum CompanionState {
   loading = "loading",
   connected = "connected",
-  /**
-   * Nothing here can read Edge's journeys: the companion is a Windows 11 package, and Edge on
-   * Windows 10 still writes journeys nobody on that machine can get at. The panel only ever renders
-   * on Edge, so the browser half of the same check is never what this is seen saying.
-   */
-  windowsTooOld = "windowsTooOld",
   /** Nobody has asked for the app yet, so nothing is asked of it and no retry is running. */
   setupNeeded = "setupNeeded",
   permissionNeeded = "permissionNeeded",
@@ -67,15 +60,6 @@ export async function requestCompanionPermission() {
 /** The press that starts the setup, which is the page's cue to start looking for the app at all. */
 export async function startCompanionSetup() {
   await companionSetupStartedItem.setValue(true);
-}
-
-/**
- * Whether the app could run on this machine at all. Edge is the only browser with a journey or a
- * Copilot tip to read, and the companion is a Windows 11 package - so on anything older there is
- * nothing to offer, never mind knock on.
- */
-async function isCompanionRunnableHere() {
-  return IS_EDGE && await isWindows11();
 }
 
 const nonEmptyRecordsSchema = z.array(z.unknown()).nonempty();
@@ -124,13 +108,6 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
     nowMs: number;
   }) => TCard[];
 }) {
-  if (!await isCompanionRunnableHere()) {
-    return {
-      state: CompanionState.windowsTooOld,
-      cards: []
-    };
-  }
-
   /*
    * The permission is asked about first because holding it is itself proof the setup happened - it
    * cannot be granted except by pressing through this panel. So a reader who has it is never offered

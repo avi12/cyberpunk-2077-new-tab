@@ -18,7 +18,7 @@
     JOURNEYS_SETTING,
     openCopilotSettings
   } from "./edge-copilot";
-  import { IS_WINDOWS } from "./platform";
+  import { IS_COMPANION_REACHABLE } from "./platform";
   import { slide } from "svelte/transition";
   import { cubicOut } from "svelte/easing";
   import { motionDuration } from "@/lib/motion";
@@ -148,7 +148,7 @@
     return () => clearTimeout(giveUp);
   });
 
-  const isVisible = $derived(IS_WINDOWS && !SILENT_STATES.includes(companion.state));
+  const isVisible = $derived(IS_COMPANION_REACHABLE && !SILENT_STATES.includes(companion.state));
 
   const glitch = new Glitch();
 
@@ -270,12 +270,7 @@
     outro is the one that cannot be skipped.
   -->
   <div class="page-section setup" transition:slide={{ duration: motionDuration(COLLAPSE_MS), easing: cubicOut }}>
-    {#if companion.state === CompanionState.windowsTooOld}
-      <CompanionNotice isTearing={glitch.active}>
-        {COMPANION_NAME} needs Windows 11 - Microsoft Edge still maps where your browsing is heading,
-        there's just nothing on this one that can read it
-      </CompanionNotice>
-    {:else if companion.state === CompanionState.setupNeeded}
+    {#if companion.state === CompanionState.setupNeeded}
       <CompanionNotice isTearing={glitch.active}>
         Microsoft Edge maps where your browsing is heading once {COPILOT_MODE_SETTING} and {JOURNEYS_SETTING}
         are on under {COPILOT_SETTINGS_SECTION} - the {COMPANION_NAME} that reads it is on the Microsoft Store

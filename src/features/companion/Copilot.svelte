@@ -8,7 +8,7 @@
   import { CopilotKind, readCopilot } from "./copilot";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import PromptTargetPicker from "./PromptTargetPicker.svelte";
-  import { IS_WINDOWS } from "./platform";
+  import { IS_COMPANION_REACHABLE } from "./platform";
   import JourneyCard from "@/features/journeys/JourneyCard.svelte";
   import { JOURNEYS_AVAILABILITY, JOURNEYS_SUPPORT_URL, JourneysAvailability } from "@/features/journeys/platform";
   import TipCard from "@/features/tips/TipCard.svelte";
@@ -26,7 +26,7 @@
   card={copilotCard}
   {glitching}
   icon={iconBot}
-  isReadable={IS_WINDOWS}
+  isReadable={IS_COMPANION_REACHABLE}
   read={readCopilot}
   rotateMs={TIPS_ROTATE_MS}
   title={TITLE}
