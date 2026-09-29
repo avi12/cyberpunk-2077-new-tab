@@ -10,8 +10,11 @@ import { z } from "@/lib/zod";
  * missing there until the page is reloaded. The background worker is torn down and replaced when
  * permissions change, so a worker that starts afterwards always speaks with the permissions the
  * extension actually has.
+ *
+ * The app is named here and asked here. `watch` opens a port to the same name for the app to speak
+ * through unasked, and a name spelled twice is two names the day one of them is changed.
  */
-const HOST_NAME = "com.avi12.cyberpunk_journeys";
+export const HOST_NAME = "com.avi12.cyberpunk_journeys";
 
 /**
  * The app says whether it managed the read at all; what it read is filed under the name asked for.

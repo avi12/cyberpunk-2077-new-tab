@@ -4,10 +4,17 @@ import {
   ensureCompanionRefreshAlarm,
   refreshCompanionSnapshots
 } from "@/features/companion/refresh";
+import { ensureCompanionWatch } from "@/features/companion/watch";
 import type { ComposeSiteId } from "@/features/compose/sites";
 import { isAtComposeSite } from "@/features/compose/sites";
 import type { ComposeRequest } from "@/lib/messaging";
-import { ComposeOutcome, MessageType, onMessage, TabDisposition } from "@/lib/messaging";
+import {
+  CompanionAnswer,
+  ComposeOutcome,
+  MessageType,
+  onMessage,
+  TabDisposition
+} from "@/lib/messaging";
 import { forgetComposeRefusals, rememberComposeRefusal, reshuffleTips } from "@/lib/storage/items";
 import { openableUrlSchema } from "@/lib/url";
 import { defineBackground } from "#imports";
@@ -127,21 +134,42 @@ export default defineBackground(() => {
      */
     browser.runtime.onStartup.addListener(reshuffleTips);
 
-    onMessage(MessageType.readCompanion, async ({ data }) => readCompanionRecords(data));
+    onMessage(MessageType.readCompanion, async ({ data }) => {
+      const result = await readCompanionRecords(data);
+      /*
+       * An answer is the one proof the app can be reached, so it is also the moment a watch is worth
+       * opening: a reader who started the app, or granted the permission, after this browser did has
+       * a row that goes on being pushed to from here on. Not awaited - it is about the next tab, not
+       * this answer.
+       */
+      const isAppReading = result.answer === CompanionAnswer.read;
+      if (isAppReading) {
+        void ensureCompanionWatch();
+      }
+
+      return result;
+    });
 
     /*
      * The row a new tab opens on is kept current here rather than by whoever happens to open one.
      * A browser that has just started has the oldest stored answer of all, so it is asked at once,
-     * and asked again on the timer for as long as it runs.
+     * and the app is asked to say so itself from then on.
      */
     browser.runtime.onStartup.addListener(refreshCompanionSnapshots);
+    /*
+     * What is left for the clock: a watch that could not be opened when this worker started, and a
+     * write whose file event never arrived. Both families are asked, because nothing has said which
+     * one moved.
+     */
     browser.alarms.onAlarm.addListener(alarm => {
       const isRefreshDue = alarm.name === COMPANION_REFRESH_ALARM;
       if (isRefreshDue) {
         void refreshCompanionSnapshots();
+        void ensureCompanionWatch();
       }
     });
     void ensureCompanionRefreshAlarm();
+    void ensureCompanionWatch();
   }
 
   /*
