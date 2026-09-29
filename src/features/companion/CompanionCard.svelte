@@ -7,10 +7,11 @@
   import type { CopilotKind } from "./copilot";
   import { AnalyticsEvent, AnalyticsParam } from "@/lib/analytics/definitions";
   import { reportQuietly } from "@/lib/analytics/report";
+  import { composeAccess } from "@/features/compose/access.svelte";
   import { handOffPrompt, promptBudgetFor } from "@/features/compose/deliver";
   import type { Snippet } from "svelte";
   import { TabDisposition } from "@/lib/messaging";
-  import { withTipContext } from "@/features/tips/context";
+  import { tipContextAccessFor, withTipContext } from "@/features/tips/context";
 
   const { kind, title, hint, summary, actionLabel, prompt, meta }: {
     /** Which family this is. The heading above says "Copilot" for both, so the card says which. */
@@ -68,14 +69,29 @@
      * How much context there is room for is settled before it is gathered, because it depends on how
      * the prompt will travel and not on what it turns out to say. A destination a script can type
      * into takes a page's worth; one that only reads its own URL takes a paragraph.
-     *
-     * Awaited first and asked for inside, because reading the reader's own browsing is a permission
-     * and a permission is a question the click has to still be paying for.
      */
+    const budget = promptBudgetFor(site);
+
+    /*
+     * Both of this press's questions, in the one dialog a press is worth: the site a script has to
+     * type the prompt at, and the listing the context is drawn from. Asked before anything else is
+     * awaited, and asked together - a click's gesture is gone by the time a first dialog has been
+     * read and answered, so a second request is refused before it is drawn. That is a card that
+     * opens Copilot with an empty box after the reader said yes.
+     */
+    await composeAccess.allowAlongside({
+      siteId: site,
+      also: tipContextAccessFor({
+        title,
+        prompt,
+        budget
+      })
+    });
+
     const asked = await withTipContext({
       title,
       prompt,
-      budget: promptBudgetFor(site)
+      budget
     });
 
     await handOffPrompt({

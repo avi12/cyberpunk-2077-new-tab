@@ -127,10 +127,12 @@ export async function handOffPrompt({ siteId, url, prompt, disposition, onCopied
    * cannot be handed one that does not fit in it, however welcome the script is there.
    */
   const isSendable = isComposerFillable(siteId) || isCarriedByUrl;
-  /* Asked before anything is awaited, since a permission prompt needs the click that raised it. */
-  const isAllowed = isSendable
-    && (composeAccess.canCompose(siteId)
-      || (composeAccess.isWorthAsking(siteId) && await composeAccess.allow(siteId)));
+  /*
+   * The site is read, never asked for. A press is worth one dialog and it was spent before this was
+   * called - by `allowAlongside`, which is the only thing that can ask, because the gesture is long
+   * gone by the time a prompt has been built out of what a reader allowed.
+   */
+  const isAllowed = isSendable && composeAccess.canCompose(siteId);
   /*
    * The link stays the carrier wherever it still fits, script or no script: a box the prompt is
    * already in is what a script that never finds one leaves behind.

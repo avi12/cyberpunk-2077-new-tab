@@ -35,9 +35,10 @@
   const isAnswering = $derived(isScanning || isScanFailed);
 
   /**
-   * What the browser already allows is only known by asking it, and a submit cannot stop to ask: a
-   * permission prompt needs the press that raised it, and an await in the middle spends it. So the
-   * asking is done up front, and the submit only ever reads the answer.
+   * What the browser already allows is only known by asking it, which is an await, and a submit has
+   * none to spare: a permission prompt needs the press that raised it, and anything awaited in front
+   * of one spends it. So the reading is done up front and the submit only acts on what it already
+   * knows - the one thing it does stop for is the question itself.
    */
   $effect(() => {
     void composeAccess.refresh();
@@ -53,6 +54,8 @@
   async function handOff(siteId: ComposeSiteId) {
     isScanning = true;
     notice = "";
+    /* The one question a press raises here, and asked before anything is awaited for that reason. */
+    await composeAccess.allowAlongside({ siteId });
     const url = searchUrl({
       engine,
       query

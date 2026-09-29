@@ -1,5 +1,5 @@
 import type { AccessRequest } from "@/lib/permissions";
-import { hasAccess, requestAccess } from "@/lib/permissions";
+import { hasAccess } from "@/lib/permissions";
 import { openableUrlSchema } from "@/lib/url";
 import { z } from "@/lib/zod";
 
@@ -159,29 +159,11 @@ function namedContextFor({ title, prompt }: {
  * raises no dialog at all, so this only ever silences the repeat of a no - which matters now that
  * every card asks rather than the quarter that name the reader out loud. A new tab is a new page,
  * and that is where the question fairly comes back.
+ *
+ * Read off the answer rather than off the asking, because the asking is not done here any more: a
+ * press that put the listing in its dialog and still does not hold it was told no to its face.
  */
 let isWorthAsking = true;
-
-/**
- * One question, and the narrowest one that answers the card: the tabs, or the history. There is
- * nothing to combine it with any more - the pages themselves would cost a wildcard origin, which is
- * not asked for here - so the reader is shown exactly the thing the context is made of.
- *
- * A no is read back rather than assumed, because a reader who refuses this prompt may well have
- * allowed the same listing on an earlier press, and that grant is still theirs.
- *
- * Only ever called straight out of a click: a permission prompt needs the gesture that asked for it.
- */
-async function requestTipContextAccess(context: TipContext) {
-  const listing = CONTEXT_ACCESS[context];
-  if (isWorthAsking && await requestAccess(listing)) {
-    return true;
-  }
-
-  isWorthAsking = false;
-
-  return hasAccess(listing);
-}
 
 type Visited = {
   title: string;
@@ -364,12 +346,57 @@ function blockFrom({ context, pages, budget }: {
   return [heading, ...lines].join("\n");
 }
 
+/** How much of the budget is left for the reader's own addresses once the question has its share. */
+function roomFor({ prompt, budget }: {
+  prompt: string;
+  budget: number;
+}) {
+  return budget - prompt.length - CONTEXT_SEPARATOR.length;
+}
+
+/** Which of the three a card is asking about, with the default already applied. */
+function contextFor({ title, prompt }: {
+  title: string;
+  prompt: string;
+}) {
+  return namedContextFor({
+    title,
+    prompt
+  }) ?? DEFAULT_CONTEXT;
+}
+
+/**
+ * The listing a card's press has to ask for, or nothing where there is nothing to ask - a prompt with
+ * no room left for context, or a reader who has already said no on this page.
+ *
+ * Named rather than asked for, because the same press has a site to ask about too and a press only
+ * pays for one dialog. Whoever is handing the prompt over puts this in theirs.
+ */
+export function tipContextAccessFor({ title, prompt, budget }: {
+  title: string;
+  prompt: string;
+  budget: number;
+}) {
+  const isRoomForContext = roomFor({
+    prompt,
+    budget
+  }) > 0;
+  if (!isWorthAsking || !isRoomForContext) {
+    return null;
+  }
+
+  return CONTEXT_ACCESS[contextFor({
+    title,
+    prompt
+  })];
+}
+
 /**
  * The prompt the destination is actually sent.
  *
- * Asked for and read here rather than when the card was drawn, because the answer is only true at
- * the moment it is used - tabs open and close while a new tab sits there. The request goes out
- * before anything is awaited, since that is the only place the click is still worth spending.
+ * Read here rather than when the card was drawn, because the answer is only true at the moment it is
+ * used - tabs open and close while a new tab sits there. The listing itself was asked for by the
+ * press, in the one dialog a press is worth; all that is left here is what came of it.
  *
  * `budget` is how long the finished prompt may be - context, blank line and question together - and
  * it is asked of the caller because only the carrier knows: a prompt going in an address gets what
@@ -389,16 +416,22 @@ export async function withTipContext({ title, prompt, budget }: {
   prompt: string;
   budget: number;
 }) {
-  const room = budget - prompt.length - CONTEXT_SEPARATOR.length;
+  const room = roomFor({
+    prompt,
+    budget
+  });
   if (room <= 0) {
     return prompt;
   }
 
-  const context = namedContextFor({
+  const context = contextFor({
     title,
     prompt
-  }) ?? DEFAULT_CONTEXT;
-  if (!await requestTipContextAccess(context)) {
+  });
+  const isListingHeld = await hasAccess(CONTEXT_ACCESS[context]);
+  if (!isListingHeld) {
+    isWorthAsking = false;
+
     return prompt;
   }
 

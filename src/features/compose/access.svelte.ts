@@ -1,4 +1,6 @@
-import { ComposeSiteId, hasComposeAccess, requestComposeAccess } from "./sites";
+import { composeAccessRequest, ComposeSiteId, hasComposeAccess, requestComposeAccess } from "./sites";
+import type { AccessRequest } from "@/lib/permissions";
+import { requestAccessTogether } from "@/lib/permissions";
 import { composeRefusalsItem } from "@/lib/storage/items";
 
 /**
@@ -53,6 +55,34 @@ class ComposeAccess {
     };
 
     return isGranted;
+  }
+
+  /** What this site would have to be handed over as, or nothing where asking could change nothing. */
+  accessWorthAsking(siteId: ComposeSiteId | null) {
+    if (siteId === null || !this.isWorthAsking(siteId)) {
+      return null;
+    }
+
+    return composeAccessRequest(siteId);
+  }
+
+  /**
+   * Everything one press needs handed over, in the one dialog a press is worth.
+   *
+   * `also` is whatever else the same press has to ask for - the reader's own browsing, where the
+   * prompt sends some of it ahead of the question - and it travels here rather than being asked for
+   * on its own because a press only pays for one question. Asking twice leaves the second refused
+   * before it is drawn, and a prompt that needed a script to arrive lands in an empty box instead.
+   *
+   * Read back rather than returned: the grants are what the rest of the hand-off goes on, and this
+   * is the one place that knows they have just changed.
+   */
+  async allowAlongside({ siteId, also = null }: {
+    siteId: ComposeSiteId | null;
+    also?: AccessRequest | null;
+  }) {
+    await requestAccessTogether([this.accessWorthAsking(siteId), also]);
+    await this.refresh();
   }
 }
 

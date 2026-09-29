@@ -114,15 +114,23 @@ export function isPromptCarriedToSite(siteId: ComposeSiteId) {
 }
 
 /**
+ * What a site has to be handed over as, named once so that asking for it, reading it back and
+ * putting it in a dialog beside something else cannot come to disagree about what it is.
+ */
+export function composeAccessRequest(siteId: ComposeSiteId) {
+  return { origins: [composeOrigin(siteId)] };
+}
+
+/**
  * Asked for on its own and only when it is about to be used, so nobody hands over a site for a
  * destination they never pick. Refusing costs only the sending: the prompt still gets there.
  */
 export async function requestComposeAccess(siteId: ComposeSiteId) {
-  return requestAccess({ origins: [composeOrigin(siteId)] });
+  return requestAccess(composeAccessRequest(siteId));
 }
 
 export async function hasComposeAccess(siteId: ComposeSiteId) {
-  return hasAccess({ origins: [composeOrigin(siteId)] });
+  return hasAccess(composeAccessRequest(siteId));
 }
 
 /** Whether a tab has arrived at a site, by origin, so a redirect within it still counts as there. */
