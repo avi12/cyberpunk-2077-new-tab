@@ -63,7 +63,12 @@ const SHARED_PERMISSIONS = [
   // so a worker that started before the grant could never reach it - the same trap the
   // companion's own permission documents. It carries no warning of its own; the site does.
   "scripting",
-  "geolocation"
+  "geolocation",
+  // The worker's own clock, for keeping the companion's stored row current between new tabs. An
+  // MV3 worker is torn down the moment it goes quiet, so a timer is the one thing it cannot hold
+  // for itself. It carries no warning at install on either engine, and it is on the shared list
+  // because the required permissions are one list - Firefox builds no companion section to use it.
+  "alarms"
 ];
 
 /**

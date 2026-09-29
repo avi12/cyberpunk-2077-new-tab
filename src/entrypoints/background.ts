@@ -1,4 +1,9 @@
 import { readCompanionRecords } from "@/features/companion/native";
+import {
+  COMPANION_REFRESH_ALARM,
+  ensureCompanionRefreshAlarm,
+  refreshCompanionSnapshots
+} from "@/features/companion/refresh";
 import type { ComposeSiteId } from "@/features/compose/sites";
 import { isAtComposeSite } from "@/features/compose/sites";
 import type { ComposeRequest } from "@/lib/messaging";
@@ -123,6 +128,20 @@ export default defineBackground(() => {
     browser.runtime.onStartup.addListener(reshuffleTips);
 
     onMessage(MessageType.readCompanion, async ({ data }) => readCompanionRecords(data));
+
+    /*
+     * The row a new tab opens on is kept current here rather than by whoever happens to open one.
+     * A browser that has just started has the oldest stored answer of all, so it is asked at once,
+     * and asked again on the timer for as long as it runs.
+     */
+    browser.runtime.onStartup.addListener(refreshCompanionSnapshots);
+    browser.alarms.onAlarm.addListener(alarm => {
+      const isRefreshDue = alarm.name === COMPANION_REFRESH_ALARM;
+      if (isRefreshDue) {
+        void refreshCompanionSnapshots();
+      }
+    });
+    void ensureCompanionRefreshAlarm();
   }
 
   /*
