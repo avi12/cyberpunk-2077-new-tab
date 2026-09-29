@@ -19,7 +19,11 @@
     title: string;
     /** Why this card is here at all, which is the one thing its title does not already say. */
     hint: string;
-    summary: string;
+    /**
+     * A second line under the title, for a family whose source gives it one. A journey's does not:
+     * Edge puts the whole card in the one line, so there is nothing true to put here.
+     */
+    summary?: string;
     actionLabel: string;
     prompt: string;
     /** The trail under the summary: the sites a journey was drawn from, a tip's category. */
@@ -137,7 +141,9 @@
   <h3 class="card__title" aria-label={title} data-tooltip={hint}>
     <span class="hover-glitch">{title}</span>
   </h3>
-  <p class="card__summary">{summary}</p>
+  {#if summary}
+    <p class="card__summary">{summary}</p>
+  {/if}
 
   <ul class="card__meta">
     {@render meta()}

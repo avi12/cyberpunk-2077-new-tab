@@ -44,7 +44,7 @@ const journeySourceSchema = z.object({
 const journeySchema = z.object({
   id: nonEmptyTextSchema,
   title: nonEmptyTextSchema,
-  summary: nonEmptyTextSchema,
+  enhancedTitle: nonEmptyTextSchema.optional(),
   contextReason: nonEmptyTextSchema,
   buttonText: nonEmptyTextSchema,
   copilotPrompts: z.tuple([nonEmptyTextSchema], z.string()),
@@ -95,4 +95,19 @@ export function parseJourneys({ raw, nowMs }: {
 /** The card's own prompt: the first is the one Edge itself sends when its card is clicked. */
 export function copilotPrompt(card: Journey) {
   return card.copilotPrompts[0];
+}
+
+/**
+ * The line Edge's own card carries, which is `enhancedTitle` and not `title`.
+ *
+ * Every record holds both, and the two say different things: "TMOG Performance Tool" against "PC
+ * slowing down? Here's how to dig deeper. Shall we get TMOG installed to start testing?". Edge shows
+ * the second and shows it in bold, so that is the journey - the short one is a name it files the
+ * record under, and `summary` is a third wording it never puts on a card at all.
+ *
+ * The short title is the fallback rather than the choice, so a record that ever arrives without the
+ * enhanced one still has something to say for itself.
+ */
+export function journeyHeadline(card: Journey) {
+  return card.enhancedTitle ?? card.title;
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { AnalyticsAction } from "@/lib/analytics/definitions";
   import CompanionCard from "@/features/companion/CompanionCard.svelte";
-  import { copilotPrompt } from "./model";
+  import { copilotPrompt, journeyHeadline } from "./model";
   import { CopilotKind } from "@/features/companion/copilot";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import { hostOf } from "@/features/netlinks/link";
@@ -29,13 +29,16 @@
   });
 </script>
 
+<!--
+  No summary: Edge's own card is its line and its button, and the line is the whole card. A second
+  wording under it would be this page saying more about a journey than the browser it came from does.
+-->
 <CompanionCard
   actionLabel={journey.buttonText}
   hint={journey.contextReason}
   kind={CopilotKind.journey}
   prompt={copilotPrompt(journey)}
-  summary={journey.summary}
-  title={journey.title}>
+  title={journeyHeadline(journey)}>
   {#snippet meta()}
     {#each sources as source (source.host)}
       <li>
