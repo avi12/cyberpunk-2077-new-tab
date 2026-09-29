@@ -1,23 +1,26 @@
 import type { Journey } from "./model";
 import { parseJourneys } from "./model";
-import { readCompanion } from "@/features/companion/bridge";
+import { readCompanion, rememberedCompanion } from "@/features/companion/bridge";
 import { CompanionRequest } from "@/lib/messaging";
 import { journeysSnapshotItem } from "@/lib/storage/items";
 
 /**
  * Edge regenerates journeys every four hours at most, and reading them means snapshot-copying a
- * database that runs to tens of megabytes - a quarter of a second, far too much to repeat for every
- * new tab. One read an hour, cached, is what lets the cards be on the page as it opens rather than
- * arriving after it.
+ * database that runs to tens of megabytes - a quarter of a second, which is long enough to see. The
+ * row does not wait on it: it opens on what the app said last and is corrected here.
  */
-const REFRESH_MS = Temporal.Duration.from({ hours: 1 }).total("milliseconds");
-
-/** Cards Edge itself generated, whether they come from this hour's read or the cached one. */
 export async function readJourneys() {
   return readCompanion<Journey>({
     request: CompanionRequest.journeys,
     snapshot: journeysSnapshotItem,
-    refreshMs: REFRESH_MS,
+    parse: parseJourneys
+  });
+}
+
+/** Last time's answer, judged at now - a journey that expired while it sat there does not come back. */
+export async function rememberedJourneys() {
+  return rememberedCompanion<Journey>({
+    snapshot: journeysSnapshotItem,
     parse: parseJourneys
   });
 }

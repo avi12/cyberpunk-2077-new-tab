@@ -2,9 +2,9 @@ import type { CompanionRead } from "./bridge";
 import { CompanionState, CompanionUnreachable, MAX_CARDS } from "./bridge";
 import iconMap from "@/assets/icons/map.svg?raw";
 import iconSparkles from "@/assets/icons/sparkles.svg?raw";
-import { readJourneys } from "@/features/journeys/bridge";
+import { readJourneys, rememberedJourneys } from "@/features/journeys/bridge";
 import type { Journey } from "@/features/journeys/model";
-import { readTips } from "@/features/tips/bridge";
+import { readTips, rememberedTips } from "@/features/tips/bridge";
 import type { Tip } from "@/features/tips/model";
 
 /**
@@ -78,6 +78,14 @@ function tipCard(tip: Tip): CopilotCard {
  * A family that could not be read has nothing to show, the same as one that had nothing - what
  * happened is the panel's to say, above the row, and it does.
  */
+/** Whatever a family had, as cards, never more than the row can seat. */
+function toCards<TItem>({ cards, toCard }: {
+  cards: TItem[];
+  toCard: (item: TItem) => CopilotCard;
+}) {
+  return cards.slice(0, MAX_CARDS).map(toCard);
+}
+
 /** What a family actually has to show. A read that never happened has nothing, like one that found nothing. */
 function cardsOf<TItem>({ read, toCard }: {
   read: PromiseSettledResult<CompanionRead<TItem>>;
@@ -87,7 +95,10 @@ function cardsOf<TItem>({ read, toCard }: {
     return [];
   }
 
-  return read.value.cards.slice(0, MAX_CARDS).map(toCard);
+  return toCards({
+    cards: read.value.cards,
+    toCard
+  });
 }
 
 /**
@@ -108,21 +119,14 @@ function stateOf(read: PromiseSettledResult<CompanionRead<unknown>>) {
 }
 
 function deal({ journeys, tips }: {
-  journeys: PromiseSettledResult<CompanionRead<Journey>>;
-  tips: PromiseSettledResult<CompanionRead<Tip>>;
+  journeys: CopilotCard[];
+  tips: CopilotCard[];
 }) {
-  const dealt = cardsOf({
-    read: journeys,
-    toCard: journeyCard
-  });
-  if (dealt.length > 0) {
-    return dealt;
+  if (journeys.length > 0) {
+    return journeys;
   }
 
-  return cardsOf({
-    read: tips,
-    toCard: tipCard
-  });
+  return tips;
 }
 
 /**
@@ -177,8 +181,37 @@ export async function readCopilot() {
       second: stateOf(tips)
     }),
     cards: deal({
-      journeys,
-      tips
+      journeys: cardsOf({
+        read: journeys,
+        toCard: journeyCard
+      }),
+      tips: cardsOf({
+        read: tips,
+        toCard: tipCard
+      })
     })
   };
+}
+
+/**
+ * The row as the app last left it, off storage alone. This is what the section opens on, so that a
+ * reader who has seen these cards before sees them again as the page paints rather than a row of
+ * placeholders while the app is asked.
+ *
+ * Dealt by the same rule as a live answer, and it has to be: a stored row dealt one way and a live
+ * row dealt another would disagree on every page, and the section reads disagreement as news.
+ */
+export async function rememberedCopilot() {
+  const [journeys, tips] = await Promise.all([rememberedJourneys(), rememberedTips()]);
+
+  return deal({
+    journeys: toCards({
+      cards: journeys,
+      toCard: journeyCard
+    }),
+    tips: toCards({
+      cards: tips,
+      toCard: tipCard
+    })
+  });
 }

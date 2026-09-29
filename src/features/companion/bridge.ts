@@ -66,6 +66,18 @@ export type CompanionRead<TCard> = {
   cards: TCard[];
 };
 
+/** The two states the app itself answered in. Every other one is a read that did not happen. */
+const ANSWERED_STATES = [CompanionState.connected, CompanionState.edgeHasNothing];
+
+/**
+ * Whether the app spoke, as against the page having given up on reaching it. What it turns on is
+ * whether an empty answer may take cards off the row: the app saying Edge has nothing is news, and
+ * not being able to ask is not.
+ */
+export function hasCompanionSpoken(state: CompanionState) {
+  return ANSWERED_STATES.includes(state);
+}
+
 /**
  * The app not reached, carrying which of the ways it was. Thrown rather than returned so that
  * "this family was not read" is the shape of the answer instead of a list of state names kept in
@@ -90,49 +102,82 @@ export async function startCompanionSetup() {
 
 const nonEmptyRecordsSchema = z.array(z.unknown()).nonempty();
 
-/**
- * An answer holding nothing is never kept, and never believed if an older build kept one: a refresh
- * window is long - an hour for journeys, a day for tips - and an app that could not answer once
- * would otherwise blind the row for the whole of it. The cost of that is re-asking on every tab
- * while there is genuinely nothing to have, which is the state that most wants to end quickly.
- */
+/** Whether an answer is worth keeping at all, which `rememberCompanion` is the one to act on. */
 function hasRecords(raw: unknown) {
   return nonEmptyRecordsSchema.safeParse(raw).success;
 }
 
-/** The cached snapshot while it is still fresh and still worth something, and nothing once it is not. */
-async function freshSnapshot({ snapshot, refreshMs, nowMs }: {
+/**
+ * The app's words kept for the next tab, which is the whole of what the snapshot is for: a row that
+ * is already on the page before anything has been asked.
+ *
+ * Written from the page's own read and from the worker's timer alike, so the two cannot come to
+ * disagree about what a kept answer looks like. An answer holding nothing is never kept, and an
+ * older build's emptiness is never believed: the stored answer is what the row opens on, so an
+ * emptiness saved there is an empty row on every new tab until something replaces it - and the app
+ * that would have replaced it is exactly the one that could not answer.
+ */
+export async function rememberCompanion({ snapshot, raw }: {
   snapshot: StorageItem<CompanionSnapshot | null>;
-  refreshMs: number;
+  raw: unknown[];
+}) {
+  if (!hasRecords(raw)) {
+    return;
+  }
+
+  await snapshot.setValue({
+    fetchedAtMs: Temporal.Now.instant().epochMilliseconds,
+    raw
+  });
+}
+
+/** How one family's records become its cards, which is the same question of a stored answer and a fresh one. */
+type ParseCards<TCard> = (input: {
+  raw: unknown;
   nowMs: number;
+}) => TCard[];
+
+/**
+ * One family of cards as the app last gave them, without asking it anything. This is what the row
+ * is drawn from as the page opens: reading journeys afresh means snapshot-copying a database that
+ * runs to tens of megabytes, and a row that waited on that would arrive after the page it belongs
+ * to.
+ *
+ * The snapshot holds the app's words verbatim rather than the cards built from them, so these are
+ * the result of a fresh validation however old the words are - a journey that expired while it sat
+ * there drops out, and the three tips on show move on with the day.
+ *
+ * Nothing here is evidence the app can be reached. That is `readCompanion`'s to find out, and it is
+ * asked in the same breath.
+ */
+export async function rememberedCompanion<TCard>({ snapshot, parse }: {
+  snapshot: StorageItem<CompanionSnapshot | null>;
+  parse: ParseCards<TCard>;
 }) {
   const cached = await snapshot.getValue();
-  if (!cached) {
-    return undefined;
+  if (!cached || !hasRecords(cached.raw)) {
+    return [];
   }
 
-  const isFresh = nowMs - cached.fetchedAtMs < refreshMs && hasRecords(cached.raw);
-  if (!isFresh) {
-    return undefined;
-  }
-
-  return cached.raw;
+  return parse({
+    raw: cached.raw,
+    nowMs: Temporal.Now.instant().epochMilliseconds
+  });
 }
 
 /**
- * One family of cards as the companion last gave them, whether that was this read or a cached one.
- * The cache holds the app's answer verbatim rather than the cards built from it, so what is
- * displayed is always the result of a fresh validation - a journey that expired while it sat there
- * drops out, and the three tips on show move on with the day.
+ * One family of cards from the app itself, every time it is asked. The stored answer is what the row
+ * opens on and this is what corrects it: an answer holding the same cards leaves the row exactly
+ * where it is, and one holding different cards replaces them where they stand.
+ *
+ * Asking every time is also the only way the state above the row stays honest. A snapshot called
+ * fresh used to answer in the app's place for an hour, so an app that stopped an hour ago went on
+ * being reported as connected - which is the one thing a panel over a working row must never say.
  */
-export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse }: {
+export async function readCompanion<TCard>({ request, snapshot, parse }: {
   request: CompanionRequest;
   snapshot: StorageItem<CompanionSnapshot | null>;
-  refreshMs: number;
-  parse: (input: {
-    raw: unknown;
-    nowMs: number;
-  }) => TCard[];
+  parse: ParseCards<TCard>;
 }) {
   /*
    * The permission is asked about first because holding it is itself proof the setup happened - it
@@ -152,21 +197,6 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
   }
 
   const nowMs = Temporal.Now.instant().epochMilliseconds;
-  const cached = await freshSnapshot({
-    snapshot,
-    refreshMs,
-    nowMs
-  });
-  if (cached) {
-    return {
-      state: CompanionState.connected,
-      cards: parse({
-        raw: cached,
-        nowMs
-      })
-    };
-  }
-
   const result = await sendMessage(MessageType.readCompanion, request).catch(() => null);
   if (!result || result.answer === CompanionAnswer.silent) {
     throw new CompanionUnreachable(CompanionState.companionOffline);
@@ -194,12 +224,10 @@ export async function readCompanion<TCard>({ request, snapshot, refreshMs, parse
     throw new CompanionUnreachable(CompanionState.linking);
   }
 
-  if (hasRecords(result.records)) {
-    await snapshot.setValue({
-      fetchedAtMs: nowMs,
-      raw: result.records
-    });
-  }
+  await rememberCompanion({
+    snapshot,
+    raw: result.records
+  });
 
   return {
     state: CompanionState.connected,

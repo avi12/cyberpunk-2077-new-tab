@@ -1,12 +1,25 @@
 <script generics="TCard extends { id: string }" lang="ts">
   import type { CompanionRead } from "./bridge";
   import { companion } from "./connection.svelte";
-  import { CompanionState, MAX_CARDS } from "./bridge";
+  import { CompanionState, hasCompanionSpoken, MAX_CARDS } from "./bridge";
+  import { Glitch } from "@/lib/glitch.svelte";
   import { rememberedRow, rememberRow } from "./row";
   import type { Snippet } from "svelte";
   import { withViewTransition } from "@/lib/view-transition";
 
-  const { id, title, icon, isReadable, read, card, unavailable, action, rotateMs, glitching = false }: {
+  const {
+    id,
+    title,
+    icon,
+    isReadable,
+    read,
+    readRemembered,
+    card,
+    unavailable,
+    action,
+    rotateMs,
+    glitching = false
+  }: {
     /** Names the section's view transition, and the row it remembers between tabs. */
     id: string;
     title: string;
@@ -14,6 +27,8 @@
     /** Whether this machine has anything for the companion to read - only Windows does. */
     isReadable: boolean;
     read: () => Promise<CompanionRead<TCard>>;
+    /** The row the app left behind last time, which the section opens on while `read` is in flight. */
+    readRemembered: () => Promise<TCard[]>;
     card: Snippet<[TCard]>;
     /** What the section says where it cannot be read, which is its own to say. */
     unavailable: Snippet;
@@ -36,6 +51,16 @@
   const PLACEHOLDER_SUMMARY_WIDTHS = ["100%", "94%", "62%"];
 
   let cards = $state<TCard[]>([]);
+
+  /**
+   * The tear that says the app disagreed with what storage had. The page marks a value moving this
+   * way everywhere else it happens - the clock on the hour, the panel as it stops asking - and this
+   * is the same event: cards the reader may already have read being replaced under them.
+   */
+  const rowGlitch = new Glitch();
+
+  /** Unmount alone - a tear outliving the section would go on running against nothing. */
+  $effect(() => () => rowGlitch.stop());
 
   /** Where this section's measured row is kept, which is its own and not the other section's. */
   const rowKey = $derived(`${id}Row`);
@@ -74,33 +99,115 @@
     elList.style.setProperty("--cp-card-height", `${remembered.height}px`);
   }
 
+  function show({ result, row }: {
+    result: CompanionRead<TCard>;
+    row: TCard[];
+  }) {
+    companion.state = result.state;
+    companion.isRowFilled = row.length > 0;
+    companion.reportLink(result.state);
+    cards = row;
+  }
+
   /**
-   * A first answer arriving is the row appearing, which is worth a transition. A rotation is the same
-   * row saying something else, and animating that turns a card the reader may be mid-sentence in into
-   * a thing that slides. It swaps instead.
+   * What an answer leaves on the row.
+   *
+   * An app that could not be reached never empties it. The cards standing there are the app's own
+   * words from last time, and not being able to ask again is no reason to take them away - that is
+   * the panel's to say, above the row, and it does. Only the app itself answering empties a row.
    */
-  async function load({ isAnimated }: { isAnimated: boolean }) {
+  function rowAfter(result: CompanionRead<TCard>) {
+    const isRowLost = result.cards.length === 0 && cards.length > 0 && !hasCompanionSpoken(result.state);
+    if (isRowLost) {
+      return cards;
+    }
+
+    return result.cards;
+  }
+
+  /** What is on the row, as the ids that name it: two answers with the same ids are the same row. */
+  function rowSignature(row: TCard[]) {
+    return row.map(item => item.id).join(" ");
+  }
+
+  /**
+   * The row the app left behind last time, drawn before it is asked anything.
+   *
+   * It says nothing about the state: whether the app can be reached now is the live read's to
+   * answer, and the panel goes on saying it is listening until it has. What this buys is the row
+   * itself, which on a machine that has seen these cards before is the whole of the section.
+   */
+  async function paintRemembered() {
+    const remembered = await readRemembered();
+    const isRowStanding = cards.length > 0;
+    if (isRowStanding || remembered.length === 0) {
+      return;
+    }
+
+    cards = remembered;
+    companion.isRowFilled = true;
+  }
+
+  /**
+   * What the app itself says, against whatever is already on the page.
+   *
+   * A rotation is the same row saying something else, and animating that turns a card the reader may
+   * be mid-sentence in into a thing that slides. It swaps instead.
+   */
+  async function load({ isRotating }: { isRotating: boolean }) {
     const result = await read();
+    const row = rowAfter(result);
+
     // A retry that finds the same nothing has nothing to redraw.
-    const isAnswerUnchanged = result.state === companion.state && result.cards.length === 0 && cards.length === 0;
+    const isAnswerUnchanged = result.state === companion.state && row.length === 0 && cards.length === 0;
     if (isAnswerUnchanged) {
       return;
     }
 
-    function show() {
-      companion.state = result.state;
-      companion.isRowFilled = result.cards.length > 0;
-      companion.reportLink(result.state);
-      cards = result.cards;
-    }
-
-    if (!isAnimated) {
-      show();
+    if (isRotating) {
+      show({
+        result,
+        row
+      });
 
       return;
     }
 
-    await withViewTransition(show);
+    // The ordinary answer: the app agreeing with what storage had. The state is written and the row
+    // is left exactly where it stands, because nothing about it has changed.
+    const isRowUnchanged = rowSignature(row) === rowSignature(cards);
+    if (isRowUnchanged) {
+      show({
+        result,
+        row
+      });
+
+      return;
+    }
+
+    /*
+     * A row already standing is one storage drew, and the app has just come back with different
+     * cards: they are swapped where they are and torn as they change. Nothing about the box moves,
+     * so without the tear the one visible result of asking the app is three paragraphs quietly
+     * replacing themselves.
+     */
+    const isRowReplaced = cards.length > 0 && row.length > 0;
+    if (isRowReplaced) {
+      show({
+        result,
+        row
+      });
+      rowGlitch.fire();
+
+      return;
+    }
+
+    // A row appearing where placeholders stood, or emptying back into them, is the page changing
+    // shape - which is the transition's to carry, so the panel above it moves at the same moment.
+    await withViewTransition(() => show({
+      result,
+      row
+    }));
   }
 
   /** Only Windows has a companion to ask; the other platforms are told, not queried. */
@@ -110,7 +217,8 @@
       return;
     }
 
-    void load({ isAnimated: true });
+    // Storage first so the row is on the page, then the app, which may have something else to say.
+    void paintRemembered().then(() => load({ isRotating: false }));
   });
 
   /*
@@ -129,7 +237,7 @@
         return;
       }
 
-      void load({ isAnimated: false });
+      void load({ isRotating: true });
     }, rotateMs);
 
     return () => clearInterval(rotate);
@@ -151,7 +259,11 @@
     {#if !isReadable}
       {@render unavailable()}
     {:else if cards.length > 0}
-      <ul style:--cp-row-seats={MAX_CARDS} class="section__list" {@attach measureRow}>
+      <ul
+        style:--cp-row-seats={MAX_CARDS}
+        class="section__list"
+        class:glitch={rowGlitch.active}
+        {@attach measureRow}>
         {#each cards as item (item.id)}
           <li>{@render card(item)}</li>
         {/each}

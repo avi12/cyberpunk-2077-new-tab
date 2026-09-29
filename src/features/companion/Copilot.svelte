@@ -5,7 +5,7 @@
   import { COMPANION_NAME } from "./bridge";
   import CompanionNotice from "./CompanionNotice.svelte";
   import type { CopilotCard } from "./copilot";
-  import { CopilotKind, readCopilot } from "./copilot";
+  import { CopilotKind, readCopilot, rememberedCopilot } from "./copilot";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import PromptTargetPicker from "./PromptTargetPicker.svelte";
   import { IS_COMPANION_REACHABLE } from "./platform";
@@ -28,6 +28,7 @@
   icon={iconBot}
   isReadable={IS_COMPANION_REACHABLE}
   read={readCopilot}
+  readRemembered={rememberedCopilot}
   rotateMs={TIPS_ROTATE_MS}
   title={TITLE}
   {unavailable} />
