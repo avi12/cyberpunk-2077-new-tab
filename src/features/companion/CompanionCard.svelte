@@ -11,9 +11,10 @@
   import { handOffPrompt, promptBudgetFor } from "@/features/compose/deliver";
   import type { Snippet } from "svelte";
   import { TabDisposition } from "@/lib/messaging";
-  import { tipContextAccessFor, withTipContext } from "@/features/tips/context";
+  import type { CardSubject } from "./context";
+  import { cardContextAccessFor, withCardContext } from "./context";
 
-  const { kind, title, hint, summary, actionLabel, prompt, meta }: {
+  const { kind, title, hint, summary, actionLabel, prompt, subject = null, meta }: {
     /** Which family this is. The heading above says "Copilot" for both, so the card says which. */
     kind: CopilotKind;
     title: string;
@@ -26,6 +27,13 @@
     summary?: string;
     actionLabel: string;
     prompt: string;
+    /**
+     * The pages this card's question is about, where its own source names them, and the browser's
+     * note on why. Edge builds a journey out of pages it lists, so a journey card carries them and
+     * the prompt goes with them behind it; a tip is written for everybody and carries none, so its
+     * context is gathered from the reader instead.
+     */
+    subject?: CardSubject | null;
     /** The trail under the summary: the sites a journey was drawn from, a tip's category. */
     meta: Snippet;
   } = $props();
@@ -85,17 +93,19 @@
      */
     await composeAccess.allowAlongside({
       siteId: site,
-      also: tipContextAccessFor({
+      also: cardContextAccessFor({
         title,
         prompt,
-        budget
+        budget,
+        subject
       })
     });
 
-    const asked = await withTipContext({
+    const asked = await withCardContext({
       title,
       prompt,
-      budget
+      budget,
+      subject
     });
 
     await handOffPrompt({

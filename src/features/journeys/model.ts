@@ -1,3 +1,4 @@
+import { formatTimestamp } from "@/features/clock/time";
 import { MAX_CARDS } from "@/features/companion/bridge";
 import { nonEmptyTextSchema, validRecords } from "@/features/companion/model";
 import { openableUrlSchema } from "@/lib/url";
@@ -33,10 +34,25 @@ const journeySourceSchema = z.object({
   url: openableUrlSchema
 });
 
+/** How far along Edge thinks the reader is, which it tracks in two words rather than one. */
+const journeyStateSchema = z.object({
+  phase: nonEmptyTextSchema.optional(),
+  activityStatus: nonEmptyTextSchema.optional()
+});
+
 /**
- * One card as Edge stored it, narrowed to the fields this page shows or acts on - `z.object` drops
- * the rest, including the imagery and the pastel accent colours, which belong to Edge's own look
- * rather than to this one.
+ * One card as Edge stored it, narrowed to the fields this page shows or sends - `z.object` drops the
+ * rest, which is the card's own appearance: the imagery, the two pastel accent colours, the tier and
+ * rank that decide where it sits in Edge's own row.
+ *
+ * Everything else is kept even where nothing draws it, because a press sends it. Edge's row is drawn
+ * by the browser itself and its Copilot is handed the whole journey when a card is pressed; every
+ * destination this extension can reach is outside the browser, so what is not in the prompt is not
+ * anywhere. `summary`, the topics, the category, the phase and the time are that context - see
+ * `journeySubject`.
+ *
+ * All of them are optional but `contextReason`, because they are one browser's shape of a record
+ * rather than a contract, and a missing one should cost its own line and not the card.
  *
  * A Copilot prompt is what a card is *for* here, so a tuple with one required entry both types the
  * first prompt as present and filters out the navigation and backfill cards that carry none.
@@ -45,7 +61,12 @@ const journeySchema = z.object({
   id: nonEmptyTextSchema,
   title: nonEmptyTextSchema,
   enhancedTitle: nonEmptyTextSchema.optional(),
+  summary: nonEmptyTextSchema.optional(),
   contextReason: nonEmptyTextSchema,
+  contentTopics: z.array(nonEmptyTextSchema).optional(),
+  category: nonEmptyTextSchema.optional(),
+  journeyState: journeyStateSchema.optional(),
+  activityTime: timestampSchema.optional(),
   buttonText: nonEmptyTextSchema,
   copilotPrompts: z.tuple([nonEmptyTextSchema], z.string()),
   sourceInfos: z.tuple([journeySourceSchema], journeySourceSchema),
@@ -110,4 +131,73 @@ export function copilotPrompt(card: Journey) {
  */
 export function journeyHeadline(card: Journey) {
   return card.enhancedTitle ?? card.title;
+}
+
+/** Where the reader is with it, as Edge tracks it: what they are doing, and how far along. */
+function stageOf(card: Journey) {
+  return [card.journeyState?.phase, card.journeyState?.activityStatus]
+    .filter(part => part !== undefined)
+    .join(", ");
+}
+
+/** When the browsing behind the card happened, in the reader's own zone and wording. */
+function lastActiveOf(card: Journey) {
+  const activeAt = card.activityTime === undefined ? null : instantOf(card.activityTime);
+  if (!activeAt) {
+    return "";
+  }
+
+  return formatTimestamp(activeAt.epochMilliseconds);
+}
+
+/**
+ * Everything Edge holds about a journey that is about the reader rather than about the card, as the
+ * lines a destination is handed it in - and the pages it was built from.
+ *
+ * This is the whole of what a press can carry. Inside Edge the same press reaches a Copilot that was
+ * given the journey itself; from here it reaches a stranger who has the question and nothing else,
+ * so every field that says something about what the reader was doing goes with it. A field Edge did
+ * not write costs its own line and nothing more.
+ *
+ * What Edge has that this cannot: the words on those pages. Edge keeps them in the same database,
+ * encrypted to the browser, and prising them out is neither something this app will do nor something
+ * that would survive an update - so the addresses go instead, and a destination that can open one
+ * reads it for itself.
+ */
+export function journeySubject(card: Journey) {
+  const facts = [
+    {
+      label: "Journey",
+      value: journeyHeadline(card)
+    },
+    {
+      label: "Why it came up",
+      value: card.contextReason
+    },
+    {
+      label: "In short",
+      value: card.summary ?? ""
+    },
+    {
+      label: "Topics",
+      value: card.contentTopics?.join(", ") ?? ""
+    },
+    {
+      label: "Area",
+      value: card.category ?? ""
+    },
+    {
+      label: "Stage",
+      value: stageOf(card)
+    },
+    {
+      label: "Last active",
+      value: lastActiveOf(card)
+    }
+  ];
+
+  return {
+    facts: facts.filter(fact => fact.value.length > 0).map(fact => `${fact.label}: ${fact.value}`),
+    pages: card.sourceInfos
+  };
 }

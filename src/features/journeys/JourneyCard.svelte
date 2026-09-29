@@ -1,7 +1,7 @@
 <script lang="ts">
   import { AnalyticsAction } from "@/lib/analytics/definitions";
   import CompanionCard from "@/features/companion/CompanionCard.svelte";
-  import { copilotPrompt, journeyHeadline } from "./model";
+  import { copilotPrompt, journeyHeadline, journeySubject } from "./model";
   import { CopilotKind } from "@/features/companion/copilot";
   import iconExternalLink from "@/assets/icons/external-link.svg?raw";
   import { hostOf } from "@/features/netlinks/link";
@@ -32,12 +32,17 @@
 <!--
   No summary: Edge's own card is its line and its button, and the line is the whole card. A second
   wording under it would be this page saying more about a journey than the browser it came from does.
+
+  The subject is everything Edge knows about this journey, which is what its own card has behind it
+  when it is pressed inside the browser. The trail below is one link per host, because a card has
+  room for a trail; what goes to the destination is the whole itinerary and the record with it.
 -->
 <CompanionCard
   actionLabel={journey.buttonText}
   hint={journey.contextReason}
   kind={CopilotKind.journey}
   prompt={copilotPrompt(journey)}
+  subject={journeySubject(journey)}
   title={journeyHeadline(journey)}>
   {#snippet meta()}
     {#each sources as source (source.host)}

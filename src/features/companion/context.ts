@@ -23,6 +23,12 @@ import { z } from "@/lib/zod";
  *
  * That list is still the reader's browsing leaving their machine, so it is asked for at the moment a
  * card is pressed, and never before. Refusing costs only the context - the prompt still goes.
+ *
+ * A journey is the exception, and the better case. Edge names the pages its card was built from, so
+ * there is nothing to guess at and nothing to ask for: those pages go ahead of the question with the
+ * browser's own note on them, which is the context Edge's own card carries when it is pressed inside
+ * the browser. All the listing would add there is a mark on the ones the reader still has open, so it
+ * is read where it is already held and never asked for.
  */
 
 /**
@@ -107,6 +113,11 @@ const CONTEXT_HEADINGS: Record<TipContext, string> = {
 /** What stands between the context and the question, and what the question's room has to allow for. */
 const CONTEXT_SEPARATOR = "\n\n";
 
+/**
+ * How many of the reader's own pages a gathered listing sends, which is the room Edge's own resolver
+ * has for them. A card that came with its pages is not capped here: they are its own few, and Edge's
+ * own card carries every one of them.
+ */
 const MAX_ENTRIES = 10;
 const MAX_TITLE_LENGTH = 70;
 
@@ -171,6 +182,29 @@ type Visited = {
   visits: number;
 };
 
+/**
+ * One entry as it is sent: a name, an address, and whatever the entry says about itself beyond those
+ * - how often the reader went back to it, or that it is open in front of them right now. Both ways
+ * of finding pages end here, which is what keeps one line looking like every other.
+ */
+type Listed = {
+  title: string;
+  url: string;
+  note: string;
+};
+
+/**
+ * Everything a card arrived knowing: what its browser holds about the reader's own doing, already
+ * worded a line at a time, and the pages it was built from.
+ */
+export type CardSubject = {
+  facts: string[];
+  pages: {
+    title: string;
+    url: string;
+  }[];
+};
+
 const worthSendingSchema = z.object({
   url: openableUrlSchema.refine(url => !NOT_READING.test(url)),
   title: z.string().trim().min(1)
@@ -185,15 +219,11 @@ function isWorthSending(page: Visited) {
  * something it can open. That is the difference between a summary of the pages and a summary of
  * their names - the query-bearing addresses that would leak most are excluded above instead.
  */
-function describe({ entry, isCounted }: {
-  entry: Visited;
-  isCounted: boolean;
-}) {
-  const trimmed = entry.title.trim();
+function describe({ title, url, note }: Listed) {
+  const trimmed = title.trim();
   const short = trimmed.length > MAX_TITLE_LENGTH ? `${trimmed.slice(0, MAX_TITLE_LENGTH)}...` : trimmed;
-  const visits = isCounted ? ` - visited ${entry.visits} times` : "";
 
-  return `- ${short}${visits}\n  ${entry.url}`;
+  return `- ${short}${note}\n  ${url}`;
 }
 
 async function openTabs() {
@@ -309,41 +339,68 @@ async function gather({ context, keywords }: {
 }
 
 /**
- * One line per entry, kept inside what the caller says the prompt can carry. Whole entries are
- * dropped rather than an address cut: half an address is not openable, and reads as damage rather
- * than as a list that ended.
+ * The lines the prompt can actually carry, in the order they were handed over. A line is dropped
+ * whole rather than cut: half an address is not openable, and half a sentence reads as damage rather
+ * than as a list that ended. What comes first therefore survives, which is why what a card knows
+ * about the reader is handed over before the pages it knows about.
  */
-function blockFrom({ context, pages, budget }: {
-  context: TipContext;
-  pages: Visited[];
+function blockFrom({ heading, lines, budget }: {
+  heading: string;
+  lines: string[];
   budget: number;
 }) {
-  const heading = CONTEXT_HEADINGS[context];
-  const isCounted = context === TipContext.followedTopics;
-  const lines: string[] = [];
+  const kept: string[] = [];
   let length = heading.length;
-  for (const page of pages) {
-    if (lines.length >= MAX_ENTRIES) {
-      break;
-    }
-
-    const described = describe({
-      entry: page,
-      isCounted
-    });
-    if (length + described.length + 1 > budget) {
+  for (const line of lines) {
+    if (length + line.length + 1 > budget) {
       continue;
     }
 
-    lines.push(described);
-    length += described.length + 1;
+    kept.push(line);
+    length += line.length + 1;
   }
 
-  if (lines.length === 0) {
+  if (kept.length === 0) {
     return "";
   }
 
-  return [heading, ...lines].join("\n");
+  return [heading, ...kept].join("\n");
+}
+
+/**
+ * What a card that came with its own context says first, and the only fixed part of that block:
+ * everything under it is the browser's own words, quoted rather than reworded. "You edited packages
+ * and store listings across Partner Center pages" is why "summarize the pending steps" has an answer
+ * at all, and it is Edge talking to the reader - which a destination reading over their shoulder
+ * understands perfectly well.
+ */
+const SUBJECT_HEADING =
+  "Here is everything my browser has on this, and the pages it came from. Open any of them you need, then answer the question below.";
+
+/** Said of a page the reader still has in front of them, which is worth a destination knowing. */
+const OPEN_NOW_NOTE = " - open in a tab right now";
+
+/**
+ * The card's own context, in the order it survives being cut: what the browser knows about the
+ * reader's doing first, then the pages, with the ones still open marked.
+ *
+ * The listing is read where it is already held and never asked for - the pages are the context
+ * either way, and a press that has a site to ask about should not spend its one dialog on a mark. An
+ * address is compared as Edge wrote it, so a tab that has moved on within the page is simply not
+ * marked rather than wrongly.
+ */
+async function subjectLines(subject: CardSubject) {
+  const isListingHeld = await hasAccess(CONTEXT_ACCESS[TipContext.openTabs]);
+  const openNow = isListingHeld ? new Set((await openTabs()).map(tab => tab.url)) : new Set<string>();
+
+  return [
+    ...subject.facts,
+    ...subject.pages.map(page => describe({
+      title: page.title,
+      url: page.url,
+      note: openNow.has(page.url) ? OPEN_NOW_NOTE : ""
+    }))
+  ];
 }
 
 /** How much of the budget is left for the reader's own addresses once the question has its share. */
@@ -366,22 +423,25 @@ function contextFor({ title, prompt }: {
 }
 
 /**
- * The listing a card's press has to ask for, or nothing where there is nothing to ask - a prompt with
- * no room left for context, or a reader who has already said no on this page.
+ * The listing a card's press has to ask for, or nothing where there is nothing to ask - a card that
+ * came with its own pages, a prompt with no room left for context, or a reader who has already said
+ * no on this page.
  *
  * Named rather than asked for, because the same press has a site to ask about too and a press only
  * pays for one dialog. Whoever is handing the prompt over puts this in theirs.
  */
-export function tipContextAccessFor({ title, prompt, budget }: {
+export function cardContextAccessFor({ title, prompt, budget, subject }: {
   title: string;
   prompt: string;
   budget: number;
+  subject: CardSubject | null;
 }) {
   const isRoomForContext = roomFor({
     prompt,
     budget
   }) > 0;
-  if (!isWorthAsking || !isRoomForContext) {
+  const isWorthAskingFor = isWorthAsking && subject === null;
+  if (!isWorthAskingFor || !isRoomForContext) {
     return null;
   }
 
@@ -392,11 +452,64 @@ export function tipContextAccessFor({ title, prompt, budget }: {
 }
 
 /**
+ * The context itself, from whichever of the two a card has: the pages it arrived with, or the
+ * reader's own listing ranked against what the question is about.
+ *
+ * Empty for every way of there being none - refused, nothing open, a browser that will not answer -
+ * which the caller reads as a prompt that goes on its own.
+ */
+async function contextBlock({ title, prompt, subject, budget }: {
+  title: string;
+  prompt: string;
+  subject: CardSubject | null;
+  budget: number;
+}) {
+  if (subject) {
+    return blockFrom({
+      heading: SUBJECT_HEADING,
+      lines: await subjectLines(subject),
+      budget
+    });
+  }
+
+  const context = contextFor({
+    title,
+    prompt
+  });
+  const isListingHeld = await hasAccess(CONTEXT_ACCESS[context]);
+  if (!isListingHeld) {
+    isWorthAsking = false;
+
+    return "";
+  }
+
+  const pages = await gather({
+    context,
+    keywords: keywordsOf(`${title} ${prompt}`)
+  });
+  const isCounted = context === TipContext.followedTopics;
+
+  return blockFrom({
+    heading: CONTEXT_HEADINGS[context],
+    lines: pages.slice(0, MAX_ENTRIES).map(page => describe({
+      title: page.title,
+      url: page.url,
+      note: isCounted ? ` - visited ${page.visits} times` : ""
+    })),
+    budget
+  });
+}
+
+/**
  * The prompt the destination is actually sent.
  *
+ * `subject` is the pages the card already knows its question is about, for a family whose source
+ * names them - a journey does, a tip does not. Where there is one it is the whole of the context and
+ * nothing is guessed at; where there is not, the reader's own listing is gathered and ranked instead.
+ *
  * Read here rather than when the card was drawn, because the answer is only true at the moment it is
- * used - tabs open and close while a new tab sits there. The listing itself was asked for by the
- * press, in the one dialog a press is worth; all that is left here is what came of it.
+ * used - tabs open and close while a new tab sits there. Any listing was asked for by the press, in
+ * the one dialog a press is worth; all that is left here is what came of it.
  *
  * `budget` is how long the finished prompt may be - context, blank line and question together - and
  * it is asked of the caller because only the carrier knows: a prompt going in an address gets what
@@ -411,10 +524,11 @@ export function tipContextAccessFor({ title, prompt, budget }: {
  * the prompt untouched. A card told no still asks its question; it just asks it with nothing behind
  * it, which is what it did before any of this.
  */
-export async function withTipContext({ title, prompt, budget }: {
+export async function withCardContext({ title, prompt, budget, subject }: {
   title: string;
   prompt: string;
   budget: number;
+  subject: CardSubject | null;
 }) {
   const room = roomFor({
     prompt,
@@ -424,24 +538,10 @@ export async function withTipContext({ title, prompt, budget }: {
     return prompt;
   }
 
-  const context = contextFor({
+  const block = await contextBlock({
     title,
-    prompt
-  });
-  const isListingHeld = await hasAccess(CONTEXT_ACCESS[context]);
-  if (!isListingHeld) {
-    isWorthAsking = false;
-
-    return prompt;
-  }
-
-  const pages = await gather({
-    context,
-    keywords: keywordsOf(`${title} ${prompt}`)
-  });
-  const block = blockFrom({
-    context,
-    pages,
+    prompt,
+    subject,
     budget: room
   });
   if (!block) {
