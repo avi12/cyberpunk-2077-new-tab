@@ -1,6 +1,7 @@
 import { CompanionState, NATIVE_MESSAGING } from "./bridge";
 import { AnalyticsEvent } from "@/lib/analytics/definitions";
 import { reportQuietly } from "@/lib/analytics/report";
+import { MessageType, onMessage } from "@/lib/messaging";
 
 /**
  * Whether the companion can be reached at all, which is one fact about the machine rather than one
@@ -57,6 +58,12 @@ export const companion = new Companion();
  * rather than the press that usually causes it is what keeps those two from being separate answers
  * to "may the app be asked yet"; `readCompanion` is already decided by the permission alone.
  */
+/**
+ * The app coming back, said by the worker the moment it is started - so a tab left open on "start
+ * the app" fills in as soon as the reader has done it, rather than whenever it next asks.
+ */
+onMessage(MessageType.companionStarted, () => companion.refresh());
+
 browser.permissions.onAdded.addListener(permissions => {
   const isCompanionAllowed = permissions.permissions?.includes(NATIVE_MESSAGING);
   if (isCompanionAllowed) {

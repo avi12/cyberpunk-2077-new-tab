@@ -1,7 +1,7 @@
 import { NATIVE_MESSAGING } from "./bridge";
 import { HOST_NAME } from "./native";
-import { refreshCompanionSnapshot } from "./refresh";
-import { CompanionRequest } from "@/lib/messaging";
+import { refreshCompanionSnapshot, refreshCompanionSnapshots } from "./refresh";
+import { CompanionRequest, MessageType, sendMessage } from "@/lib/messaging";
 import { z } from "@/lib/zod";
 import type { Browser } from "wxt/browser";
 
@@ -28,8 +28,16 @@ const WATCH_REQUEST = { kind: "watch" };
  * build does not know - carries no family either. So a message that does not name one is a message
  * with nothing to do about it, and the disconnect that follows a refusal is what actually matters.
  */
-const pushSchema = z.object({
+const changeSchema = z.object({
   changed: z.enum(CompanionRequest)
+});
+
+/**
+ * The other push: the app was off and has just been started. A watch asked for while it was off is
+ * held open to say exactly this, so an open new tab fills in the moment it happens.
+ */
+const startSchema = z.object({
+  started: z.literal(true)
 });
 
 let held: Browser.runtime.Port | null = null;
@@ -69,21 +77,42 @@ async function connect() {
   const port = browser.runtime.connectNative(HOST_NAME);
   held = port;
   port.onMessage.addListener(message => {
-    const parsed = pushSchema.safeParse(message);
-    if (!parsed.success) {
+    const parsed = changeSchema.safeParse(message);
+    if (parsed.success) {
+      void refreshCompanionSnapshot(parsed.data.changed);
+
       return;
     }
 
-    void refreshCompanionSnapshot(parsed.data.changed);
+    const isAppStarted = startSchema.safeParse(message).success;
+    if (!isAppStarted) {
+      return;
+    }
+
+    /*
+     * The host that waited is the build that was running before, so it is let go and a watch is
+     * opened on whatever was just started.
+     */
+    held = null;
+    port.disconnect();
+    void ensureCompanionWatch();
+    void refreshCompanionSnapshots();
+    // No new tab open is no one to tell, which the messaging library reports as a failure
+    void sendMessage(MessageType.companionStarted).catch(() => {});
   });
   /*
-   * Nothing is reconnected from here. A host with nothing to watch, and an app that has been quit,
-   * both answer and exit - so reconnecting on a disconnect is a loop that spawns a process as fast
-   * as the app can turn it down. The next read the app answers brings the watch back, and the alarm
-   * brings it back for a browser nobody is opening tabs in.
+   * Nothing is reconnected on a disconnect. A host with nothing to watch answers and exits - so
+   * reconnecting there is a loop that spawns a process as fast as the app can turn it down. The one
+   * reconnect is the app saying it started, above; otherwise the next read the app answers brings
+   * the watch back, and the alarm brings it back for a browser nobody is opening tabs in.
+   *
+   * Only this port's own going clears the slot, so a disconnect arriving late cannot clear the watch
+   * that replaced it.
    */
   port.onDisconnect.addListener(() => {
-    held = null;
+    if (held === port) {
+      held = null;
+    }
   });
   port.postMessage(WATCH_REQUEST);
 }

@@ -15,8 +15,8 @@ import { type CompanionSnapshot, journeysSnapshotItem, type StorageItem, tipsSna
  * - what changes is how often it has to.
  *
  * Mostly it is asked because the app said to. A watch is what actually keeps the row current - see
- * `watch.ts` - and the alarm below is the net under it: a file event the app never got, a watch that
- * could not be opened at all, or a browser whose app was started after it.
+ * `watch.ts` - and the alarm below is the net under it: a file event the app never got, or a watch
+ * that could not be opened at all.
  */
 
 export const COMPANION_REFRESH_ALARM = "companionRefresh";

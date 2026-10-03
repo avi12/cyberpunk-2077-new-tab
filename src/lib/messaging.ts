@@ -67,6 +67,7 @@ export enum MessageType {
   getTopSites = "getTopSites",
   searchWithDefaultEngine = "searchWithDefaultEngine",
   readCompanion = "readCompanion",
+  companionStarted = "companionStarted",
   openPromptTarget = "openPromptTarget",
   takeComposeRequest = "takeComposeRequest"
 }
@@ -75,6 +76,8 @@ type ProtocolMap = {
   [MessageType.getTopSites](): TopSite[];
   [MessageType.searchWithDefaultEngine](text: string): void;
   [MessageType.readCompanion](request: CompanionRequest): CompanionResult;
+  /** Told to every open new tab by the worker, the moment the app's watch hears it start. */
+  [MessageType.companionStarted](): void;
   /**
    * Go to a destination, and where `compose` says so, finish the prompt off once there. Only the
    * background can do the second half, since only it may inject - and it says how that went, which
