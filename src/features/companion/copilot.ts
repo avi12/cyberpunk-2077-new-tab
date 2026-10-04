@@ -67,17 +67,6 @@ function tipCard(tip: Tip): CopilotCard {
   };
 }
 
-/**
- * Whose row it is. Not a mixture of the two, and never one family padding out the other.
- *
- * Edge deals its own row this way: journeys have it whenever there are any, measured at three of
- * three with no tip appearing, and a profile with only one journey is shown one card and a row that
- * simply ends there rather than one topped up to three with tips. Tips have the row when there are
- * no journeys to have it.
- *
- * A family that could not be read has nothing to show, the same as one that had nothing - what
- * happened is the panel's to say, above the row, and it does.
- */
 /** Whatever a family had, as cards, never more than the row can seat. */
 function toCards<TItem>({ cards, toCard }: {
   cards: TItem[];
@@ -118,15 +107,19 @@ function stateOf(read: PromiseSettledResult<CompanionRead<unknown>>) {
   return CompanionState.companionOffline;
 }
 
+/**
+ * Journeys first, and tips in whatever seats they leave - Edge's own row, watched with one live
+ * journey beside two tips. It used to be one family or the other, from a profile that happened to
+ * have three journeys at once; a row with fewer is topped up rather than left to end early.
+ *
+ * A family that could not be read has nothing to show, the same as one that had nothing - what
+ * happened is the panel's to say, above the row, and it does.
+ */
 function deal({ journeys, tips }: {
   journeys: CopilotCard[];
   tips: CopilotCard[];
 }) {
-  if (journeys.length > 0) {
-    return journeys;
-  }
-
-  return tips;
+  return [...journeys, ...tips].slice(0, MAX_CARDS);
 }
 
 /**
