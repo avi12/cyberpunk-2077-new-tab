@@ -121,7 +121,7 @@ its own colours: title, summary, the sites the card was drawn from, and a button
 with the prompt Edge generated for it.
 
 An extension cannot read a browser profile file, so the reading is done by a separate app that
-answers over native messaging - [Cyber Trails](https://apps.microsoft.com/detail/9PL9NRMWFT3R),
+answers over native messaging - [Cyber Journeys](https://apps.microsoft.com/detail/9PL9NRMWFT3R),
 a paid Microsoft Store add-on, closed source and kept in a private repository of its own. It needs
 Windows 11 - the Store package's floor is 24H2 (`10.0.26100.0`), the oldest Windows 11 still
 serviced when Edge shipped Journeys - and the new tab says so where it cannot run rather than
