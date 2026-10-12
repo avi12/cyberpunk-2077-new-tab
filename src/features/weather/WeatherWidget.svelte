@@ -16,6 +16,8 @@
   } from "./model";
   import { nightCitySky } from "./night-city";
   import { readOpenMeteoWeather } from "./open-meteo";
+  import { GOOGLE_WEATHER_ORIGIN, readGoogleWeather } from "./google";
+  import type { AccessRequest } from "@/lib/permissions";
   import { Glitch } from "@/lib/glitch.svelte";
   import LocationOverrideModal from "./LocationOverrideModal.svelte";
   import WidgetCard from "@/features/widgets/WidgetCard.svelte";
@@ -99,6 +101,9 @@
     return nightCitySky();
   }
 
+  /** Firefox never sends the Google cookie jar from an extension page - see `google.ts`. */
+  const isGoogleReadable = import.meta.env.CHROME || import.meta.env.EDGE;
+
   /**
    * No throwing branch, because there is nothing to throw: the source names the way it came up empty
    * rather than raising, and the card says which.
@@ -120,7 +125,11 @@
       return Promise.resolve(WeatherRefusal.noPlace);
     }
 
-    return readOpenMeteoWeather(asked);
+    if (!isGoogleReadable) {
+      return readOpenMeteoWeather(asked);
+    }
+
+    return readGoogleWeather(asked).then(reading => reading ?? readOpenMeteoWeather(asked));
   }
 
   /**
@@ -170,7 +179,28 @@
     });
   });
 
+  /** Listened to rather than tied to the press, so a grant made in the browser's settings re-reads too. */
+  let googleAccessChangeCount = $state(0);
+
   $effect(() => {
+    function noteAccessChange(changed: AccessRequest) {
+      const isWeatherOrigin = changed.origins?.includes(GOOGLE_WEATHER_ORIGIN);
+      if (isWeatherOrigin) {
+        googleAccessChangeCount += 1;
+      }
+    }
+
+    browser.permissions.onAdded.addListener(noteAccessChange);
+    browser.permissions.onRemoved.addListener(noteAccessChange);
+
+    return () => {
+      browser.permissions.onAdded.removeListener(noteAccessChange);
+      browser.permissions.onRemoved.removeListener(noteAccessChange);
+    };
+  });
+
+  $effect(() => {
+    void googleAccessChangeCount;
     const asked = askedLocation;
     weather = readWeather(asked);
     const timer = setInterval(() => {

@@ -12,6 +12,7 @@
   import SolidColorsSection from "./SolidColorsSection.svelte";
   import SoundSection from "./SoundSection.svelte";
   import TabIdentitySection from "./TabIdentitySection.svelte";
+  import WeatherSourceSection from "./WeatherSourceSection.svelte";
 
   const { onElementGlitch }: { onElementGlitch: (key: keyof DisplayPreferences | null) => void } = $props();
 
@@ -35,6 +36,11 @@
       <DisplayElementsSection {onElementGlitch} />
 
       <SoundSection />
+
+      <!-- Firefox never sends the cookies Google's weather depends on, so it has no site to offer -->
+      {#if import.meta.env.CHROME || import.meta.env.EDGE}
+        <WeatherSourceSection />
+      {/if}
 
 
       <PanelSection title="Scan Lines">

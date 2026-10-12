@@ -89,3 +89,27 @@ export async function fetchBytes({ url, init, timeoutMs }: Request) {
 
   return response.blob().catch(() => null);
 }
+
+const HTML_CONTENT_TYPE = "text/html";
+
+/**
+ * `DOMParser` builds an inert tree, so nothing in a stranger's page runs. The content type is checked
+ * here because `DOMParser` labels whatever it parses as HTML, so a PDF is indistinguishable afterwards.
+ */
+export async function fetchDocument({ url, init, timeoutMs }: Request) {
+  const response = await fetchOk({
+    url,
+    init,
+    timeoutMs
+  });
+  if (!response?.headers.get("content-type")?.includes(HTML_CONTENT_TYPE)) {
+    return null;
+  }
+
+  const markup = await response.text().catch(() => null);
+  if (markup === null) {
+    return null;
+  }
+
+  return new DOMParser().parseFromString(markup, HTML_CONTENT_TYPE);
+}

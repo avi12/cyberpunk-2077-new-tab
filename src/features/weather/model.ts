@@ -117,8 +117,8 @@ export const WEATHER_ICONS: Record<WeatherCondition, {
   }
 };
 
-/** The one conversion. Everything upstream is Celsius, so this is the only place that is not. */
-function toFahrenheit(celsius: number) {
+/** The one conversion. Every source reads Celsius, Google's page included. */
+export function toFahrenheit(celsius: number) {
   return Math.round((celsius * 9) / 5 + 32);
 }
 

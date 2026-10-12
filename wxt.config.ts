@@ -51,6 +51,13 @@ const TIP_CONTEXT_PERMISSIONS = ["tabs", "history"];
  */
 const COMPOSE_ORIGINS = ["https://claude.ai/*", "https://copilot.com/*"];
 
+/**
+ * Google's own weather, read off its search page. Optional and asked for only when turned on in the
+ * terminal panel - a refusal falls back to open-meteo. Chromium only: measured, Firefox never sends
+ * the cookie jar the weather block depends on from an extension page, so the grant achieves nothing.
+ */
+const WEATHER_ORIGIN = "https://www.google.com/*";
+
 /** What both builds ask for at install - the same list on each, since neither needs more. */
 const SHARED_PERMISSIONS = [
   "search",
@@ -216,7 +223,7 @@ export default defineConfig({
         key: publicKey,
         minimum_chrome_version: MINIMUM_CHROMIUM_VERSION,
         optional_permissions: [...COMPANION_PERMISSIONS, ...TIP_CONTEXT_PERMISSIONS],
-        optional_host_permissions: [...COMPOSE_ORIGINS]
+        optional_host_permissions: [...COMPOSE_ORIGINS, WEATHER_ORIGIN]
       }),
     homepage_url: "https://avi12.com"
   }),

@@ -12,22 +12,9 @@ import type { GeoLocation } from "@/lib/storage/schema";
 import { z } from "@/lib/zod";
 
 /**
- * The source that asks for nothing: an open API, no key, no host permission, answered by coordinate.
- *
- * It was here before and was removed in `8148afb`, for sitting underneath Google as a silent
- * fallback - the widget could not say which source had answered, and the panel advertised a second
- * one. That objection was about having *two* sources rather than about this one, and it is gone:
- * this is the only source now, on every engine.
- *
- * What it fixes, measured rather than hoped for. Google draws its weather block with its own script
- * and answers a browser it does not recognise with a shell carrying `enablejs` - so a scraped
- * reading needs an aged Google cookie jar, which a fresh profile, cleared cookies, a container tab
- * or any Firefox never has. This is a JSON API that answers every reader the same way, and it
- * sends no cookies: a cross-origin fetch carries none unless it is asked to, and nothing here asks.
- *
- * It is asked by **coordinate**, which is the other thing Google could not do: a search is by place
- * name, so bare coordinates typed into the panel were named after themselves and had no forecast at
- * all. Every place the panel can produce has coordinates, so every place now has a sky.
+ * Open API: no key, no host permission, no cookies, asked by coordinate so every place has a sky.
+ * The only source on Firefox, and the Chromium fallback when Google is not granted or answers without
+ * its weather block - see `google.ts`.
  */
 
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
