@@ -50,16 +50,12 @@
     }
   ];
 
-  /**
-   * The elements another browser has no way of filling. The switch is still listed there - a section
-   * missing from the list reads as a build that lost it - but pressing it says why instead of
-   * turning on a row that could only ever be empty.
-   */
+  /** Still listed elsewhere, since a missing switch reads as a broken build; pressing it explains why. */
   const EDGE_ONLY_KEYS: (keyof DisplayPreferences)[] = ["showCopilot"];
 
   let isEdgeOnlyOpen = $state(false);
 
-  function commit({ key, isVisible }: {
+  function setVisibility({ key, isVisible }: {
     key: keyof DisplayPreferences;
     isVisible: boolean;
   }) {
@@ -69,19 +65,12 @@
     };
   }
 
-  /**
-   * The element glitches on its way out, and the mount or unmount itself happens inside a view
-   * transition - every element in the page stack carries a `view-transition-name`, so the one
-   * leaving fades where it stood while the rest close the gap instead of jumping into it.
-   *
-   * The greeting stays mounted for as long as it is glitching, so clearing the glitch is the DOM
-   * change that removes it. That is why it goes inside the transition rather than after it.
-   */
+  /** An element stays mounted while glitching, so clearing the glitch belongs inside the transition. */
   async function hide(key: keyof DisplayPreferences) {
     onElementGlitch(key);
     await wait(GLITCH_SHORT_MS);
     await withViewTransition(() => {
-      commit({
+      setVisibility({
         key,
         isVisible: false
       });
@@ -89,9 +78,8 @@
     });
   }
 
-  /** The other way round: it arrives with the neighbours moving aside, and glitches once it lands. */
   async function show(key: keyof DisplayPreferences) {
-    await withViewTransition(() => commit({
+    await withViewTransition(() => setVisibility({
       key,
       isVisible: true
     }));
@@ -101,9 +89,8 @@
   }
 
   /**
-   * What the switch reads is what the page will actually draw, which is not always what is stored:
-   * a `showCopilot` carried in from a backup made in Microsoft Edge would otherwise light the switch
-   * in a browser that can never draw the section.
+   * What the page draws rather than what is stored: a `showCopilot` imported from an Edge backup
+   * would otherwise light the switch in a browser that can never draw the section.
    */
   function isShowing(key: keyof DisplayPreferences) {
     const preferences = settings.displayPreferences.current;

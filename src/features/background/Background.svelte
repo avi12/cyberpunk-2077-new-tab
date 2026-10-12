@@ -116,24 +116,9 @@
   }
 
   /*
-   * Keeps the terminal text legible over a bright photo or video.
-   *
-   * The original runs this 70% at the top down to 60% at the bottom, and that is backwards for the
-   * kind of picture it is over: a night city is darkest in the sky and brightest at street level, so
-   * the scrim thinned out exactly where the wallpaper is loudest. The copyright line - 12px of
-   * `#6b7280`, the original's colour - landed on lit windows and their reflections in the water and
-   * could not be read at all.
-   *
-   * Nothing an element can do about that on its own. Grey on a lit window is about 1.3:1 and white
-   * is barely 2:1, so no colour rescues it, and a halo around 12px mono glyphs only greys the gaps
-   * between them - both measured. Making this layer do the job its name claims is the fix, and it
-   * covers the footer, the info button and the two corner buttons in one go rather than one at a
-   * time.
-   *
-   * So it never lightens going down: 70% at the top, deepening through the lower half to 88% at the
-   * edge where that furniture sits. A photograph keeps its depth and still reads as one; a plain
-   * colour gets a fade rather than a flat wash, which is what the vignette already does at the
-   * corners.
+   * Deepens toward the bottom: a night city is brightest at street level, where the footer and corner
+   * buttons sit. No text colour or halo rescues 12px text over lit windows (measured), so the scrim
+   * does it for all of them.
    */
   .background__scrim {
     position: fixed;

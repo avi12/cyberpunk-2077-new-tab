@@ -15,30 +15,18 @@
   import { cardContextAccessFor, withCardContext } from "./context";
 
   const { kind, label, title, hint, actionLabel, prompt, subject = null, meta }: {
-    /** Which family this is. The heading above says "Copilot" for both, so the card says which. */
     kind: CopilotKind;
     /** Overrides the family's name in the eyebrow, as a tip's title does in Edge's own card. */
     label?: string;
     title: string;
-    /** Why this card is here at all, which is the one thing its title does not already say. */
     hint: string;
     actionLabel: string;
     prompt: string;
-    /**
-     * The pages this card's question is about, where its own source names them, and the browser's
-     * note on why. Edge builds a journey out of pages it lists, so a journey card carries them and
-     * the prompt goes with them behind it; a tip is written for everybody and carries none, so its
-     * context is gathered from the reader instead.
-     */
+    /** Only a journey has one; a tip's context is gathered from the reader's tabs or history instead. */
     subject?: CardSubject | null;
-    /** The trail under the title: the sites a journey was drawn from. */
     meta?: Snippet;
   } = $props();
 
-  /**
-   * Read while the destination is already opening, so each has to fit what happened and what is left
-   * to do into the one line a card has room for.
-   */
   const COPIED_NOTICE = "Prompt's on your clipboard - paste it when you land";
   const UNCOPIED_NOTICE = "Couldn't copy the prompt - you'll have to type it there";
 
@@ -46,47 +34,22 @@
 
   const targetId = $derived(promptDestination.targetId);
 
-  /**
-   * The site a script has to finish the prompt off at, and nothing for the destinations where
-   * arriving is already asking - those take the whole prompt in their own address instead.
-   */
   const siteId = $derived(composeSiteFor(targetId));
 
-  /**
-   * One address for the link and the hand-off alike, so a middle-click cannot land anywhere a plain
-   * click would not. There is always one, though what it is worth differs: most destinations read
-   * the prompt out of it, and Copilot reads nothing out of anything, so there the link is only the
-   * door and the press is the whole question.
-   *
-   * What no address can hold is the reader's own context, since that is only true at the moment it
-   * is pressed. The href is the question on its own, which is what a middle-click gets and what the
-   * click improves on.
-   */
-  const destination = $derived(promptUrl({
+  /** Shared with the hand-off, so a middle-click lands where a click would, minus the reader's context. */
+  const destinationUrl = $derived(promptUrl({
     targetId,
     prompt
   }));
 
-  /**
-   * The site is asked for on the way, so a card is what raises the question, and only for someone
-   * who clicked one. A no costs only the sending: the prompt goes by clipboard and the destination
-   * opens all the same, which is what this always did.
-   */
+  /** A refused site permission only costs the auto-send: the prompt still goes by clipboard. */
   async function handOff(site: ComposeSiteId | null) {
     notice = "";
-    /*
-     * How much context there is room for is settled before it is gathered, because it depends on how
-     * the prompt will travel and not on what it turns out to say. A destination a script can type
-     * into takes a page's worth; one that only reads its own URL takes a paragraph.
-     */
     const budget = promptBudgetFor(site);
 
     /*
-     * Both of this press's questions, in the one dialog a press is worth: the site a script has to
-     * type the prompt at, and the listing the context is drawn from. Asked before anything else is
-     * awaited, and asked together - a click's gesture is gone by the time a first dialog has been
-     * read and answered, so a second request is refused before it is drawn. That is a card that
-     * opens Copilot with an empty box after the reader said yes.
+     * Both permissions in one dialog, before anything else is awaited: the click's gesture expires
+     * while a first dialog is read, so a second request would be refused.
      */
     await composeAccess.allowAlongside({
       siteId: site,
@@ -98,7 +61,7 @@
       })
     });
 
-    const asked = await withCardContext({
+    const promptWithContext = await withCardContext({
       title,
       prompt,
       budget,
@@ -109,23 +72,20 @@
       siteId: site,
       url: promptUrl({
         targetId,
-        prompt: asked
+        prompt: promptWithContext
       }),
-      prompt: asked,
+      prompt: promptWithContext,
       disposition: TabDisposition.new,
       onCopied(isCopied) {
         notice = isCopied ? COPIED_NOTICE : UNCOPIED_NOTICE;
       }
     });
 
-    /*
-     * Which kind of card went where, and whether the reader's own context was behind it. The prompt
-     * itself is never reported - what is worth knowing is that a card was used, not what was asked.
-     */
+    // The prompt itself is never reported. `isSuccess` is whether context was added.
     reportQuietly(AnalyticsEvent.promptSent, {
       [AnalyticsParam.cardKind]: kind,
       [AnalyticsParam.destination]: targetId,
-      [AnalyticsParam.isSuccess]: asked !== prompt
+      [AnalyticsParam.isSuccess]: promptWithContext !== prompt
     });
   }
 </script>
@@ -136,14 +96,9 @@
     {label ?? COPILOT_KINDS[kind].label}
   </p>
   <!--
-    Named by the title alone: the hint is drawn as this heading's own `::after`, which would
-    otherwise be read out as part of it.
-
-    The tear sits on the span rather than on the heading, and has to. `hover-glitch` animates
-    `translate`, and a translated element becomes the containing block for anything `fixed` inside
-    it - including its own `::after`, which is where the hint lives. With both on the heading, the
-    first 130ms of every hover measured the hint against the heading's own box instead of the
-    viewport and threw it across the card. A span is a sibling of the `::after` and cannot reach it.
+    `aria-label` keeps the tooltip's `::after` out of the accessible name. `hover-glitch` sits on the
+    span because its `translate` would make the heading the containing block of the `fixed` tooltip,
+    throwing it across the card for the first 130ms of every hover.
   -->
   <h3 class="card__title" aria-label={title} data-tooltip={hint}>
     <span class="hover-glitch">{title}</span>
@@ -153,17 +108,10 @@
     {@render meta?.()}
   </ul>
 
-  <!--
-    Every press is handed off, because every press has the reader's own context to put in front of
-    the question - the href is the question alone, which is what a middle-click settles for.
-
-    The click decides here and nowhere else, because its default is spent the moment the handler
-    returns: an `await` before `preventDefault` lets the link open its own tab first, and the
-    background then opens a second one.
-  -->
+  <!-- `preventDefault` must run before any `await`, or the link opens a tab and the hand-off a second one -->
   <a
     class="card__action"
-    href={destination}
+    href={destinationUrl}
     onclick={e => {
       e.preventDefault();
       void handOff(siteId);
@@ -193,7 +141,6 @@
     }
   }
 
-  /* Edge's own eyebrow: the family's mark and name, quiet above the title. */
   .card__kind {
     display: flex;
     gap: 0.375rem;
@@ -220,7 +167,6 @@
     text-transform: uppercase;
   }
 
-  /* The trail's type is the card's to set, whichever family filled it in. */
   .card__meta {
     display: flex;
     flex-wrap: wrap;
@@ -231,7 +177,6 @@
     line-height: 1.125rem;
   }
 
-  /* The one thing the card is for, so it carries the theme's brightest weight. */
   .card__action {
     display: flex;
     gap: 0.25rem;
@@ -258,7 +203,6 @@
     }
   }
 
-  /* Under the action rather than over it, so what was clickable a moment ago is not covered up. */
   .card__notice {
     display: block;
     color: var(--cp-accent);

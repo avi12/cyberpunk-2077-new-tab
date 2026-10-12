@@ -3,12 +3,8 @@ import { openableUrlSchema } from "@/lib/url";
 import { z } from "@/lib/zod";
 
 /**
- * The shape of everything this page stores, written once. The types the rest of the app passes
- * around are inferred from these schemas rather than declared beside them, so a setting has exactly
- * one description - and a settings file, which is a stranger's JSON, is checked against the same one
- * the compiler enforces.
- *
- * An enum's string values are the persisted contract, so they live here too.
+ * The app's types are inferred from these schemas, so an imported settings file is checked against
+ * the same shape the compiler enforces. Enum string values are the persisted contract.
  */
 
 export enum WidgetType {
@@ -30,7 +26,6 @@ export enum ScanLinesMode {
   none = "none"
 }
 
-/** Which of the two clocks `Intl` is asked for, for a reader who has said they want the other one. */
 export enum HourCycle {
   hour12 = "12",
   hour24 = "24"
@@ -66,12 +61,8 @@ export enum BookmarkCategory {
 }
 
 /**
- * `category` is a plain string rather than the enum: a reader can add sections of their own, and
- * `icon` names a glyph in the picker, which is free to gain and lose names between builds.
- *
- * A url is held to the one shape everything openable is held to, which is what a settings file
- * offering a `javascript:` bookmark runs into - the schema is what an import is checked against.
- * A bookmark already in storage is not re-read through this, so the shape gates what gets in.
+ * `category` is a plain string since a reader can add sections of their own, and `icon` is too since
+ * the picker gains and loses names between builds. `url` is what stops an imported `javascript:` bookmark.
  */
 export const bookmarkSchema = z.object({
   id: z.string(),
@@ -83,34 +74,21 @@ export const bookmarkSchema = z.object({
 
 export type Bookmark = z.infer<typeof bookmarkSchema>;
 
-/**
- * Not a zod schema, unlike everything else here: an engine is shipped with the extension and never
- * arrives from anywhere, so there is no payload to validate - only a shape to hold the authors to.
- */
+/** Not a zod schema: engines ship with the extension, so there is no payload to validate. */
 export type SearchEngine = {
   id: SearchEngineId;
   name: string;
-  /** Where the search form posts. Empty for the browser's own engine, which is asked over a message. */
+  /** Empty for the browser's own engine, which is asked over a message. */
   action: string;
-  /** The field the query is written into, since not every engine calls it `q`. */
   queryParam: string;
-  /** Anything the engine needs alongside the query, carried as hidden fields. */
+  /** Sent as hidden fields alongside the query. */
   params?: Record<string, string>;
-  /**
-   * Named by an engine whose box a script has to finish: filled on arrival and waiting to be sent,
-   * or empty because no link could fill it. It is what turns a submit into a question about the
-   * site, so the last press can be made for the reader rather than left to them.
-   */
+  /** Set when a script has to finish the engine's box on arrival - fill it, send it, or both. */
   composeSiteId?: ComposeSiteId;
   placeholder: string;
 };
 
-/**
- * A bound belongs to the shape, not to the control that happens to edit it: the input is one way in,
- * a settings file is another, and only what is written here is checked on both. The controls import
- * these rather than restating them, so a range cannot mean one thing in the markup and another in
- * storage.
- */
+/** Bounds belong to the shape so an input and an imported file are held to the same range. */
 export const LATITUDE_MIN = -90;
 export const LATITUDE_MAX = 90;
 export const LONGITUDE_MIN = -180;
@@ -137,7 +115,6 @@ export const taskSchema = z.object({
 
 export type Task = z.infer<typeof taskSchema>;
 
-/** One bag for every widget's settings, so each widget reads the few keys that are its own. */
 const widgetConfigSchema = z.object({
   location: geoLocationSchema.optional(),
   temperatureUnit: z.boolean().optional(),
@@ -160,14 +137,9 @@ export const widgetSchema = z.object({
 export type Widget = z.infer<typeof widgetSchema>;
 
 /**
- * Every element carries its own default, which is what makes a partial answer readable: preferences
- * written before an element shipped - in storage, or in a settings file exported by an older build -
- * come back with that element on, because an absent answer is not "hidden", it is what the element
- * ships as.
- *
- * Copilot is the one that ships off. It is the only section that has nothing of its own to show -
- * the cards are read out of Edge, through an app that is a separate download - so a reader who has
- * neither would otherwise be given a row that can only ever explain itself.
+ * Every element carries its own default, so preferences saved before an element shipped read it as
+ * its default rather than hidden. Copilot ships off: its cards need Edge plus a separately downloaded
+ * app, and without them the row could only ever explain itself.
  */
 export const displayPreferencesSchema = z.object({
   showGreeting: z.boolean().default(true),

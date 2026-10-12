@@ -81,7 +81,6 @@
     }
   }
 
-  /* A popover: the browser owns Escape and light dismiss, anchored under its own trigger. */
   .picker__panel {
     position: absolute;
     width: anchor-size(width);

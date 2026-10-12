@@ -3,16 +3,9 @@ import { z } from "@/lib/zod";
 import { storage } from "#imports";
 
 /**
- * A JSON snapshot kept in the browser's own sync area, cut into pieces small enough to fit it.
- *
- * That area is a small one - roughly 100KB in all, and 8KB for any single value - so a snapshot goes
- * in as numbered slices with one record beside them saying how many there are and when they were
- * taken. Written only when a reader asks: a mirror that followed every change would spend the area,
- * and the browser's hourly write allowance, on typing in the scratch pad.
- *
- * Shared rather than written twice, because there are two of these now - the whole settings blob and
- * the netlinks on their own - and the part that is fiddly is identical in both: the slicing, the
- * order the writes have to land in, and reading back something another build wrote.
+ * The sync area holds roughly 100KB in all and 8KB per value, so a snapshot is stored as numbered
+ * slices plus a record of their count. Written only on request: mirroring every change would spend
+ * the area and the hourly write allowance on typing in the scratch pad.
  */
 
 /** Short enough that a slice stays inside the per-value limit even when JSON escaping doubles it. */
@@ -29,17 +22,12 @@ const recordSchema = z.object({
 
 type BackupRecord = z.infer<typeof recordSchema>;
 
-/**
- * One backup in the sync area, addressed by name.
- *
- * The name decides the keys, so `settings` keeps the exact keys it has always written and nothing
- * anybody already has in their browser account is orphaned by this being shared.
- */
+/** The name decides the storage keys, so `settings` must keep the exact keys it has always written. */
 export function slicedBackup({ name, maxLength, tooBig }: {
   name: string;
-  /** How much of the shared area this backup may claim, in characters of JSON. */
+  /** In characters of JSON. */
   maxLength: number;
-  /** What a reader is told when their snapshot will not fit, in words about their page. */
+  /** The error message when the snapshot will not fit. */
   tooBig: string;
 }) {
   const recordItem = definePlainItem<BackupRecord | null>(`sync:${name}Backup`, { fallback: null });
@@ -52,10 +40,7 @@ export function slicedBackup({ name, maxLength, tooBig }: {
     return Array.from({ length: count }, (_, index) => sliceKey(index));
   }
 
-  /**
-   * The record another machine left, which is another build's idea of what a backup looks like - so
-   * it is read the way any other crossing payload is, and an unreadable one counts as none at all.
-   */
+  /** Another build may have written it, so an unreadable record counts as none. */
   async function readRecord() {
     const parsed = recordSchema.safeParse(await recordItem.getValue());
 
@@ -66,7 +51,6 @@ export function slicedBackup({ name, maxLength, tooBig }: {
     async takenAtMs() {
       return (await readRecord())?.savedAtMs ?? null;
     },
-    /** Answers with the moment it was taken, which is the line a panel shows afterwards. */
     async keep(json: string) {
       if (json.length > maxLength) {
         throw new Error(tooBig);

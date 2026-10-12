@@ -7,12 +7,6 @@
   import iconSettings from "@/assets/icons/settings.svg?raw";
   import { settings } from "@/lib/storage/settings.svelte";
 
-  /**
-   * Where a card's action hands its prompt, asked beside the cards it decides for rather than in the
-   * display panel. The panel is where the page is dressed; this is what a card does when pressed,
-   * and it only exists where the cards do - so the gear that opens it is the section's own.
-   */
-
   const PICKER_ID = "prompt-target-picker";
 
   const LABEL = "Which assistant a card asks";
@@ -20,19 +14,10 @@
   let elPicker = $state<HTMLDivElement>();
 
   /**
-   * A destination only raises a question when a script has to finish the prompt off at its site, and
-   * which ones those are is the compose table's to say - not something a picker can tell from the
-   * name. Every other destination takes the prompt in the link, which no permission governs.
-   *
-   * Asked straight out of the press, since a permission prompt needs the gesture that raised it, and
-   * only where there is anything to ask: a site already handed over, or one this browser will not
-   * let any extension script anyway, is a question with nothing behind it.
-   *
-   * The pick lands only once the site is actually handed over. A refusal leaves the previous
-   * destination chosen and the picker open, which is the honest answer to a question just declined -
-   * closing on it would look like the pick had taken.
+   * Asked straight out of the press, since a permission prompt needs its gesture. A refusal keeps the
+   * previous pick and the picker open, so it does not look like the pick took.
    */
-  async function choose(targetId: PromptTargetId) {
+  async function choosePromptTarget(targetId: PromptTargetId) {
     const siteId = composeSiteFor(targetId);
     const isSiteWorthAsking = siteId !== null && composeAccess.isWorthAsking(siteId);
     if (isSiteWorthAsking && !await composeAccess.allow(siteId)) {
@@ -58,7 +43,7 @@
   <OptionGroup
     columns={2}
     label={LABEL}
-    onSelect={choose}
+    onSelect={choosePromptTarget}
     options={PROMPT_TARGET_OPTIONS}
     selected={promptDestination.targetId} />
 </div>
@@ -74,7 +59,6 @@
       color: var(--cp-secondary-hi);
     }
 
-    /* A bare glyph has no box to light, so focus paints in the ring the page's reset holds ready. */
     &:focus-visible {
       outline-color: currentColor;
     }
@@ -85,10 +69,6 @@
     }
   }
 
-  /*
-   * A popover, so the browser owns opening, Escape and light dismiss - clicking anywhere outside
-   * closes it without this having to listen for it.
-   */
   .picker__panel {
     position: absolute;
     width: max-content;

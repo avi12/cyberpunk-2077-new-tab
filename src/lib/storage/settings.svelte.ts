@@ -42,15 +42,7 @@ import { ICON_NAMES } from "@/features/netlinks/icons/choices";
 import { plainCopy } from "@/lib/plain";
 import { z } from "@/lib/zod";
 
-/**
- * One setting: where it is kept, what shape it may take, and how a stored answer is brought up to
- * date with what this build ships. The schema is what a settings file is checked against, so the
- * shape a setting accepts is named once and both the compiler and an import obey it.
- *
- * Storage is read through it too, not only a settings file. What is in there was written by builds
- * that described these shapes more loosely, and it outlives every one of them, so a stored value is
- * a claim rather than a value until the shape has agreed with it.
- */
+/** Storage is parsed like an imported file: older builds wrote looser shapes, and their values outlive them. */
 class Setting<TValue> {
   readonly #item: StorageItem<TValue>;
   readonly schema: z.ZodType<TValue>;
@@ -61,7 +53,7 @@ class Setting<TValue> {
   constructor({ item, schema, entrySchema, normalize }: {
     item: StorageItem<TValue>;
     schema: z.ZodType<TValue>;
-    /** Named by a list, so one entry that no longer reads does not cost the reader the rest. */
+    /** For a list, so one entry that no longer reads does not cost the rest. */
     entrySchema?: z.ZodType;
     normalize?: (stored: TValue) => TValue;
   }) {
@@ -81,14 +73,8 @@ class Setting<TValue> {
   }
 
   /**
-   * The write behind `current`, for a caller that cannot move on until storage has the value.
-   *
-   * The copy is for what stays in memory, not for the write - `definePlainItem` guards that end,
-   * and every stored value goes through it. A caller almost always hands back something it read out
-   * of `current`, a list mapped over or a shape spread into a new one, and holding their proxy
-   * would leave `current` answering with a value they can still change underneath it. Copying
-   * severs that, and makes the value this page reads and the value on disk one value rather than
-   * two that agree for now.
+   * The copy is for memory, not the write (`definePlainItem` guards that): a caller usually hands back
+   * something derived from `current`, and holding their proxy would let them change it underneath.
    */
   async set(value: TValue) {
     const stored = plainCopy(value);
@@ -96,11 +82,7 @@ class Setting<TValue> {
     await this.#item.setValue(stored);
   }
 
-  /**
-   * Reading is a parse. Nothing is written back afterwards - the repair stands for this page's life
-   * and the reader's own next edit is what persists it, so a shape this build cannot read is still
-   * there for a later one that can.
-   */
+  /** The repair is not written back, so a shape this build cannot read is kept for a later one that can. */
   async load() {
     const stored: unknown = await this.#item.getValue();
     const parsed = this.schema.safeParse(stored);
@@ -109,13 +91,8 @@ class Setting<TValue> {
   }
 
   /**
-   * One entry that no longer reads costs the reader that entry rather than the list it was in: a
-   * single `javascript:` bookmark saved before the address was pinned would otherwise take every
-   * other bookmark down with it. Whatever is left is read through the setting's own shape again,
-   * because a list of survivors is still only a claim until it has been.
-   *
-   * Anything else - a scalar, a list that is not a list at all - is past salvaging, and the fallback
-   * is what a setting means by no answer.
+   * Drops only the unreadable entries of a list: one `javascript:` bookmark saved before urls were
+   * pinned would otherwise take every other bookmark down with it.
    */
   #repaired(stored: unknown) {
     const entrySchema = this.#entrySchema;
@@ -131,10 +108,6 @@ class Setting<TValue> {
   }
 }
 
-/**
- * A setting that is a list. The array is built from the entry's own shape here, so what one entry
- * looks like is written once and the list cannot come to disagree with the entries in it.
- */
 class ListSetting<TItem> extends Setting<TItem[]> {
   constructor({ item, entrySchema, normalize }: {
     item: StorageItem<TItem[]>;
@@ -150,11 +123,7 @@ class ListSetting<TItem> extends Setting<TItem[]> {
   }
 }
 
-/**
- * The stored list is reconciled with the shipped one on every read: widgets added since the user
- * last saved are appended, and ones that have since been retired are dropped rather than left as
- * empty slots in the panel.
- */
+/** Appends widgets shipped since the last save and drops retired ones. */
 function withShippedWidgets(stored: Widget[]) {
   const shipped = stored.filter(widget => DEFAULT_WIDGETS.some(({ id }) => id === widget.id));
 
@@ -265,7 +234,7 @@ export async function loadSettings() {
   await Promise.all(Object.values(settings).map(setting => setting.load()));
 }
 
-/** A setting with its type forgotten, for the code that walks all of them without knowing any. */
+/** Type-erased, for code that walks every setting. */
 type AnySetting = {
   current: unknown;
   readonly schema: z.ZodType;

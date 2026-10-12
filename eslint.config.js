@@ -12,8 +12,7 @@ import svelteParser from "svelte-eslint-parser";
 import tsEslint from "typescript-eslint";
 
 // Logic and correctness rules live in oxlint (.oxlintrc.json) - ESLint only carries what oxlint
-// cannot: formatting, selector bans, the local custom rules and the .svelte template rules. Adapted
-// from youtube-time-manager.
+// cannot: formatting, selector bans, the local custom rules and the .svelte template rules.
 const tsStyleRules = {
   "perfectionist/sort-imports": [
     "error",
@@ -192,15 +191,11 @@ const tsStyleRules = {
   "local/expand-nested-object-expression": "error",
   "local/expand-nested-type-literal": "error",
   "local/multiline-arg-paren-newline": "error",
-  // Only the auto-removal of dead imports lives here - unused *variable* detection stays in oxlint's
-  // type-aware typescript/no-unused-vars (this plugin's syntactic no-unused-vars false-positives on a
-  // const used only via `typeof`). oxlint can't auto-strip imports (a "dangerous" fix plain --fix
-  // skips), so `pnpm lint` runs oxlint --fix with no-unused-vars off (.oxlintrc.fix.json) -> eslint
-  // --fix strips imports here -> a final plain oxlint re-checks as the gate.
+  // Only for its import auto-fix, which oxlint will not apply. Unused variables stay with oxlint's
+  // type-aware rule, since this plugin's false-positives on a const used only via `typeof`.
   "unused-imports/no-unused-imports": "error",
-  // Arrow-function-to-variable is enforced by oxlint's func-style (allowArrowFunctions: false), but
-  // that only catches a direct `const x = () => ...` - a ternary that picks between two arrows evades
-  // it, so the selectors below close that gap.
+  // The ConditionalExpression selectors close a gap in oxlint's func-style, which misses a ternary
+  // that picks between two arrows.
   "no-restricted-syntax": [
     "error",
     {
@@ -243,9 +238,6 @@ const browserGlobals = {
   chrome: "readonly"
 };
 
-// Node globals belong only to tooling that actually runs under Node (dev/build scripts and config
-// files). The new-tab page and the service worker must not see `process` - oxlint enforces this via
-// its env override.
 const nodeToolingFiles = ["./scripts/*.ts", "**/*.config.ts", "**/*.config.js", "**/*.config.mjs"];
 
 export default [
@@ -275,8 +267,7 @@ export default [
   },
   ...svelteEslint.configs["flat/recommended"],
   {
-    // Also *.svelte.{js,ts} - the recommended configs claim those for svelteParser, which needs the
-    // TS sub-parser below to read their TypeScript.
+    // The recommended configs claim *.svelte.{js,ts} for svelteParser, which needs the TS sub-parser.
     files: ["**/*.svelte", "**/*.svelte.{js,ts}"],
     languageOptions: {
       parser: svelteParser,

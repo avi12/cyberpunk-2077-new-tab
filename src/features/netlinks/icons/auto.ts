@@ -3,23 +3,8 @@ import { DEFAULT_ICON } from "./choices";
 import { hostLabel, hostOf } from "@/features/netlinks/link";
 import { BookmarkCategory } from "@/lib/storage/schema";
 
-/**
- * Niagara Launcher's Anycons decide an app's glyph from the app's store category, with a
- * community-voted per-app override layered on top; stroke width and palette are only how the glyph
- * is drawn, never which one is drawn. The same layering here, in the same order:
- *
- * 1. a site recognised by name wins outright - the override layer
- * 2. otherwise the host and title are classified, and the class carries the glyph - the category
- *    layer, with the classes standing in for a store's category list
- * 3. otherwise the section the link is filed under decides
- * 4. otherwise the default bookmark glyph
- *
- * There is no computable step to copy: Niagara downloads both its category table and its vote
- * results. These tables are the local stand-in, and each layer is a table rather than a heuristic
- * for the same reason - a wrong guess is one line to fix.
- */
-
-/** Sites recognised outright, keyed by the registrable label of the host. */
+// Layered like Niagara Launcher's Anycons: a known site wins, then keyword classes, then the
+// section, then the default. Tables rather than heuristics, so a wrong guess is one line to fix
 const SITE_ICONS: Record<string, IconName> = {
   airbnb: "Map",
   aliexpress: "Shopping",
@@ -126,12 +111,9 @@ const SITE_ICONS: Record<string, IconName> = {
   zoom: "Video"
 };
 
-/**
- * The category layer. Ordered most specific first, since the first class that recognises a word
- * wins, and matched on word starts so `developer` answers to `dev` while `rapid` never answers
- * to `api`.
- */
-const CLASSES: {
+// Most specific first, since the first match wins. Matched on word starts, so `developer` answers
+// to `dev` while `rapid` never answers to `api`
+const KEYWORD_ICONS: {
   icon: IconName;
   keywords: string[];
 }[] = [
@@ -277,11 +259,7 @@ const CLASSES: {
   }
 ];
 
-/**
- * Which section a glyph belongs to. The two layers above already say what a link *is*, so the
- * section it belongs in is one more reading of the same answer rather than a second set of tables.
- * A glyph left out has no opinion, and a link wearing it is left where its owner put it.
- */
+// A glyph left out has no opinion, so a link wearing it stays where its owner put it
 const ICON_CATEGORIES: Partial<Record<IconName, BookmarkCategory>> = {
   Basket: BookmarkCategory.daily,
   Bot: BookmarkCategory.work,
@@ -310,7 +288,6 @@ const ICON_CATEGORIES: Partial<Record<IconName, BookmarkCategory>> = {
   Work: BookmarkCategory.work
 };
 
-/** The section a link is filed under has the last word, the way a store category would. */
 const CATEGORY_ICONS: Record<string, IconName> = {
   [BookmarkCategory.daily]: "Star",
   [BookmarkCategory.entertainment]: "Popcorn",
@@ -322,15 +299,14 @@ function tokensOf(text: string) {
   return text.toLowerCase().split(/[^a-z\d]+/).filter(Boolean);
 }
 
-function knows({ tokens, keywords }: {
+function hasKeywordPrefix({ tokens, keywords }: {
   tokens: string[];
   keywords: string[];
 }) {
   return tokens.some(token => keywords.some(keyword => token.startsWith(keyword)));
 }
 
-/** The two layers that read the link itself, before the section it happens to be filed under. */
-function classify({ url, title }: {
+function iconFromLink({ url, title }: {
   url: string;
   title: string;
 }) {
@@ -341,30 +317,28 @@ function classify({ url, title }: {
 
   const tokens = tokensOf(`${hostOf(url)} ${title}`);
 
-  return CLASSES.find(entry => knows({
+  return KEYWORD_ICONS.find(entry => hasKeywordPrefix({
     tokens,
     keywords: entry.keywords
   }))?.icon ?? null;
 }
 
-/** The glyph a link would carry if nobody picked one. */
 export function pickIcon({ url, title, category }: {
   url: string;
   title: string;
   category: string;
 }) {
-  return classify({
+  return iconFromLink({
     url,
     title
   }) ?? CATEGORY_ICONS[category.toLowerCase()] ?? DEFAULT_ICON;
 }
 
-/** The section a link belongs in, or null when nothing about the link says. */
 export function pickCategory({ url, title }: {
   url: string;
   title: string;
 }) {
-  const icon = classify({
+  const icon = iconFromLink({
     url,
     title
   });

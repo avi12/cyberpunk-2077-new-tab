@@ -13,14 +13,10 @@ import { BROWSER_NAME } from "@/features/companion/platform";
 import { analyticsSessionItem } from "@/lib/storage/items";
 
 /**
- * GA4's Measurement Protocol, which is the only way an extension can report: there is no gtag.js to
- * load, and loading one would mean fetching remote code into a page the browser handed us.
+ * The Measurement Protocol, since an extension cannot load gtag.js as remote code.
  *
- * Deliberately not `@wxt-dev/analytics`, which is what youtube-time-manager uses. Its module adds a
- * WXT plugin, and WXT injects a plugin into *every* entrypoint - including `entrypoints/compose.ts`,
- * the unlisted script injected into claude.ai. Measured: that
- * took the injected script from 5.20 kB to 126.13 kB, because the provider's imports ride along.
- * The protocol below is the same one that package speaks; only the delivery is ours.
+ * Deliberately not `@wxt-dev/analytics`: WXT injects its plugin into every entrypoint, including
+ * the compose script injected into claude.ai, which measured 5.20 kB before and 126.13 kB after.
  *
  * @see https://developers.google.com/analytics/devguides/collection/protocol/ga4/reference
  */
@@ -37,14 +33,9 @@ const MICROSECONDS_PER_MS = 1000;
 /** GA4 refuses an event older than this, so a late one is stamped forward rather than dropped. */
 const MAX_BACKDATE_HOURS = 72;
 
-/**
- * Names that carry a person rather than a fact. This extension holds prompts, bookmarks, searches
- * and a reader's own name, and none of them may leave in a report - so anything that looks like an
- * address is refused outright too, whatever it is called.
- */
+/** Names that carry a person rather than a fact. Values that look like an address are refused too. */
 const FORBIDDEN_PARAMS = new Set(["email", "name", "phone", "address", "page_referrer", "query", "prompt"]);
 
-/** One report's parameters: only the names the property has dimensions for, and only flat values. */
 type ReportedParams = Partial<Record<AnalyticsParam, string | number | boolean>>;
 
 function isSendable({ key, value }: {
@@ -62,15 +53,12 @@ function isSendable({ key, value }: {
   return value.length <= MAX_PARAM_VALUE_LENGTH && !value.startsWith("http");
 }
 
-/**
- * A parameter is dropped rather than trimmed: half a value in a report reads as data and is not.
- * GA4 discards the whole event past 25 of them, so the cap is kept here rather than discovered.
- */
+/** A parameter is dropped rather than trimmed: half a value in a report reads as data and is not. */
 function sendableParams(params: ReportedParams) {
   const kept: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(params)) {
-    const isRoom = Object.keys(kept).length < MAX_EVENT_PARAMS;
-    if (isRoom && isSendable({
+    const isBelowParamCap = Object.keys(kept).length < MAX_EVENT_PARAMS;
+    if (isBelowParamCap && isSendable({
       key,
       value
     })) {
@@ -81,10 +69,7 @@ function sendableParams(params: ReportedParams) {
   return kept;
 }
 
-/**
- * Traits of the install rather than of the moment, so any report can be broken down by them. GA4
- * keeps the latest value against the id, which is why none of these is repeated per event.
- */
+/** GA4 keeps the latest value against the client id, so these are not repeated as event params. */
 function userProperties() {
   const values: Record<AnalyticsUserProperty, string> = {
     [AnalyticsUserProperty.extensionVersion]: browser.runtime.getManifest().version,
@@ -119,8 +104,8 @@ async function currentSession() {
   const nowMs = Temporal.Now.instant().epochMilliseconds;
   const sinceLastMs = previous ? nowMs - previous.atMs : null;
   const sessionLengthMs = Temporal.Duration.from({ minutes: SESSION_LENGTH_MINUTES }).total("milliseconds");
-  const isNew = sinceLastMs === null || sinceLastMs > sessionLengthMs;
-  const sessionId = isNew || !previous ? nowMs.toString() : previous.sessionId;
+  const isNewSession = sinceLastMs === null || sinceLastMs > sessionLengthMs;
+  const sessionId = isNewSession || !previous ? nowMs.toString() : previous.sessionId;
 
   await analyticsSessionItem.setValue({
     sessionId,
@@ -129,18 +114,12 @@ async function currentSession() {
 
   return {
     sessionId,
-    engagementMs: isNew || sinceLastMs === null
+    engagementMs: isNewSession || sinceLastMs === null
       ? MIN_ENGAGEMENT_MS
       : Math.min(Math.max(sinceLastMs, MIN_ENGAGEMENT_MS), MAX_ENGAGEMENT_MS)
   };
 }
 
-/**
- * Report one thing that happened, or quietly do nothing.
- *
- * Never throws and is never awaited by anything the reader is waiting on: a report is the least
- * important thing the page is doing, and a page that stalls because a beacon did is indefensible.
- */
 async function report(name: AnalyticsEvent, params: ReportedParams = {}) {
   if (!MEASUREMENT_ID || !API_SECRET || !(await isAnalyticsEnabled())) {
     return;
@@ -177,7 +156,7 @@ async function report(name: AnalyticsEvent, params: ReportedParams = {}) {
   );
 }
 
-/** The same, for a caller with nothing to do about a failure - which is all of them. */
+/** Never awaited: a page must not stall because a beacon did. */
 export function reportQuietly(name: AnalyticsEvent, params?: ReportedParams) {
   void report(name, params).catch(() => undefined);
 }

@@ -1,8 +1,3 @@
-/**
- * Where the repo's fixed files live. A script that reads or writes one of them names it from here
- * rather than restating a path that another script already depends on.
- */
-
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 

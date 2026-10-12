@@ -1,30 +1,16 @@
 /**
- * Opens browsers with the built extension sideloaded and CDP listening, then stays alive so they do.
- *
- * `pnpm ext:dev` is the normal loop, but it owns the terminal and closes its browser when that
- * terminal goes away - no good when the browser has to outlive the command, or be driven over the
- * DevTools protocol. This opens the same browsers that loop opens, through the same launcher and
- * the same kept profiles, against `.output/` rather than a dev build. Ctrl+C closes all of them.
+ * Opens browsers on the built `.output/` extension with CDP listening, through the dev loop's
+ * launcher and kept profiles. Ctrl+C closes all of them.
  *
  * Usage: `pnpm ext:sideload [--port 9223] [--edge] [--firefox] [--opera] [--all]`
- *
- * A Chrome that lists the extension but leaves it switched off wants developer mode - one press on
- * `chrome://extensions`, which the kept profile then remembers. `scripts/browser.mjs` says why it
- * cannot be pressed for you.
  */
 
 import { CDP_PORT, launchBrowser, PROJECT_ROOT } from "./browser.mjs";
 import { join } from "node:path";
 import process from "node:process";
 
-/**
- * Three Chromiums off one build. Edge is a target and the only browser with Copilot Journeys to
- * show, so it is the one to open when the companion is what is being worked on. Opera is not a
- * target at all - it blocks `chrome_url_overrides`, so the new tab never appears there - but a
- * second Chromium to check the build against costs nothing. The only thing that differs between the
- * three is which binary `web-ext.config.ts` points the launcher at.
- */
-const SOURCE_DIRECTORIES = {
+/** Opera is not a target (it blocks `chrome_url_overrides`), only a spare Chromium to check against. */
+const BUILD_DIRECTORIES = {
   chrome: join(PROJECT_ROOT, ".output", "chrome-mv3"),
   edge: join(PROJECT_ROOT, ".output", "chrome-mv3"),
   opera: join(PROJECT_ROOT, ".output", "chrome-mv3"),
@@ -33,7 +19,7 @@ const SOURCE_DIRECTORIES = {
 
 const args = process.argv.slice(2);
 const iPortFlag = args.indexOf("--port");
-const portBase = iPortFlag === -1 ? CDP_PORT : Number(args[iPortFlag + 1]);
+const firstPort = iPortFlag === -1 ? CDP_PORT : Number(args[iPortFlag + 1]);
 
 function browsersRequested() {
   if (args.includes("--all")) {
@@ -56,13 +42,13 @@ function browsersRequested() {
 }
 
 /** Every Chromium needs a port of its own, or the second one quietly starts without a debugger. */
-function planned() {
+function launchPlan() {
   const plan = [];
   let portOffset = 0;
   for (const browser of browsersRequested()) {
     plan.push({
       browser,
-      port: portBase + portOffset
+      port: firstPort + portOffset
     });
 
     if (browser !== "firefox") {
@@ -73,15 +59,11 @@ function planned() {
   return plan;
 }
 
-/**
- * One browser that will not take the extension is not a reason to close the two that did - and
- * Chrome without developer mode is exactly that: `Extensions.loadUnpacked` is refused, web-ext's
- * connection closes under it, and the rejection used to take the whole run down with it.
- */
+/** A failed launch (Chrome without developer mode) must not take the other browsers down. */
 async function launch({ browser, port }) {
   const runner = await launchBrowser({
     browser,
-    sourceDir: SOURCE_DIRECTORIES[browser],
+    sourceDir: BUILD_DIRECTORIES[browser],
     port
   }).catch(error => {
     console.error(`${browser}: ${error.message}`);
@@ -93,17 +75,16 @@ async function launch({ browser, port }) {
   }
 
   const debuggerNote = browser === "firefox" ? "" : `, devtools protocol on http://127.0.0.1:${port}`;
-  console.log(`${browser}: sideloaded ${SOURCE_DIRECTORIES[browser]}${debuggerNote}`);
+  console.log(`${browser}: sideloaded ${BUILD_DIRECTORIES[browser]}${debuggerNote}`);
 
   return runner;
 }
 
-const runners = (await Promise.all(planned().map(launch))).filter(Boolean);
+const runners = (await Promise.all(launchPlan().map(launch))).filter(Boolean);
 if (runners.length === 0) {
   process.exit(1);
 }
 
-/** One browser being closed is not the end of the run when three were asked for. */
 let openCount = runners.length;
 for (const runner of runners) {
   runner.registerCleanup(() => {

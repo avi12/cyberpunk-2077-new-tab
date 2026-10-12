@@ -20,37 +20,25 @@ import { openableUrlSchema } from "@/lib/url";
 import { defineBackground } from "#imports";
 import type { Browser } from "wxt/browser";
 
-/** The built name of the unlisted script, which is its entrypoint file's. */
 const COMPOSE_SCRIPT = "/compose.js";
 
 /** A page that never reports itself finished still gets its one attempt. */
 const READY_TIMEOUT_MS = 15_000;
 
 export default defineBackground(() => {
-  /*
-   * A host that refuses to be scripted is a fact about the browser that is running, not about the
-   * reader, so it is dropped the moment a new run begins - the local area is the only one Firefox
-   * has, and it would otherwise outlive the browser that found out.
-   */
+  // A refusal describes this browser run, not the reader, and `local:` would otherwise outlive it
   browser.runtime.onStartup.addListener(forgetComposeRefusals);
 
-  /*
-   * What each tab this opened is waiting to be told to send. Held here rather than in storage
-   * because it belongs to a tab that is being opened right now: it is collected once, by the script
-   * running in that tab, and there is nothing left behind to tidy up afterwards.
-   */
   const requestByTab = new Map<number, ComposeRequest>();
 
   /**
-   * A tab reports itself several times over, starting at `about:blank`, so the script goes in on the
-   * first report that is both finished and actually the destination - and the listener comes off
-   * with it, so a reader browsing on in that tab is never injected into again.
+   * A tab reports itself several times, starting at `about:blank`, so inject on the first finished
+   * report at the destination and stop listening, so later browsing in that tab is never injected.
    */
   function injectWhenReady({ tabId, siteId }: {
     tabId: number;
     siteId: ComposeSiteId;
   }) {
-    /* Answered once, however the attempt ends. */
     const attempt = Promise.withResolvers<ComposeOutcome>();
 
     function stopWaiting() {
@@ -69,12 +57,8 @@ export default defineBackground(() => {
         });
         attempt.resolve(ComposeOutcome.composed);
       } catch {
-        /*
-         * Some hosts refuse every extension outright, which is worth learning. A tab that is simply
-         * no longer there is not: it says nothing about the host, and remembering it would stop the
-         * destination ever being tried again this session. The prompt is at the destination either
-         * way, so a refusal costs only the last press.
-         */
+        // A closed tab says nothing about the host, so only a live tab's failure is remembered as a
+        // refusal - otherwise the destination would never be tried again this session
         const isTabAlive = await browser.tabs.get(tabId).then(() => true, () => false);
         if (!isTabAlive) {
           attempt.resolve(ComposeOutcome.failed);
@@ -121,27 +105,15 @@ export default defineBackground(() => {
     }));
   });
 
-  /*
-   * Everything the Copilot section needs of this worker, and nothing else does. Only Chrome and Edge
-   * build that section, and only they are given a `nativeMessaging` to grant, so elsewhere the read
-   * could never have answered and the rotation would only ever be shuffling a row nobody has. The
-   * flags are read at the branch so they are literals and the whole block folds out of that worker.
-   */
+  // Inline flags so they are literals and the whole block folds out of the Firefox worker
   if (import.meta.env.CHROME || import.meta.env.EDGE) {
-    /*
-     * Edge starts its tip rotation somewhere new every time it launches, so this does too - otherwise
-     * the first new tab of every session would open on the three the last one closed on.
-     */
+    // Mirrors Edge, which starts its tip rotation somewhere new on every launch
     browser.runtime.onStartup.addListener(reshuffleTips);
 
     onMessage(MessageType.readCompanion, async ({ data }) => {
       const result = await readCompanionRecords(data);
-      /*
-       * An answer is the one proof the app can be reached, so it is also the moment a watch is worth
-       * opening: a reader who started the app, or granted the permission, after this browser did has
-       * a row that goes on being pushed to from here on. Not awaited - it is about the next tab, not
-       * this answer.
-       */
+      // An answer proves the app is reachable, so open the watch now for an app started (or a
+      // permission granted) after the browser. Not awaited - it serves the next tab, not this answer
       const isAppReading = result.answer === CompanionAnswer.read;
       if (isAppReading) {
         void ensureCompanionWatch();
@@ -150,17 +122,8 @@ export default defineBackground(() => {
       return result;
     });
 
-    /*
-     * The row a new tab opens on is kept current here rather than by whoever happens to open one.
-     * A browser that has just started has the oldest stored answer of all, so it is asked at once,
-     * and the app is asked to say so itself from then on.
-     */
     browser.runtime.onStartup.addListener(refreshCompanionSnapshots);
-    /*
-     * What is left for the clock: a watch that could not be opened when this worker started, and a
-     * write whose file event never arrived. Both families are asked, because nothing has said which
-     * one moved.
-     */
+    // Catches a watch that failed to open at startup and a write whose file event never arrived
     browser.alarms.onAlarm.addListener(alarm => {
       const isRefreshDue = alarm.name === COMPANION_REFRESH_ALARM;
       if (isRefreshDue) {
@@ -172,18 +135,11 @@ export default defineBackground(() => {
     void ensureCompanionWatch();
   }
 
-  /*
-   * Awaited rather than fired and forgotten: the browser refuses this when there is no window it
-   * considers active, and a page told the search started when it did not is a page that sits on
-   * SCANNING forever. Failing the message hands that answer back.
-   */
+  // Awaited: the browser refuses this with no active window, and the page must hear about it rather
+  // than sit on SCANNING forever
   onMessage(MessageType.openPromptTarget, async ({ data, sender }) => {
     const { url, disposition, compose } = data;
-    /*
-     * `tabs.create` is the address bar, and a message is the one way into this worker from outside
-     * it. Every sender is this extension's own today, which is what makes the parse cheap to keep
-     * rather than a reason to drop it.
-     */
+    // Every sender is our own today, but a message is the one way in, so the URL is still validated
     const isOpenable = openableUrlSchema.safeParse(url).success;
     if (!isOpenable) {
       return ComposeOutcome.failed;

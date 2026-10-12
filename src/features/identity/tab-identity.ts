@@ -7,10 +7,8 @@ const TITLE_CACHE_KEY = "tabTitle";
 const TERMINAL_FAVICON = "/icon/terminal.svg";
 
 /**
- * The tab strip follows the OS theme rather than the page's, so a favicon ships both strokes and
- * lets a media query pick one - at full strength the cyan reads as near-white against light
- * browser chrome. `src/public/icon/terminal.svg`, the pre-script default in `index.html`, repeats the
- * pair because a static asset cannot read it from here.
+ * The tab strip follows the OS theme, not the page's, so the favicon carries both strokes for a media
+ * query to pick. `src/public/icon/terminal.svg` duplicates the pair, as a static asset cannot import it.
  */
 const FAVICON_STROKE = {
   light: "#0b7a8e",
@@ -36,7 +34,6 @@ export function applyTabTitle(title: string) {
   }
 }
 
-/** Restyles the icon file itself into a data URI, rather than rebuilding the same markup by hand. */
 function faviconHref(iconName: IconName) {
   const elIcon = new DOMParser().parseFromString(iconByName(iconName), "image/svg+xml").documentElement;
   elIcon.setAttribute("width", String(FAVICON_SIZE));
@@ -51,10 +48,10 @@ function faviconHref(iconName: IconName) {
 }
 
 export function applyTabFavicon(iconName: IconName) {
-  const link = document.querySelector("link[rel='icon']");
-  if (!(link instanceof HTMLLinkElement)) {
+  const elFaviconLink = document.querySelector("link[rel='icon']");
+  if (!(elFaviconLink instanceof HTMLLinkElement)) {
     return;
   }
 
-  link.href = iconName === DEFAULT_TAB_FAVICON ? TERMINAL_FAVICON : faviconHref(iconName);
+  elFaviconLink.href = iconName === DEFAULT_TAB_FAVICON ? TERMINAL_FAVICON : faviconHref(iconName);
 }

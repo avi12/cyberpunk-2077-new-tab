@@ -14,11 +14,7 @@
     onClose: () => void;
   } = $props();
 
-  /**
-   * The field holds what is being typed; the setting holds what the page greets by. They part ways
-   * for exactly as long as the field is empty - a name being retyped passes through nothing at all,
-   * and the greeting answers that with the default rather than with "Evening, ".
-   */
+  // Separate from the setting so an emptied field greets by the default, never "Evening, "
   let name = $state(settings.userName.current);
   let error = $state("");
 
@@ -53,10 +49,7 @@
   }
 </script>
 
-<!--
-  `method="dialog"` rather than a submit handler: there is nothing to commit, so Enter and the button
-  both mean "done", and the platform closes the dialog for them.
--->
+<!-- `method="dialog"`: nothing to commit, so Enter and Close both just close the dialog -->
 <Modal {isOpen} {onClose} title="Identity Override">
   <form class="stack" method="dialog">
     <label class="visually-hidden" for="identity-name">Your name</label>

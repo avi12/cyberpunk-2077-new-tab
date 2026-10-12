@@ -1,17 +1,9 @@
 import { z } from "@/lib/zod";
 
 /**
- * How tall a row of cards actually came out last time, so the placeholders standing in for it can be
- * that tall from the first frame instead of guessing from type metrics. One entry per section, since
- * a journey card and a tip card are not the same height.
- *
- * Read synchronously, which is why it is not in extension storage: the placeholders are drawn in
- * the page's first frame, and a height arriving a few milliseconds after that is a shift of its
- * own. It is a measurement rather than a setting - nothing here is the reader's choice, and losing
- * it costs one animated correction.
- *
- * It is only trusted at the width it was taken at: a narrower column wraps a card's text into more
- * lines, and the row is as tall as its tallest card.
+ * The last measured row height, so placeholders match from the first frame. In `localStorage` because
+ * it must be read synchronously - an async height arrives a frame late and shifts the layout. Only
+ * trusted at the width it was taken at, since narrower columns wrap.
  */
 
 const rowSchema = z.object({

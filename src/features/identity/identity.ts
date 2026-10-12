@@ -2,37 +2,24 @@ import { fetchJson, fetchText } from "@/lib/fetch";
 import { z } from "@/lib/zod";
 import { browser } from "#imports";
 
-/**
- * The name of the person signed into the browser.
- *
- * No browser API returns a name: `identity.getProfileUserInfo` answers with an email address and an
- * account id and nothing else, and the Chromium team has said there is no supported way to read the
- * profile name either. Reading a name out of the address only works when the address happens to
- * hold one - "jane.doe@..." does, "cyberwolf99@..." does not - so the name is asked for instead.
- *
- * `launchWebAuthFlow` is the OAuth door that needs no `oauth2` manifest key, the key Edge has never
- * supported, and every target browser implements it, Firefox included. On top of it runs the flow
- * RFC 8252 and OAuth 2.1 ask for: authorization code with PKCE, `state` against CSRF, `nonce`
- * against a replayed ID token. The code is redeemed at the token endpoint over TLS, which is what
- * lets the ID token be read without verifying its signature - a token arriving through a redirect
- * fragment would have to be.
- *
- * What is deliberately absent is storage. The grant buys one claim; the tokens are read once, never
- * written anywhere, and the access token is handed straight back to Google.
+/*
+ * No browser API exposes the profile's name (`identity.getProfileUserInfo` only gives an email), so
+ * Google is asked via `launchWebAuthFlow`, which needs no `oauth2` key (unsupported on Edge).
+ * Authorization code with PKCE, `state` and `nonce` per RFC 8252 / OAuth 2.1. The code is redeemed
+ * over TLS, which is why the ID token's signature need not be verified. Nothing is stored.
  */
 
 /** Public by design: an extension cannot hide either of these, and Google's token endpoint wants both. */
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
 
-/** A build missing either has nothing to ask with, and the button that would ask says so. */
 export const isGoogleAccountConfigured = Boolean(CLIENT_ID) && Boolean(CLIENT_SECRET);
 
 const AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const REVOKE_URL = "https://oauth2.googleapis.com/revoke";
 
-/** `openid` is what makes Google mint an ID token; `profile` is what puts a name inside it. */
+/** `openid` mints an ID token; `profile` puts a name inside it */
 const SCOPES = ["openid", "profile"];
 
 const PKCE_VERIFIER_BYTES = 32;
@@ -49,10 +36,6 @@ const claimsSchema = z.object({
   name: z.string().optional()
 });
 
-/**
- * What the token endpoint is sent, spelled the way Google spells it. Naming the shape is what makes
- * a renamed parameter a type error here rather than a 400 read as a refused sign-in.
- */
 type TokenExchange = {
   client_id: string;
   client_secret: string;
@@ -66,7 +49,6 @@ type Revocation = {
   token: string;
 };
 
-/** Both of Google's endpoints read form-encoded parameters, and `URLSearchParams` is that format. */
 function toFormPost(parameters: TokenExchange | Revocation) {
   return {
     method: "POST",
@@ -84,17 +66,17 @@ function toBase64Url(bytes: Uint8Array) {
     .replaceAll("=", "");
 }
 
-function randomVerifier() {
+function createPkceVerifier() {
   return toBase64Url(crypto.getRandomValues(new Uint8Array(PKCE_VERIFIER_BYTES)));
 }
 
-async function toChallenge(verifier: string) {
+async function pkceChallengeFor(verifier: string) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
 
   return toBase64Url(new Uint8Array(digest));
 }
 
-/** A JWT payload is base64url, and a name outside ASCII only survives a real UTF-8 decode. */
+/** A name outside ASCII only survives a real UTF-8 decode of the base64url payload */
 function claimsFromIdToken(idToken: string) {
   const [, payload = ""] = idToken.split(".");
   const base64 = payload.replaceAll("-", "+").replaceAll("_", "/");
@@ -108,18 +90,15 @@ function claimsFromIdToken(idToken: string) {
   }
 }
 
-/**
- * Nothing here is kept, so the grant is handed back rather than left open on the account. Whether
- * Google took it back is not this flow's business, so the answer is dropped rather than waited on.
- */
-function revoke(accessToken: string) {
+/** Nothing is kept, so the grant is handed back. Fire and forget */
+function revokeAccessToken(accessToken: string) {
   void fetchText({
     url: REVOKE_URL,
     init: toFormPost({ token: accessToken })
   });
 }
 
-async function redeem({ code, codeVerifier, redirectUri }: {
+async function redeemAuthorizationCode({ code, codeVerifier, redirectUri }: {
   code: string;
   codeVerifier: string;
   redirectUri: string;
@@ -140,9 +119,9 @@ async function redeem({ code, codeVerifier, redirectUri }: {
   });
 }
 
-/** Null covers every way this ends without a name: a closed window, a refused consent, a bad token. */
+/** Null for a closed window, a refused consent or a bad token */
 export async function googleAccountName() {
-  const codeVerifier = randomVerifier();
+  const codeVerifier = createPkceVerifier();
   const state = crypto.randomUUID();
   const nonce = crypto.randomUUID();
   const redirectUri = browser.identity.getRedirectURL();
@@ -152,7 +131,7 @@ export async function googleAccountName() {
     redirect_uri: redirectUri,
     response_type: "code",
     scope: SCOPES.join(" "),
-    code_challenge: await toChallenge(codeVerifier),
+    code_challenge: await pkceChallengeFor(codeVerifier),
     code_challenge_method: "S256",
     prompt: "select_account",
     state,
@@ -169,14 +148,14 @@ export async function googleAccountName() {
     return null;
   }
 
-  const returned = new URL(redirectUrl).searchParams;
-  const code = returned.get("code");
-  // `state` is what makes this the answer to the request that was just made, not one injected into it.
-  if (!code || returned.get("state") !== state) {
+  const redirectParameters = new URL(redirectUrl).searchParams;
+  const code = redirectParameters.get("code");
+  // `state` proves this answers the request just made, not one injected into it
+  if (!code || redirectParameters.get("state") !== state) {
     return null;
   }
 
-  const tokens = await redeem({
+  const tokens = await redeemAuthorizationCode({
     code,
     codeVerifier,
     redirectUri
@@ -186,11 +165,11 @@ export async function googleAccountName() {
   }
 
   if (tokens.access_token) {
-    revoke(tokens.access_token);
+    revokeAccessToken(tokens.access_token);
   }
 
   const parsed = claimsFromIdToken(tokens.id_token);
-  // `nonce` ties the token to this request, `aud` ties it to this extension's client.
+  // `nonce` ties the token to this request, `aud` to this extension's client
   if (!parsed?.success || parsed.data.nonce !== nonce || parsed.data.aud !== CLIENT_ID) {
     return null;
   }

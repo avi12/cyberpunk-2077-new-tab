@@ -2,13 +2,8 @@
   import type { Snippet } from "svelte";
 
   /**
-   * The shell every modal in the app shares. A real `<dialog>` opened with `showModal()`, so Escape,
-   * the backdrop and focus containment come from the platform rather than from hand-rolled listeners
-   * the way the original did it.
-   *
-   * `closedby="any"` is what dismisses it on a backdrop click. Comparing an event target against the
-   * dialog cannot do that job: a dialog with padding reports itself as the target for clicks on its
-   * own inner edge too, so the frame around the content used to close it.
+   * `closedby="any"` handles backdrop clicks: comparing the event target against the dialog also
+   * matches clicks on its own padding.
    */
   const {
     isOpen,
@@ -22,12 +17,7 @@
     onClose: () => void;
     title?: string;
     variant?: "primary" | "warning";
-    /**
-     * Where the focus lands on opening. `showModal` gives it to the first control it finds, which is
-     * what a form wants - the reader is here to type - and what a panel whose only control is an
-     * action does not: they arrive with that action lit, ringed and explaining itself, having asked
-     * for none of it. The panel takes it instead, and the reader tabs to what they came for.
-     */
+    /** For a panel whose only control is an action, so it does not open focused and lit up */
     isSelfFocused?: boolean;
     children: Snippet;
   } = $props();
@@ -41,12 +31,8 @@
 
     if (isOpen && !elDialog.open) {
       elDialog.showModal();
-      /*
-       * Taken back by hand, because the attribute that should say this is ignored: measured in
-       * Chromium 152, an `autofocus` on the dialog itself changes nothing and the first control is
-       * focused anyway. Only a focusable descendant carrying `autofocus` is honoured, and a panel
-       * has no such element to spare. `tabindex="-1"` below is what makes this land.
-       */
+      // By hand: measured in Chromium 152, `autofocus` on the dialog itself is ignored. Needs the
+      // `tabindex="-1"` below
       if (isSelfFocused) {
         elDialog.focus();
       }
@@ -70,11 +56,6 @@
 </dialog>
 
 <style>
-  /*
-   * The open and closed states animate in both directions without a line of JavaScript:
-   * `allow-discrete` keeps `display` and `overlay` animatable, and `@starting-style` supplies the
-   * frame the dialog enters from.
-   */
   .cyber-dialog {
     width: 100%;
     max-width: 28rem;
@@ -91,11 +72,7 @@
       overlay 160ms allow-discrete;
     scale: 0.96;
 
-    /*
-     * The panel takes focus only to keep it off the controls inside, so the ring it earns for that
-     * says nothing about anything. Transparent rather than `none`, the way every control on the page
-     * drops its ring, so a forced-colours mode still draws one.
-     */
+    /* Transparent rather than `none`, so forced-colours mode still draws a ring */
     &:focus {
       outline: 2px solid transparent;
       outline-offset: 2px;
@@ -114,7 +91,7 @@
     border-color: var(--cp-secondary);
   }
 
-  /* `open` is `showModal()`'s to set rather than the markup's, so the compiler cannot see it. */
+  /* `open` is set by `showModal()`, so the compiler cannot see it */
   .cyber-dialog:global([open]) {
     @starting-style {
       opacity: 0%;

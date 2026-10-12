@@ -2,44 +2,37 @@ import type { ComposeSiteId } from "@/features/compose/sites";
 import { defineExtensionMessaging } from "@webext-core/messaging";
 import type { Browser } from "wxt/browser";
 
-/** What `topSites.get` answers with, named here so the message and the API cannot drift apart. */
 type TopSite = Browser.topSites.MostVisitedURL;
 
-/**
- * What the companion may be asked for. The strings are the wire contract with the app, which files
- * its answer under the same name it was asked by - `companion/dotnet/src/NativeMessage.cs` names these two.
- */
+/** The strings are the wire contract with the app - `companion/dotnet/src/NativeMessage.cs` names them too. */
 export enum CompanionRequest {
   journeys = "journeys",
   tips = "tips"
 }
 
 /**
- * What the background was able to do about the request, which is a different question from what the
- * companion said. `unbound` is the worker reporting that it started before `nativeMessaging` was
- * granted: the API bindings a context holds are fixed when that context is created, so this worker
- * cannot reach the app however often it is asked, and only its replacement can.
+ * `unbound`: the worker started before `nativeMessaging` was granted, and a context's API bindings
+ * are fixed at creation, so only a replacement worker can reach the app.
  */
 export enum CompanionAnswer {
   read = "read",
   silent = "silent",
   unbound = "unbound",
-  /** The app is installed - it answered - but it has been quit, so it is not reading anything. */
+  /** Installed - it answered - but quit. */
   notRunning = "notRunning",
-  /** The app read fine and Edge has written nothing of this kind, which is a browser setting away. */
+  /** Edge has written nothing of this kind, which is a browser setting away. */
   nothingToRead = "nothingToRead"
 }
 
 type CompanionResult = {
   answer: CompanionAnswer;
-  /** Raw records of whatever was asked for, and only when the answer is `read`. */
+  /** Only filled when the answer is `read`. */
   records: unknown[];
 };
 
 /**
- * How an attempt to finish a prompt off at its destination ended. `refused` is the browser turning
- * the host down outright and is worth remembering; `failed` is anything else - a tab closed before
- * the script got there - and is worth forgetting, since the next click may well work.
+ * `refused` is the browser turning the host down outright and is remembered; `failed` (say, the tab
+ * closed first) is forgotten, since the next click may well work.
  */
 export enum ComposeOutcome {
   composed = "composed",
@@ -47,22 +40,17 @@ export enum ComposeOutcome {
   failed = "failed"
 }
 
-/** Whether the reader is going somewhere or being taken there - a card opens, a search follows. */
 export enum TabDisposition {
   current = "current",
   new = "new"
 }
 
-/** A prompt that still needs sending once its tab is there, and the site that knows how. */
 export type ComposeRequest = {
   siteId: ComposeSiteId;
   prompt: string;
 };
 
-/**
- * Every question the protocol can be asked. The name is the wire contract between the context that
- * asks and the one that answers, so it is spelled once here rather than at each end of every call.
- */
+/** The values are the wire contract between the context that asks and the one that answers. */
 export enum MessageType {
   getTopSites = "getTopSites",
   searchWithDefaultEngine = "searchWithDefaultEngine",
@@ -76,15 +64,11 @@ type ProtocolMap = {
   [MessageType.getTopSites](): TopSite[];
   [MessageType.searchWithDefaultEngine](text: string): void;
   [MessageType.readCompanion](request: CompanionRequest): CompanionResult;
-  /** Told to every open new tab by the worker, the moment the app's watch hears it start. */
+  /** Sent to every open new tab the moment the app's watch hears it start. */
   [MessageType.companionStarted](): void;
   /**
-   * Go to a destination, and where `compose` says so, finish the prompt off once there. Only the
-   * background can do the second half, since only it may inject - and it says how that went, which
-   * is the only way to find out short of asking a browser to tell the truth about itself.
-   *
-   * A page navigating its own tab is gone before the answer arrives, which is why a refusal is
-   * remembered here rather than handed back for the caller to remember.
+   * Only the background may inject, so it finishes the compose. A refusal is remembered there rather
+   * than by the caller, since a page navigating its own tab is gone before the answer arrives.
    */
   [MessageType.openPromptTarget](request: {
     url: string;
@@ -92,8 +76,8 @@ type ProtocolMap = {
     compose: ComposeRequest | null;
   }): ComposeOutcome | null;
   /**
-   * Asked by the script injected into that tab, and answered by which tab asked - so the prompt is
-   * never written anywhere it would have to be cleaned up from, and is only ever collected once.
+   * Answered by which tab asked, so the prompt is never written anywhere that needs cleaning up and
+   * is collected only once.
    */
   [MessageType.takeComposeRequest](): ComposeRequest | null;
 };

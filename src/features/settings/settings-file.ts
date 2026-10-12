@@ -4,28 +4,18 @@ import { BackgroundMediaType } from "@/lib/storage/schema";
 import { allSettings, settings } from "@/lib/storage/settings.svelte";
 import { z } from "@/lib/zod";
 
-/**
- * Export and import of the whole settings blob.
- *
- * Both walk the `settings` object rather than listing keys, so a setting added there is carried by
- * both without a second edit - the drift the original's two hand-written 21-key lists invited. The
- * shape each one may take is the setting's own schema, which is what a file is checked against.
- */
+// Export and import both walk `allSettings` rather than listing keys, so a new setting needs no
+// second edit here.
 
 export const SETTINGS_FILE_STEM = "Cyberpunk-settings";
 
 export const INVALID_SETTINGS_FILE = "Invalid settings file";
 
-/**
- * A settings file is a stranger's JSON, so nothing goes in unverified. Every key is optional: a file
- * written before a setting existed still imports, and one written by a newer build loses only the
- * keys this one has never heard of.
- */
+/** Every key is optional, so older files still import and newer ones lose only unknown keys. */
 const snapshotSchema = z.object(
   Object.fromEntries(Object.entries(allSettings).map(([key, setting]) => [key, setting.schema.optional()]))
 );
 
-/** Every setting as one object - what a file holds, and what the browser account holds. */
 export function settingsSnapshot() {
   const snapshot: Record<string, unknown> = {};
   for (const [key, setting] of Object.entries(allSettings)) {
@@ -41,7 +31,7 @@ export function settingsSnapshot() {
   return snapshotSchema.parse(snapshot);
 }
 
-/** A file is indented: it is the copy a reader may open. */
+/** Indented, since a person may open the file. */
 export function exportSettings() {
   return JSON.stringify(settingsSnapshot(), null, 2);
 }
@@ -56,27 +46,25 @@ function readJson(json: string) {
   }
 }
 
-/** The first thing wrong with the file, named, because "invalid" alone says nothing to fix. */
-function problem(error: z.ZodError) {
+function firstIssueError(error: z.ZodError) {
   const path = error.issues[0]?.path.join(".");
 
   return new Error(path ? `${INVALID_SETTINGS_FILE} - ${path} does not look right` : INVALID_SETTINGS_FILE);
 }
 
 /**
- * All or nothing: the whole file is checked before a single setting moves, so a bad key leaves the
- * page as it was rather than half imported. It resolves once every value is in storage, because the
- * page reloads on the other side of this call and a write still in flight would not survive it.
+ * All or nothing: the whole file is validated before any setting moves. Resolves only once every
+ * value is stored, because the caller reloads the page and an in-flight write would not survive it.
  */
 export async function importSettings(json: string) {
   const parsed = snapshotSchema.safeParse(readJson(json));
   if (!parsed.success) {
-    throw problem(parsed.error);
+    throw firstIssueError(parsed.error);
   }
 
-  const arriving = Object.entries(allSettings)
+  const pendingWrites = Object.entries(allSettings)
     .filter(([key]) => parsed.data[key] !== undefined)
     .map(([key, setting]) => setting.set(parsed.data[key]));
 
-  await Promise.all(arriving);
+  await Promise.all(pendingWrites);
 }

@@ -12,7 +12,7 @@
 </script>
 
 <PanelSection title="Sound">
-  <!-- Turning them on is the one click that can answer for itself, so it does. -->
+  <!-- The tick previews the sound being turned on. -->
   <ToggleOption
     iconOff={iconVolumeOff}
     iconOn={iconVolume}

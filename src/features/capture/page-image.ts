@@ -1,74 +1,37 @@
 /**
- * The page as a PNG, drawn with nothing but the platform.
+ * The page re-rendered as a PNG through an SVG `foreignObject`, the way `html-to-image` does it.
  *
- * `captureVisibleTab` would hand back the compositor's own output and be perfect, and it cannot be
- * used: it needs `<all_urls>` or `activeTab`, and neither is reachable from a button inside the
- * extension's own page - `activeTab` is granted only when the extension is invoked from outside it,
- * and `permissions.request` for `<all_urls>` never resolves here at all, measured with and without a
- * toolbar action to anchor its prompt.
+ * `captureVisibleTab` cannot be used: `activeTab` is only granted when invoked from outside the
+ * extension's page, and `permissions.request` for `<all_urls>` never resolves here (measured).
  *
- * So the page is re-rendered instead, the way `html-to-image` does it and for the same reason, but
- * written here rather than taken as a dependency. The whole trick is that SVG can carry HTML:
- * a `foreignObject` holding a copy of the DOM is a picture the browser will draw onto a canvas.
- *
- * Two things it cannot reproduce, both worth knowing rather than discovering:
- *
- * - `backdrop-filter` does not apply inside `foreignObject`, so the blur behind a panel is missing
- *   from the picture. Two rules in this app use it.
- * - Anything the copy cannot reach becomes nothing: a cross-origin image with no CORS headers is
- *   dropped rather than drawn, because tainting the canvas would make it unreadable.
+ * Known gaps: `backdrop-filter` does not apply inside `foreignObject`, and a cross-origin image
+ * without CORS headers is dropped, since it would taint the canvas.
  */
 
-/** A copy is only as good as the styles carried with it, and computed styles are the only complete set. */
 const PSEUDO_ELEMENTS = ["::before", "::after"] as const;
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
 const XHTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
 
-/** Where the generated pseudo-element rules are hung, since inline styles cannot express them. */
 const PSEUDO_CLASS_PREFIX = "capture-pseudo-";
 
 /**
- * The logical half of the box model, left out because the physical half is already in.
- *
- * `getComputedStyle` resolves both spellings of every edge: `margin-block-end` and `margin-bottom`
- * come back as the same `16px`. Writing both puts two declarations for one edge in a single block,
- * and the CSSOM regroups them into shorthands where the last one written wins. Measured on this
- * page: `margin-block: 0px 16px;` followed by `margin-block: 0px;`, and every netlink section lost
- * the 16px beneath it - the copy stacked four sections 64px tighter than the page it was of.
- *
- * The physical value is the resolved one, whatever the writing mode, so it is the one worth
- * keeping. Forty-four properties go, and every one of them has a twin that stays.
+ * Skipped because the physical twin is already copied. Writing both made the CSSOM regroup them into
+ * shorthands where the last one won, and margins were lost (measured: `margin-block: 0px 16px;`
+ * then `margin-block: 0px;`).
  */
 const LOGICAL_BOX_PROPERTY = /(^|-)(block|inline)(-|$)/u;
 
 /**
- * The one resolved value that changes meaning when it is written back.
- *
- * `getComputedStyle` resolves `height: auto` to the pixels the box ended up being, and writing those
- * pixels back makes it a specified height - which is not the same box. An auto-height box lets its
- * last child's bottom margin collapse out through it; a box with a height traps it. Measured: every
- * netlink section's 16px sat stuck inside its wrapper, and the copy stacked four sections 48px
- * tighter than the page it was a copy of.
- *
- * Leaving it out costs nothing, because the copy carries everything that decided the height in the
- * first place: measured across all 165 elements on this page, every one came back the exact height
- * it had.
+ * A resolved `height: auto` written back as pixels stops the last child's margin collapsing through
+ * the box. Leaving it out still reproduces every element's height exactly (measured).
  */
 const COLLAPSE_BLOCKING_PROPERTY = "height";
 
-/**
- * What the reader raised over the page, which is not the page.
- *
- * `foreignObject` has no top layer, so a copied dialog would come back as an ordinary block in the
- * flow - out of position, without its backdrop, sitting on the very thing it was raised above. It
- * would not be wanted even if it landed correctly: the panel someone pressed a button in is not
- * part of the picture they asked for.
- */
+/** `foreignObject` has no top layer, so a copied dialog would land in the flow - and it is not wanted anyway. */
 const TOP_LAYER_SELECTOR = "dialog[open], :popover-open";
 
-/** Every longhand, so nothing rests on whether the shorthand happens to serialise back out. */
 const BACKGROUND_PROPERTIES = [
   "background-color",
   "background-image",
@@ -80,7 +43,6 @@ const BACKGROUND_PROPERTIES = [
   "background-clip"
 ] as const;
 
-/** A blank frame is worth more than a broken picture, so a source that will not load is dropped. */
 const TRANSPARENT_PIXEL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
@@ -119,13 +81,13 @@ export async function capturePage() {
 
   const svg = buildSvg({
     body: clone,
-    ground: takeBackground(clone),
+    backgroundDeclarations: takeBackground(clone),
     pseudoRules,
     width,
     height
   });
 
-  return draw({
+  return drawToPng({
     svg,
     width,
     height,
@@ -133,19 +95,14 @@ export async function capturePage() {
   });
 }
 
-/**
- * Every computed property, written onto the copy as an inline style.
- *
- * Verbose and the only complete answer: the copy is torn out of the document, so no stylesheet
- * reaches it and anything not written down here is simply lost.
- */
+/** No stylesheet reaches the detached copy, so every computed property is inlined. */
 function copyStyles({ originals, clones, pseudoRules }: {
   originals: HTMLElement[];
   clones: HTMLElement[];
   pseudoRules: string[];
 }) {
-  for (const [index, original] of originals.entries()) {
-    const clone = clones[index];
+  for (const [i, original] of originals.entries()) {
+    const clone = clones[i];
     if (!clone) {
       continue;
     }
@@ -154,17 +111,17 @@ function copyStyles({ originals, clones, pseudoRules }: {
     collectPseudoRules({
       original,
       clone,
-      index,
+      iElement: i,
       pseudoRules
     });
   }
 }
 
 /** A pseudo-element has no node to carry a style attribute, so it gets a class and a real rule. */
-function collectPseudoRules({ original, clone, index, pseudoRules }: {
+function collectPseudoRules({ original, clone, iElement, pseudoRules }: {
   original: HTMLElement;
   clone: HTMLElement;
-  index: number;
+  iElement: number;
   pseudoRules: string[];
 }) {
   for (const pseudo of PSEUDO_ELEMENTS) {
@@ -174,29 +131,16 @@ function collectPseudoRules({ original, clone, index, pseudoRules }: {
       continue;
     }
 
-    const className = `${PSEUDO_CLASS_PREFIX}${index}`;
+    const className = `${PSEUDO_CLASS_PREFIX}${iElement}`;
     clone.classList.add(className);
     pseudoRules.push(`.${className}${pseudo}{${declarationsOf(style)}}`);
   }
 }
 
 /**
- * The copy moved under the window, so the picture is the part of the page being looked at.
- *
- * A `foreignObject` does not scroll. The copy is laid out from the document's origin, so a page
- * scrolled halfway down was photographed from the top - the right page, the wrong part of it. What
- * cannot be scrolled is offset instead.
- *
- * Placed rather than transformed, deliberately: a transform would make the copy the containing
- * block for everything `fixed` inside it, and the wallpaper, the widget panel and the corner
- * buttons would slide up with the flow rather than staying against the window, which is the one
- * thing `fixed` is for. Absolute positioning leaves them to the window and stands in for the
- * document origin that everything absolute inside was measured from.
- *
- * These two edges only hold because `LOGICAL_BOX_PROPERTY` keeps `inset-block-start` and
- * `inset-inline-start` out of the copy. While both spellings were written, the logical pair sat
- * later in the block at `0px` and quietly overruled this, and the picture came back at the top of
- * the page however far down the reader was.
+ * A `foreignObject` does not scroll, so the copy is offset instead. Positioned rather than
+ * transformed: a transform would become the containing block for every `fixed` element inside.
+ * This relies on `LOGICAL_BOX_PROPERTY` keeping the logical insets, which would overrule it, out.
  */
 function alignToScroll({ clone, scrollX, scrollY }: {
   clone: HTMLElement;
@@ -209,18 +153,15 @@ function alignToScroll({ clone, scrollX, scrollY }: {
 }
 
 /**
- * Asked of the original rather than the copy, and answered after the styles are on.
- *
- * `:popover-open` is a live state rather than an attribute, so a copy torn out of the document
- * cannot answer it - only the element still in the page knows. And `copyStyles` assigns `cssText`
- * whole, which would wipe anything written before it.
+ * Asks the original, since `:popover-open` is live state a detached copy cannot answer. Runs after
+ * `copyStyles`, whose whole-`cssText` assignment would wipe this.
  */
 function hideTopLayer({ originals, clones }: {
   originals: HTMLElement[];
   clones: HTMLElement[];
 }) {
-  for (const [index, original] of originals.entries()) {
-    const clone = clones[index];
+  for (const [i, original] of originals.entries()) {
+    const clone = clones[i];
     const isRaised = original.matches(TOP_LAYER_SELECTOR);
     if (clone && isRaised) {
       clone.style.display = "none";
@@ -229,15 +170,8 @@ function hideTopLayer({ originals, clones }: {
 }
 
 /**
- * A computed style written out as declarations, because `cssText` on one is empty.
- *
- * Measured here on 2026-09-08: reading `getComputedStyle(element).cssText` gives back an empty
- * string for every element on the page - a computed declaration is not serializable that way, and a
- * copy relying on it carries no styling whatsoever. The properties have to be walked and written by
- * hand, which is what every library that does this ends up doing.
- *
- * Built as one string and assigned once, rather than a `setProperty` per property: this runs for
- * every element on the page, and there are a few hundred properties each.
+ * `getComputedStyle(element).cssText` is empty (measured), so the properties are walked by hand -
+ * into one string rather than a `setProperty` each, since this runs for every element.
  */
 function declarationsOf(style: CSSStyleDeclaration) {
   let declarations = "";
@@ -251,13 +185,6 @@ function declarationsOf(style: CSSStyleDeclaration) {
   return declarations;
 }
 
-/**
- * Sources the copy cannot reach on its own, turned into data it carries.
- *
- * A video is the interesting one: it has no `src` a picture can use, so the frame on screen right
- * now is drawn to a canvas and the element becomes an image of that frame, keeping the styles that
- * positioned it.
- */
 async function inlineMedia({ originals, clones }: {
   originals: HTMLElement[];
   clones: HTMLElement[];
@@ -268,23 +195,22 @@ async function inlineMedia({ originals, clones }: {
     ...[...(clone?.querySelectorAll("img") ?? [])].map(async image => {
       image.src = await asDataUrl(image.src);
     }),
-    ...originals.map(async (original, index) => inlineBackground({
+    ...originals.map(async (original, i) => inlineBackground({
       original,
-      clone: clones[index]
+      clone: clones[i]
     }))
   ]);
 }
 
 function replaceVideo(video: HTMLVideoElement) {
-  const live = [...document.querySelectorAll("video")].find(candidate => candidate.src === video.src);
+  const liveVideo = [...document.querySelectorAll("video")].find(candidate => candidate.src === video.src);
   const image = document.createElement("img");
   image.style.cssText = video.style.cssText;
-  image.src = live ? frameOf(live) : TRANSPARENT_PIXEL;
+  image.src = liveVideo ? currentFrameOf(liveVideo) : TRANSPARENT_PIXEL;
   video.replaceWith(image);
 }
 
-/** The frame on screen, which is the only part of a video a still picture can hold. */
-function frameOf(video: HTMLVideoElement) {
+function currentFrameOf(video: HTMLVideoElement) {
   const canvas = document.createElement("canvas");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -293,24 +219,12 @@ function frameOf(video: HTMLVideoElement) {
   return canvas.toDataURL("image/png");
 }
 
-/**
- * Built fresh on every call rather than shared.
- *
- * A global regular expression carries a `lastIndex` between uses, and this one is asked about every
- * element on the page at once - a shared instance has its position moved by whichever call is
- * running, and matches go missing. Measured: the page background silently stopped being found.
- */
+/** Fresh per call: a shared global regex carries `lastIndex` across concurrent calls and drops matches. */
 function urlPattern() {
   return /url\(["']?(?<source>blob:[^"')]+|https?:[^"')]+)["']?\)/gu;
 }
 
-/**
- * Read from the original's computed style rather than back off the copy.
- *
- * The copy's own `background-image` is whatever survived being written into `cssText` alongside
- * three hundred other properties, and that round trip is the part that was quietly losing the page
- * background. The computed value is the one the browser resolved, and it is always there to read.
- */
+/** Read from the original: the copy's `background-image` round trip through `cssText` was losing it. */
 async function inlineBackground({ original, clone }: {
   original: HTMLElement;
   clone: HTMLElement | undefined;
@@ -326,11 +240,10 @@ async function inlineBackground({ original, clone }: {
   }
 
   const inlined = await Promise.all(sources.map(async source => asDataUrl(source)));
-  let index = 0;
-  clone.style.backgroundImage = backgroundImage.replace(urlPattern(), () => `url("${inlined[index++]}")`);
+  let iSource = 0;
+  clone.style.backgroundImage = backgroundImage.replace(urlPattern(), () => `url("${inlined[iSource++]}")`);
 }
 
-/** Already-inlined sources are left alone, which is most of them - this app's CSS icons are data URIs. */
 async function asDataUrl(source: string) {
   if (!source || source.startsWith("data:")) {
     return source || TRANSPARENT_PIXEL;
@@ -351,16 +264,8 @@ async function asDataUrl(source: string) {
 }
 
 /**
- * The copy's background, taken off it so the SVG can paint it instead.
- *
- * A browser hands the body's background to the canvas, which is painted before anything the page
- * draws - including the `z-index: -2` layer this app puts its wallpaper on. Inside a `foreignObject`
- * the body is an ordinary box instead, so the same declaration paints in the flow and buries every
- * negative layer under it. Measured: an opaque `rgb(0, 12, 20)` swallowed the wallpaper whole, and
- * the picture came back a flat dark rectangle with the interface floating on it.
- *
- * The SVG element is painted before its own content, which is exactly what the canvas is, so the
- * declaration moves there and the copy gives it up.
+ * Moved from the body onto the SVG: inside a `foreignObject` the body's background paints in the flow
+ * and buries the negative-z-index wallpaper, rather than going to the canvas (measured).
  */
 function takeBackground(clone: HTMLElement) {
   let declarations = "";
@@ -372,16 +277,10 @@ function takeBackground(clone: HTMLElement) {
   return declarations;
 }
 
-/**
- * The copy wrapped in the one SVG element that will hold HTML.
- *
- * Built through the DOM rather than written as a string, so the markup is well formed by
- * construction - `foreignObject` is XML, and an unclosed tag the HTML parser forgave is an error
- * there.
- */
-function buildSvg({ body, ground, pseudoRules, width, height }: {
+/** Built through the DOM so the markup is well-formed XML, which `foreignObject` requires. */
+function buildSvg({ body, backgroundDeclarations, pseudoRules, width, height }: {
   body: HTMLElement;
-  ground: string;
+  backgroundDeclarations: string;
   pseudoRules: string[];
   width: number;
   height: number;
@@ -389,7 +288,7 @@ function buildSvg({ body, ground, pseudoRules, width, height }: {
   const svg = document.createElementNS(SVG_NAMESPACE, "svg");
   svg.setAttribute("width", String(width));
   svg.setAttribute("height", String(height));
-  svg.style.cssText = ground;
+  svg.style.cssText = backgroundDeclarations;
 
   const frame = document.createElementNS(SVG_NAMESPACE, "foreignObject");
   frame.setAttribute("x", "0");
@@ -407,7 +306,7 @@ function buildSvg({ body, ground, pseudoRules, width, height }: {
   return new XMLSerializer().serializeToString(svg);
 }
 
-async function draw({ svg, width, height, scale }: {
+async function drawToPng({ svg, width, height, scale }: {
   svg: string;
   width: number;
   height: number;
@@ -422,14 +321,14 @@ async function draw({ svg, width, height, scale }: {
     throw new Error("this browser gave no 2d context to draw into");
   }
 
-  const image = await load(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
+  const image = await loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
   context.scale(scale, scale);
   context.drawImage(image, 0, 0, width, height);
 
   return canvas.toDataURL("image/png");
 }
 
-function load(source: string) {
+function loadImage(source: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
     image.addEventListener("load", () => resolve(image));

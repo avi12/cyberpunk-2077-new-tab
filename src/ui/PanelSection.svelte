@@ -56,13 +56,8 @@
     }
 
     /*
-     * The chevron is the section's own state, so it turns into it rather than swapping glyph.
-     *
-     * Two things about where this rule sits. It cannot nest inside the `::after` above: `&` there
-     * would stand for a selector that ends in a pseudo-element, and `:is()`, which is what nesting
-     * desugars `&` to, refuses those - the selector would simply never match. And `open` is the
-     * browser's to set rather than the markup's, so the compiler cannot see it and prunes the rule
-     * as unused unless the attribute is spelt out as global.
+     * Cannot nest inside `::after`: nesting desugars `&` to `:is()`, which never matches a
+     * pseudo-element. `open` is set by the browser, so it must be global or the compiler prunes it.
      */
     .section:global([open]) &::after {
       rotate: 45deg;

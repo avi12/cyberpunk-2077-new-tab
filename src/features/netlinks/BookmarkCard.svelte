@@ -1,11 +1,6 @@
 <script lang="ts" module>
-  /**
-   * Outside edit mode a card is a plain link, and the browser drags it: it carries the URL, and it
-   * hands the cursor a snapshot of whatever it started from - here, the whole card. A card sliding
-   * under the pointer is what edit mode's own drag looks like, so this one leaves the cursor bare
-   * and lets the browser's own drop feedback speak instead. `setDragImage` still needs something to
-   * draw, and a transparent pixel draws nothing.
-   */
+  // Dragging a plain link would otherwise slide a snapshot of the card under the pointer, which is
+  // what edit mode's drag looks like - so the browser's own drop feedback speaks instead
   const BLANK_DRAG_IMAGE = new Image();
   BLANK_DRAG_IMAGE.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 </script>
@@ -31,21 +26,12 @@
     onEdit: (bookmark: Bookmark) => void;
   } = $props();
 
-  /*
-   * Named after the link they act on, not after their icon. Tabbing a grid of cards otherwise reads
-   * as "edit bookmark, delete bookmark" over and over with nothing saying which one is in hand, and
-   * the tooltip says the same words as the accessible name rather than a second, shorter story.
-   */
+  // Named after the link, or tabbing the grid reads "edit, delete" with nothing saying which card
   const editLabel = $derived(`Edit ${bookmark.title}`);
   const deleteLabel = $derived(`Delete ${bookmark.title}`);
 
-  /*
-   * The form holds a link to this shape on the way in, but storage is older than the form is: a
-   * bookmark saved by an earlier build, or restored from a settings file one exported, arrives typed
-   * as a link and having been asked nothing. A `javascript:` URL in an `href` is the reader's own
-   * page handing a stranger the keys, so the card checks rather than trusts, and one it cannot vouch
-   * for is drawn without a destination instead of carrying an unread one to three places.
-   */
+  // Rechecked although the form validates: a bookmark from an older build or an imported file was
+  // never asked, and a `javascript:` URL in an `href` would run on the reader's own page
   const openableUrl = $derived.by(() => {
     const isOpenable = openableUrlSchema.safeParse(bookmark.url).success;
     if (!isOpenable) {
@@ -57,10 +43,6 @@
 </script>
 
 <li class="card-slot view-item" data-sortable-id={bookmark.id}>
-  <!-- A card is a link, and the browser already knows what to do with one - follow it, open it in a
-       new tab, offer it a context menu - so none of that is written out here. Only while the section
-       is being arranged is it something else, a thing being moved, and only then is the press taken
-       off it. -->
   <a
     class="card glitch-border hover-glitch-host"
     class:is-editing={isEditing}
@@ -119,26 +101,17 @@
     background: var(--cp-surface);
     text-align: center;
 
-    /* Arrow keys move between cards, so a card reached that way answers the way a hovered one does. */
     &:is(:hover, :focus-visible) {
       border-color: var(--cp-accent);
     }
 
-    /*
-     * That answer - the lit border and the label's tear - is the whole focus indicator, so the ring
-     * on top of it would be a second one. Transparent rather than `none`, the way every other control
-     * on the page drops its ring, so a forced-colours mode still draws one.
-     */
+    /* The lit border is the focus indicator. Transparent rather than `none`, so forced colours still draw a ring */
     &:focus-visible {
       outline: 2px solid transparent;
       outline-offset: 2px;
     }
 
-    /*
-     * In edit mode the card is a drag handle rather than a link: its text must not be selectable
-     * under the pointer, and there is nothing to aim at, so it drops back to the page's arrow -
-     * which is also what keeps it quiet, since a link only speaks while it is one.
-     */
+    /* A drag handle in edit mode, not a link */
     &.is-editing {
       cursor: var(--cp-cursor);
       user-select: none;
@@ -177,12 +150,7 @@
   }
 
   .card__action {
-    /*
-     * A card lights its own border when focused, but a bare glyph has no box to light - so focus
-     * draws one around it. Only the colour: the page's own reset already gives every button a 2px
-     * outline at a 2px offset and holds it transparent, so this only paints that ring in
-     * whatever colour the control is currently wearing.
-     */
+    /* A bare glyph has no box to light, so focus paints in the ring the page's reset holds transparent */
     &:focus-visible {
       outline-color: currentColor;
     }

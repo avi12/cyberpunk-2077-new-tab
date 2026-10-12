@@ -1,13 +1,11 @@
 import { z } from "@/lib/zod";
 
 /**
- * Everything the reader brings in themselves lives in IndexedDB rather than extension storage: a
- * background runs to tens of megabytes, and `storage.local` is neither meant for nor sized for
- * binary data. The setting that points at one holds a sentinel - `cached:image` - instead of a URL.
+ * Uploads live in IndexedDB: a background runs to tens of megabytes, which `storage.local` is not
+ * sized for. The setting pointing at one holds a `cached:` sentinel instead of a URL.
  *
- * One record per slot, and a slot's id is the record's key, so it is the persisted contract. The
- * background keeps the id the original extension used, so an existing user's upload survives the
- * rebuild.
+ * A slot's id is its record key, so it is a persisted contract - `background-media` is the original
+ * extension's id, which keeps existing uploads alive.
  */
 
 const DB_NAME = "terminal-startpage";
@@ -20,34 +18,29 @@ export enum MediaSlot {
 
 export const CACHED_PREFIX = "cached:";
 
-/**
- * A stored record, on the way back out. Only the blob and the slot it was filed under are insisted
- * on: the store is the original extension's, and a record older than everything else here is no
- * reason to hand back nothing.
- */
+/** Only the blob and the slot are required: the store is the original extension's, and older records lack the rest. */
 const mediaRecordSchema = z.object({
   id: z.enum(MediaSlot),
   blob: z.instanceof(Blob),
   type: z.string().optional(),
-  /** What the file was called when it came in, which is the only way to name it back at the reader. */
   name: z.string().optional(),
   timestamp: z.number().optional()
 });
 
 type MediaRecord = z.infer<typeof mediaRecordSchema>;
 
-let openDb: IDBDatabase | null = null;
+let openedDatabase: IDBDatabase | null = null;
 
-async function getDb() {
-  if (openDb) {
-    return openDb;
+async function getDatabase() {
+  if (openedDatabase) {
+    return openedDatabase;
   }
 
   return new Promise<IDBDatabase>((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onerror = () => reject(request.error);
     request.onsuccess = () => {
-      openDb = request.result;
+      openedDatabase = request.result;
       resolve(request.result);
     };
     request.onupgradeneeded = () => {
@@ -62,7 +55,7 @@ async function runRequest<TResult>({ mode, run }: {
   mode: IDBTransactionMode;
   run: (store: IDBObjectStore) => IDBRequest<TResult>;
 }) {
-  const database = await getDb();
+  const database = await getDatabase();
 
   return new Promise<TResult>((resolve, reject) => {
     const request = run(database.transaction([STORE_NAME], mode).objectStore(STORE_NAME));

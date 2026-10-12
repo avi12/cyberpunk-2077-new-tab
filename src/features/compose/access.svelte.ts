@@ -4,33 +4,19 @@ import { requestAccessTogether } from "@/lib/permissions";
 import { composeRefusalsItem } from "@/lib/storage/items";
 
 /**
- * Whether a prompt can be finished off at a site, which decides what submitting does. Two things
- * have to be true: the reader allowed the site, and the browser did not refuse the script outright.
- *
- * The refusal is discovered rather than predicted: a browser or an enterprise policy can refuse
- * every extension a host however the permission was come by, and trying is the only way to find out.
- * No host is named here, so one that starts refusing - or stops - needs no code change.
+ * A site needs both the reader's grant and the browser not refusing the script. Refusals are
+ * discovered by trying, since a browser or enterprise policy can block a host regardless of grants.
  */
 class ComposeAccess {
-  /**
-   * Undefined for a site until the browser has been asked about it. Acting on a `false` that only
-   * means "not looked yet" would ask everyone who had already allowed the site all over again, so
-   * anything that reads this waits for an actual answer.
-   */
+  /** Undefined until the browser has answered, so "not checked yet" is never mistaken for `false` */
   granted = $state<Partial<Record<ComposeSiteId, boolean>>>({});
 
   refused = $state<ComposeSiteId[]>([]);
 
-  /** The one answer to act on; asking its two halves separately is how they drift apart. */
   canCompose(siteId: ComposeSiteId) {
     return this.granted[siteId] === true && !this.refused.includes(siteId);
   }
 
-  /**
-   * Whether asking about a site could still change anything: not already handed over, and not one
-   * the browser refuses to script however it is answered. Said here rather than at each press, so a
-   * pick and a card's hand-off cannot disagree about when there is a question worth raising.
-   */
   isWorthAsking(siteId: ComposeSiteId) {
     return this.granted[siteId] !== true && !this.refused.includes(siteId);
   }
@@ -46,7 +32,7 @@ class ComposeAccess {
     this.refused = refused;
   }
 
-  /** Only ever called straight out of a click: a permission prompt needs the gesture that asked. */
+  /** Only call straight from a click: a permission prompt needs the user gesture */
   async allow(siteId: ComposeSiteId) {
     const isGranted = await requestComposeAccess(siteId);
     this.granted = {
@@ -57,7 +43,6 @@ class ComposeAccess {
     return isGranted;
   }
 
-  /** What this site would have to be handed over as, or nothing where asking could change nothing. */
   accessWorthAsking(siteId: ComposeSiteId | null) {
     if (siteId === null || !this.isWorthAsking(siteId)) {
       return null;
@@ -67,15 +52,8 @@ class ComposeAccess {
   }
 
   /**
-   * Everything one press needs handed over, in the one dialog a press is worth.
-   *
-   * `also` is whatever else the same press has to ask for - the reader's own browsing, where the
-   * prompt sends some of it ahead of the question - and it travels here rather than being asked for
-   * on its own because a press only pays for one question. Asking twice leaves the second refused
-   * before it is drawn, and a prompt that needed a script to arrive lands in an empty box instead.
-   *
-   * Read back rather than returned: the grants are what the rest of the hand-off goes on, and this
-   * is the one place that knows they have just changed.
+   * `also` joins the same dialog because one press only buys one: the gesture expires while the
+   * first dialog is read, so a second request would be refused.
    */
   async allowAlongside({ siteId, also = null }: {
     siteId: ComposeSiteId | null;

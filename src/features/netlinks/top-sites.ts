@@ -7,19 +7,14 @@ import type { Bookmark } from "@/lib/storage/schema";
 import { openableUrlSchema } from "@/lib/url";
 import { z } from "@/lib/zod";
 
-/**
- * What a browser calls a top site is not all somewhere a card can go: `chrome://` pages and pinned
- * search shortcuts share the list, and a link a card carries is held to one shape wherever it comes
- * from. An entry that fails drops on its own rather than costing the whole seed, which is offered
- * once and never again.
- */
+// Top sites include `chrome://` pages and pinned search shortcuts. Each entry is checked on its own,
+// so one bad entry never costs the whole one-time seed
 const seedableSiteSchema = z.object({
   title: z.string(),
   url: openableUrlSchema
 });
 
-/** The netlinks a browser's own list is worth, written where the page will read them back. */
-async function bookmarksFromTopSites() {
+async function storeBookmarksFromTopSites() {
   const sites = await sendMessage(MessageType.getTopSites, undefined).catch(() => null);
   const seedable = sites?.filter(site => seedableSiteSchema.safeParse(site).success) ?? [];
   if (!seedable.length) {
@@ -58,14 +53,10 @@ export async function seedBookmarksFromTopSites() {
     return null;
   }
 
-  return bookmarksFromTopSites();
+  return storeBookmarksFromTopSites();
 }
 
-/**
- * The same seed, asked for rather than taken. The automatic one is spent on the first run and never
- * offered again, so a grid the reader has since emptied has no way of filling itself - and an empty
- * grid is the only place this is offered from.
- */
+// The automatic seed runs only once, so an emptied grid offers this to fill itself again
 export async function importTopSites() {
-  return bookmarksFromTopSites();
+  return storeBookmarksFromTopSites();
 }

@@ -16,7 +16,6 @@
     onCancel
   }: {
     bookmarkToEdit: Bookmark | null;
-    /** The section the card sits in: it decides the link's category, and seeds the icon. */
     category: string;
     onSubmit: (draft: Omit<Bookmark, "id">) => void;
     onCancel: () => void;
@@ -28,7 +27,6 @@
   const TITLE_LABEL = "Title";
   const URL_LABEL = "URL";
 
-  /** An add form and an edit form can sit in the same grid, so each one labels its own fields. */
   const instanceId = $props.id();
   const urlFieldId = `${instanceId}-url`;
   const titleFieldId = `${instanceId}-title`;
@@ -40,7 +38,6 @@
   let elUrl: HTMLInputElement | undefined;
 
   const normalizedUrl = $derived(normalizeUrl(url));
-  /** Nothing to pick by hand: the link decides its own glyph from what is in the fields. */
   const icon = $derived(pickIcon({
     url: normalizedUrl,
     title,
@@ -53,20 +50,15 @@
 
     return "Add link";
   });
-  /**
-   * The form is the way into storage, so it is where a link is held to the shape everything openable
-   * is held to. `normalizeUrl` reads `localhost:3000` and `javascript:alert(1)` as already carrying a
-   * scheme and leaves both alone, so a card that could never open, or would open something nobody
-   * asked for, is one blank field and one Enter away without this.
-   */
+  // `normalizeUrl` treats `localhost:3000` and `javascript:alert(1)` as already having a scheme
   const isUrlOpenable = $derived(openableUrlSchema.safeParse(normalizedUrl).success);
-  /** The form suppresses the browser's own required bubble, so the field has to say it itself. */
+  // `novalidate` suppresses the browser's own required bubble, so the field has to show it
   const isUrlRejected = $derived(hasTriedSubmit && !isUrlOpenable);
 
   function focusUrl(elField: HTMLInputElement) {
     elUrl = elField;
     elField.focus();
-    // Focus leaves the caret at the end, which scrolls a long URL past its own host name.
+    // Focus leaves the caret at the end, which scrolls a long URL past its own host name
     elField.scrollLeft = 0;
   }
 
@@ -166,8 +158,7 @@
 </form>
 
 <style>
-  /* Shaped like a bookmark card, because it is the card being written - and no taller, so
-     opening it never moves the row. */
+  /* No taller than a bookmark card, so opening it never moves the row */
   .link-card {
     display: flex;
     flex-direction: column;
@@ -207,7 +198,6 @@
     }
   }
 
-  /* The title field previews the card's own centred title; a URL is long, so it reads from the left. */
   .link-card__field--title {
     text-align: center;
   }

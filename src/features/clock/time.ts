@@ -1,10 +1,6 @@
 import { HourCycle } from "@/lib/storage/schema";
 
-/**
- * Intl decides how a time reads - whether there is a day period, what it is called and where it
- * sits, how the hour is padded, what separates it from the minute - so nothing here spells any of
- * that out. Built once because the clock reformats every second.
- */
+/** Built once because the clock reformats every second. */
 const TIME_PARTS: Intl.DateTimeFormatOptions = {
   hour: "numeric",
   minute: "2-digit"
@@ -12,11 +8,7 @@ const TIME_PARTS: Intl.DateTimeFormatOptions = {
 
 const TIME_FORMAT = new Intl.DateTimeFormat(undefined, TIME_PARTS);
 
-/**
- * The same format with the clock the reader asked for rather than the one their locale assumes.
- * Only the cycle is overridden: everything else about how the time reads is still the locale's,
- * which is why a 12-hour Hebrew clock still says the Hebrew day period.
- */
+/** Only the cycle is overridden, so a 12-hour Hebrew clock still says the Hebrew day period. */
 const TIME_FORMATS: Record<HourCycle, Intl.DateTimeFormat> = {
   [HourCycle.hour12]: new Intl.DateTimeFormat(undefined, {
     ...TIME_PARTS,
@@ -28,7 +20,6 @@ const TIME_FORMATS: Record<HourCycle, Intl.DateTimeFormat> = {
   })
 };
 
-/** Which of the two the locale reads as, so the first press is the one that visibly changes it. */
 export function localeHourCycle() {
   return TIME_FORMAT.resolvedOptions().hour12 ? HourCycle.hour12 : HourCycle.hour24;
 }
@@ -40,7 +31,6 @@ const DATE_FORMAT = new Intl.DateTimeFormat(undefined, {
   day: "numeric"
 });
 
-/** A moment that has already passed, spelled out: the reader's locale decides how much of it shows. */
 const TIMESTAMP_FORMAT = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
   timeStyle: "short"

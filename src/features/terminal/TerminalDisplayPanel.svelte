@@ -42,7 +42,6 @@
         <WeatherSourceSection />
       {/if}
 
-
       <PanelSection title="Scan Lines">
         <OptionGroup
           label="Scan line mode"
@@ -99,37 +98,25 @@
   }
 
   /*
-   * A popover, so Escape and light dismiss come from the browser instead of a document listener.
    * `anchor()` insets rather than `position-area`: the latter aligns safely, so a panel this tall
-   * would slide down over the button it belongs to instead of overflowing. The cap is what keeps it
-   * on screen - the viewport minus everything below the panel - so it scrolls rather than spills.
+   * would slide down over its button instead of overflowing. `max-height` makes it scroll instead.
    */
   .terminal__popup {
     /*
-     * Closed is the base state and it is nothing at all: no height, and no block padding or border
-     * either, or the panel would sit there as a 36px bar waiting to grow. `display` and `overlay`
-     * transition discretely so the panel is still there to watch on the way out.
+     * Closed has no block padding or border either, or it would sit there as a 36px bar.
      *
-     * The roll is a single grid row from `0fr` to `1fr` rather than a height from `0` to `auto`,
-     * because Firefox has no `interpolate-size` and so cannot animate towards `auto` at all - the
-     * panel arrived fully open in one frame there. Measured: 0 -> 480 of its 516 on the first frame
-     * before this, and an eased ramp after. A `1fr` row is its content's height, which is the thing
-     * `auto` was here for and still not a number this file could name.
+     * A grid row rolls `0fr` -> `1fr` because Firefox has no `interpolate-size` and cannot animate
+     * a height towards `auto` - the panel arrived fully open in one frame there.
      *
-     * A panel that is a scroll container while it grows is one its own contents overflow for those
-     * 200ms, so the scrollbar appears for the roll and goes again. It is taken away for exactly as
-     * long as the panel is moving: `scrollbar-width` flips discretely, held back by the length of
-     * the roll on the way open and by nothing at all on the way shut, since a transition reads its
-     * timing from the state being moved into. Only the closed value is spelt here - open belongs
-     * to `.scrollbar-cyberpunk`, which is where this panel gets its scrollbar from.
+     * Contents overflow the panel while it grows, so the scrollbar is hidden for exactly the roll:
+     * delayed by its length on the way open, immediate on the way shut. The open value comes from
+     * `.scrollbar-cyberpunk`.
      */
     --terminal-roll-property: grid-template-rows;
 
     /*
-     * Fixed, not absolute. In the top layer an absolutely positioned box still resolves its insets
-     * against the initial containing block, which does not move with the page - so on a scrolled
-     * page the panel rose by exactly `scrollY` and left a gap between itself and the button it
-     * belongs to. The button is inside a fixed container and never scrolls; neither should this.
+     * Fixed, not absolute: in the top layer an absolute box resolves its insets against the initial
+     * containing block, so on a scrolled page the panel rose by `scrollY` away from its button.
      */
     position: fixed;
     inset: auto;
@@ -156,10 +143,8 @@
       overlay 200ms allow-discrete;
 
     /*
-     * Named apart from the button it belongs to, because an open popover is painted in the top
-     * layer rather than inside its own ancestor - which left it in the root snapshot, and so washed
-     * out through every root cross-fade the page ran underneath it. A name of its own makes it a
-     * group, and a group whose two snapshots are the same holds still.
+     * A top-layer popover is otherwise left in the root snapshot and washes out through every root
+     * cross-fade; a group of its own with identical snapshots holds still.
      */
     view-transition-name: terminal-panel;
     position-anchor: --terminal-display-button;
@@ -179,10 +164,8 @@
   }
 
   /*
-   * Spelt out at the top level rather than nested inside the rule above, which is the shape the
-   * documentation shows and which silently does nothing: the entry style is resolved before the
-   * panel is open, so a rule nested under `:popover-open` does not match, and a transition with
-   * nothing to start from does not run. Verified in Chrome 152 against all three forms.
+   * Top level, not nested under `:popover-open` as documented: the entry style resolves before the
+   * panel is open, so the nested form silently never matches. Verified in Chrome 152.
    */
   @starting-style {
     .terminal__popup:popover-open {
@@ -198,10 +181,7 @@
     min-height: 0;
   }
 
-  /*
-   * Chromium keeps the height it always rolled on - see `PanelSection.svelte` for why a real length
-   * is preferred to a fraction wherever `auto` can be animated towards at all.
-   */
+  /* Chromium rolls a real height - see `PanelSection.svelte` for why it beats a fraction. */
   @supports (interpolate-size: allow-keywords) {
     @starting-style {
       .terminal__popup:popover-open {
@@ -209,7 +189,6 @@
       }
     }
 
-    /* Only the property that rolls differs; the list it sits in is written once above. */
     .terminal__popup {
       --terminal-roll-property: height;
 

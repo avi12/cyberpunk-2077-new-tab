@@ -5,24 +5,12 @@ import { withViewTransition } from "./view-transition";
 import { tick } from "svelte";
 
 /**
- * One pointer-driven reorder engine, shared by the category list, each category's bookmark grid and
- * the widget list. It replaces the original's `@dnd-kit`: those three are the only drag targets in
- * the app, and they need reordering and nothing else.
+ * Geometry is snapshotted once at lift, so the landing slot is decided against a layout that is not
+ * itself moving, and the order is written once on release rather than on every crossing - which is
+ * what made the old engine stutter under the pointer.
  *
- * A press lifts the item out of the flow, the siblings slide aside to open the slot it will land
- * in, and on release the lifted item springs from wherever it was let go into that slot before the
- * new order is committed. Geometry is snapshotted once at lift, so the landing slot is always
- * decided against a layout that is not itself moving, and the order is written once at the end
- * rather than on every crossing - which is what made the old engine stutter under the pointer.
- *
- * Containers naming the same `group` hand items to each other: a lift measures all of them, the
- * pointer picks whichever one it is over, and a release in a foreign container reports a move
- * instead of a reorder.
- *
- * Pointer events only, so mouse, pen and touch behave the same. The engine stamps
- * `touch-action: none` on whatever starts a drag - the handle, or the item itself when there is no
- * handle - so a touch-drag reorders instead of scrolling the page; it owns that because it is the
- * only place that knows which element that is, and it lifts the stamp again while disabled.
+ * The engine stamps `touch-action: none` on whatever starts a drag, so a touch-drag reorders instead
+ * of scrolling; only it knows which element that is.
  */
 
 export type SortableMove = {
@@ -37,7 +25,7 @@ export type SortableOptions = {
   onReorder: (ids: string[]) => void;
   /** Containers naming the same group hand items to each other. */
   group?: string;
-  /** What this container answers to inside its group - it comes back on a move. */
+  /** Comes back on a move as `fromKey` or `toKey`. */
   groupKey?: string;
   onMove?: (move: SortableMove) => void;
   handle?: string;
@@ -86,14 +74,12 @@ const ACTIVATION_DISTANCE = 8;
 const SIBLING_SLIDE_MS = 240;
 const SETTLE_MS = 300;
 
-/** The siblings slide on the app's emphasized curve; the lifted item lands with a little overshoot. */
 const SLIDE_EASE = "cubic-bezier(0.2, 0, 0, 1)";
 const SETTLE_EASE = "cubic-bezier(0.34, 1.35, 0.5, 1)";
 
 const LIFTED_Z_INDEX = "999";
 const SHIELD_Z_INDEX = "998";
 
-/** Every mounted container, by group, so a lift can measure the ones it might be dropped into. */
 const GROUPS = new Map<string, Set<Member>>();
 
 function centerOf(slot: Slot) {
@@ -123,7 +109,7 @@ function slotOf({ id, element }: {
   };
 }
 
-function measure(member: Member) {
+function measureBoard(member: Member) {
   const slots: Slot[] = [];
   let spare: Slot | null = null;
 
@@ -166,7 +152,6 @@ function measure(member: Member) {
   };
 }
 
-/** The nearest element holding every board, so a lifted item is raised only as far as it needs. */
 function commonAncestor(nodes: HTMLElement[]) {
   let ancestor: HTMLElement | null = null;
   for (const node of nodes) {
@@ -238,15 +223,15 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
   function snapshot() {
     const group = GROUPS.get(current.group ?? "") ?? new Set<Member>();
     const peers = [...group].filter(peer => peer.node !== node && !peer.read().disabled);
-    const own = measure(member);
-    boards = [own, ...peers.map(measure)];
+    const own = measureBoard(member);
+    boards = [own, ...peers.map(measureBoard)];
     source = own;
     target = own;
     fromIndex = own.ids.indexOf(draggedId);
     toIndex = fromIndex;
   }
 
-  /** A transparent sheet under the lifted item, so the drag owns every surface it passes over. */
+  /** Transparent, so the drag owns every surface it passes over. */
   function raiseShield() {
     elShield = document.createElement("div");
     elShield.style.position = "fixed";
@@ -311,7 +296,6 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     slot.element.getBoundingClientRect();
   }
 
-  /** Open the gap the item would land in: every other sibling takes the slot it would then sit in. */
   function reflow(before: number) {
     if (!source) {
       return;
@@ -333,7 +317,6 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     }
   }
 
-  /** The source as it will look without the card: everything after it steps back one. */
   function closeSource() {
     if (!source) {
       return;
@@ -352,7 +335,6 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     }
   }
 
-  /** The same gap in a list the item is only visiting: everything from `before` steps along one. */
   function openGap({ board, before }: {
     board: Board;
     before: number;
@@ -579,7 +561,6 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     return target.slots[toIndex] ?? target.spare ?? source.slots[fromIndex] ?? null;
   }
 
-  /** Spring from the release point into the open slot, then commit once it has settled. */
   function settle(isCancelled: boolean) {
     const dragged = source?.slots[fromIndex];
     const landing = landingSlot(isCancelled);

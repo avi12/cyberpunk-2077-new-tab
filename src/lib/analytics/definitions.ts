@@ -1,14 +1,9 @@
 /**
- * The whole vocabulary this extension may send, written down once.
- *
- * GA4 keeps a custom event parameter out of every report until it is registered as a custom
- * dimension on the property, and a property allows only 50 event-scoped and 25 user-scoped ones. So
- * the names here are deliberately few and reused across events: the event name is what qualifies a
- * value, which is what keeps one `action` dimension useful everywhere rather than a bespoke
- * parameter per event that would land nowhere.
+ * GA4 only reports a parameter registered as a custom dimension, capped at 50 event-scoped and 25
+ * user-scoped per property - so parameter names are few and reused, and the event name qualifies them.
  */
 
-/** What happened. One name per thing worth counting, and nothing that names a person or a page. */
+/** Nothing here may name a person or a page. */
 export enum AnalyticsEvent {
   newTabOpened = "new_tab_opened",
   searchSubmitted = "search_submitted",
@@ -18,13 +13,8 @@ export enum AnalyticsEvent {
 }
 
 /**
- * What `AnalyticsParam.action` may say: one value per control in the page, and the only thing a
- * press ever reports.
- *
- * A control names itself here rather than being described from what it renders. The alternative was
- * reading the label off the element, and this exists because of what that would have sent: a netlink
- * is labelled with a site the reader chose and a category with a word they typed, and neither is
- * ours to count. A name that is not in this list cannot leave the page.
+ * A control names itself from this list rather than being described by its label, which may be a
+ * site or word the reader chose. A name not in this list cannot leave the page.
  */
 export enum AnalyticsAction {
   /* Page furniture */

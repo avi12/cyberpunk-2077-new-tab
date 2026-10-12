@@ -11,7 +11,6 @@
   const FALLBACK_SWATCH = "#00ffff";
   const DEFAULT_CUSTOM_COLOR = "#003333";
 
-  /** One wording for the hint and the accessible name, so the two cannot drift apart. */
   const CLOSE_PICKER_LABEL = "Close custom color";
   const HUE_MAX = 360;
   const DARKNESS_MAX = 100;
@@ -30,12 +29,7 @@
     return FALLBACK_SWATCH;
   });
 
-  /**
-   * The hue on its own, which is what the spectrum slider is choosing - full value, so it is the
-   * colour directly under the thumb rather than the darkened one further down the panel. Darkness
-   * has its own slider and `swatch` is where that lands.
-   */
-  const hueSwatch = $derived(hsvToHex({
+  const pureHueSwatch = $derived(hsvToHex({
     hue,
     saturation: 1,
     value: 1
@@ -86,11 +80,6 @@
     selected={background} />
 
   <div class="custom-color-picker">
-    <!--
-      A `<details>` rather than a button and an `{#if}`: this is a disclosure, so the state, the
-      keyboard and the expanded/collapsed announcement all come from the element, and `.disclosure`
-      rolls it open and shut the way every section in this panel already does.
-    -->
     <details class="disclosure" bind:open={isPickerOpen}>
       <summary class="picker__row picker__summary disclosure__gap" data-analytics={AnalyticsAction.colorPickerToggled}>
         <span class="cyber-row-label">Custom Color</span>
@@ -102,7 +91,7 @@
           <label class="cyber-slider-label">
             <span>Color Spectrum</span>
             <input
-              style:--cp-thumb={hueSwatch}
+              style:--cp-thumb={pureHueSwatch}
               class="cyber-color-slider"
               max={HUE_MAX}
               min="0"
@@ -127,7 +116,6 @@
               type="range"
               value={darkness} />
           </label>
-          <!-- A form rather than a key handler: Enter is what submits one, and the browser says so. -->
           <form
             class="picker__hex"
             novalidate
@@ -177,10 +165,6 @@
     align-items: center;
   }
 
-  /*
-   * `display: flex` from `picker__row` already takes the marker off in both engines; `list-style`
-   * says so out loud rather than leaving the triangle's absence resting on a layout mode.
-   */
   .picker__summary {
     list-style: none;
   }
@@ -218,15 +202,9 @@
     outline: none;
 
     /*
-     * The one place this codebase writes an engine's own pseudo-element, and it is written twice.
-     *
-     * A range thumb has no standard selector in either engine, and `accent-color` is not the way
-     * out: it only tints a control that still has its native appearance, and taking `appearance`
-     * back hands the track to the browser - measured, and the hue spectrum disappears behind a
-     * plain fill, which is the one thing this slider exists to show.
-     *
-     * Two rules rather than a selector list. A list holding a pseudo-element the engine does not
-     * know is invalid whole, so pairing these would drop the thumb on both.
+     * No standard thumb selector exists, and `accent-color` needs the native appearance, which
+     * replaces the hue track with a plain fill. Two rules, not a list: a list holding a
+     * pseudo-element the engine does not know is invalid whole.
      */
     &::-webkit-slider-thumb {
       appearance: none;
@@ -247,11 +225,7 @@
     }
   }
 
-  /*
-   * No thumb offset on either of these. There was one here - `margin-top: 0.75rem` on the spectrum's
-   * Chromium thumb - and it was what pushed that thumb off the middle of its own track: both engines
-   * already centre a thumb against the track, so the nudge could only ever move it away from centre.
-   */
+  /* No thumb margin offset: both engines already centre the thumb on its track. */
   .cyber-color-slider {
     background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
   }

@@ -16,7 +16,6 @@
     onCancel: () => void;
   } = $props();
 
-  /** A rename form and the add form can be open together, so each one labels its own field. */
   const nameFieldId = $props.id();
 
   const isCyan = $derived(variant === "cyan");

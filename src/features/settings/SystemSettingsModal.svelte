@@ -41,8 +41,7 @@
     void backupTakenAtMs().then(takenAt => (backupAtMs = takenAt));
   });
 
-  /** What went wrong, in the words that named it - "invalid" on its own says nothing to fix. */
-  function report(e: unknown) {
+  function showError(e: unknown) {
     error = e instanceof Error ? e.message : INVALID_SETTINGS_FILE;
   }
 
@@ -51,7 +50,7 @@
       await importSettings(await file.text());
       location.reload();
     } catch (e) {
-      report(e);
+      showError(e);
     }
   }
 
@@ -64,11 +63,8 @@
     await importFrom(file);
   }
 
-  /**
-   * A file dropped before the warning has been read waits behind it rather than landing straight in
-   * storage. Dropping it once the warning is on screen is the answer to it, so that one goes in.
-   */
-  async function importWaiting() {
+  /** A file dropped before the overwrite warning was shown waits for this confirmation. */
+  async function importWaitingFile() {
     if (!waitingFile) {
       return;
     }
@@ -84,7 +80,7 @@
         type: "application/json"
       });
     } catch (e) {
-      report(e);
+      showError(e);
     }
   }
 
@@ -94,7 +90,7 @@
       backupAtMs = await keepBackup();
       error = "";
     } catch (e) {
-      report(e);
+      showError(e);
     } finally {
       isWorking = false;
     }
@@ -106,7 +102,7 @@
       await restoreBackup();
       location.reload();
     } catch (e) {
-      report(e);
+      showError(e);
       isWorking = false;
     }
   }
@@ -144,7 +140,7 @@
         <button
           class="cyber-button cyber-button--primary cyber-button--action"
           data-analytics={AnalyticsAction.settingsImported}
-          onclick={() => void importWaiting()}
+          onclick={() => void importWaitingFile()}
           type="button">
           {@html iconUpload}
           Import {waitingFile.name}

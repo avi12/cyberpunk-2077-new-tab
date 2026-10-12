@@ -37,11 +37,6 @@
 
   const preferences = $derived(settings.displayPreferences.current);
 
-  /**
-   * Both card families come through the one app, so the one line about reaching it is shared. Only
-   * Edge files a journey or a tip under a profile, so only Edge is ever shown either - the reader's
-   * own switch decides the rest.
-   */
   const isUsingCompanion = $derived(isCopilotShowing(preferences));
   const greetingText = $derived.by(() => {
     void greetingTick;
@@ -52,12 +47,8 @@
   $effect(() => {
     void (async () => {
       await loadSettings();
-      /*
-       * Plainly, and not inside a view transition: the settings land in the same few milliseconds
-       * the companion answers in, and a browser runs one transition at a time - a second one
-       * starting skips the first. Dressing this up would cost the journeys section the animation it
-       * needs, for a quote that is only ever moving at all if the reader has turned quotes off.
-       */
+      // Not in a view transition: the companion answers at the same moment, and a second
+      // transition would skip the journeys section's one
       isReady = true;
       const seeded = await seedBookmarksFromTopSites();
       if (seeded) {
@@ -133,16 +124,7 @@
       <Quote glitching={glitchingElement === "showQuotes"} isPending={!isReady} />
     {/if}
 
-    <!--
-      Named targets rather than "not Firefox": Chrome and Edge are the two builds an Edge reader can
-      have installed, and Firefox - the only other build there is - is one the section could only be
-      dead weight in.
-
-      Read here rather than from a named constant, because where it is read is what decides whether
-      it does anything: both flags are replaced by literals before the bundle is built, so the branch
-      folds away and takes the two components with it. Behind an import it would only ever be a
-      runtime `false`, and the section would ship to a browser that can never draw it.
-    -->
+    <!-- Flags read inline so they become literals and the section folds out of the Firefox build -->
     {#if (import.meta.env.CHROME || import.meta.env.EDGE) && isUsingCompanion}
       <CompanionSetup />
       <Copilot glitching={glitchingElement === "showCopilot"} />
@@ -248,7 +230,7 @@
     letter-spacing: 0.05em;
     transition: opacity 200ms;
 
-    /* Kept in the tree while it glitches out, so the animation has something to play on. */
+    /* Kept in the tree while it glitches out, so the animation has something to play on */
     &.is-hidden {
       opacity: 0%;
       pointer-events: none;

@@ -8,35 +8,21 @@ export const MIN_ITEMS = 1;
 export const MAX_ITEMS = 50;
 export const DEFAULT_MAX_ITEMS = 10;
 
-/**
- * The bound belongs to the count, not to the field that happens to edit it: the same number comes
- * back from storage and out of a settings file another build wrote, and neither has been past the
- * spinner.
- */
+/** Storage and imported settings files never went through the spinner's bounds. */
 const maxItemsSchema = z.number().int().min(MIN_ITEMS).max(MAX_ITEMS);
 
-/** A count that is absent, fractional, or past either end is the one the widget ships with. */
 export function readMaxItems(stored: number | undefined) {
   const parsed = maxItemsSchema.safeParse(stored);
 
   return parsed.success ? parsed.data : DEFAULT_MAX_ITEMS;
 }
 
-/**
- * The address is fetched exactly as it was typed, so it is held to the same shape the stories it
- * answers with are held to - and it is held there on the way in, since the field is one way to set
- * it and a settings file is another. An address that is not http(s) is no feed at all.
- */
 export function readFeedUrl(stored: string | undefined) {
   const parsed = openableUrlSchema.safeParse(stored);
 
   return parsed.success ? parsed.data : "";
 }
 
-/**
- * One story, narrowed to the two fields the widget renders. The link goes straight into an `href`,
- * so it is held to the one shape everything openable is held to.
- */
 const feedItemSchema = z.object({
   title: nonEmptyTextSchema,
   link: openableUrlSchema
@@ -48,7 +34,6 @@ function trimmedText(element: Element | null) {
   return element?.textContent?.trim();
 }
 
-/** A story with no headline, or with a link the page must not open, is not a story this can show. */
 function readItem(item: Element) {
   const parsed = feedItemSchema.safeParse({
     title: trimmedText(item.querySelector("title")),
@@ -61,18 +46,14 @@ function readItem(item: Element) {
   return parsed.data;
 }
 
-/** The list is keyed by link, so a feed that repeats one is kept down to its first story. */
+/** The list is keyed by link. */
 function withoutRepeatedLinks(items: FeedItem[]) {
   return items.filter((item, i) => i === items.findIndex(other => other.link === item.link));
 }
 
 /**
- * A stranger's XML, so nothing in it is taken on trust. Every story is validated on its own and a
- * malformed one is dropped rather than failing the read - the whole feed is rejected only when the
- * document is not XML at all, which is the widget's "Feed Error", while a feed left with nothing
- * usable reads as "No items found".
- *
- * `item` is what RSS 0.9x, 1.0 and 2.0 all call a story; Atom's `entry` was never read here either.
+ * Throws only for a document that is not XML ("Feed Error"); a malformed story is dropped instead.
+ * Reads RSS `item`s only - Atom's `entry` is not supported.
  */
 export function parseFeed({ xml, maxItems }: {
   xml: string;

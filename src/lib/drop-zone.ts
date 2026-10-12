@@ -1,17 +1,6 @@
 /**
- * A file handed over by dropping it rather than picked out of a dialog. The zone stamps itself
- * `data-dropping` for as long as a file is over it, so the highlight is the stylesheet's business
- * and no component has to hold that state.
- *
- * `accept` is the same string the file input carries, so what a zone takes is written once and both
- * the dialog and the drop read it from there.
- *
- * A file dropped anywhere else is a file the browser navigates to, which would take the page with
- * it - so for as long as a zone is on screen, the document swallows the drops that miss.
- *
- * An attachment rather than an action, so a zone whose `accept` changes is rebuilt on the spot: the
- * listeners are four and the state is a counter, and nothing can be mid-drop while the answer to
- * what a zone takes is changing.
+ * A file dropped outside a zone would navigate the page away, so while any zone is mounted the
+ * document swallows the drops that miss.
  */
 
 type DropZoneOptions = {
@@ -83,7 +72,7 @@ export function dropZone({ accept, onFile }: DropZoneOptions) {
     // `dragleave` fires for every child the pointer crosses, so the depth is what says it has left.
     let depth = 0;
 
-    function mark(isOver: boolean) {
+    function markDropping(isOver: boolean) {
       node.toggleAttribute(DROPPING_ATTRIBUTE, isOver);
     }
 
@@ -93,7 +82,7 @@ export function dropZone({ accept, onFile }: DropZoneOptions) {
       }
 
       depth += 1;
-      mark(true);
+      markDropping(true);
     }
 
     function onDragOver(e: DragEvent) {
@@ -119,7 +108,7 @@ export function dropZone({ accept, onFile }: DropZoneOptions) {
 
       if (depth < 1) {
         depth = 0;
-        mark(false);
+        markDropping(false);
       }
     }
 
@@ -127,7 +116,7 @@ export function dropZone({ accept, onFile }: DropZoneOptions) {
       e.preventDefault();
       e.stopPropagation();
       depth = 0;
-      mark(false);
+      markDropping(false);
 
       const file = e.dataTransfer?.files[0];
       if (!file || !isAccepted({

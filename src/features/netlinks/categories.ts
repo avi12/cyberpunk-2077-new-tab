@@ -2,15 +2,11 @@ import type { Bookmark } from "@/lib/storage/schema";
 import { BookmarkCategory } from "@/lib/storage/schema";
 import { settings } from "@/lib/storage/settings.svelte";
 
-/** Category names are normalised to lower case, matching how the original stored them. */
+// Lower case, matching how the original stored category names
 export function normalizeName(name: string) {
   return name.trim().toLowerCase();
 }
 
-/**
- * The one answer to which section a link sits in, so renaming and deleting reach every link the
- * grid shows there: a blank category is filed under `other`, the same place the grid puts it.
- */
 export function categoryOf(bookmark: Bookmark) {
   return bookmark.category || BookmarkCategory.other;
 }

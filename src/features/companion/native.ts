@@ -2,26 +2,16 @@ import { CompanionAnswer, CompanionRequest } from "@/lib/messaging";
 import { z } from "@/lib/zod";
 
 /**
- * The one call that reaches the companion app, and the only reason the background script knows
- * anything about journeys or Copilot tips.
- *
- * It cannot live in the new tab itself: `nativeMessaging` is an optional permission, and the API
- * bindings a page already holds are never refreshed when one is granted - `sendNativeMessage` stays
- * missing there until the page is reloaded. The background worker is torn down and replaced when
- * permissions change, so a worker that starts afterwards always speaks with the permissions the
- * extension actually has.
- *
- * The app is named here and asked here. `watch` opens a port to the same name for the app to speak
- * through unasked, and a name spelled twice is two names the day one of them is changed.
+ * Runs in the background worker, not the new tab: a page's API bindings are never refreshed when an
+ * optional permission is granted, so `sendNativeMessage` stays missing there until a reload. A worker
+ * started after the grant has it.
  */
 export const HOST_NAME = "com.avi12.cyber_journeys";
 
 /**
- * The app says whether it managed the read at all; what it read is filed under the name asked for.
- *
- * Two markers tell apart the ways of failing that look alike from here, and both are proof in
- * themselves that the app is installed, since only the app can send them: `isRunning` says whether
- * the resident half is up, and `hasEdgeData` says the read worked and Edge had written nothing.
+ * The records are filed under the request's name. Either marker proves the app is installed, since
+ * only it can send them: `isRunning` is the resident half being up, and `hasEdgeData` false means
+ * Edge wrote nothing.
  */
 const answerSchema = z.looseObject({
   ok: z.boolean(),
@@ -29,11 +19,8 @@ const answerSchema = z.looseObject({
   hasEdgeData: z.boolean().optional()
 });
 
-/**
- * Which of the three ways of not answering this was. An app too old to carry either marker sends
- * neither, and a missing marker reads as the silence it always did.
- */
-function refusal({ isRunning, hasEdgeData }: z.infer<typeof answerSchema>) {
+/** An app too old to send either marker reads as silent. */
+function refusalAnswer({ isRunning, hasEdgeData }: z.infer<typeof answerSchema>) {
   if (isRunning === false) {
     return CompanionAnswer.notRunning;
   }
@@ -45,17 +32,11 @@ function refusal({ isRunning, hasEdgeData }: z.infer<typeof answerSchema>) {
   return CompanionAnswer.silent;
 }
 
-/**
- * An app older than the request it was handed answers about journeys whatever it was asked, so a
- * missing list is read as an empty one - a companion that says it is fine is not offline, it simply
- * has nothing of that kind to give until it is updated.
- */
+/** An app older than the request answers about journeys whatever it was asked, so a missing list is empty. */
 const recordsSchema = z.array(z.unknown()).catch([]);
 
-/** What the companion said, or which of the two ways of hearing nothing this was. */
 export async function readCompanionRecords(request: CompanionRequest) {
-  // A worker older than the grant holds no binding at all, which is worth telling the page apart
-  // from an app that is simply not installed - only one of the two is fixed by asking again.
+  // A worker older than the grant holds no binding, which asking again fixes - unlike a missing app.
   if (!browser.runtime.sendNativeMessage) {
     return {
       answer: CompanionAnswer.unbound,
@@ -74,7 +55,7 @@ export async function readCompanionRecords(request: CompanionRequest) {
 
   if (!parsed.data.ok) {
     return {
-      answer: refusal(parsed.data),
+      answer: refusalAnswer(parsed.data),
       records: []
     };
   }

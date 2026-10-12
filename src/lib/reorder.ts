@@ -1,8 +1,3 @@
-/**
- * The order arithmetic behind drag-to-reorder, kept away from the DOM so the engine in
- * `sortable.ts` only has to measure geometry and move elements.
- */
-
 export type SlotCenter = {
   x: number;
   y: number;
@@ -24,11 +19,7 @@ export function reorderedIds({ ids, fromIndex, toIndex }: {
   return [...rest.slice(0, toIndex), draggedId, ...rest.slice(toIndex)];
 }
 
-/**
- * Reading order, which is the same question for all three lists: a slot comes first when it sits a
- * row above, and within the same row when it sits to the left. A single column decides on `y`
- * alone and a single row on `x`, so the grid of bookmark cards needs no separate case.
- */
+/** Reading order, which covers a single column, a single row and a grid alike. */
 function isBefore({ slot, dragged }: {
   slot: SlotCenter;
   dragged: SlotCenter;
@@ -46,24 +37,23 @@ function isBefore({ slot, dragged }: {
 }
 
 /**
- * Where the dragged item would land: how many of the *other* slots the pointer has passed. Feeding
- * it the item's current slot rather than the one it started in is what makes the drag sticky - a
- * swapped neighbour holds its new place until the pointer crosses back over its centre.
+ * Passing the item's current slot rather than the one it started in is what makes the drag sticky -
+ * a swapped neighbour holds its new place until the pointer crosses back over its centre.
  */
 export function insertionIndex({ centers, fromIndex, dragged }: {
   centers: SlotCenter[];
   fromIndex: number;
   dragged: SlotCenter;
 }) {
-  let index = 0;
+  let passedSlotCount = 0;
   for (const [position, slot] of centers.entries()) {
     if (position !== fromIndex && isBefore({
       slot,
       dragged
     })) {
-      index += 1;
+      passedSlotCount += 1;
     }
   }
 
-  return index;
+  return passedSlotCount;
 }

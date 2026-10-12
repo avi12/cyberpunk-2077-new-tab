@@ -33,11 +33,8 @@
     bookmarks: Bookmark[];
     isEditing: boolean;
     isCollapsed: boolean;
-    /** True while the grid's ADD LINK tile has become the card being written. */
     isAddingLink: boolean;
-    /** The card in this grid that has become a form, if any. */
     editingBookmarkId: string | null;
-    /** Rendered in the slot the link will occupy, so it is written where it lands. */
     linkForm: Snippet<[string]>;
     onBookmarkOrderChange: (change: {
       category: string;
@@ -58,8 +55,7 @@
   const BOOKMARK_GROUP = "bookmarks";
 
   const ids = $derived(bookmarks.map(bookmark => bookmark.id));
-  /** A card that is being written is not a card to drag, and its neighbours stay put with it. */
-  const isWriting = $derived(isAddingLink || ids.includes(editingBookmarkId ?? ""));
+  const isLinkFormOpen =$derived(isAddingLink || ids.includes(editingBookmarkId ?? ""));
 </script>
 
 <section class="category view-item">
@@ -107,7 +103,7 @@
       class="netlink-grid"
       {@attach sortable(() => ({
         ids,
-        disabled: !isEditing || isWriting,
+        disabled: !isEditing || isLinkFormOpen,
         group: BOOKMARK_GROUP,
         groupKey: category,
         onMove: onBookmarkMove,
@@ -205,12 +201,7 @@
   }
 
   .category__action {
-    /*
-     * A card lights its own border when focused, but a bare glyph has no box to light - so focus
-     * draws one around it. Only the colour: the page's own reset already gives every button a 2px
-     * outline at a 2px offset and holds it transparent, so this only paints that ring in
-     * whatever colour the control is currently wearing.
-     */
+    /* A bare glyph has no box to light, so focus paints in the ring the page's reset holds transparent */
     &:focus-visible {
       outline-color: currentColor;
     }
@@ -237,7 +228,6 @@
     }
   }
 
-  /* Sized like a bookmark card, so the tile reads as the slot the new link will occupy. */
   .category__add {
     display: flex;
     flex-direction: column;

@@ -46,12 +46,8 @@
     }
   }
 
-  /*
-   * The quote is drawn before the stored preference is known, so the space it needs is the page's
-   * from the first frame and nothing below it moves when the setting lands. It is unseen until
-   * then, because a quote the reader has turned off must never flash up first - and if that is what
-   * the setting says, the space it hands back is handed back inside a view transition.
-   */
+  /* Holds its space before the stored preference loads, so nothing below moves, yet stays unseen so a
+     quote that was turned off never flashes up */
   .quote--pending {
     visibility: hidden;
   }

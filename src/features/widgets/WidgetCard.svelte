@@ -2,10 +2,6 @@
   import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { Snippet } from "svelte";
 
-  /**
-   * Three of the four widgets name themselves above their contents, and that header is the same
-   * shape every time: the widget's mark, its name, and the single control it carries.
-   */
   type WidgetCardHeader = {
     icon: string;
     label: string;
@@ -24,7 +20,6 @@
   }: {
     children: Snippet;
     header?: WidgetCardHeader;
-    /** What stands between the name and the control - a count, so far. */
     meta?: Snippet;
   } = $props();
 </script>
@@ -54,7 +49,6 @@
 </article>
 
 <style>
-  /* Every widget is the same bordered panel; only the contents differ. */
   .widget-card {
     padding: 1rem;
     border: 2px solid var(--cp-primary);

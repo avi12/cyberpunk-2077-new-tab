@@ -6,65 +6,43 @@ import { z } from "@/lib/zod";
 import type { Browser } from "wxt/browser";
 
 /**
- * The app saying when Edge has written, rather than the worker asking on a clock.
- *
- * Edge rebuilds journeys on its own schedule - `journeysTriggerIntervalInMinutes` is 240 in its own
- * configuration, and the snapshots on this machine sit 242.5 minutes apart - so anything asking on a
- * timer is either asking far more often than the browser writes or showing a row hours behind it. A
- * port answers that properly: the app watches the files Edge writes and says one word when one of
- * them moves, and the stored row is corrected while nobody is looking at it.
- *
- * `connectNative` is also the one documented way an MV3 worker stays alive - a worker holding a
- * native port is not torn down after its thirty quiet seconds, which is what makes it there to hear
- * this. Nothing else keeps it up: no port, no watch, and the alarm is what covers the gap.
+ * The app watches the files Edge writes and pushes a word when one moves. A native port is also the
+ * documented way to keep an MV3 worker alive past its thirty idle seconds.
  */
 
-/** What the app is asked for - `RequestKind.Watch` on its side, which no read ever answers to. */
+/** `RequestKind.Watch` on the app's side. */
 const WATCH_REQUEST = { kind: "watch" };
 
-/**
- * A push, which is one word: the family that moved. The answer that opens the port says `watching`
- * and not this, and every refusal the app can give a watch - quit, nothing to watch, a word an older
- * build does not know - carries no family either. So a message that does not name one is a message
- * with nothing to do about it, and the disconnect that follows a refusal is what actually matters.
- */
+/** The opening `watching` answer and every refusal name no family, so only this shape is acted on. */
 const changeSchema = z.object({
   changed: z.enum(CompanionRequest)
 });
 
-/**
- * The other push: the app was off and has just been started. A watch asked for while it was off is
- * held open to say exactly this, so an open new tab fills in the moment it happens.
- */
+/** A watch opened while the app was off is held open to say this when it starts. */
 const startSchema = z.object({
   started: z.literal(true)
 });
 
-let held: Browser.runtime.Port | null = null;
+let watchPort: Browser.runtime.Port | null = null;
 
-let connecting: Promise<void> | null = null;
+let pendingConnection: Promise<void> | null = null;
 
 /**
- * The port, opened once and then left alone. Called wherever the app has just been shown to be
- * reachable - the worker starting, a read it answered, the alarm coming round - because every one of
- * those is a moment a watch would work, and it costs nothing where one already stands.
- *
- * An attempt that finds nothing to watch costs a process that exits as it says so, which is why it
- * is only made on those three occasions and never on a disconnect.
+ * Called only where the app was just shown reachable, never on a disconnect: each failed attempt
+ * spawns a process that exits.
  */
 export async function ensureCompanionWatch() {
-  if (held) {
+  if (watchPort) {
     return;
   }
 
-  connecting ??= connect();
-  await connecting;
-  connecting = null;
+  pendingConnection ??= connectWatch();
+  await pendingConnection;
+  pendingConnection = null;
 }
 
-async function connect() {
-  // A worker older than the grant holds no binding to connect with, the same way it holds none to
-  // send with - only its replacement can, and one starts the moment permissions change.
+async function connectWatch() {
+  // A worker older than the grant holds no binding; its replacement starts when permissions change.
   if (!browser.runtime.connectNative) {
     return;
   }
@@ -75,7 +53,7 @@ async function connect() {
   }
 
   const port = browser.runtime.connectNative(HOST_NAME);
-  held = port;
+  watchPort = port;
   port.onMessage.addListener(message => {
     const parsed = changeSchema.safeParse(message);
     if (parsed.success) {
@@ -89,11 +67,8 @@ async function connect() {
       return;
     }
 
-    /*
-     * The host that waited is the build that was running before, so it is let go and a watch is
-     * opened on whatever was just started.
-     */
-    held = null;
+    // The host that waited is the previous build, so a watch is reopened on the one just started.
+    watchPort = null;
     port.disconnect();
     void ensureCompanionWatch();
     void refreshCompanionSnapshots();
@@ -101,17 +76,12 @@ async function connect() {
     void sendMessage(MessageType.companionStarted).catch(() => {});
   });
   /*
-   * Nothing is reconnected on a disconnect. A host with nothing to watch answers and exits - so
-   * reconnecting there is a loop that spawns a process as fast as the app can turn it down. The one
-   * reconnect is the app saying it started, above; otherwise the next read the app answers brings
-   * the watch back, and the alarm brings it back for a browser nobody is opening tabs in.
-   *
-   * Only this port's own going clears the slot, so a disconnect arriving late cannot clear the watch
-   * that replaced it.
+   * Never reconnected here: a host with nothing to watch exits, so it would loop spawning processes.
+   * Only this port clears the slot, so a late disconnect cannot clear the watch that replaced it.
    */
   port.onDisconnect.addListener(() => {
-    if (held === port) {
-      held = null;
+    if (watchPort === port) {
+      watchPort = null;
     }
   });
   port.postMessage(WATCH_REQUEST);

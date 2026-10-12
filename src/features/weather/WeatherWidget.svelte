@@ -34,46 +34,19 @@
   const isAutomatic = $derived(!config.location);
 
   /**
-   * Whether the widget is on a place this machine actually produced, which is not the same thing as
-   * being in automatic mode. Automatic with nothing found is the fallback city on show, and a lit
-   * "follow my location" over Night City claims a fix that does not exist - which on Chromium was
-   * every cold start, since the permission is granted by the manifest and reads `granted` whether
-   * or not the device can place anything.
+   * Not the same as automatic: automatic with nothing found shows the fallback city. Chromium reads
+   * `granted` from the manifest whether or not the device can place anything.
    */
   const isFollowingDevice = $derived(isAutomatic && detected !== null);
   const askedLocation = $derived(config.location ?? detected ?? DEFAULT_WEATHER_LOCATION);
-  /** Unset is celsius, which `!== false` used to say in a way nobody could read at a glance. */
   const isCelsius = $derived(config.temperatureUnit ?? true);
   const unit = $derived(temperatureUnit(isCelsius));
 
-  /**
-   * Whether this machine worked out a real place, which is what a failure is allowed to draw.
-   *
-   * The city used to fall back with the reading, so a reader whose forecast failed was shown Night
-   * City however well the page knew where they were - and then a line blaming the source for having
-   * no forecast for a city it was never asked about. The place is known or it is not, and that
-   * answer does not depend on whether the sky came back.
-   */
   const isPlaceKnown = $derived(askedLocation !== DEFAULT_WEATHER_LOCATION);
 
-  /**
-   * Whether the reader asked for Night City, rather than being left with it.
-   *
-   * The two look identical on the card and could not be more different underneath: one is a setting
-   * they chose and the other is everything having failed. Told apart by the stored location, which
-   * is the only thing that differs - a pinned place is a pick, and its absence is automatic. No
-   * second flag, so the two cannot disagree.
-   */
+  /** Picked rather than fallen back to: a stored location is a pick, its absence is automatic. */
   const isNightCityChosen = $derived(config.location?.name === DEFAULT_WEATHER_LOCATION.name);
 
-  /**
-   * The reason to print under the city, and null for a reading, which has nothing to explain.
-   *
-   * Every refusal has a line now, and one used to have none on purpose: the sky was read off a site
-   * the reader had to hand over, and a card cannot ask for a site, so the one refusal that was a
-   * permission was left wordless rather than sending them somewhere else to act on it. The open API
-   * asks for nothing, so there is no such refusal and the wording covers the whole enum.
-   */
   function refusalWording(answer: WeatherReading | WeatherRefusal) {
     if (!isWeatherRefusal(answer)) {
       return null;
@@ -82,13 +55,7 @@
     return WEATHER_REFUSAL_WORDING[answer];
   }
 
-  /**
-   * The reading to draw, and null where there is none to draw.
-   *
-   * Night City's sky is only for Night City. Over a place this machine actually found, an invented
-   * temperature would be the one thing on the card passing itself off as measured - so the card
-   * says it has no number instead, the way it does while it is still looking.
-   */
+  /** Night City's invented sky is never drawn over a real place, where it would pass as measured. */
   function readingFor(answer: WeatherReading | WeatherRefusal) {
     if (!isWeatherRefusal(answer)) {
       return answer;
@@ -104,18 +71,8 @@
   /** Firefox never sends the Google cookie jar from an extension page - see `google.ts`. */
   const isGoogleReadable = import.meta.env.CHROME || import.meta.env.EDGE;
 
-  /**
-   * No throwing branch, because there is nothing to throw: the source names the way it came up empty
-   * rather than raising, and the card says which.
-   *
-   * Night City is the one place never asked about. It is a fiction with invented coordinates, so a
-   * real forecast for it would be a reading of somewhere that is not there.
-   */
+  /** Google first where it can answer, open-meteo otherwise. Night City's coordinates are invented, so it is never asked about. */
   function readWeather(asked: GeoLocation) {
-    /*
-     * Asked for, so it is an answer rather than the absence of one - and nothing is sent anywhere to
-     * work it out. The sky drifts on the same beat a real forecast is re-read on.
-     */
     if (isNightCityChosen) {
       return Promise.resolve(nightCitySky());
     }
@@ -133,29 +90,16 @@
   }
 
   /**
-   * The reading in flight, held rather than awaited here: the template awaits it, and a block
-   * handed a new promise forgets the one before it. That forgetting is the whole staleness guard,
-   * and it has to exist - every load asks twice, because the widget opens on the fallback and
-   * learns where the reader is a moment later. The first answer used to come back last and paint
-   * over the second, so a city that had just been found wore Night City's sky, which is what made
-   * the location button look like it did nothing.
-   *
-   * It starts on the fallback's own answer, because that is the place the widget opens on.
+   * Held as a promise for the template's `{#await}`, which forgets a replaced promise - that is the
+   * staleness guard, since every load asks twice (fallback first, then the found place) and the first
+   * answer can land last.
    */
   let weather = $state<Promise<WeatherReading | WeatherRefusal>>(readWeather(DEFAULT_WEATHER_LOCATION));
 
   /**
-   * The device is asked before the override is given up, and the override only goes once there is a
-   * fix to put in its place. Clearing first cost a reader whose device cannot place itself - a
-   * hardened browser, a machine with no radios - the coordinates they had typed, and dropped the
-   * widget onto the fallback city on the way.
-   *
-   * `detected` is assigned here rather than left to the read below, which only runs where the
-   * override was the thing being followed until now.
-   *
-   * Whether the panel closes on this is the panel's call and not the widget's: a fix from the
-   * device earns a close and a town from the connection does not, and the panel is the only thing
-   * that knows which of the two came back.
+   * The override is only cleared once there is a fix, so a device that cannot place itself does not
+   * cost the typed coordinates. `detected` is set here because the effect below does not run while an
+   * override was being followed.
    */
   async function followDevice() {
     const answer = await askDeviceLocation();
@@ -217,15 +161,7 @@
     isEditingLocation = true;
   }
 
-  /**
-   * Going off the grid, which is the one pick here that takes something away rather than setting it.
-   *
-   * The caption promises nothing is scanned, traced or sent anywhere, and a remembered fix is a
-   * standing contradiction of that - so it is forgotten rather than merely out-ranked by the city.
-   * The permission the device reads through cannot go with it: the manifest requires that one,
-   * because Chromium refuses to make it optional, and neither browser will drop it. Pinning the city
-   * is what actually stops the reading, since nothing asks the device once it is off automatic.
-   */
+  /** The fix is forgotten, not just out-ranked, since the caption promises nothing is traced. Pinning the city is what stops reading the device. */
   function stayDark() {
     forgetDeviceLocation();
     detected = null;
@@ -263,7 +199,6 @@
         </button>
       </div>
     {:else}
-      <!-- No number rather than an invented one, and no button: there is no reading to flip. -->
       <div class="weather__row">
         <span class="weather__icon weather__icon--loading">{@html iconCloud}</span>
         <p class="weather__temp weather__temp--muted">--{unit}</p>
@@ -332,7 +267,6 @@
     color: var(--cp-primary);
   }
 
-  /* A reason rather than a reading, so it is dimmed the way the panel dims its own notices. */
   .weather__desc--refused {
     color: var(--cp-text-dimmer);
   }

@@ -1,7 +1,7 @@
 <script lang="ts" module>
   const NOTHING_BACKED_UP = "Nothing backed up yet";
 
-  /** The one line both the section and the panel's own restore step show, so they cannot disagree. */
+  /** Shared with each panel's own restore step, so they cannot disagree */
   export function backupState(takenAtMs: number | null) {
     if (takenAtMs === null) {
       return NOTHING_BACKED_UP;
@@ -18,14 +18,7 @@
   import iconSave from "@/assets/icons/save.svg?raw";
   import iconTrash2 from "@/assets/icons/trash2.svg?raw";
 
-  /**
-   * The browser account half of a panel that can back something up: what is stored there, when it
-   * was taken, and the three things a reader can do about it.
-   *
-   * Presentational, and deliberately: the settings panel and the netlinks panel both keep their own
-   * restore step, because in both it replaces the whole panel with a warning first. What is the same
-   * in both - and was written twice before this - is everything below that.
-   */
+  /** Presentational: each panel keeps its own restore step, since it replaces the whole panel with a warning */
   const {
     takenAtMs,
     isWorking = false,
@@ -40,7 +33,6 @@
     onForget: () => void;
   } = $props();
 
-  /** Only ever this section's business: the panel around it never needs to know it was asked. */
   let isConfirmingDelete = $state(false);
 </script>
 

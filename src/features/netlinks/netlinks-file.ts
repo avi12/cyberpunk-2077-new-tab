@@ -3,27 +3,14 @@ import type { Bookmark } from "@/lib/storage/schema";
 import { allSettings, settings } from "@/lib/storage/settings.svelte";
 import { z } from "@/lib/zod";
 
-/**
- * Export and import of the grid on its own, rather than of everything.
- *
- * The settings file already carries the netlinks, because it carries every setting - but it carries
- * a reader's name, where they are, their theme and their wallpaper with them. That is the wrong
- * thing to hand somebody who asked for your links, and the wrong thing to accept from them: an
- * import of the whole file is an import of their identity over yours.
- *
- * So this is the same machinery pointed at four settings instead of all of them. It reads their
- * schemas out of the one registry rather than restating any shape, so a netlink that gains a field
- * is carried here without a second edit.
- */
-
-/** The four settings that are the grid: the cards, the sections, and which sections are shut. */
+// The grid apart from the full settings file, which also carries a reader's name, location, theme
+// and wallpaper - nothing to hand over, or to accept, along with someone's links
 const NETLINK_KEYS = ["bookmarks", "categoryOrder", "customCategories", "collapsedCategories"] as const;
 
 export const NETLINKS_FILE_STEM = "Cyberpunk-netlinks";
 
 export const INVALID_NETLINKS_FILE = "Invalid netlinks file";
 
-/** How an import treats what is already on the page - which is a question only the reader can answer. */
 export enum ImportMode {
   merge = "merge",
   replace = "replace"
@@ -31,22 +18,14 @@ export enum ImportMode {
 
 type NetlinkKey = (typeof NETLINK_KEYS)[number];
 
-/**
- * Derived from the registry rather than written out, so a setting that changes shape changes here
- * too. Every key optional: a file written before one of them existed still imports, and one written
- * by a newer build loses only the keys this one has never heard of.
- */
+// Every key optional, so a file written before one of them existed still imports
 type Netlinks = Partial<{ [Key in NetlinkKey]: (typeof settings)[Key]["current"] }>;
 
-/**
- * The runtime shape comes from the same registry the type does. Annotated rather than inferred
- * because `Object.fromEntries` widens its keys to `string` and takes the shape down with them.
- */
+// Annotated because `Object.fromEntries` widens its keys to `string` and loses the shape
 const netlinksSchema: z.ZodType<Netlinks> = z.object(
   Object.fromEntries(NETLINK_KEYS.map(key => [key, allSettings[key].schema.optional()]))
 );
 
-/** Everything the grid is, as one object - what a file holds, and what the browser account holds. */
 export function netlinksSnapshot() {
   const snapshot: Record<string, unknown> = {};
   for (const key of NETLINK_KEYS) {
@@ -57,7 +36,6 @@ export function netlinksSnapshot() {
   return netlinksSchema.parse(snapshot);
 }
 
-/** A file is indented: it is the copy a reader may open, and may well send to somebody. */
 export function exportNetlinks() {
   return JSON.stringify(netlinksSnapshot(), null, 2);
 }
@@ -66,8 +44,7 @@ export function countNetlinks(snapshot: Netlinks) {
   return snapshot.bookmarks?.length ?? 0;
 }
 
-/** The first thing wrong with the file, named, because "invalid" alone says nothing to fix. */
-function problem(error: z.ZodError) {
+function errorNamingFirstIssue(error: z.ZodError) {
   const path = error.issues[0]?.path.join(".");
 
   return new Error(path ? `${INVALID_NETLINKS_FILE} - ${path} does not look right` : INVALID_NETLINKS_FILE);
@@ -76,7 +53,7 @@ function problem(error: z.ZodError) {
 export function readNetlinksFile(json: string) {
   const parsed = netlinksSchema.safeParse(parseJson(json));
   if (!parsed.success) {
-    throw problem(parsed.error);
+    throw errorNamingFirstIssue(parsed.error);
   }
 
   return parsed.data;
@@ -92,18 +69,11 @@ function parseJson(json: string) {
   }
 }
 
-/**
- * The same link twice is the one thing a merge has to answer for, and the address is what decides it
- * - a title is a label a reader chose and two people will not have chosen the same one.
- *
- * Compared without its trailing slash or its scheme, so a link saved from the address bar and the
- * same link typed by hand do not both land.
- */
-function sameLink(url: string) {
+// Duplicates are decided by address, never by title - a title is a label each reader chose
+function comparableUrl(url: string) {
   return url.replace(/^https?:\/\//u, "").replace(/\/+$/u, "").toLowerCase();
 }
 
-/** An id is only ever a key within one grid, so a collision is renamed rather than refused. */
 function withFreeId({ bookmark, taken }: {
   bookmark: Bookmark;
   taken: Set<string>;
@@ -122,29 +92,28 @@ function mergeBookmarks({ existing, arriving }: {
   existing: Bookmark[];
   arriving: Bookmark[];
 }) {
-  const links = new Set(existing.map(bookmark => sameLink(bookmark.url)));
-  const ids = new Set(existing.map(bookmark => bookmark.id));
+  const takenUrls = new Set(existing.map(bookmark => comparableUrl(bookmark.url)));
+  const takenIds = new Set(existing.map(bookmark => bookmark.id));
   const added: Bookmark[] = [];
 
   for (const bookmark of arriving) {
-    const link = sameLink(bookmark.url);
-    if (links.has(link)) {
+    const url = comparableUrl(bookmark.url);
+    if (takenUrls.has(url)) {
       continue;
     }
 
-    links.add(link);
+    takenUrls.add(url);
     const landing = withFreeId({
       bookmark,
-      taken: ids
+      taken: takenIds
     });
-    ids.add(landing.id);
+    takenIds.add(landing.id);
     added.push(landing);
   }
 
   return [...existing, ...added];
 }
 
-/** Sections keep the order they already had; the ones a file brings are new and go after them. */
 function mergeNames({ existing, arriving }: {
   existing: string[];
   arriving: string[];
@@ -152,13 +121,7 @@ function mergeNames({ existing, arriving }: {
   return [...existing, ...arriving.filter(name => !existing.includes(name))];
 }
 
-/**
- * All or nothing: the file is read and checked before a single setting moves, so a bad key leaves
- * the grid as it was rather than half imported.
- *
- * A merge never removes anything - a link a reader already had wins, and a section they had keeps
- * its place. A replace is the file exactly, which is what restoring your own backup means.
- */
+// The file is fully validated before any setting moves, so a bad key never leaves a half import
 export async function importNetlinks({ json, mode }: {
   json: string;
   mode: ImportMode;

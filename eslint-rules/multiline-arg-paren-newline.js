@@ -9,12 +9,12 @@
  *     })
  *   );
  *
- * Direct callbacks, object literals, and array literals are excluded — they
+ * Direct callbacks, object literals, and array literals are excluded - they
  * conventionally stay inline with the call:
  *
- *   foo({ key: value });        // OK — ObjectExpression
- *   untrack(() => { ... });     // OK — ArrowFunctionExpression
- *   new Promise(resolve => {})  // OK — ArrowFunctionExpression
+ *   foo({ key: value });        // OK - ObjectExpression
+ *   untrack(() => { ... });     // OK - ArrowFunctionExpression
+ *   new Promise(resolve => {})  // OK - ArrowFunctionExpression
  */
 
 const inlineArgumentTypes = new Set([
@@ -60,7 +60,8 @@ export default {
         const firstArg = node.arguments[0];
         const openParen = sourceCode.getTokenBefore(firstArg);
         const lastArg = node.arguments[node.arguments.length - 1];
-        const closeParen = sourceCode.getLastToken(node);        if (!hasMultilineNonLiteralArgument) {
+        const closeParen = sourceCode.getLastToken(node);
+        if (!hasMultilineNonLiteralArgument) {
           const allInlineTypes = node.arguments.every(arg => inlineArgumentTypes.has(getEffectiveType(arg)));
           const hasAnyMultilineArgument = node.arguments.some(arg => arg.loc.start.line !== arg.loc.end.line);
           const isFirstArgOnNewLine = openParen.loc.end.line !== firstArg.loc.start.line;

@@ -1,26 +1,16 @@
 import { settings } from "@/lib/storage/settings.svelte";
 
 /**
- * What a card says back to the cursor.
- *
- * Two voices, taken off the game's own menu and rebuilt from oscillators and filtered noise.
- * Nothing here is CDPR's audio - the numbers below are measurements of it, and an extension that
- * ships no sample cannot ship anyone's sample.
- *
- * The pair is the mouse's pair: `ui_menu_hover` (hash 435721760) and `ui_menu_mouse_click`
- * (142422666). The game also has `ui_menu_onpress`, which is the gamepad and keyboard answer to the
- * same row and a longer, more tonal sound; a page driven by a pointer should say what the game says
- * to a pointer.
+ * The game's mouse menu sounds, `ui_menu_hover` (hash 435721760) and `ui_menu_mouse_click`
+ * (142422666), rebuilt from oscillators and filtered noise. No CDPR audio ships - the numbers below
+ * are measurements of it. Not `ui_menu_onpress`, which is the game's gamepad and keyboard sound.
  *
  * The tick is 68ms and hollow - 145Hz carrying 60% of the energy, a pair at 5672Hz and 5906Hz
- * carrying the rest, and almost nothing in between. The 234Hz gap between the two highs beats
- * about four times across the sound, and that beating is the shimmer. It swells over 12ms rather
- * than striking, so there is no transient in it at all.
+ * carrying the rest. The 234Hz gap between the two highs beats about four times across the sound,
+ * which is the shimmer. It swells over 12ms rather than striking.
  *
- * The click is barely a note at all: 31ms of hash with a spectral flatness of 0.72, flat from 2kHz
- * to the top of the band and falling away below 1kHz, with only an eighth of its energy under
- * 1.5kHz. It has no decay - it comes up over about 6ms and then simply stops. In the game it sits
- * roughly 10dB above the hover, because a click is an event and a hover is weather.
+ * The click is 31ms of hash with a spectral flatness of 0.72, flat from 2kHz up and falling away
+ * below 1kHz. It has no decay - it comes up over about 6ms and then stops.
  */
 
 const MS_PER_SECOND = 1000;
@@ -87,23 +77,21 @@ const CLICK_Q = 1;
  */
 const CLICK_GAIN = 0.28;
 
-/** One buffer of noise, long enough for whichever of the two voices asks for it. */
 const NOISE_MS = 120;
 
-let context: AudioContext | null = null;
-let hiss: AudioBuffer | null = null;
-let lastPlayedMs = 0;
+let sharedAudioContext: AudioContext | null = null;
+let sharedNoiseBuffer: AudioBuffer | null = null;
+let lastTickPlayedMs = 0;
 
 function audioContext() {
-  context ??= new AudioContext();
+  sharedAudioContext ??= new AudioContext();
 
-  return context;
+  return sharedAudioContext;
 }
 
 /**
- * A page nobody has clicked yet is not allowed to make a sound, and a suspended context does not
- * drop what it was asked for - it queues it, and plays the lot at once when it wakes. So the sound
- * is skipped rather than scheduled until the context is actually running.
+ * A suspended context (no click yet) queues what it is asked for and plays the lot at once when it
+ * wakes, so a sound is skipped rather than scheduled until it is running.
  */
 function runningContext() {
   const audio = audioContext();
@@ -116,23 +104,19 @@ function runningContext() {
   return null;
 }
 
-/** The same hiss every time it is asked for: both voices are an envelope over it, not a new noise. */
-function hissBuffer(audio: AudioContext) {
-  if (hiss) {
-    return hiss;
+function noiseBuffer(audio: AudioContext) {
+  if (sharedNoiseBuffer) {
+    return sharedNoiseBuffer;
   }
 
   const length = Math.round(audio.sampleRate * NOISE_MS / MS_PER_SECOND);
-  hiss = audio.createBuffer(1, length, audio.sampleRate);
-  hiss.getChannelData(0).set(Float32Array.from({ length }, () => Math.random() * 2 - 1));
+  sharedNoiseBuffer = audio.createBuffer(1, length, audio.sampleRate);
+  sharedNoiseBuffer.getChannelData(0).set(Float32Array.from({ length }, () => Math.random() * 2 - 1));
 
-  return hiss;
+  return sharedNoiseBuffer;
 }
 
-/**
- * Both voices are the same shape at different settings: fade in, hold, fade out. Linear ramps rather
- * than exponential ones, because what was measured is a swell and a release, not a decay.
- */
+/** Linear ramps rather than exponential, because what was measured is a swell and a release, not a decay. */
 function envelopeFor({
   audio,
   startedAt,
@@ -179,7 +163,7 @@ function playTick(audio: AudioContext) {
     voice.stop(endsAt);
   }
 
-  const bed = new AudioBufferSourceNode(audio, { buffer: hissBuffer(audio) });
+  const bed = new AudioBufferSourceNode(audio, { buffer: noiseBuffer(audio) });
   const band = new BiquadFilterNode(audio, {
     type: "bandpass",
     frequency: TICK_HASH_HZ,
@@ -202,7 +186,7 @@ function playClick(audio: AudioContext) {
     gain: CLICK_GAIN
   });
 
-  const burst = new AudioBufferSourceNode(audio, { buffer: hissBuffer(audio) });
+  const burst = new AudioBufferSourceNode(audio, { buffer: noiseBuffer(audio) });
   const corner = new BiquadFilterNode(audio, {
     type: "highpass",
     frequency: CLICK_HZ,
@@ -213,7 +197,7 @@ function playClick(audio: AudioContext) {
   burst.stop(endsAt);
 }
 
-function audioForSound() {
+function audioIfSoundsEnabled() {
   if (!settings.playSounds.current) {
     return null;
   }
@@ -221,48 +205,38 @@ function audioForSound() {
   return runningContext();
 }
 
-function onHover() {
-  const audio = audioForSound();
+function playHoverTick() {
+  const audio = audioIfSoundsEnabled();
   if (!audio) {
     return;
   }
 
-  const now = performance.now();
-  if (now - lastPlayedMs < REPEAT_GUARD_MS) {
+  const nowMs = performance.now();
+  if (nowMs - lastTickPlayedMs < REPEAT_GUARD_MS) {
     return;
   }
 
-  lastPlayedMs = now;
+  lastTickPlayedMs = nowMs;
   playTick(audio);
 }
 
-/**
- * No repeat guard: a click cannot machine-gun the way a cursor crossing a grid can, and the guard
- * would swallow it anyway - the hover that brought the cursor here fired milliseconds ago.
- */
-function onClick() {
-  const audio = audioForSound();
+/** No repeat guard: it would swallow the click, since the hover that led here fired milliseconds ago. */
+function playPressClick() {
+  const audio = audioIfSoundsEnabled();
   if (audio) {
     playClick(audio);
   }
 }
 
-/**
- * The panel's own preview. A click is exactly the activation a context waits for, so unlike a
- * hover it is worth waiting on the wake-up before playing.
- */
+/** Called from a click, which is the activation a context waits for, so the wake-up is worth awaiting. */
 export async function previewTick() {
   await audioContext().resume();
-  onHover();
+  playHoverTick();
 }
 
-/**
- * The page's own arrow: what everything that cannot be aimed at wears. Only the reticle is themed,
- * so this is read once and holds for the life of the page.
- */
+/** Only the reticle is themed, so the page's resting arrow is read once and holds for the page's life. */
 let restingCursor = "";
 
-/** Whether the page is offering this element the reticle rather than the arrow. */
 function isAimed(element: Element) {
   restingCursor ||= getComputedStyle(document.documentElement).cursor;
 
@@ -270,15 +244,8 @@ function isAimed(element: Element) {
 }
 
 /**
- * The link under the pointer, or nothing at all.
- *
- * Only somewhere to go speaks: a netlink, a source under a Copilot card, the card's own action. A
- * button is a setting rather than a destination - a section that collapses, an icon in the picker,
- * a search engine - and settings are quiet.
- *
- * `closest` is what makes a link one thing to speak for rather than an icon and a label. The cursor
- * is then asked whether it is still a link at all, since a netlink being rearranged is a drag
- * handle written as an anchor, and drops back to the arrow to say so.
+ * Only links speak - buttons are settings, and settings are quiet. The cursor check is there because
+ * a netlink being rearranged is a drag handle written as an anchor, and drops back to the arrow.
  */
 function aimedLink(target: EventTarget | null) {
   if (!(target instanceof Element)) {
@@ -294,43 +261,36 @@ function aimedLink(target: EventTarget | null) {
 }
 
 /**
- * What the page says back to the cursor, said once for the whole page.
- *
- * The game's menu ticks under a target, not under every widget in the pause screen, and here a
- * target is a link. `a[href]` is the whole list, so nothing has to be kept in step by hand as the
- * page grows.
- *
- * `:focus-visible` extends it to the keyboard, and only to the keyboard: it is the browser's own
- * answer to whether the user tabbed here or focus merely landed - restored after a dialog closes,
- * moved by script, or dragged along by the click that is already playing its own sound.
+ * `:focus-visible` limits focus sounds to the keyboard, rather than focus restored after a dialog,
+ * moved by script, or dragged along by a click already playing its own sound.
  */
 export function menuSounds(node: HTMLElement) {
-  /** What the pointer is inside, so crossing a link's padding onto its label says nothing new. */
-  let elLink: Element | null = null;
+  /** Kept so crossing a link's padding onto its label says nothing new. */
+  let elHoveredLink: Element | null = null;
 
   function onPointerOver(e: PointerEvent) {
     const link = aimedLink(e.target);
-    if (link === elLink) {
+    if (link === elHoveredLink) {
       return;
     }
 
-    elLink = link;
+    elHoveredLink = link;
 
     if (link) {
-      onHover();
+      playHoverTick();
     }
   }
 
-  /** Leaving the window, which is the one exit no `pointerover` arrives to describe. */
+  /** Leaving the window is the one exit no `pointerover` arrives to describe. */
   function onPointerOut(e: PointerEvent) {
     if (!e.relatedTarget) {
-      elLink = null;
+      elHoveredLink = null;
     }
   }
 
   function onPointerDown(e: PointerEvent) {
     if (aimedLink(e.target)) {
-      onClick();
+      playPressClick();
     }
   }
 
@@ -339,7 +299,7 @@ export function menuSounds(node: HTMLElement) {
       && e.target.matches(":focus-visible")
       && Boolean(aimedLink(e.target));
     if (isTabbedOntoLink) {
-      onHover();
+      playHoverTick();
     }
   }
 

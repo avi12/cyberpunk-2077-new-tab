@@ -25,8 +25,7 @@
   const TRANSFER_LABEL = "Export, import or back up netlinks";
 
   let isEditing = $state(false);
-  /** The category the link form is open inside, so a link is always added where it will land. */
-  let formCategory = $state<string | null>(null);
+  let linkFormCategory = $state<string | null>(null);
   let bookmarkToEdit = $state<Bookmark | null>(null);
   let renamingCategory = $state<string | null>(null);
   let renameDraft = $state("");
@@ -36,8 +35,7 @@
   let isTransferOpen = $state(false);
 
   const categories = $derived(settings.categoryOrder.current);
-  /** A grid with nothing in it is the only place the browser's own list is worth offering. */
-  const isImportOffered = $derived(settings.bookmarks.current.length === 0);
+  const isGridEmpty = $derived(settings.bookmarks.current.length === 0);
   const byCategory = $derived.by(() => {
     const groups: Record<string, Bookmark[]> = {};
     for (const bookmark of settings.bookmarks.current) {
@@ -49,30 +47,23 @@
     return groups;
   });
   const visibleCategories = $derived(categories.filter(name => isEditing || bookmarksIn(name).length > 0));
-  /**
-   * The section a first link lands in, and null unless the form was opened from the empty grid.
-   *
-   * An empty grid draws no sections, so there is nowhere for the form to be put the way a section
-   * puts it. Editing draws them all again, each with its own way in, so this only ever answers when
-   * there are none to ask.
-   */
+  // An empty grid draws no sections to host the form, so the first link's form is drawn on its own
   const firstLinkCategory = $derived.by(() => {
-    const isAskedFromEmptyGrid = isImportOffered && !isEditing;
+    const isAskedFromEmptyGrid = isGridEmpty && !isEditing;
     if (!isAskedFromEmptyGrid) {
       return null;
     }
 
-    return formCategory;
+    return linkFormCategory;
   });
-  /** Only links the tables recognise, that would land somewhere else, in a section that still exists. */
-  const misfiled = $derived(settings.bookmarks.current.filter(bookmark => filedCategory(bookmark) !== null));
-  const isEverythingFiled = $derived(misfiled.length === 0);
+  const misfiledBookmarks = $derived(settings.bookmarks.current.filter(bookmark => betterFittingCategory(bookmark) !== null));
+  const isEverythingFiled = $derived(misfiledBookmarks.length === 0);
   const sortLabel = $derived.by(() => {
     if (isEverythingFiled) {
       return "Every link already sits in the section that fits it";
     }
 
-    return `Move ${misfiled.length} link(s) into the section that fits`;
+    return `Move ${misfiledBookmarks.length} link(s) into the section that fits`;
   });
   const pendingDeleteCount = $derived.by(() => {
     if (!pendingDelete) {
@@ -82,8 +73,7 @@
     return bookmarksIn(pendingDelete).length;
   });
 
-  /** Where the tables would file a link, or null when they would leave it exactly where it is. */
-  function filedCategory(bookmark: Bookmark) {
+  function betterFittingCategory(bookmark: Bookmark) {
     const category = pickCategory({
       url: bookmark.url,
       title: bookmark.title
@@ -96,13 +86,11 @@
     return category;
   }
 
-  /** A category's own bookmarks, in the order the array already holds them. */
   function bookmarksIn(category: string) {
     return byCategory[category] ?? [];
   }
 
-  /** Rewrite one category, leaving every other category's bookmarks exactly where they were. */
-  function writeCategory({ category, bookmarks }: {
+  function replaceCategoryBookmarks({ category, bookmarks }: {
     category: string;
     bookmarks: Bookmark[];
   }) {
@@ -120,7 +108,7 @@
 
     const landing = bookmarksIn(move.toKey);
     settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.id !== move.id);
-    writeCategory({
+    replaceCategoryBookmarks({
       category: move.toKey,
       bookmarks: [
         ...landing.slice(0, move.toIndex),
@@ -139,7 +127,7 @@
   }) {
     const inCategory = bookmarksIn(category);
 
-    writeCategory({
+    replaceCategoryBookmarks({
       category,
       bookmarks: ids
         .map(id => inCategory.find(bookmark => bookmark.id === id))
@@ -150,7 +138,7 @@
   function sortIntoCategories() {
     withViewTransition(() => {
       settings.bookmarks.current = settings.bookmarks.current.map(bookmark => {
-        const category = filedCategory(bookmark);
+        const category = betterFittingCategory(bookmark);
 
         return category ? {
           ...bookmark,
@@ -160,14 +148,7 @@
     });
   }
 
-  /**
-   * Through a transition, because a card leaving is rarely the only thing that moves.
-   *
-   * The cards after it each slide up a place, and where two rows stood at different heights - one
-   * card's title wrapping to a second line and the next one's not - the row it left resizes, and
-   * everything below the grid moves with it. Every card is a `.view-item`, so the browser morphs
-   * each one from where it was instead of cutting to where it ends up.
-   */
+  // Later cards slide up and rows of wrapped titles resize, so every `.view-item` morphs rather than cuts
   function deleteBookmark(id: string) {
     return withViewTransition(() => {
       settings.bookmarks.current = settings.bookmarks.current.filter(bookmark => bookmark.id !== id);
@@ -175,7 +156,7 @@
   }
 
   function closeForm() {
-    formCategory = null;
+    linkFormCategory = null;
     bookmarkToEdit = null;
   }
 
@@ -272,9 +253,7 @@
     <h2 class="cyber-section-title"><span class="hover-glitch" data-text="NETLINKS">NETLINKS</span></h2>
     <div class="netlinks__controls">
       {#if isEditing}
-        <!-- Named by the same words the hint shows: a `::after` joins the name of the element it
-             hangs off, so a button named by its own text would be read as "SORT" and then the whole
-             sentence over again. -->
+        <!-- The tooltip's `::after` joins the accessible name, so text content alone would read "SORT" plus the hint -->
         <button
           class="netlinks__sort"
           aria-label={sortLabel}
@@ -308,7 +287,7 @@
       disabled: !isEditing,
       handle: ".category__grip",
       onReorder: next => {
-        // Only the visible subset is dragged; hidden categories keep their place at the end.
+        // Only the visible subset is dragged; hidden categories keep their place at the end
         settings.categoryOrder.current = [...next, ...categories.filter(name => !next.includes(name))];
       }
     }))}>
@@ -327,13 +306,13 @@
             bookmarks={bookmarksIn(category)}
             {category}
             editingBookmarkId={bookmarkToEdit?.id ?? null}
-            isAddingLink={formCategory === category}
+            isAddingLink={linkFormCategory === category}
             isCollapsed={settings.collapsedCategories.current[category] ?? false}
             {isEditing}
             {linkForm}
             onAddBookmark={name => {
               bookmarkToEdit = null;
-              formCategory = name;
+              linkFormCategory = name;
             }}
             onBookmarkMove={moveBookmark}
             onBookmarkOrderChange={applyBookmarkOrder}
@@ -352,7 +331,7 @@
 
   {#if firstLinkCategory}
     <div class="netlink-grid">{@render linkForm(firstLinkCategory)}</div>
-  {:else if isImportOffered}
+  {:else if isGridEmpty}
     <p class="netlinks__empty">Nothing saved yet - pull in the sites you visit most, or add your own</p>
     <div class="netlinks__empty-actions">
       <button
@@ -368,14 +347,14 @@
         {@html iconDownload}
         IMPORT MOST VISITED
       </button>
-      <!-- Only where there are no sections: editing draws them all, and each carries its own. -->
+      <!-- Editing draws every section, each with its own add tile -->
       {#if !isEditing}
         <button
           class="netlinks__add-link-button cyber-glass"
           data-analytics={AnalyticsAction.netlinkAddOpened}
           onclick={() => {
             bookmarkToEdit = null;
-            formCategory = SEEDED_CATEGORY;
+            linkFormCategory = SEEDED_CATEGORY;
           }}
           type="button">
           {@html iconPlus}
@@ -487,7 +466,7 @@
       color: var(--cp-secondary-hi);
     }
 
-    /* A bare glyph has no box to light, so focus paints in the ring the page's reset holds ready. */
+    /* A bare glyph has no box to light, so focus paints in the ring the page's reset holds transparent */
     &:focus-visible {
       outline-color: currentColor;
     }
@@ -509,7 +488,6 @@
     text-align: center;
   }
 
-  /* Side by side while both fit, stacked when they do not. A lone button is not a flex item. */
   .netlinks__empty-actions {
     display: flex;
     flex-wrap: wrap;

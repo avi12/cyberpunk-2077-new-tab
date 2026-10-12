@@ -44,11 +44,8 @@ type IconChoice = {
   svg: string;
 };
 
-/**
- * The one list behind both the bookmark icon picker and the tab favicon picker, in the original's
- * order. A bookmark stores the `name`, so these strings are a persisted contract: renaming one
- * orphans every bookmark that used it.
- */
+// Bookmarks store the `name`, so these strings are a persisted contract: renaming one orphans
+// every bookmark that used it
 export const ICON_CHOICES = [
   {
     name: "Default",
@@ -212,13 +209,10 @@ export const ICON_CHOICES = [
   }
 ] as const satisfies readonly IconChoice[];
 
-/** The closed set of stored icon names. */
 export type IconName = (typeof ICON_CHOICES)[number]["name"];
 
-/** The same set as values, for the shapes that will only take a name this build actually ships. */
 export const ICON_NAMES = ICON_CHOICES.map(choice => choice.name);
 
-/** The first choice doubles as the fallback, so what "no icon picked" looks like is decided once. */
 const DEFAULT_CHOICE = ICON_CHOICES[0];
 
 export const DEFAULT_ICON = DEFAULT_CHOICE.name;

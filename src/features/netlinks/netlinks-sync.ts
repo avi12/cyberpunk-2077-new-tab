@@ -1,17 +1,9 @@
 import { ImportMode, importNetlinks, netlinksSnapshot } from "./netlinks-file";
 import { slicedBackup } from "@/lib/storage/sliced-backup";
 
-/**
- * The grid alone, kept in the browser's own sync area, beside the settings backup rather than
- * instead of it.
- *
- * Two backups in one small area, so this one takes the smaller share: the settings snapshot is
- * allowed 80,000 characters of it and this is allowed the rest. That is still far more netlinks than
- * a grid is ever asked to hold - a card costs around 150 characters - and keeping them apart is the
- * point. Restoring your links should not also restore the wallpaper you have since changed.
- */
-
-/** What is left of the area once the settings backup, the keys and the records are counted. */
+// Kept apart from the settings backup so restoring links never restores an old wallpaper too. The
+// sync area is shared: this is what is left after the settings backup's 80,000 characters and the
+// keys - still around a hundred cards at about 150 characters each
 const MAX_SNAPSHOT_LENGTH = 16_000;
 
 const backup = slicedBackup({
@@ -25,14 +17,11 @@ export async function netlinksBackupTakenAtMs() {
 }
 
 export async function keepNetlinksBackup() {
-  // No indenting: every byte of it counts against the area.
+  // No indenting: every byte counts against the sync quota
   return backup.keep(JSON.stringify(netlinksSnapshot()));
 }
 
-/**
- * A restore replaces rather than merges. It is your own grid coming back, and a merge would leave
- * behind whatever you deleted between taking the backup and needing it.
- */
+// Replaces rather than merges, or links deleted since the backup would come back
 export async function restoreNetlinksBackup() {
   await importNetlinks({
     json: await backup.read(),

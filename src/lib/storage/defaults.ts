@@ -10,11 +10,6 @@ import {
 import { ComposeSiteId } from "@/features/compose/sites";
 import type { IconName } from "@/features/netlinks/icons/choices";
 
-/**
- * What every setting starts at, and the fixed lists the panels pick from. The shapes themselves live
- * in `schema.ts` - this file only ever names a value one of them can take.
- */
-
 export type SelectOption<TValue extends string> = {
   value: TValue;
   label: string;
@@ -32,14 +27,7 @@ export const SEEDED_CATEGORY = BookmarkCategory.daily;
 
 export const DEFAULT_BOOKMARKS: Bookmark[] = [];
 
-/**
- * `default` defers to the browser's own configured engine via `chrome.search`; the rest are form
- * targets the page posts to.
- *
- * Each is named the way the product names itself, rather than trimmed to a width. The original
- * padded two of these with trailing spaces to keep the dropdown steady, which HTML collapsed away
- * anyway - the picker sizes itself now.
- */
+/** `default` defers to the browser's own engine via `chrome.search`; the rest are form targets. */
 export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
   {
     id: SearchEngineId.browserDefault,
@@ -185,7 +173,6 @@ export const DEFAULT_WIDGETS: Widget[] = [
 
 export const DEFAULT_WIDGET_ORDER = DEFAULT_WIDGETS.map(widget => widget.id);
 
-/** Each element's default is the one the schema fills a missing answer with. */
 export const DEFAULT_DISPLAY_PREFERENCES = displayPreferencesSchema.parse({});
 
 /* What the page paints under an image or a video, so a solid colour is in effect either way. */

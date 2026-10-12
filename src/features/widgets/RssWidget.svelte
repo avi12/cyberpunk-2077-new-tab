@@ -190,7 +190,6 @@
 </Modal>
 
 <style>
-  /* The four things a feed can say instead of items, which differ only in colour and placement. */
   .rss__message {
     color: var(--cp-text-faint);
     font-family: var(--cp-mono);
@@ -318,7 +317,6 @@
     white-space: nowrap;
   }
 
-  /* Headlines are clipped to one line and scroll on hover rather than wrapping the card. */
   .rss-title-container {
     flex: 1;
     overflow: hidden;
@@ -328,7 +326,7 @@
     }
   }
 
-  /* The number field renders the spinner pair below, so the native control is hidden outright. */
+  /* The custom spinner buttons replace the native one. */
   [type="number"] {
     appearance: textfield;
   }

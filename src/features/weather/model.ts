@@ -7,15 +7,6 @@ import iconWind from "@/assets/icons/wind.svg?raw";
 import { nonEmptyTextSchema } from "@/features/companion/model";
 import { z } from "@/lib/zod";
 
-/**
- * What a reading is.
- *
- * The source answers with a numeric code rather than a sentence, so both halves are decided here:
- * the code picks one of six conditions, which is what the icon is chosen by, and the words that
- * travel beside it are this page's own. The temperature is always Celsius, so the unit the reader
- * asked for is the only conversion left to make.
- */
-
 export enum WeatherCondition {
   clear = "clear",
   cloudy = "cloudy",
@@ -26,10 +17,8 @@ export enum WeatherCondition {
 }
 
 /**
- * The coldest and hottest air ever recorded on the surface are -89.2 and 56.7, so this is the range
- * with room to spare either side. It is not decoration: a reading arrives from a service this page
- * does not own and ends up drawn as a number over a real town, and a schema that accepts anything a
- * `number` can hold would pass a temperature of 1e308 straight through to the card.
+ * Records are -89.2 and 56.7, with room either side. Readings come from third parties, so an unbounded
+ * number like 1e308 would otherwise reach the card.
  */
 export const TEMPERATURE_CELSIUS_MIN = -100;
 export const TEMPERATURE_CELSIUS_MAX = 70;
@@ -42,51 +31,28 @@ export const weatherReadingSchema = z.object({
 
 export type WeatherReading = z.infer<typeof weatherReadingSchema>;
 
-/**
- * A reading's two halves that are decided together and never separately: what the sky is doing and
- * what to call it. A source works this pair out from one answer of its own - a WMO code, a district
- * of Night City - so keeping them in one type is what stops an icon drifting from the words beside
- * it.
- */
+/** Decided together from one source answer, so an icon never drifts from the words beside it. */
 export type WeatherSky = Pick<WeatherReading, "condition" | "description">;
 
-/**
- * Why there is no reading, because the reasons want different sentences and the widget used to give
- * them all the same one: Night City's invented sky, with nothing to say it was a stand-in.
- *
- * `siteWithheld` is gone with the source that needed it. The sky comes from an open API answered by
- * coordinate now, so there is no site for a reader to withhold and no permission to be short of.
- */
 export enum WeatherRefusal {
   noPlace = "no-place",
   unreachable = "unreachable",
   noReading = "no-reading"
 }
 
-/**
- * What each refusal says on the widget, in its own register - one line, no full stop.
- *
- * None of them may name or imply a place. A reading and its city fall back together, so by the time
- * a line is read the card may say Night City - and a sentence about "here" would then be pointing
- * at the fiction.
- */
+/** None may imply a place: a reading and its city fall back together, so the card may say Night City. */
 export const WEATHER_REFUSAL_WORDING: Record<WeatherRefusal, string> = {
   [WeatherRefusal.noPlace]: "Nowhere to read the sky over yet",
   [WeatherRefusal.unreachable]: "Couldn't reach the sky",
   [WeatherRefusal.noReading]: "Nothing came back"
 };
 
-/** A reading is an object and a refusal is a word, which is the whole of the test. */
 export function isWeatherRefusal(answer: WeatherReading | WeatherRefusal): answer is WeatherRefusal {
   return typeof answer === "string";
 }
 
 export const WEATHER_REFRESH_MS = Temporal.Duration.from({ minutes: 15 }).total("milliseconds");
 
-/**
- * The six glyphs the widget draws, one per condition. The set is deliberately coarse - a source with
- * a hundred words for rain is rounded into the nearest of these rather than given a seventh.
- */
 export const WEATHER_ICONS: Record<WeatherCondition, {
   svg: string;
   color: string;
@@ -117,12 +83,10 @@ export const WEATHER_ICONS: Record<WeatherCondition, {
   }
 };
 
-/** The one conversion. Every source reads Celsius, Google's page included. */
 export function toFahrenheit(celsius: number) {
   return Math.round((celsius * 9) / 5 + 32);
 }
 
-/** Intl writes the degree sign and the unit, in the order and spacing the locale uses. */
 const TEMPERATURE_FORMATS = {
   celsius: new Intl.NumberFormat(undefined, {
     style: "unit",
@@ -151,7 +115,6 @@ export function formatTemperature({ celsius, isCelsius }: {
   return temperatureFormat(isCelsius).format(isCelsius ? celsius : toFahrenheit(celsius));
 }
 
-/** The unit on its own, for the placeholder shown while the first reading is still in flight. */
 export function temperatureUnit(isCelsius: boolean) {
   return temperatureFormat(isCelsius)
     .formatToParts(0)

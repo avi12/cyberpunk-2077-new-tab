@@ -60,12 +60,8 @@
     return !builtIn.includes(background);
   });
 
-  /**
-   * Everything the user brings in ends up in the same place: the bytes in IndexedDB, the sentinel in
-   * settings. A link is downloaded rather than kept as a link, so the page paints from disk on every
-   * load instead of asking a host that can rate-limit it, move it or disappear.
-   */
-  async function keep({ blob, kind }: {
+  /** A link is downloaded too, so the page paints from disk rather than depending on the host. */
+  async function storeBackground({ blob, kind }: {
     blob: Blob;
     kind: UploadableMedia;
   }) {
@@ -89,19 +85,19 @@
     error = "";
   }
 
-  async function keepPicked(e: Event) {
+  async function storePickedFile(e: Event) {
     const file = e.currentTarget instanceof HTMLInputElement ? e.currentTarget.files?.[0] : null;
     if (!file) {
       return;
     }
 
-    await keep({
+    await storeBackground({
       blob: file,
       kind: mediaKind
     });
   }
 
-  async function keepLinked(entered: string) {
+  async function storeLinkedMedia(entered: string) {
     const url = entered.trim().replace(/^http:\/\//, "https://");
     if (!url) {
       return;
@@ -119,7 +115,7 @@
       return;
     }
 
-    await keep({
+    await storeBackground({
       blob,
       kind
     });
@@ -172,7 +168,7 @@
           class="drop-zone"
           {@attach dropZone({
             accept,
-            onFile: file => void keep({
+            onFile: file => void storeBackground({
               blob: file,
               kind: mediaKind
             })
@@ -194,7 +190,6 @@
         {/if}
       </div>
     {:else}
-      <!-- A form, so the address is applied by the Enter the field already invites. -->
       <form
         class="stack stack--tight"
         novalidate
@@ -204,7 +199,7 @@
             return;
           }
 
-          void keepLinked(urlEntry ?? "");
+          void storeLinkedMedia(urlEntry ?? "");
         }}>
         <label class="visually-hidden" for="background-url">Background URL</label>
         <!-- svelte-ignore a11y_autofocus -->
@@ -238,7 +233,7 @@
       id="background-file"
       class="visually-hidden"
       {accept}
-      onchange={e => void keepPicked(e)}
+      onchange={e => void storePickedFile(e)}
       type="file" />
   </div>
 </PanelSection>
@@ -257,7 +252,7 @@
     justify-content: center;
     align-items: center;
 
-    /* This pair marks its selection in cyan rather than the pink every other option row uses. */
+    /* Cyan, unlike the pink every other option row selects with. */
     &[aria-pressed="true"] {
       background: var(--cp-primary);
       color: var(--cp-on-accent);
@@ -330,7 +325,6 @@
     }
   }
 
-  /* The slider fill is driven by the `--fill` custom property set inline above. */
   .brightness-slider {
     appearance: none;
     width: 100%;
@@ -345,8 +339,7 @@
       );
     outline: none;
 
-    /* Two rules, not a list: a list holding a pseudo-element the engine cannot read is invalid
-       whole, and would cost both engines the thumb. See `SolidColorsSection` for the long version. */
+    /* Two rules, not a list: a list holding a pseudo-element the engine cannot read is invalid whole. */
     &::-webkit-slider-thumb {
       appearance: none;
       width: 20px;

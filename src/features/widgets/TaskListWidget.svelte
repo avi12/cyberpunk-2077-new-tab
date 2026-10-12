@@ -18,13 +18,13 @@
   const COUNTER_DIGITS = 3;
   const COUNTER_FORMAT = counterFormat(COUNTER_DIGITS);
 
-  // A stored list is another build's claim about itself, so a gig that no longer reads is dropped.
+  // A stored list may come from another build, so a task that no longer validates is dropped.
   let tasks = $state<Task[]>(untrack(() => validRecords({
     raw: config.tasks,
     schema: taskSchema
   })));
-  let idCompleting = $state<string | null>(null);
-  let idFocused = $state<string | null>(null);
+  let completingTaskId = $state<string | null>(null);
+  let focusedTaskId = $state<string | null>(null);
   let removalTimer: ReturnType<typeof setTimeout> | undefined;
 
   const saver = configSaver({ save: patch => onConfigChange(patch) });
@@ -43,17 +43,16 @@
     saver.queue({ tasks });
   }
 
-  /** The tick is shown for the length of the glitch, then the gig leaves with it. */
   function completeTask(id: string) {
     tasks = tasks.map(item => (item.id === id ? {
       ...item,
       completed: true
     } : item));
-    idCompleting = id;
+    completingTaskId = id;
     removalTimer = setTimeout(() => {
       tasks = tasks.filter(item => item.id !== id);
       saver.queue({ tasks });
-      idCompleting = null;
+      completingTaskId = null;
     }, GLITCH_LONG_MS);
   }
 
@@ -86,14 +85,14 @@
   {#if tasks.length === 0}
     <p class="tasks__empty">No active gigs</p>
   {:else}
-    <ul class="tasks scrollbar-cyberpunk" class:task-list-glitching={idCompleting}>
+    <ul class="tasks scrollbar-cyberpunk" class:task-list-glitching={completingTaskId}>
       {#each tasks as task (task.id)}
-        {@const isTicking = task.completed && idCompleting === task.id}
+        {@const isTicking = task.completed && completingTaskId === task.id}
         <li
           class="tasks__item"
-          class:is-focused={idFocused === task.id}
-          class:task-glitch={idCompleting === task.id}
-          class:task-pulse={idFocused === task.id}>
+          class:is-focused={focusedTaskId === task.id}
+          class:task-glitch={completingTaskId === task.id}
+          class:task-pulse={focusedTaskId === task.id}>
           <button
             class="tasks__check"
             aria-label="Complete gig"
@@ -106,8 +105,8 @@
           <textarea
             id="task-{task.id}"
             class="tasks__text scrollbar-cyberpunk"
-            onblur={() => (idFocused = null)}
-            onfocus={() => (idFocused = task.id)}
+            onblur={() => (focusedTaskId = null)}
+            onfocus={() => (focusedTaskId = task.id)}
             oninput={e => editTask({
               id: task.id,
               text: e.currentTarget.value
@@ -147,7 +146,7 @@
     max-height: 240px;
   }
 
-  /* While an item is dissolving the scrollbar would jump - collapse it for the 200ms. */
+  /* The scrollbar would jump while an item dissolves. */
   .task-list-glitching {
     scrollbar-width: none;
   }
@@ -206,7 +205,7 @@
     field-sizing: content;
   }
 
-  /* Not themed in the original - the completion burst always flashes the base neon triad. */
+  /* Deliberately unthemed: the burst always flashes the base neon triad. */
   @keyframes task-glitch {
     0% {
       border-color: #666666;

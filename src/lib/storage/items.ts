@@ -31,7 +31,6 @@ import type { ComposeSiteId } from "@/features/compose/sites";
 import type { IconName } from "@/features/netlinks/icons/choices";
 import type { WxtStorageItem } from "wxt/utils/storage";
 
-/** One stored value as `definePlainItem` hands it back, for code that is given one to read or write. */
 export type StorageItem<TValue> = WxtStorageItem<TValue, Record<string, unknown>>;
 
 export const bookmarksItem = definePlainItem<Bookmark[]>("local:bookmarks", { fallback: DEFAULT_BOOKMARKS });
@@ -76,54 +75,34 @@ export const tabFaviconItem = definePlainItem<IconName>("local:tabFavicon", { fa
 
 export const playSoundsItem = definePlainItem<boolean>("local:playSounds", { fallback: DEFAULT_PLAY_SOUNDS });
 
-/**
- * Nothing stored means the clock reads however the reader's locale reads it, which is what it did
- * before there was anything to press. Only a press on the clock itself ever writes here.
- */
+/** Absent means the locale decides. Only a press on the clock writes here. */
 export const hourCycleItem = definePlainItem<HourCycle | null>("local:hourCycle", { fallback: null });
 
-/**
- * Nothing stored means a card asks Copilot, which is the automatic mode rather than a second
- * setting that can disagree with the first. Only an explicit pick is ever written here.
- */
+/** Absent means Copilot, the automatic mode. Only an explicit pick is written here. */
 export const promptTargetItem = definePlainItem<PromptTargetId | null>("local:promptTarget", { fallback: null });
 
 export const bookmarksSeededItem = definePlainItem<boolean>("local:bookmarksSeeded", { fallback: false });
 
 /**
- * Whether the reader has asked for the companion app. Nothing is said to the app until they have:
- * it is a separate, paid Microsoft Store download, so knocking on a native host for someone who
- * never asked for one is a knock that could only ever go unanswered.
- *
- * Written by the press that starts the setup, which is the one thing the page can honestly know -
- * that they want it, not that they have it.
- *
- * Not the authority on whether they asked, though: the `nativeMessaging` permission is, since it
- * cannot be held without having pressed through the same panel. This is only read where the
- * permission is absent, so the two can never be seen disagreeing - see `readCompanion`.
+ * The app is a separate paid download, so its native host is never contacted until the reader starts
+ * setup. The `nativeMessaging` permission is the real authority; this is only read where that is
+ * absent, so the two never disagree - see `readCompanion`.
  */
 export const companionSetupStartedItem = definePlainItem<boolean>("local:companionSetupStarted", { fallback: false });
 
 /**
- * Whether the companion has ever answered on this machine, which is the durable proof the reader
- * actually has the paid app - and so the one thing that decides whether the panel may still offer
- * to sell it. Written the moment the app speaks, whether it had records to give or was only saying
- * its resident half is stopped: both are an app that is installed and reachable.
+ * Durable proof the reader has the paid app, so the panel stops selling it. Written whenever the app
+ * answers, even to say it is stopped.
  *
- * Not derivable from the snapshots it used to be read off. `tipsSnapshot` is filled by Microsoft's
- * own public endpoint on machines with no app at all, and `journeysSnapshot` stays empty on an Edge
- * that has not mapped a journey yet - so one read the app's presence into a reader who lacks it and
- * the other missed it in a reader who has it.
+ * Not derivable from the snapshots: tips are filled from Microsoft's public endpoint without the app,
+ * and journeys stay empty on an Edge that has not mapped one yet.
  */
 export const companionAnsweredItem = definePlainItem<boolean>("local:companionAnswered", { fallback: false });
 
 /**
- * Not a setting: the last answer the companion app gave about one family of cards. Reading journeys
- * afresh means snapshotting a database that runs to tens of megabytes and takes a quarter of a
- * second, which is long enough to see, so the answer outlives the browser session - otherwise the
- * first new tab after every restart is the slow one. It holds the app's words verbatim; the cards
- * are rebuilt and revalidated on every read, so an expired journey never comes back from here and
- * the three tips on show move on with the day.
+ * The app's last answer, verbatim. Kept across sessions because a fresh journeys read snapshots a
+ * database of tens of megabytes - a visible quarter second. Cards are rebuilt and revalidated on
+ * every read, so nothing expired comes back from here.
  */
 export type CompanionSnapshot = {
   fetchedAtMs: number;
@@ -139,22 +118,13 @@ export const tipsSnapshotItem = definePlainItem<CompanionSnapshot | null>("local
 });
 
 /**
- * The sites a browser has refused to let the compose script into at all, which is an answer the
- * permission cannot buy off: a host a browser or a policy blocks refuses the injection however the
- * grant was come by. Local rather than session, because Firefox has no session area and this
- * ships there too; the background empties it on `runtime.onStartup` instead, so a browser that stops
- * refusing is believed again after a restart. It is not one of the `settings`, and an export and a
- * browser-account backup carry only those, so the answer never travels to a machine it is not true
- * on.
+ * Sites a browser or policy refuses the compose script whatever the permission says. `local:` since
+ * Firefox has no session area, so the background empties it on `runtime.onStartup` instead. Not one
+ * of the `settings`, so it never travels in an export or backup to a machine it is not true on.
  */
 export const composeRefusalsItem = definePlainItem<ComposeSiteId[]>("local:composeRefusals", { fallback: [] });
 
-/**
- * How far round the tip rotation this browser run has got. Edge holds the same count in memory and
- * starts somewhere new every run, so a reader who restarts does not get the same three tips they
- * closed the browser on. A page cannot hold it - the next new tab is a different page - so it lives
- * here.
- */
+/** Mirrors Edge's in-memory rotation, which starts somewhere new every browser run. */
 export const tipsTurnItem = definePlainItem<number>("local:tipsTurn", { fallback: 0 });
 
 /** Far enough round the catalogue that two runs rarely open on the same three. */
@@ -164,12 +134,10 @@ export async function reshuffleTips() {
   await tipsTurnItem.setValue(Math.floor(Math.random() * TIPS_SHUFFLE_RANGE));
 }
 
-/** A refusal is only ever true of the browser run that found it out, so a new run starts with none. */
 export async function forgetComposeRefusals() {
   await composeRefusalsItem.removeValue();
 }
 
-/** Written by the background, which is the only side that finds out, and only ever adds to the set. */
 export async function rememberComposeRefusal(siteId: ComposeSiteId) {
   const refused = await composeRefusalsItem.getValue();
   if (refused.includes(siteId)) {
@@ -179,13 +147,7 @@ export async function rememberComposeRefusal(siteId: ComposeSiteId) {
   await composeRefusalsItem.setValue([...refused, siteId]);
 }
 
-/**
- * What GA4 counts installs by, and the session it groups events into. Both are written on the first
- * event that is actually reported, so a reader who is never counted leaves neither behind.
- *
- * `local:` rather than `sync:`: an id that followed a browser account would count one person twice
- * over as two installs, and a session is about this machine's last half hour.
- */
+/** `local:` rather than `sync:`: an install is this machine, not the browser account. */
 export const analyticsClientIdItem = definePlainItem<string | null>("local:analyticsClientId", {
   fallback: null
 });
@@ -198,5 +160,5 @@ export const analyticsSessionItem = definePlainItem<{
   { fallback: null }
 );
 
-/** The reader's own no. Absent is consent, which is what an untouched install means. */
+/** Absent is consent. */
 export const analyticsOptOutItem = definePlainItem<boolean>("local:analyticsOptOut", { fallback: false });

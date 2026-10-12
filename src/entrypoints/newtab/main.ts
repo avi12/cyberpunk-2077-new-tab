@@ -10,8 +10,5 @@ applyCachedTabTitle();
 
 mount(App, { target: document.getElementById("app")! });
 
-/*
- * Reported after the page is mounted rather than before, so the one thing a reader is waiting for is
- * never behind a beacon. It answers the only question a new tab page has: is it being opened.
- */
+// After mounting, so the page is never waiting behind the beacon
 reportQuietly(AnalyticsEvent.newTabOpened);

@@ -20,64 +20,40 @@
     rotateMs,
     glitching = false
   }: {
-    /** Names the section's view transition, and the row it remembers between tabs. */
+    /** Names the view transition and the remembered row height. */
     id: string;
     title: string;
     icon: string;
-    /** Whether this machine has anything for the companion to read - only Windows does. */
     isReadable: boolean;
     read: () => Promise<CompanionRead<TCard>>;
-    /** The row the app left behind last time, which the section opens on while `read` is in flight. */
     readRemembered: () => Promise<TCard[]>;
     card: Snippet<[TCard]>;
-    /** What the section says where it cannot be read, which is its own to say. */
     unavailable: Snippet;
-    /** A control that belongs to this section rather than to the page, drawn beside its title. */
     action?: Snippet;
-    /** How often to re-deal while the page is watched, for a row whose contents are meant to move. */
     rotateMs?: number;
     glitching?: boolean;
   } = $props();
 
-  /**
-   * One placeholder per card the answer can hold, so the row the cards will occupy is already the
-   * right size and shape while the companion is being read. The cards take the place of the
-   * placeholders where they already stood - and a row that turns out taller or shorter than the one
-   * standing here grows or shrinks into it, rather than snapping the page down or up.
-   */
   const PLACEHOLDERS = Array.from({ length: MAX_CARDS }, (_, i) => i);
 
-  /** Widths that read as a card of text rather than as a barcode. */
   const PLACEHOLDER_SUMMARY_WIDTHS = ["100%", "94%", "62%"];
 
   let cards = $state<TCard[]>([]);
 
-  /**
-   * The tear that says the app disagreed with what storage had. The page marks a value moving this
-   * way everywhere else it happens - the clock on the hour, the panel as it stops asking - and this
-   * is the same event: cards the reader may already have read being replaced under them.
-   */
+  /** Fires when the app disagrees with the stored row, as the page glitches any value replaced in place. */
   const rowGlitch = new Glitch();
 
-  /** Unmount alone - a tear outliving the section would go on running against nothing. */
   $effect(() => () => rowGlitch.stop());
 
-  /** Where this section's measured row is kept, which is its own and not the other section's. */
   const rowKey = $derived(`${id}Row`);
 
   /**
-   * The section holds its place from the first frame, empty, rather than dropping in once the
-   * companion answers and shoving the netlinks down the page. Once it has answered, only cards keep
-   * the section on the page: a connected companion with nothing of this kind to give is not a fault
-   * worth a panel, and the one line about reaching the app at all is said above, once, for both
-   * sections at a time.
+   * Shown while loading so it holds its place rather than shoving the page down later. Afterwards only
+   * cards keep it, since reachability is reported once above both sections.
    */
   const isVisible = $derived(!isReadable || cards.length > 0 || companion.state === CompanionState.loading);
 
-  /**
-   * The row as it actually came out, kept for the next tab. The grid stretches every card to the
-   * tallest one, so that is the whole of what a placeholder needs to stand in for it.
-   */
+  /** The grid stretches every card to the tallest, so that height is all a placeholder needs. */
   function measureRow(elList: HTMLElement) {
     const height = Math.round(Math.max(...[...elList.children].map(elCard => elCard.getBoundingClientRect().height)));
     if (height > 0) {
@@ -89,7 +65,7 @@
     }
   }
 
-  /** Applied before the first paint, so the reserved row is the right one rather than a corrected one. */
+  /** Applied before the first paint, so the reserved row never needs correcting. */
   function reserveRow(elList: HTMLElement) {
     const remembered = rememberedRow(rowKey);
     if (remembered?.width !== elList.clientWidth) {
@@ -99,7 +75,7 @@
     elList.style.setProperty("--cp-card-height", `${remembered.height}px`);
   }
 
-  function show({ result, row }: {
+  function showRow({ result, row }: {
     result: CompanionRead<TCard>;
     row: TCard[];
   }) {
@@ -109,14 +85,8 @@
     cards = row;
   }
 
-  /**
-   * What an answer leaves on the row.
-   *
-   * An app that could not be reached never empties it. The cards standing there are the app's own
-   * words from last time, and not being able to ask again is no reason to take them away - that is
-   * the panel's to say, above the row, and it does. Only the app itself answering empties a row.
-   */
-  function rowAfter(result: CompanionRead<TCard>) {
+  /** Only the app itself answering may empty the row; failing to reach it keeps the cards. */
+  function rowToShow(result: CompanionRead<TCard>) {
     const isRowLost = result.cards.length === 0 && cards.length > 0 && !hasCompanionSpoken(result.state);
     if (isRowLost) {
       return cards;
@@ -125,18 +95,11 @@
     return result.cards;
   }
 
-  /** What is on the row, as the ids that name it: two answers with the same ids are the same row. */
   function rowSignature(row: TCard[]) {
     return row.map(item => item.id).join(" ");
   }
 
-  /**
-   * The row the app left behind last time, drawn before it is asked anything.
-   *
-   * It says nothing about the state: whether the app can be reached now is the live read's to
-   * answer, and the panel goes on saying it is listening until it has. What this buys is the row
-   * itself, which on a machine that has seen these cards before is the whole of the section.
-   */
+  /** Leaves the state alone: only the live read can say whether the app is reachable now. */
   async function paintRemembered() {
     const remembered = await readRemembered();
     const isRowStanding = cards.length > 0;
@@ -148,24 +111,18 @@
     companion.isRowFilled = true;
   }
 
-  /**
-   * What the app itself says, against whatever is already on the page.
-   *
-   * A rotation is the same row saying something else, and animating that turns a card the reader may
-   * be mid-sentence in into a thing that slides. It swaps instead.
-   */
-  async function load({ isRotating }: { isRotating: boolean }) {
+  /** A rotation swaps rather than animates, so a card the reader is mid-sentence in does not slide. */
+  async function loadRow({ isRotating }: { isRotating: boolean }) {
     const result = await read();
-    const row = rowAfter(result);
+    const row = rowToShow(result);
 
-    // A retry that finds the same nothing has nothing to redraw.
     const isAnswerUnchanged = result.state === companion.state && row.length === 0 && cards.length === 0;
     if (isAnswerUnchanged) {
       return;
     }
 
     if (isRotating) {
-      show({
+      showRow({
         result,
         row
       });
@@ -173,11 +130,9 @@
       return;
     }
 
-    // The ordinary answer: the app agreeing with what storage had. The state is written and the row
-    // is left exactly where it stands, because nothing about it has changed.
     const isRowUnchanged = rowSignature(row) === rowSignature(cards);
     if (isRowUnchanged) {
-      show({
+      showRow({
         result,
         row
       });
@@ -185,15 +140,10 @@
       return;
     }
 
-    /*
-     * A row already standing is one storage drew, and the app has just come back with different
-     * cards: they are swapped where they are and torn as they change. Nothing about the box moves,
-     * so without the tear the one visible result of asking the app is three paragraphs quietly
-     * replacing themselves.
-     */
+    // Swapped in place with a glitch, since nothing about the box moves and the change would go unseen.
     const isRowReplaced = cards.length > 0 && row.length > 0;
     if (isRowReplaced) {
-      show({
+      showRow({
         result,
         row
       });
@@ -202,45 +152,37 @@
       return;
     }
 
-    // A row appearing where placeholders stood, or emptying back into them, is the page changing
-    // shape - which is the transition's to carry, so the panel above it moves at the same moment.
-    await withViewTransition(() => show({
+    // The page changes shape, so the view transition carries it and the panel above moves with it.
+    await withViewTransition(() => showRow({
       result,
       row
     }));
   }
 
-  /** Only Windows has a companion to ask; the other platforms are told, not queried. */
   $effect(() => {
     void companion.generation;
     if (!isReadable) {
       return;
     }
 
-    // Storage first so the row is on the page, then the app, which may have something else to say.
-    void paintRemembered().then(() => load({ isRotating: false }));
+    void paintRemembered().then(() => loadRow({ isRotating: false }));
   });
 
-  /*
-   * Re-dealt while it is being read, which is what Edge does with the same row. Only while the page
-   * is actually on screen: a new tab left open behind others would otherwise walk the rotation on
-   * for nobody, and every one of them would be walking the same shared count at once. The cards that
-   * do not change keep their id, so only the one that moved is redrawn.
-   */
+  // Only while visible: every open new tab shares one turn count, so hidden ones would walk it on too.
   $effect(() => {
     if (!isReadable || !rotateMs) {
       return;
     }
 
-    const rotate = setInterval(() => {
+    const rotationTimer = setInterval(() => {
       if (document.visibilityState !== "visible") {
         return;
       }
 
-      void load({ isRotating: true });
+      void loadRow({ isRotating: true });
     }, rotateMs);
 
-    return () => clearInterval(rotate);
+    return () => clearInterval(rotationTimer);
   });
 </script>
 
@@ -291,12 +233,7 @@
 
 <style>
   .section {
-    /*
-     * How much of a card goes to its summary, and so how tall a card is. It is fixed, and read by
-     * both the card and the placeholder that stands in its place while the companion is being read,
-     * so the row is the size it will be before there is anything in it. Three lines at the summary's
-     * own leading.
-     */
+    /* Three lines at the summary's leading, shared by the card and its placeholder. */
     --cp-card-summary-height: 3.9375rem;
   }
 
@@ -318,43 +255,30 @@
     }
   }
 
-  /*
-   * As many columns as the row can ever hold, not as many as it happens to have. `auto-fit` collapses
-   * the empty tracks, so a row with one card in it stretched that card the whole width of the page -
-   * a short row has to read as short, the way Edge's own does.
-   */
+  /* Fixed seats rather than `auto-fit`, which stretched a lone card the whole width of the page. */
   .section__list {
     display: grid;
     grid-template-columns: repeat(var(--cp-row-seats), minmax(0, 1fr));
     gap: 1rem;
   }
 
-  /* Narrow enough that three of anything is unreadable, so the row becomes a column. */
   @media (width < 48rem) {
     .section__list {
       grid-template-columns: 1fr;
     }
   }
 
-  /*
-   * The placeholder card mirrors CompanionCard's box and its type metrics line for line, so the row
-   * standing here while the companion is read is the height the real cards will need. They take its
-   * place without anything below the section moving - and where a card needs a line more or less
-   * than the placeholder allowed, the difference is animated rather than dropped on the page.
-   */
+  /* Mirrors CompanionCard's box and type metrics line for line, so the real cards land without a shift. */
   .section__placeholder {
     display: flex;
     flex-direction: column;
     gap: 0.625rem;
-
-    /* The row a real answer came out at, if one has been seen here at this width; its own otherwise. */
     height: var(--cp-card-height, 100%);
     padding: 0.875rem;
     border: 1px solid var(--cp-outline);
     background: var(--cp-surface);
   }
 
-  /* Whatever the bar count, the block is the height the card's summary will be. */
   .section__summary-lines {
     display: flex;
     flex-direction: column;
@@ -391,7 +315,6 @@
     margin-top: auto;
   }
 
-  /* The action is a filled block on a real card, so its placeholder is one too. */
   .section__bar--action {
     height: 2.125rem;
 

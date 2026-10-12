@@ -16,13 +16,8 @@
   const ENGINE_POPOVER_ID = "search-engine-list";
   const QUERY_INPUT_ID = "search-query";
 
-  /**
-   * Both are read while the destination is already on its way in, so each has to say what happened
-   * and what is left to do in the one line there is time for.
-   */
   const COPIED_NOTICE = "Prompt's on your clipboard - paste it in and send it yourself";
   const UNCOPIED_NOTICE = "Couldn't copy the prompt - opening the site, you'll have to type it in";
-  /** Long enough that the scan reads as a scan rather than a flicker on the way to the answer. */
   const EMPTY_SCAN_MS = 1000;
 
   let query = $state("");
@@ -31,30 +26,24 @@
   let notice = $state("");
   const engine = $derived(engineById(settings.activeSearchEngine.current));
 
-  /** Both states speak over the label, so the label steps aside for either. */
-  const isAnswering = $derived(isScanning || isScanFailed);
+  const isLabelOverlaid = $derived(isScanning || isScanFailed);
 
   /**
-   * What the browser already allows is only known by asking it, which is an await, and a submit has
-   * none to spare: a permission prompt needs the press that raised it, and anything awaited in front
-   * of one spends it. So the reading is done up front and the submit only acts on what it already
-   * knows - the one thing it does stop for is the question itself.
+   * Read up front: a permission prompt needs the press's user gesture, and any await before it in
+   * the submit would spend it.
    */
   $effect(() => {
     void composeAccess.refresh();
   });
 
   /**
-   * The whole hand-off - the question about the site, the clipboard it falls back to, the pause that
-   * makes the fallback readable - so it also fails in one place. The scan runs until the page leaves,
-   * which is why it is only ever called off here: nothing came of the hand-off, and a button left on
-   * SCANNING is a search that never went anywhere. A notice already shown stays shown, since a prompt
-   * that reached the clipboard is still on it.
+   * The scan runs until the page leaves, so it is only stopped when the hand-off fails. A notice
+   * already shown stays, since a copied prompt is still on the clipboard.
    */
   async function handOff(siteId: ComposeSiteId) {
     isScanning = true;
     notice = "";
-    /* The one question a press raises here, and asked before anything is awaited for that reason. */
+    /* Asked before anything is awaited, while the press's gesture is still live. */
     await composeAccess.allowAlongside({ siteId });
     const url = searchUrl({
       engine,
@@ -76,12 +65,8 @@
     }
   }
 
-  /**
-   * An empty box still scans. The button is the one moving part on the page, and a press that draws
-   * no answer at all reads as a dead control rather than as an empty query - so it runs the same
-   * scan every other search runs, and then reports what it turned up, which is nothing.
-   */
-  async function scanNothing() {
+  /** A press with no visible answer would read as a dead control rather than an empty query. */
+  async function scanEmptyQuery() {
     if (isScanning) {
       return;
     }
@@ -94,24 +79,18 @@
   }
 
   /**
-   * Every engine that answers a query on arrival is left to the form: the browser builds the address
-   * out of the fields and navigates, which is why such an engine needs nothing here but an action and
-   * a field name.
-   *
-   * Two of them do not answer on arrival, and each is taken off the form for its own reason. The
-   * browser's own engine has no URL to post to, only an API the worker holds. An engine that fills
-   * its box and then waits needs the last press made on the reader's behalf, which is a script, which
-   * is a question about the site. Both make the reader wait, so both show a scan.
+   * Plain engines are left to the native form submission. Two are taken off it: the browser's own
+   * engine has no URL, only a worker API, and a compose engine needs a script to press send.
    */
   async function onSubmit(e: SubmitEvent) {
     if (!query.trim()) {
       e.preventDefault();
-      await scanNothing();
+      await scanEmptyQuery();
 
       return;
     }
 
-    /* Which engine, never what was typed - a query is the reader's and has no business in a report. */
+    /* Never the query itself - only which engine. */
     reportQuietly(AnalyticsEvent.searchSubmitted, { [AnalyticsParam.engine]: engine.id });
 
     const { composeSiteId } = engine;
@@ -128,7 +107,6 @@
 
     e.preventDefault();
     isScanning = true;
-    // The scan runs until the page leaves, so it only stops when the search could not be handed off.
     isScanning = await searchWithBrowserDefault(query);
   }
 </script>
@@ -174,7 +152,6 @@
     {/each}
 
     <label class="visually-hidden" for={QUERY_INPUT_ID}>Search</label>
-    <!-- A failure is about what was in the box, so it stops being true the moment that changes. -->
     <input
       id={QUERY_INPUT_ID}
       name={engine.queryParam}
@@ -186,8 +163,8 @@
       bind:value={query} />
 
     <button class="search__submit" class:search__submit--failed={isScanFailed} type="submit">
-      <!-- Kept in flow for the button's width, but out of the name once something speaks over it. -->
-      <span class:is-hidden={isAnswering} aria-hidden={isAnswering}>SCAN</span>
+      <!-- Kept in flow for the button's width, but hidden from the accessible name when overlaid. -->
+      <span class:is-hidden={isLabelOverlaid} aria-hidden={isLabelOverlaid}>SCAN</span>
       {#if isScanning}
         <span class="search__overlay scanning-text">SCANNING...</span>
       {:else if isScanFailed}
@@ -213,7 +190,6 @@
     display: flex;
   }
 
-  /* The picker and the SCAN button keep their width - the input between them is what gives. */
   .search__engine {
     position: relative;
     flex-shrink: 0;
@@ -243,13 +219,6 @@
     }
   }
 
-  /*
-   * A popover, so the browser owns opening, Escape and light dismiss - clicking anywhere outside
-   * closes it with no listener of our own. Anchor positioning keeps it under its button.
-   *
-   * The list is as wide as its longest option rather than as wide as the button, which is only ever
-   * as wide as the one name it is showing.
-   */
   .search__engine-list {
     position: absolute;
     overflow-y: auto;
@@ -306,12 +275,7 @@
     flex-shrink: 0;
     overflow: hidden;
 
-    /*
-     * "SCANNING..." and "ERROR" are laid over the label rather than in the flow, so neither can
-     * widen the button itself. The longest of the three is "SCANNING...", measured at 97px in the
-     * mono face this button uses, and 7rem is that with room to spare. It only matters at the narrow
-     * padding.
-     */
+    /* Overlays cannot widen the button; "SCANNING..." measures 97px in this mono face. */
     min-width: 7rem;
     padding: 0 1.5rem;
     border: 2px solid var(--cp-accent);
@@ -329,7 +293,6 @@
       background: var(--cp-accent-lo);
     }
 
-    /* A press that found nothing says so where the press was, and stops looking like a live button. */
     &.search__submit--failed {
       border-color: var(--cp-danger);
       background: var(--cp-danger);
@@ -337,12 +300,10 @@
     }
   }
 
-  /* The label stays in flow so the button keeps its width while "SCANNING..." overlays it. */
   .is-hidden {
     opacity: 0%;
   }
 
-  /* Both answers are laid over the label rather than in the flow, so neither widens the button. */
   .search__overlay {
     position: absolute;
     inset: 0;
@@ -352,16 +313,8 @@
   }
 
   /*
-   * The failure glitches on the text alone. The shared `.glitch` rotates hue, which would carry the
-   * red round with it, and a button that changes colour while it shudders reads as two things going
-   * wrong rather than one - so the background is held and only the letters break up.
-   *
-   * It breaks up for a moment and then holds still, because a fault that shakes forever stops being
-   * a fault and becomes decoration - the word stays either way. Clipped by the button's own
-   * overflow, so the row cannot move while it does.
-   *
-   * `step-end` because a glitch does not ease: each frame holds until the next one replaces it. The
-   * last keyframe is the settled one, and `forwards` is what leaves the letters resting on it.
+   * Text only: the shared `.glitch` rotates hue, which would shift the red too. It settles after a
+   * moment, since a fault that shakes forever reads as decoration.
    */
   .search__overlay--failed {
     animation: 320ms step-end 4 forwards failed-glitch;
@@ -394,11 +347,7 @@
     }
   }
 
-  /*
-   * Under the bar rather than inside it, so nothing in the row moves as it appears. It is spoken by
-   * an element that is always there and empty until it has something to say, since a live region
-   * that arrives with its own text is a region nobody hears.
-   */
+  /* Always rendered: a live region that arrives with its text already in it is never announced. */
   .search__notice {
     display: block;
     margin: 0;

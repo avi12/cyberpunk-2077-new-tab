@@ -21,7 +21,6 @@
 
   const glitch = new Glitch();
 
-  /** Nothing stored is the locale's own clock, so a first press is a press on what is on screen. */
   const hourCycle = $derived(settings.hourCycle.current ?? localeHourCycle());
 
   let date = $state(currentDate());
@@ -31,12 +30,8 @@
   const glitching = $derived(glitch.active || glitchingTime);
 
   /**
-   * The tear is fired from the tick that changes the reading, rather than from a timer of its own.
-   * A second timer starts at mount and lands wherever that leaves it - somewhere inside the minute,
-   * tearing a display that is not about to change, which reads as the clock running late.
-   *
-   * Reading the cycle here is also what makes a press show immediately: the effect re-runs on the
-   * new one and reformats before the next tick, rather than waiting out the second it is in.
+   * The glitch fires from the tick that changes the reading: a separate timer would land mid-minute
+   * and read as the clock running late. Reading the cycle here makes a press reformat immediately.
    */
   $effect(() => {
     const cycle = hourCycle;
@@ -59,10 +54,7 @@
     return () => clearInterval(tick);
   });
 
-  /**
-   * Unmount alone, which is why it is not the tick's teardown: that one re-runs on a press, and
-   * stopping the tear there would cancel the very tear the press had just fired.
-   */
+  /** Unmount only - the tick's teardown re-runs on a press and would cancel the glitch it just fired. */
   $effect(() => () => glitch.stop());
 
   const hourCycleHint = $derived.by(() => {
@@ -73,7 +65,6 @@
     return "Switch to 12-hour";
   });
 
-  /** The display tears as it changes, which is the page's way of saying a value just moved. */
   function flipHourCycle() {
     const isTwelveHour = hourCycle === HourCycle.hour12;
     glitch.fire({ durationMs: GLITCH_LONG_MS });
@@ -117,19 +108,10 @@
   }
 
   /*
-   * The two readings are named apart from the clock that holds them, because hiding the date
-   * changes the box the clock occupies and a snapshot is redrawn at whatever size its group has
-   * reached. Under one name the old capture - time and date together - was squeezed into the
-   * narrower box the time alone needs, so the time was painted a second time at about three
-   * quarters size, anchored to the top of the group, and cross-faded over itself.
-   *
-   * Measured in Edge: the group runs 350.9x146.4 -> 220.7x110.4 and shifts 65px right as it
-   * recentres, while the time's own box does not move by a pixel. Named separately, the time
-   * morphs between two identical boxes and only the date animates.
-   *
-   * Naming these is safe for the hint hanging off the button inside: `view-transition-name` makes a
-   * stacking context but *not* a containing block for a `fixed` descendant - asked of both engines
-   * rather than assumed - so the hint is still placed against the viewport.
+   * Time and date get their own view-transition names: under one name, hiding the date squeezed the
+   * old snapshot into the smaller box and the time was painted twice, cross-faded over itself
+   * (measured in Edge). `view-transition-name` is not a containing block for the `fixed` hint inside,
+   * verified on both engines.
    */
   .clock__time {
     color: var(--cp-primary);
@@ -147,8 +129,8 @@
   }
 
   /*
-   * The hint hangs off the button, so the tear has to sit on the span inside it: a transformed
-   * trigger becomes the containing block for its own `fixed` hint, and the hint lands on the clock.
+   * The glitch sits on the inner span, not the button: a transformed trigger becomes the containing
+   * block for its own `fixed` hint, and the hint lands on the clock.
    */
   .clock__toggle {
     font-weight: inherit;
@@ -160,7 +142,6 @@
     display: inline-block;
   }
 
-  /* The two offset copies that make the RGB-split glitch read as a broken display. */
   .clock__ghost {
     position: absolute;
     inset: 0;
@@ -174,7 +155,6 @@
     color: var(--cp-accent);
   }
 
-  /* Its own name, so it is the only thing that fades when it goes. */
   .clock__date {
     margin-top: 0.5rem;
     color: var(--cp-accent);

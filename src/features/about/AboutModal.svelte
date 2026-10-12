@@ -17,38 +17,30 @@
   const SCREENSHOT_LABEL = "Capture screenshot";
   const BUG_REPORT_LABEL = "Report a bug";
 
-  /** The issue list rather than a new-issue form: a bug worth reporting is often already reported. */
+  // The issue list rather than a new-issue form: a bug worth reporting is often already reported
   const ISSUES_URL = "https://github.com/avi12/cyberpunk-2077-new-tab/issues";
 
-  /**
-   * What each ending says. A press always answers, which it used to not: every way of failing
-   * returned in silence, and silence reads as a button that does nothing.
-   */
-  const RESULT = {
+  const CAPTURE_MESSAGE = {
     copied: "Copied to the clipboard",
     undrawable: "The page could not be drawn",
     unwritable: "Drawn, but the clipboard would not take it"
   } as const;
 
-  let result = $state("");
+  let captureMessage = $state("");
 
   let isBusy = $state(false);
 
   async function capture() {
     isBusy = true;
-    result = "";
+    captureMessage = "";
     try {
       await captureToClipboard();
     } finally {
       isBusy = false;
-      /*
-       * The one control that reports itself rather than through `reportClicks`: the press alone says
-       * nothing useful here, and what is worth counting is whether the clipboard took the image. So
-       * it carries no `data-analytics`, and this is its single report.
-       */
+      // Reported here instead of via `data-analytics`, since what counts is whether the copy succeeded
       reportQuietly(AnalyticsEvent.controlPressed, {
         [AnalyticsParam.action]: AnalyticsAction.screenshot,
-        [AnalyticsParam.isSuccess]: result === RESULT.copied
+        [AnalyticsParam.isSuccess]: captureMessage === CAPTURE_MESSAGE.copied
       });
     }
   }
@@ -56,16 +48,15 @@
   async function captureToClipboard() {
     const png = await capturePage().catch(() => null);
     if (!png) {
-      result = RESULT.undrawable;
+      captureMessage = CAPTURE_MESSAGE.undrawable;
 
       return;
     }
 
     const isCopied = await copyToClipboard(png);
-    result = isCopied ? RESULT.copied : RESULT.unwritable;
+    captureMessage = isCopied ? CAPTURE_MESSAGE.copied : CAPTURE_MESSAGE.unwritable;
   }
 
-  /** An image rather than a file: what a screenshot is usually for is the next thing you paste it into. */
   async function copyToClipboard(dataUrl: string) {
     try {
       const png = await (await fetch(dataUrl)).blob();
@@ -105,8 +96,8 @@
       {@html iconBug}
     </a>
   </div>
-  <!-- Always rendered: a live region added at the same moment as its text is one a screen reader can miss. -->
-  <output class="about__result">{result}</output>
+  <!-- Always rendered: a screen reader can miss a live region added together with its text -->
+  <output class="about__result">{captureMessage}</output>
 </Modal>
 
 <style>
@@ -152,7 +143,7 @@
     }
   }
 
-  /* The height is held whether or not there is anything to say, so an answer never moves the panel. */
+  /* Height held while empty, so a message never moves the panel */
   .about__result {
     display: block;
     min-height: 1.25rem;

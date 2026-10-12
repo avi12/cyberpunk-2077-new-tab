@@ -1,12 +1,4 @@
-/*
- * Global stylesheet: reset, theme tokens, and the effect classes that cross component boundaries.
- *
- * The original extension themed itself with ~120 `!important` Tailwind overrides per theme. Here a
- * single token set on `.cyberpunk-container` is the source of truth, and the two alternate
- * theme classes only redefine the tokens. Component-local layout lives in each `.svelte` file's
- * scoped `\3c style>`; anything applied from more than one component lives here, because Svelte's
- * scoping would otherwise strip it.
- */
+/* Anything applied from more than one component lives here, since Svelte's scoping would strip it */
 
 *,
 *::before,
@@ -14,12 +6,7 @@
   box-sizing: border-box;
 }
 
-/*
- * The constants the page needs above the themed container: the scrollbar and the body sit outside
- * it, a tooltip is a popover appended to the body, and a view transition's pseudo-elements hang off
- * the root. The raw neon triad is the same in all three themes, so `.cyberpunk-container` points its
- * own tokens at these rather than restating the values.
- */
+/* On the root because the scrollbar, the body and view-transition pseudo-elements sit outside the themed container */
 :root {
   --cp-bg: #000c14;
   --cp-neon-cyan: #00ffff;
@@ -27,21 +14,13 @@
   --cp-neon-yellow: #f9f002;
   --cp-ease: cubic-bezier(0.2, 0, 0, 1);
 
-  /* How long a disclosure takes to roll, read by everything that has to move with one. */
+  /* Shared by everything that has to move with a disclosure's roll */
   --cp-roll: 200ms;
 
   /*
-   * The page replaces the system cursor outright, as the original does: a cyan arrow over everything,
-   * and a neon plus reticle over anything interactive. Only the reticle is themed - the arrow is the
-   * same in all three themes.
-   *
-   * The arrow is declared once, on the root, and reaches the page by inheritance. Setting it on
-   * every element instead re-claimed it for a button's own icon and label, leaving the reticle only
-   * over the padding around them. Inheritance follows the DOM tree, so a dialog or a popover in the
-   * top layer still takes the cursor of the markup it sits in.
-   *
-   * Both are drawn twice, a dark stroke under the bright one: the reticle is the accent colour, and
-   * the accent is also what fills a pressed button, where a single-colour cursor disappeared.
+   * The arrow is inherited from the root: set on every element, it overrode the reticle on a
+   * button's own icon and label. Each cursor has a dark under-stroke so it stays visible over a
+   * pressed button filled with the same accent.
    */
   --cp-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' stroke='%2300ffff'%3E%3C/path%3E%3C/svg%3E") 0 0, auto;
   --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23f9f002'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
@@ -62,12 +41,6 @@ body {
   margin: 0;
   background-color: var(--cp-bg);
   font-family: system-ui, "Segoe UI", roboto, helvetica, arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
-
-  /*
-   * Every digit the page draws is the same width, declared once here rather than at each of the
-   * places that draw one. A clock whose minute is 11 must not be narrower than one whose minute is
-   * 08, and the same goes for a temperature, a coordinate, a percentage or a count.
-   */
   font-variant-numeric: tabular-nums;
 }
 
@@ -98,7 +71,6 @@ button {
   list-style: none;
 }
 
-/* Icons are inlined `<svg>` files, so a component sizes and colours them through the box around. */
 svg {
   display: block;
   flex-shrink: 0;
@@ -109,35 +81,24 @@ svg {
   text-decoration: none;
 }
 
-/* Every control the original renders is square-cornered and unfocused-outline-free. */
+/* Transparent rather than `none`, so forced-colours mode still draws a ring */
 :where(input, textarea, select, button):focus {
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
 
-/*
- * Theme tokens, and the two type/layout constants that live with them. `cyberpunk2077` is the base
- * set; the two alternates redefine only what differs, so a colour has exactly one definition per
- * theme and none is repeated across rules.
- */
+/* The base theme's tokens; the two alternate theme classes redefine only what differs */
 .cyberpunk-container {
-  /*
-   * The original loaded Share Tech Mono but never referenced it - `font-mono` resolved to Tailwind's
-   * default stack, which is what actually rendered. Same stack here, so the type is identical and
-   * nothing is fetched from a font CDN.
-   */
   --cp-mono: ui-monospace, sfmono-regular, menlo, monaco, consolas, "Liberation Mono", "Courier New", monospace;
-
-  /* How wide the page's stacked sections run - the netlinks, and either family of Copilot cards. */
   --cp-column: 64rem;
 
-  /* Structural colours - identical in all three themes. */
+  /* Identical in all three themes */
   --cp-on-accent: #000000;
   --cp-text: #ffffff;
   --cp-danger: #7f1d1d;
   --cp-danger-hover: #991b1b;
 
-  /* Cyan is the constant across all three themes: it is the terminal itself. */
+  /* Cyan stays constant across all three themes */
   --cp-primary: #22d3ee;
   --cp-primary-hover: #67e8f9;
   --cp-accent: #fde047;
@@ -153,11 +114,7 @@ svg {
   --cp-text-dimmer: #9ca3af;
   --cp-text-faint: #6b7280;
 
-  /*
-   * Raw neon used by the glitch/scan effects - deliberately not the Tailwind palette. The tokens
-   * below it hold the same colour as one of these in every theme, so they are aliases rather than
-   * repeated values, and an alternate theme only has to re-point the one they follow.
-   */
+  /* Aliases, so an alternate theme only re-points the one each follows */
   --cp-glitch-a: var(--cp-neon-magenta);
   --cp-glitch-b: var(--cp-neon-cyan);
   --cp-accent-vivid: var(--cp-neon-yellow);
@@ -218,14 +175,9 @@ svg {
 }
 
 /*
- * Fields are where inheritance stops: the UA stylesheet declares `cursor: auto` on every input
- * and textarea, and `cursor: default` on every label - measured in both engines - which would hand
- * a text field the platform caret and a label the platform arrow, the only stock cursors on the
- * page. They keep the page's own arrow instead. The rule below still outranks this one, so submit
- * and button inputs stay on the reticle.
- *
- * A label goes to the arrow rather than the reticle on purpose: clicking one reaches the field it
- * names, and that field is on the arrow too. The reticle stays for the things that act.
+ * The UA stylesheet sets its own cursor on inputs, textareas and labels (measured in both engines),
+ * which breaks inheritance. The rule below still outranks this, so submit and button inputs keep
+ * the reticle.
  */
 input,
 textarea,
@@ -237,7 +189,6 @@ label {
   cursor: var(--cp-cursor-pointer);
 }
 
-/* A control that cannot be activated has nothing to aim at, so it drops back to the arrow. */
 :disabled {
   cursor: var(--cp-cursor);
 }
@@ -245,15 +196,8 @@ label {
 /* ---------- View transitions ---------- */
 
 /*
- * State changes that reflow the page (theme, scan lines, background, edit modes, a completed gig)
- * are wrapped in a view transition. Naming the persistent regions makes them morph between the two
- * states instead of the whole page cross-fading over itself.
- *
- * Both halves of the root cross-fade run on the same timing as every group, which is why they share
- * this rule: the browser blends them with `plus-lighter`, so a symmetric fade sums to exactly one
- * and a mismatched one does not. Running 200ms out against 260ms in left a window where the two
- * added up to less than the page - which is the blink the wallpaper picked up on every edit-mode
- * toggle.
+ * Both halves of the root cross-fade must share the groups' timing: `plus-lighter` only sums to one
+ * for a symmetric fade, and a mismatch blinked the wallpaper on every edit-mode toggle.
  */
 ::view-transition-group(*),
 ::view-transition-old(root),
@@ -263,10 +207,8 @@ label {
 }
 
 /*
- * Named groups all paint above the root snapshot, in capture order, which is not the order the page
- * paints in - so the page's own stacking is restated here, group by group, with the same numbers the
- * elements carry. Without it the scan lines slip under the interface they cover (everything brightens
- * by the 12.5% they take out) and the widgets slip under the lines (they darken by it).
+ * Groups paint in capture order, not page order, so the page's own z-indexes are restated per group -
+ * otherwise the scan lines and widgets swap layers mid-transition.
  */
 .identity {
   view-transition-name: identity;
@@ -291,11 +233,7 @@ label {
   z-index: 15;
 }
 
-/*
- * A widget slot is a `.view-item` like a bookmark card, so it shares the generated `match-element`
- * name and cannot be told apart by name alone - but it lives in the widget layer, above the lines,
- * while the cards live in the page below them. The class is what separates the two.
- */
+/* Widget slots share the `match-element` name with cards, so their class lifts them above the lines */
 ::view-transition-group(*.above-scan-lines),
 ::view-transition-group(widgets),
 ::view-transition-group(system-button),
@@ -304,23 +242,14 @@ label {
 }
 
 /*
- * The panel is a popover, so on the page it paints in the top layer - above every z-index there is,
- * rather than at one of them. Captured, it is an ordinary group again and has to be given a number
- * that says the same thing, and it has to be a number rather than the 30 its button carries: groups
- * that tie are painted in tree order, and `widgets` sorts after `terminal-panel`. Firefox drew the
- * weather card over the open menu for exactly that reason, on any transition that moved the page -
- * toggling a display element is one, since the row it removes changes the height of everything.
+ * A popover is in the top layer on the page but an ordinary group once captured. Above 30, since
+ * ties paint in tree order and `widgets` sorts later - Firefox drew the weather card over the menu.
  */
 ::view-transition-group(terminal-panel) {
   z-index: 50;
 }
 
-/*
- * And a slot keeps its snapshots inside itself. Entering edit mode gives every slot a row it did not
- * have, but a snapshot is painted at the size it was captured - so the taller slot hangs over the
- * widgets moving down underneath it for the whole transition unless the pair is clipped to the box
- * the group is animating.
- */
+/* A snapshot paints at its captured size, so a slot growing in edit mode would hang over its neighbours */
 ::view-transition-image-pair(*.above-scan-lines) {
   overflow: clip;
 }
@@ -329,7 +258,6 @@ label {
   z-index: 40;
 }
 
-/* Cards and widget slots each get their own name, so a reorder or an edit-mode change morphs them. */
 .view-item {
   view-transition-name: match-element;
 }
@@ -397,18 +325,9 @@ label {
 /* ---------- Tooltip ---------- */
 
 /*
- * A hint is the trigger's own `::after`, filled from `data-tooltip`. No element to create, nothing
- * to keep in step with the control it explains, and nothing to tidy up when that control goes.
- *
- * `anchor-scope` is what lets every trigger claim the same anchor name: the name is confined to the
- * trigger's own subtree, so each `::after` resolves to the element it hangs off rather than to
- * whichever trigger the page happened to lay out last.
- *
- * A trigger may not be transformed. `translate`, `scale`, `rotate` and `filter` all make an element
- * the containing block for anything `fixed` inside it, and the hint below is `fixed` and inside it -
- * so a moved trigger is measured against its own box rather than the viewport, and the hint lands
- * somewhere across the card. Put the movement on a child: `hover-glitch` on a span inside the
- * trigger is a sibling of this `::after` and cannot reach it.
+ * `anchor-scope` lets every trigger reuse the same anchor name. Never transform a trigger
+ * (`translate`, `scale`, `rotate`, `filter`): that makes it the containing block for the `fixed`
+ * hint, which then lands across the card. Animate a child instead.
  */
 [data-tooltip] {
   anchor-name: --tooltip;
@@ -417,13 +336,7 @@ label {
   &::after {
     content: attr(data-tooltip);
 
-    /*
-     * Fixed rather than absolute, so the viewport is what it is placed and measured against - which
-     * is what the popover this replaced got for nothing by living in the top layer. Absolute, the
-     * containing block is whatever positioned ancestor the trigger happens to sit in: a card's
-     * little action bar is a few pixels tall, a hint above it overflows that box whatever the room
-     * on screen, and every hint fell to its `block-end` fallback and landed across the card.
-     */
+    /* Fixed, not absolute: inside a tiny positioned ancestor every hint fell back to `block-end` */
     position: fixed;
     width: max-content;
     max-width: min(16rem, 100vw - 1rem);
@@ -441,12 +354,6 @@ label {
     backdrop-filter: blur(4px);
     pointer-events: none;
     transition: opacity 200ms;
-
-    /*
-     * Above the trigger, and the browser picks the cell that actually fits: below it at a ceiling,
-     * then shifted towards an edge rather than off it. All logical, so it follows the writing
-     * direction on its own.
-     */
     position-anchor: --tooltip;
     position-area: block-start;
     position-try-fallbacks:
@@ -461,21 +368,12 @@ label {
     opacity: 100%;
   }
 
-  /*
-   * A control that has just opened its own menu has stopped needing explaining, and the hint would
-   * only sit beside the answer repeating the question.
-   */
   &:has(+ [popover]:popover-open)::after {
     opacity: 0%;
   }
 }
 
-/*
- * A hint hangs outside the control it explains, and every card and section carries a
- * `view-transition-name` - which is a stacking context, so the words from one card were painted
- * under the card beside it whatever their z-index said. Lifting the one being explained above its
- * siblings is what the top layer used to do for them.
- */
+/* Every card's `view-transition-name` is a stacking context, so a hint would paint under the next card */
 .view-item:has([data-tooltip]:is(:hover, :focus-visible)) {
   position: relative;
   z-index: 1;
@@ -483,22 +381,11 @@ label {
 
 /* ---------- Glitch effects ---------- */
 
-/*
- * The game's menu tears the label for two or three frames, along x only, and is done inside about
- * 130ms. What was here ran two and a half times that and jittered on y as well, which reads as a
- * signal problem rather than as a cursor arriving.
- */
+/* Matches the game's menu: two or three frames along x only, done inside about 130ms */
 .hover-glitch {
   position: relative;
 
-  /*
-   * The tear answers the cursor reaching the label. A card is far bigger than the label inside it,
-   * though, and what the cursor actually arrives at is the card - so anything can declare itself the
-   * host of a label's hover and answer on its behalf, and the whole card tears as one.
-   *
-   * A keyboard arrives at the same place by a different route, so the host answers a focus it can
-   * see the same way it answers a cursor.
-   */
+  /* `.hover-glitch-host` lets a whole card trigger the tear of the label inside it */
   &:is(:hover, :focus-visible),
   .hover-glitch-host:is(:hover, :focus-visible) & {
     animation: 130ms steps(2, end) hover-glitch;
@@ -509,7 +396,7 @@ label {
   }
 }
 
-/* Default and Cyber Ninja share this shape; Edgerunners cycles a third colour and needs its own. */
+/* Edgerunners cycles a third colour, so it has its own keyframes */
 @keyframes hover-glitch {
   0% {
     text-shadow: 2px 2px var(--cp-glitch-a), -2px -2px var(--cp-glitch-b);
@@ -578,10 +465,6 @@ label {
   animation: 100ms infinite glitch-1;
 }
 
-/*
- * The second glitch layer follows cyan in the two cyan-accented themes but the green accent in
- * Edgerunners, which is the only theme where the two diverge.
- */
 .glitch-2 {
   text-shadow: 0.1em 0 color-mix(in sRGB, var(--cp-glitch-b) 90%, transparent);
   animation: 100ms infinite glitch-2;
@@ -742,10 +625,7 @@ label {
   }
 }
 
-/*
- * The border chase runs a different number of colour stops per theme, so unlike every other effect
- * it cannot be reduced to one keyframe reading tokens - three keyframes, selected by theme class.
- */
+/* Each theme has a different number of colour stops, so one keyframe reading tokens cannot cover it */
 .glitch-border {
   position: relative;
   overflow: hidden;
@@ -826,7 +706,6 @@ label {
   }
 }
 
-/* The search button's "SCANNING..." sweep. */
 .scanning-effect {
   position: relative;
   overflow: hidden;
@@ -897,7 +776,6 @@ label {
   box-shadow: inset 0 0 10px color-mix(in sRGB, var(--cp-quote-glow) 30%, transparent);
 }
 
-/* Set by the sortable action on the item under the pointer, for as long as the drag lasts. */
 .sortable-dragging {
   position: relative;
   z-index: 999;
@@ -906,14 +784,7 @@ label {
 
 /* ---------- Utility classes shared by more than one component ---------- */
 
-/*
- * What decides how wide a netlink is, so a card, the tile that adds one and the form that writes one
- * are all the same size.
- *
- * Shared rather than a section's own, because a link can be written where there is no section to
- * hold it: an empty grid draws none, and the form it opens there would otherwise stretch the whole
- * column instead of standing in a card's place.
- */
+/* Global because an empty grid draws no section, and its form must still take a card's width */
 .netlink-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -938,7 +809,6 @@ label {
   }
 }
 
-/* The soft breathing pulse the original borrowed from Tailwind for loading states. */
 .pulse {
   animation: 2000ms cubic-bezier(0.4, 0, 0.6, 1) infinite pulse;
 }
@@ -950,17 +820,8 @@ label {
 }
 
 /*
- * One rule, rather than a list of the things that move.
- *
- * The list this replaces had to be extended by hand every time anything gained an animation, and
- * had already fallen two behind - a spinner that scales when pressed and the container's
- * `transition: all` both moved straight through it. A universal rule cannot fall behind. It is also
- * the one place `!important` earns its keep here: `*` loses to every other selector in this sheet,
- * and to Svelte's scoped ones by more still, and it has to outrank the transitions a drag writes
- * inline as well.
- *
- * Durations rather than `none`, because `allow-discrete` needs a duration to hand a popover or a
- * dialog its open and close - at 1ms they arrive whole instead of not at all.
+ * `!important` because `*` must outrank scoped selectors and the inline transitions a drag writes.
+ * 1ms rather than `none`, since `allow-discrete` needs a duration to open and close a popover or dialog.
  */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -974,13 +835,8 @@ label {
   }
 
   /*
-   * `*` reaches every element and its own `::before` and `::after`. A pseudo-element the browser
-   * owns is none of those, so the roll on a disclosure's `::details-content` and the fade on a
-   * dialog's `::backdrop` ran their full curve with motion turned off - measured in Edge, 200ms of
-   * roll under the picker while the gap above it snapped shut on the first frame.
-   *
-   * A second block rather than two more selectors on the one above: a list holding a pseudo-element
-   * an engine does not know is invalid whole, and that list is the blanket itself.
+   * `*` does not reach browser-owned pseudo-elements (measured in Edge). A separate block, since an
+   * engine that does not know one would invalidate the whole selector list above.
    */
   ::backdrop,
   ::details-content {
@@ -991,7 +847,7 @@ label {
     animation-iteration-count: 1 !important;
   }
 
-  /* A view transition's pseudo-elements are not in the tree, so `*` never reaches them. */
+  /* A view transition's pseudo-elements are not in the tree, so `*` never reaches them */
   ::view-transition-group(*),
   ::view-transition-old(*),
   ::view-transition-new(*) {

@@ -3,7 +3,7 @@ type Quote = {
   author: string;
 };
 
-/** The 72 quotes the original shipped, verbatim and in order. */
+// Verbatim and in order, as the original shipped them
 const QUOTES: [Quote, ...Quote[]] = [
   {
     text: "Wake up, samurai. We have a city to burn.",
@@ -295,7 +295,6 @@ const QUOTES: [Quote, ...Quote[]] = [
   }
 ];
 
-/** A fresh quote every time the page opens - the original picked one per mount and kept it. */
 export function randomQuote() {
   return QUOTES[Math.floor(Math.random() * QUOTES.length)] ?? QUOTES[0];
 }

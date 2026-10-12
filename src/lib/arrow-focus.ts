@@ -1,23 +1,16 @@
 /**
- * Arrow keys move between the links inside a container, treating the grids stacked in it as one
- * field: left and right run through every link in order, and up and down cross from the last row of
- * one category into the first row of the next.
+ * Arrow keys treat the stacked category grids as one field. Tab is deliberately left alone: it
+ * already walks each card's own edit and delete actions in DOM order.
  *
- * Tab is deliberately untouched. It already walks the DOM - a card, its edit and delete actions, then
- * the next card - which is the order someone operating a card wants, and the order that leads back
- * out to the category and the netlinks gear on the way up.
- *
- * Up and down are answered geometrically rather than by counting columns. A category whose last row
- * is half full, and the gap between one category and the next, are both rows a count would get wrong.
+ * Up and down are geometric rather than counted, since a half-full last row and the gap between
+ * categories are both rows a column count would get wrong.
  */
 
-/** A link is the only thing here worth aiming at, exactly as the page's sounds decide it. */
 const LINK_SELECTOR = "a[href]";
 
 /** Two rows are never this close, and the same row never differs by this much. */
 const ROW_TOLERANCE_PX = 2;
 
-/** The four keys this answers to, so the table below and the two comparisons cannot drift apart. */
 enum ArrowKey {
   right = "ArrowRight",
   left = "ArrowLeft",
@@ -29,7 +22,6 @@ function isArrowKey(key: string): key is ArrowKey {
   return Object.values<string>(ArrowKey).includes(key);
 }
 
-/** Only the two that move along a row - up and down are answered geometrically instead. */
 const STEP_BY_KEY: Partial<Record<ArrowKey, number>> = {
   [ArrowKey.right]: 1,
   [ArrowKey.left]: -1
@@ -39,7 +31,6 @@ function centerOf(box: DOMRect) {
   return box.left + box.width / 2;
 }
 
-/** The links making up the row immediately above or below the one the focus is on. */
 function adjacentRow({ links, origin, isDown }: {
   links: HTMLElement[];
   origin: DOMRect;
@@ -64,8 +55,7 @@ function adjacentRow({ links, origin, isDown }: {
   return beyond.filter((link, index) => Math.abs((edges[index] ?? 0) - nearestEdge) < ROW_TOLERANCE_PX);
 }
 
-/** Whichever link in that row sits closest to the column the focus is already in. */
-function alignedWith({ row, origin }: {
+function closestInColumn({ row, origin }: {
   row: HTMLElement[];
   origin: DOMRect;
 }) {
@@ -84,7 +74,7 @@ function alignedWith({ row, origin }: {
 }
 
 export function arrowFocus(node: HTMLElement) {
-  function nextFor({ key, links, current }: {
+  function nextLink({ key, links, current }: {
     key: ArrowKey;
     links: HTMLElement[];
     current: HTMLElement;
@@ -101,7 +91,7 @@ export function arrowFocus(node: HTMLElement) {
 
     const origin = current.getBoundingClientRect();
 
-    return alignedWith({
+    return closestInColumn({
       row: adjacentRow({
         links,
         origin,
@@ -123,7 +113,7 @@ export function arrowFocus(node: HTMLElement) {
       return;
     }
 
-    const next = nextFor({
+    const next = nextLink({
       key: e.key,
       links,
       current

@@ -19,32 +19,18 @@ import { z } from "@/lib/zod";
 
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 
-/**
- * WMO present-weather codes are two digits, and the table below covers every one of them. A code
- * outside that range is not a sky this can describe, so the schema refuses it rather than letting it
- * fall off the end of the table and be drawn as severe weather.
- */
+/** Out-of-range codes are refused by the schema rather than falling through to severe. */
 const WMO_CODE_MIN = 0;
 const WMO_CODE_MAX = 99;
 
-/**
- * What a WMO code means, in one table rather than two ladders.
- *
- * It was two: one walking the codes for the words and another walking them again for the icon, with
- * boundaries that did not line up - and they had drifted apart in exactly the way separate ladders
- * over one input do. Fog drew a rain icon and rain showers drew a thunderstorm, each contradicting
- * the sentence printed beside it. One row per bucket cannot disagree with itself.
- *
- * The buckets stay wider than the standard code table, which is deliberate: the widget shows one
- * icon and one short line, and narrowing them would only invent distinctions a reader cannot see.
- */
 const SEVERE_SKY: WeatherSky = {
   condition: WeatherCondition.severe,
   description: "Severe weather"
 };
 
+/** Deliberately wider than the WMO table: the widget shows one icon and one short line. */
 const WEATHER_CODE_BUCKETS: {
-  /** The highest code this row answers for; rows are read in order, so each starts after the last. */
+  /** Rows are read in order, so each starts after the previous row's maxCode. */
   maxCode: number;
   sky: WeatherSky;
 }[] = [
@@ -77,7 +63,7 @@ const WEATHER_CODE_BUCKETS: {
     }
   },
   {
-    /* A cloud rather than rain, which is what a reader sees when they look up into fog. */
+    /* Fog draws a cloud rather than rain, which is what it looks like. */
     maxCode: 49,
     sky: {
       condition: WeatherCondition.cloudy,
@@ -125,19 +111,12 @@ const WEATHER_CODE_BUCKETS: {
   }
 ];
 
-/** The first row the code falls inside. Severe is both the last bucket and the answer to a surprise. */
 function skyForCode(code: number) {
   return WEATHER_CODE_BUCKETS.find(({ maxCode }) => code <= maxCode)?.sky ?? SEVERE_SKY;
 }
 
 const CURRENT_FIELDS = "temperature_2m,weather_code";
 
-/**
- * What comes back, and only what is read - the answer carries a dozen more fields (the coordinates
- * it snapped to, elevation, timezone, units) and none of them are consulted, so none are described.
- * Both values are bounded rather than merely typed: they arrive from a service this page does not
- * own and end up drawn over a real town.
- */
 const forecastSchema = z.object({
   current: z.object({
     temperature_2m: z.number().min(TEMPERATURE_CELSIUS_MIN).max(TEMPERATURE_CELSIUS_MAX),
@@ -154,17 +133,8 @@ function forecastUrl({ latitude, longitude }: z.infer<typeof coordinatesSchema>)
   return url.href;
 }
 
-/**
- * A reading, or which way it came up empty. Never throws: turning the sky on can only add to a card
- * that already knows how to say it has nothing.
- */
 export async function readOpenMeteoWeather(location: GeoLocation) {
-  /*
-   * Checked on the way out as well as on the way back. These two numbers are about to be put in a
-   * URL and sent to somebody else's server, and they reached this page through a device API, a
-   * third party's JSON or a text field - so the one schema that says what a coordinate may be says
-   * it here too, rather than trusting that whoever built the location already asked.
-   */
+  /* Re-validated before the coordinates go into a third party's URL, whatever built the location. */
   const parsedLocation = coordinatesSchema.safeParse(location);
   if (!parsedLocation.success) {
     return WeatherRefusal.noPlace;

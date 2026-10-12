@@ -5,7 +5,6 @@
 
   const { tip }: { tip: Tip } = $props();
 
-  /** Why this one is here: not because of anything you did, but because today dealt it. */
   const HINT = "One of the day's three - a different set tomorrow";
 </script>
 

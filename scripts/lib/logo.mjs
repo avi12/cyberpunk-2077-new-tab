@@ -1,11 +1,6 @@
 /**
- * Rendering the brand mark. `scripts/cyberpunk-logo.ico` is the one file the mark lives in, and
- * everything that needs it at a size - the extension's icon set, the companion's Store assets -
- * resamples from here rather than keeping its own copy.
- *
- * It decodes and resamples by hand rather than pulling in an image library: the source is a single
- * high-resolution frame, and a gamma-correct box filter is all a pure downscale needs. Averaging
- * sRGB bytes directly would darken the wordmark's antialiased edges into mud at 16px.
+ * Decodes and resamples by hand rather than pulling in an image library: a gamma-correct box filter
+ * is all a pure downscale needs. Averaging sRGB bytes directly would darken antialiased edges at 16px.
  */
 
 import { readFileSync } from "node:fs";
@@ -42,7 +37,6 @@ function linearToSrgb(value) {
   return Math.max(0, Math.min(255, Math.round(encoded * 255)));
 }
 
-/** Picks the ICO's largest frame, which is the only one worth downscaling from. */
 function readLargestIcoFrame({ ico, source }) {
   const count = ico.readUInt16LE(4);
   if (ico.readUInt16LE(2) !== 1 || count === 0) {
@@ -177,7 +171,6 @@ function decodePng(png) {
   };
 }
 
-/** The mark as RGBA pixels, ready to be rendered at any size. */
 export function readLogo(source) {
   return decodePng(
     readLargestIcoFrame({
@@ -211,18 +204,9 @@ function samplePixel({ pixels, size, left, top, right, bottom }) {
   return [...colours, Math.round((alphaTotal / weightTotal) * OPAQUE)];
 }
 
-/**
- * The Web Store wants 96px of artwork inside a 128px frame, the remaining 16px per side
- * transparent, so every listing tile carries the same optical weight. Holding one ratio across
- * every icon set keeps the mark the same size in the toolbar, in the store and in the app list.
- */
+/** The Web Store wants 96px of artwork inside a 128px frame; every icon set holds the same ratio. */
 export const ICON_ARTWORK_RATIO = 96 / 128;
 
-/**
- * Box-filters the mark down to `artworkRatio` of the canvas's shorter side, then centres it on a
- * transparent canvas. The ratio is the padding: it is what keeps the mark the same optical weight
- * across a set of frames that are not all the same shape.
- */
 export function renderLogo({ source, width, height, artworkRatio }) {
   const artworkSize = Math.round(Math.min(width, height) * artworkRatio);
   const insetX = Math.round((width - artworkSize) / 2);

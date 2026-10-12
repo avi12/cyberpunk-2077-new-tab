@@ -17,7 +17,6 @@
   import WeatherWidget from "@/features/weather/WeatherWidget.svelte";
   import type { WidgetProps } from "./widget.svelte";
 
-  /** What a widget type is called in the list, and the view that draws it - named once, together. */
   const WIDGETS: Record<WidgetType, {
     label: string;
     view: Component<WidgetProps>;
@@ -40,7 +39,6 @@
     }
   };
 
-  /** Long enough to read as the card opening, short enough that a switch still feels like a switch. */
   const REVEAL_MS = 180;
 
   let isEditing = $state(false);
@@ -106,23 +104,15 @@
       onReorder: next => (settings.widgetOrder.current = next)
     }))}>
     <!--
-      The card is the only thing that animates, and it animates its own height inside the flow. That
-      is what keeps the switch above it still and the widgets below it exactly in step: they are not
-      following an animation of their own, they are being pushed by a box that is genuinely growing.
-      Anything that animates the slot instead - a view transition morphing it, `flip` scaling it, a
-      translate - moves the header with it or lets a row cross the card. Entering and leaving edit
-      mode still transitions: that moves the whole column at once.
+      Only the card animates, growing its own height in flow so the rows below are pushed in step.
+      Animating the slot instead (view transition, `flip`, translate) drags the header along or lets
+      a row cross the card.
     -->
     {#each ordered as widget (widget.id)}
       {@const isShown = isEditing || widget.enabled}
       <!--
-        A slot with nothing in it is not drawn at all, and that is load-bearing rather than tidy.
-        Off, outside edit mode, this `li` held neither the switch nor the widget and stood there as
-        an empty box - captured by the view transition all the same, because the name is on the slot.
-        Firefox then animated those groups to translate(0, 0) instead of to where the empty box sat -
-        read straight off `getAnimations()` - so on leaving edit mode the switched-off rows flew out
-        of the column towards the corner of the screen. Chromium held their place and hid it.
-        A slot that is not there is not captured, and an exit fades where it stood on both.
+        An empty slot must not be drawn: the view transition still captures it, and Firefox animates
+        a zero-box group to translate(0, 0), flinging switched-off rows to the screen corner.
       -->
       {#if isShown}
         <li
@@ -171,11 +161,7 @@
 </section>
 
 <style>
-  /*
-   * The row is exactly the title's line box, and the control slot is pinned to it. The gear and the
-   * SAVE that replaces it are not the same height, and without this the header - and every widget
-   * under it - steps down as one becomes the other.
-   */
+  /* The gear and SAVE differ in height, so the controls are pinned to the title's line box. */
   .widgets__header {
     --widgets-header-size: 1.75rem;
 
