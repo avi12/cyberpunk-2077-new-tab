@@ -13,18 +13,6 @@
   actionLabel={tip.cta}
   hint={HINT}
   kind={CopilotKind.tip}
+  label={tip.title}
   prompt={tip.prompt}
-  summary={tip.description}
-  title={tip.title}>
-  {#snippet meta()}
-    <li class="category">{tip.category}</li>
-  {/snippet}
-</CompanionCard>
-
-<style>
-  .category {
-    color: var(--cp-text-dimmer);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-</style>
+  title={tip.description} />

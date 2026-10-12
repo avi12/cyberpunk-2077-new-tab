@@ -1,7 +1,7 @@
 import type { CompanionRead } from "./bridge";
 import { CompanionState, CompanionUnreachable, MAX_CARDS } from "./bridge";
-import iconMap from "@/assets/icons/map.svg?raw";
-import iconSparkles from "@/assets/icons/sparkles.svg?raw";
+import iconClock from "@/assets/icons/clock.svg?raw";
+import iconLightbulb from "@/assets/icons/lightbulb.svg?raw";
 import { readJourneys, rememberedJourneys } from "@/features/journeys/bridge";
 import type { Journey } from "@/features/journeys/model";
 import { readTips, rememberedTips } from "@/features/tips/bridge";
@@ -23,11 +23,11 @@ export enum CopilotKind {
 export const COPILOT_KINDS = {
   [CopilotKind.journey]: {
     label: "Journeys",
-    icon: iconMap
+    icon: iconClock
   },
   [CopilotKind.tip]: {
     label: "Tips",
-    icon: iconSparkles
+    icon: iconLightbulb
   }
 } as const;
 

@@ -14,17 +14,14 @@
   import type { CardSubject } from "./context";
   import { cardContextAccessFor, withCardContext } from "./context";
 
-  const { kind, title, hint, summary, actionLabel, prompt, subject = null, meta }: {
+  const { kind, label, title, hint, actionLabel, prompt, subject = null, meta }: {
     /** Which family this is. The heading above says "Copilot" for both, so the card says which. */
     kind: CopilotKind;
+    /** Overrides the family's name in the eyebrow, as a tip's title does in Edge's own card. */
+    label?: string;
     title: string;
     /** Why this card is here at all, which is the one thing its title does not already say. */
     hint: string;
-    /**
-     * A second line under the title, for a family whose source gives it one. A journey's does not:
-     * Edge puts the whole card in the one line, so there is nothing true to put here.
-     */
-    summary?: string;
     actionLabel: string;
     prompt: string;
     /**
@@ -34,8 +31,8 @@
      * context is gathered from the reader instead.
      */
     subject?: CardSubject | null;
-    /** The trail under the summary: the sites a journey was drawn from, a tip's category. */
-    meta: Snippet;
+    /** The trail under the title: the sites a journey was drawn from. */
+    meta?: Snippet;
   } = $props();
 
   /**
@@ -136,7 +133,7 @@
 <article class="card glitch-border">
   <p class="card__kind">
     {@html COPILOT_KINDS[kind].icon}
-    {COPILOT_KINDS[kind].label}
+    {label ?? COPILOT_KINDS[kind].label}
   </p>
   <!--
     Named by the title alone: the hint is drawn as this heading's own `::after`, which would
@@ -151,12 +148,9 @@
   <h3 class="card__title" aria-label={title} data-tooltip={hint}>
     <span class="hover-glitch">{title}</span>
   </h3>
-  {#if summary}
-    <p class="card__summary">{summary}</p>
-  {/if}
 
   <ul class="card__meta">
-    {@render meta()}
+    {@render meta?.()}
   </ul>
 
   <!--
@@ -224,20 +218,6 @@
     line-height: 1.375rem;
     letter-spacing: 0.025em;
     text-transform: uppercase;
-  }
-
-  /*
-   * Mono at a small size needs the extra leading more than most faces do. The height is fixed by the
-   * section rather than by the text, so every card is the same height as the placeholder that stood
-   * where it now is, and a long summary cannot push the page around as it arrives.
-   */
-  .card__summary {
-    overflow: hidden;
-    height: var(--cp-card-summary-height);
-    color: var(--cp-text-dim);
-    font-family: var(--cp-mono);
-    font-size: 0.8125rem;
-    line-height: 1.3125rem;
   }
 
   /* The trail's type is the card's to set, whichever family filled it in. */
