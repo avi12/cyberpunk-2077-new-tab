@@ -250,14 +250,19 @@ export default defineConfig({
   },
   zip: {
     artifactTemplate: "cyberpunk-2077-new-tab-{{versionName}}-{{browser}}.zip",
-    // The companion app is distributed on its own, so it does not belong in a store upload.
-    excludeSources: [
-      ".output/**",
-      ".wxt/**",
-      ".fallow/**",
-      "reference/**",
-      "scripts/**",
-      "companion/**"
+    // An allowlist, so working-tree-only files (handoff notes, the companion app) never reach a
+    // store upload. `scripts/browser.mjs` is here because this file imports it.
+    includeSources: [
+      "src/**",
+      "scripts/browser.mjs",
+      "wxt.config.ts",
+      "extension-identity.json",
+      "tsconfig.json",
+      "package.json",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml",
+      "README.md",
+      "LICENSE"
     ]
   }
 });
