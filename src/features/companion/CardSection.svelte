@@ -11,27 +11,27 @@
     id,
     title,
     icon,
-    isReadable,
+    isCompanionReadable,
     read,
     readRemembered,
     card,
     unavailable,
     action,
     rotateMs,
-    glitching = false
+    isGlitching = false
   }: {
     /** Names the view transition and the remembered row height. */
     id: string;
     title: string;
     icon: string;
-    isReadable: boolean;
+    isCompanionReadable: boolean;
     read: () => Promise<CompanionRead<TCard>>;
     readRemembered: () => Promise<TCard[]>;
     card: Snippet<[TCard]>;
     unavailable: Snippet;
     action?: Snippet;
     rotateMs?: number;
-    glitching?: boolean;
+    isGlitching?: boolean;
   } = $props();
 
   const PLACEHOLDERS = Array.from({ length: MAX_CARDS }, (_, i) => i);
@@ -51,7 +51,7 @@
    * Shown while loading so it holds its place rather than shoving the page down later. Afterwards only
    * cards keep it, since reachability is reported once above both sections.
    */
-  const isVisible = $derived(!isReadable || cards.length > 0 || companion.state === CompanionState.loading);
+  const isVisible = $derived(!isCompanionReadable || cards.length > 0 || companion.state === CompanionState.loading);
 
   /** The grid stretches every card to the tallest, so that height is all a placeholder needs. */
   function measureRow(elList: HTMLElement) {
@@ -161,7 +161,7 @@
 
   $effect(() => {
     void companion.generation;
-    if (!isReadable) {
+    if (!isCompanionReadable) {
       return;
     }
 
@@ -170,7 +170,7 @@
 
   // Only while visible: every open new tab shares one turn count, so hidden ones would walk it on too.
   $effect(() => {
-    if (!isReadable || !rotateMs) {
+    if (!isCompanionReadable || !rotateMs) {
       return;
     }
 
@@ -187,7 +187,7 @@
 </script>
 
 {#if isVisible}
-  <section style:view-transition-name={id} class="page-section section" class:glitch={glitching}>
+  <section style:view-transition-name={id} class="page-section section" class:glitch={isGlitching}>
     <div class="section__head">
       <h2 class="cyber-section-title section__title">
         {@html icon}
@@ -198,13 +198,13 @@
       {/if}
     </div>
 
-    {#if !isReadable}
+    {#if !isCompanionReadable}
       {@render unavailable()}
     {:else if cards.length > 0}
       <ul
         style:--cp-row-seats={MAX_CARDS}
         class="section__list"
-        class:glitch={rowGlitch.active}
+        class:glitch={rowGlitch.isActive}
         {@attach measureRow}>
         {#each cards as item (item.id)}
           <li>{@render card(item)}</li>

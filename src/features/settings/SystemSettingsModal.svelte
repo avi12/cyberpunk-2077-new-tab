@@ -1,6 +1,6 @@
 <script lang="ts">
   import { AnalyticsAction } from "@/lib/analytics/definitions";
-  import { backupTakenAtMs, dropBackup, keepBackup, restoreBackup } from "./settings-sync";
+  import { backupTakenAtMs, deleteBackup, saveBackup, restoreBackup } from "./settings-sync";
   import { exportSettings, importSettings, INVALID_SETTINGS_FILE, SETTINGS_FILE_STEM } from "./settings-file";
   import AccountBackup, { backupState } from "@/ui/AccountBackup.svelte";
   import { downloadFile, jsonFileName } from "@/lib/download";
@@ -77,7 +77,7 @@
       downloadFile({
         name: jsonFileName(SETTINGS_FILE_STEM),
         contents: exportSettings(),
-        type: "application/json"
+        mimeType: "application/json"
       });
     } catch (e) {
       showError(e);
@@ -87,7 +87,7 @@
   async function backUp() {
     isWorking = true;
     try {
-      backupAtMs = await keepBackup();
+      backupAtMs = await saveBackup();
       error = "";
     } catch (e) {
       showError(e);
@@ -108,7 +108,7 @@
   }
 
   async function forgetBackup() {
-    await dropBackup();
+    await deleteBackup();
     backupAtMs = null;
   }
 </script>

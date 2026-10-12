@@ -2,7 +2,7 @@ export const GLITCH_SHORT_MS = 100;
 export const GLITCH_LONG_MS = 200;
 
 export class Glitch {
-  active = $state(false);
+  isActive = $state(false);
   #timer: ReturnType<typeof setTimeout> | undefined;
 
   fire({ onDone, durationMs = GLITCH_SHORT_MS }: {
@@ -10,15 +10,15 @@ export class Glitch {
     durationMs?: number;
   } = {}) {
     clearTimeout(this.#timer);
-    this.active = true;
+    this.isActive = true;
     this.#timer = setTimeout(() => {
-      this.active = false;
+      this.isActive = false;
       onDone?.();
     }, durationMs);
   }
 
   stop() {
     clearTimeout(this.#timer);
-    this.active = false;
+    this.isActive = false;
   }
 }

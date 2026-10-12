@@ -117,17 +117,17 @@
     {/if}
 
     {#if preferences.showSearchBar}
-      <SearchBar glitching={glitchingElement === "showSearchBar"} />
+      <SearchBar isGlitching={glitchingElement === "showSearchBar"} />
     {/if}
 
     {#if preferences.showQuotes}
-      <Quote glitching={glitchingElement === "showQuotes"} isPending={!isReady} />
+      <Quote isGlitching={glitchingElement === "showQuotes"} isPending={!isReady} />
     {/if}
 
     <!-- Flags read inline so they become literals and the section folds out of the Firefox build -->
     {#if (import.meta.env.CHROME || import.meta.env.EDGE) && isUsingCompanion}
       <CompanionSetup />
-      <Copilot glitching={glitchingElement === "showCopilot"} />
+      <Copilot isGlitching={glitchingElement === "showCopilot"} />
     {/if}
 
     {#if preferences.showNetlinks}

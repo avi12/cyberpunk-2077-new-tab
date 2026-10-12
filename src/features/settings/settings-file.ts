@@ -1,5 +1,5 @@
 import { DEFAULT_BACKGROUND } from "@/lib/storage/defaults";
-import { CACHED_PREFIX } from "@/lib/storage/media-store";
+import { CACHED_MEDIA_PREFIX } from "@/lib/storage/media-store";
 import { BackgroundMediaType } from "@/lib/storage/schema";
 import { allSettings, settings } from "@/lib/storage/settings.svelte";
 import { z } from "@/lib/zod";
@@ -23,7 +23,7 @@ export function settingsSnapshot() {
   }
 
   const background = settings.background.current;
-  const isCachedBackground = background.startsWith(CACHED_PREFIX);
+  const isCachedBackground = background.startsWith(CACHED_MEDIA_PREFIX);
   snapshot.background = isCachedBackground ? DEFAULT_BACKGROUND : background;
   snapshot.backgroundMediaType = isCachedBackground ? BackgroundMediaType.image : settings.backgroundMediaType.current;
 

@@ -7,7 +7,7 @@ const MAX_SNAPSHOT_LENGTH = 80_000;
 const backup = slicedBackup({
   name: "settings",
   maxLength: MAX_SNAPSHOT_LENGTH,
-  tooBig: "Too much to fit in your browser account"
+  tooBigMessage: "Too much to fit in your browser account"
 });
 
 export async function backupTakenAtMs() {
@@ -15,7 +15,7 @@ export async function backupTakenAtMs() {
 }
 
 /** Resolves to when the backup was taken. */
-export async function keepBackup() {
+export async function saveBackup() {
   // No indenting: every byte of it counts against the area.
   return backup.keep(JSON.stringify(settingsSnapshot()));
 }
@@ -24,6 +24,6 @@ export async function restoreBackup() {
   await importSettings(await backup.read());
 }
 
-export async function dropBackup() {
+export async function deleteBackup() {
   await backup.drop();
 }

@@ -1,20 +1,20 @@
 <script lang="ts">
   import { randomQuote } from "./quotes";
 
-  const { glitching = false, isPending = false }: {
-    glitching?: boolean;
+  const { isGlitching = false, isPending = false }: {
+    isGlitching?: boolean;
     isPending?: boolean;
   } = $props();
 
   const quote = randomQuote();
 </script>
 
-<figure class="quote" class:glitch={glitching} class:quote--pending={isPending}>
-  <blockquote class="quote__text quote-box quote-hover" class:glitch={glitching} data-text={`"${quote.text}"`}>
+<figure class="quote" class:glitch={isGlitching} class:quote--pending={isPending}>
+  <blockquote class="quote__text quote-box quote-hover" class:glitch={isGlitching} data-text={`"${quote.text}"`}>
     "{quote.text}"
     <span class="quote-glow" aria-hidden="true"></span>
   </blockquote>
-  <figcaption class="quote__author hover-glitch" class:glitch={glitching} data-text={`- ${quote.author}`}>
+  <figcaption class="quote__author hover-glitch" class:glitch={isGlitching} data-text={`- ${quote.author}`}>
     - <cite>{quote.author}</cite>
   </figcaption>
 </figure>

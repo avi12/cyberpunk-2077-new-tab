@@ -188,7 +188,7 @@
   <!-- An outro rather than the page's view transition, which a permission prompt can skip -->
   <div class="page-section setup" transition:slide={{ duration: motionDuration(COLLAPSE_MS), easing: cubicOut }}>
     {#if companion.state === CompanionState.setupNeeded}
-      <CompanionNotice isTearing={glitch.active}>
+      <CompanionNotice isTearing={glitch.isActive}>
         Microsoft Edge maps where your browsing is heading once {COPILOT_MODE_SETTING} and {JOURNEYS_SETTING}
         are on under {COPILOT_SETTINGS_SECTION} - the {COMPANION_NAME} that reads it is on the Microsoft Store
         {#snippet action()}
@@ -207,7 +207,7 @@
       </CompanionNotice>
     {:else if companion.state === CompanionState.permissionNeeded}
       <!-- Names the switches too, or a reader granting without them lands on "nothing from Microsoft Edge yet" -->
-      <CompanionNotice isTearing={glitch.active}>
+      <CompanionNotice isTearing={glitch.isActive}>
         Let the {COMPANION_NAME} through and this fills itself in - it reads what Microsoft Edge
         writes once {COPILOT_MODE_SETTING} and {JOURNEYS_SETTING} are on under {COPILOT_SETTINGS_SECTION}
         {#snippet action()}
@@ -233,7 +233,7 @@
         {/snippet}
       </CompanionNotice>
     {:else if companion.state === CompanionState.companionNotRunning}
-      <CompanionNotice isTearing={glitch.active}>
+      <CompanionNotice isTearing={glitch.isActive}>
         {#if companion.isRowFilled}
           {COMPANION_NAME} stopped - start it again; what is below it is the last read
         {:else}
@@ -242,7 +242,7 @@
       </CompanionNotice>
     {:else if companion.state === CompanionState.edgeHasNothing}
       <!-- Covers switches that are off and ones just turned on, which the app cannot tell apart -->
-      <CompanionNotice isTearing={glitch.active}>
+      <CompanionNotice isTearing={glitch.isActive}>
         Nothing from Microsoft Edge yet - it needs {COPILOT_MODE_SETTING}, then {JOURNEYS_SETTING} under
         {COPILOT_SETTINGS_SECTION}, and a little browsing after that
         {#snippet action()}
@@ -259,7 +259,7 @@
         {/snippet}
       </CompanionNotice>
     {:else if companion.state === CompanionState.linking}
-      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>
+      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.isActive}>
         {#if isLinkStalled}
           <!-- The worker predates the permission, and only going idle or a restart replaces it -->
           Still linking the {COMPANION_NAME} - Microsoft Edge picks it up shortly on its own, or
@@ -271,7 +271,7 @@
         {/if}
       </CompanionNotice>
     {:else if isAppUnreachable}
-      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>
+      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.isActive}>
         {#if hasCompanionAnswered}
           <!-- Installed before, so an update most likely moved the executable Edge points at -->
           Couldn't reach the {COMPANION_NAME} - start it, then choose {RECONNECT_ITEM} in its tray menu
@@ -281,7 +281,7 @@
         {/if}
       </CompanionNotice>
     {:else}
-      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.active}>
+      <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.isActive}>
         {#if companion.isRowFilled}
           Can't reach the {COMPANION_NAME} - what is below it is the last read
         {:else}

@@ -9,7 +9,7 @@ const MAX_SNAPSHOT_LENGTH = 16_000;
 const backup = slicedBackup({
   name: "netlinks",
   maxLength: MAX_SNAPSHOT_LENGTH,
-  tooBig: "Too many netlinks to fit in your browser account"
+  tooBigMessage: "Too many netlinks to fit in your browser account"
 });
 
 export async function netlinksBackupTakenAtMs() {

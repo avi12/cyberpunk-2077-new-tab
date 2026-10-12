@@ -1,7 +1,7 @@
 <script lang="ts">
   import { BackgroundMediaType } from "@/lib/storage/schema";
   import { BASE_BACKGROUND_COLOR } from "@/lib/storage/defaults";
-  import { CACHED_PREFIX, loadMedia, MediaSlot } from "@/lib/storage/media-store";
+  import { CACHED_MEDIA_PREFIX, loadMedia, MediaSlot } from "@/lib/storage/media-store";
   import { isHexColor } from "@/lib/color";
   import { settings } from "@/lib/storage/settings.svelte";
 
@@ -13,9 +13,9 @@
   const background = $derived(settings.background.current);
   const brightnessFilter = $derived(`brightness(${settings.backgroundBrightness.current / PERCENT})`);
   const version = $derived(settings.backgroundMediaVersion.current);
-  const isCached = $derived(background.startsWith(CACHED_PREFIX));
+  const isCached = $derived(background.startsWith(CACHED_MEDIA_PREFIX));
   const isVideo = $derived(
-    background.startsWith(`${CACHED_PREFIX}${BackgroundMediaType.video}`) ||
+    background.startsWith(`${CACHED_MEDIA_PREFIX}${BackgroundMediaType.video}`) ||
     (isCached && settings.backgroundMediaType.current === BackgroundMediaType.video)
   );
   const isColor = $derived(isHexColor(background));

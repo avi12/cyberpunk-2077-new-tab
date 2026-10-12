@@ -2,7 +2,7 @@
   import { AnalyticsAction } from "@/lib/analytics/definitions";
   import { BACKGROUND_BRIGHTNESS_MAX, BACKGROUND_BRIGHTNESS_MIN, BackgroundMediaType } from "@/lib/storage/schema";
   import { BACKGROUND_COLORS, BACKGROUND_IMAGES, DEFAULT_BACKGROUND, DEFAULT_BACKGROUND_BRIGHTNESS } from "@/lib/storage/defaults";
-  import { CACHED_PREFIX, clearMedia, MediaSlot, saveMedia } from "@/lib/storage/media-store";
+  import { CACHED_MEDIA_PREFIX, clearMedia, MediaSlot, saveMedia } from "@/lib/storage/media-store";
   import { dropZone } from "@/lib/drop-zone";
   import { fetchBlob } from "@/features/widgets/cors-proxy";
   import iconImage from "@/assets/icons/image.svg?raw";
@@ -80,7 +80,7 @@
 
     settings.backgroundMediaType.current = kind;
     settings.backgroundMediaVersion.current += 1;
-    settings.background.current = `${CACHED_PREFIX}${kind}`;
+    settings.background.current = `${CACHED_MEDIA_PREFIX}${kind}`;
     urlEntry = null;
     error = "";
   }

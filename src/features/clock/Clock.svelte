@@ -27,7 +27,7 @@
   let dateIso = $state(currentDateIso());
   let timeIso = $state(currentTimeIso());
   let time = $state(currentTime(localeHourCycle()));
-  const glitching = $derived(glitch.active || glitchingTime);
+  const isGlitching = $derived(glitch.isActive || glitchingTime);
 
   /**
    * The glitch fires from the tick that changes the reading: a separate timer would land mid-minute
@@ -82,9 +82,9 @@
         data-tooltip={hourCycleHint}
         onclick={flipHourCycle}
         type="button">
-        <span class="clock__reading hover-glitch" class:glitch={glitching} data-text={time}>
+        <span class="clock__reading hover-glitch" class:glitch={isGlitching} data-text={time}>
           <time datetime={timeIso}>{time}</time>
-          {#if glitching}
+          {#if isGlitching}
             <span class="clock__ghost clock__ghost--a glitch-1" aria-hidden="true">{time}</span>
             <span class="clock__ghost clock__ghost--b glitch-2" aria-hidden="true">{time}</span>
           {/if}

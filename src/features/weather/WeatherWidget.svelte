@@ -190,7 +190,7 @@
         <span style:color={icon.color} class="weather__icon">{@html icon.svg}</span>
         <button
           class="weather__temp weather__temp--button"
-          class:glitch={glitch.active}
+          class:glitch={glitch.isActive}
           data-analytics={AnalyticsAction.weatherSourceChanged}
           data-text={temperature}
           onclick={() => glitch.fire({ onDone: () => onConfigChange({ temperatureUnit: !isCelsius }) })}

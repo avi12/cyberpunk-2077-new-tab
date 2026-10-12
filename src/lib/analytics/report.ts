@@ -1,4 +1,4 @@
-import { resolveClientId } from "./client-id";
+import { getOrCreateClientId } from "./client-id";
 import { isAnalyticsEnabled } from "./consent";
 import {
   AnalyticsParam,
@@ -133,7 +133,7 @@ async function report(name: AnalyticsEvent, params: ReportedParams = {}) {
     })}`, {
       method: "POST",
       body: JSON.stringify({
-        client_id: await resolveClientId(),
+        client_id: await getOrCreateClientId(),
         timestamp_micros: stampedMicros(Temporal.Now.instant().epochMilliseconds),
         user_properties: userProperties(),
         /* None of this is advertising data and none of it may become any, so both are refused. */

@@ -14,7 +14,7 @@
   import TipCard from "@/features/tips/TipCard.svelte";
   import { TIPS_ROTATE_MS } from "@/features/tips/model";
 
-  const { glitching = false }: { glitching?: boolean } = $props();
+  const { isGlitching = false }: { isGlitching?: boolean } = $props();
 
   const SECTION_ID = "copilot";
   const TITLE = "Copilot";
@@ -24,9 +24,9 @@
   id={SECTION_ID}
   {action}
   card={copilotCard}
-  {glitching}
   icon={iconBot}
-  isReadable={IS_COMPANION_REACHABLE}
+  isCompanionReadable={IS_COMPANION_REACHABLE}
+  {isGlitching}
   read={readCopilot}
   readRemembered={rememberedCopilot}
   rotateMs={TIPS_ROTATE_MS}

@@ -23,12 +23,12 @@ const recordSchema = z.object({
 type BackupRecord = z.infer<typeof recordSchema>;
 
 /** The name decides the storage keys, so `settings` must keep the exact keys it has always written. */
-export function slicedBackup({ name, maxLength, tooBig }: {
+export function slicedBackup({ name, maxLength, tooBigMessage }: {
   name: string;
   /** In characters of JSON. */
   maxLength: number;
   /** The error message when the snapshot will not fit. */
-  tooBig: string;
+  tooBigMessage: string;
 }) {
   const recordItem = definePlainItem<BackupRecord | null>(`sync:${name}Backup`, { fallback: null });
 
@@ -53,7 +53,7 @@ export function slicedBackup({ name, maxLength, tooBig }: {
     },
     async keep(json: string) {
       if (json.length > maxLength) {
-        throw new Error(tooBig);
+        throw new Error(tooBigMessage);
       }
 
       const previous = await readRecord();

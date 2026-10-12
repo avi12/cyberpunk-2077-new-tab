@@ -16,7 +16,7 @@ export enum MediaSlot {
   background = "background-media"
 }
 
-export const CACHED_PREFIX = "cached:";
+export const CACHED_MEDIA_PREFIX = "cached:";
 
 /** Only the blob and the slot are required: the store is the original extension's, and older records lack the rest. */
 const mediaRecordSchema = z.object({

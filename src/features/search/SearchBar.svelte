@@ -11,7 +11,7 @@
   import { TabDisposition } from "@/lib/messaging";
   import { wait } from "@/lib/wait";
 
-  const { glitching = false }: { glitching?: boolean } = $props();
+  const { isGlitching = false }: { isGlitching?: boolean } = $props();
 
   const ENGINE_POPOVER_ID = "search-engine-list";
   const QUERY_INPUT_ID = "search-query";
@@ -111,7 +111,7 @@
   }
 </script>
 
-<search class="search" class:glitch={glitching}>
+<search class="search" class:glitch={isGlitching}>
   <form
     class="search__form"
     action={engine.action}

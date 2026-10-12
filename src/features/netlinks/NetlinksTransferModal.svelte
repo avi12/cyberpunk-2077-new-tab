@@ -95,7 +95,7 @@
       downloadFile({
         name: jsonFileName(NETLINKS_FILE_STEM),
         contents: exportNetlinks(),
-        type: "application/json"
+        mimeType: "application/json"
       });
     } catch (e) {
       showError(e);
