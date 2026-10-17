@@ -29,6 +29,53 @@ export const weatherReadingSchema = z.object({
   description: nonEmptyTextSchema
 });
 
+/**
+ * Neither Google nor Bing publishes a list of its phrases, so a keyword decides the icon. Order matters: freezing
+ * rain is snow before it is rain, and a dust storm is severe before anything else.
+ */
+const CONDITION_WORDS: {
+  condition: WeatherCondition;
+  words: string[];
+}[] = [
+  {
+    condition: WeatherCondition.thunderstorm,
+    words: ["thunder", "lightning", "hail"]
+  },
+  {
+    condition: WeatherCondition.snow,
+    words: ["snow", "sleet", "blizzard", "flurr", "wintry", "freezing", "ice", "icy"]
+  },
+  {
+    condition: WeatherCondition.rain,
+    words: ["rain", "drizzle", "shower", "sprinkle"]
+  },
+  {
+    condition: WeatherCondition.severe,
+    words: ["tornado", "cyclone", "hurricane", "squall", "wind", "blustery", "dust", "sand", "smoke", "ash"]
+  },
+  {
+    condition: WeatherCondition.clear,
+    words: ["sunny", "clear", "sun"]
+  },
+  {
+    condition: WeatherCondition.cloudy,
+    words: ["cloud", "overcast", "fog", "mist", "haze", "dreary"]
+  }
+];
+
+const UNKNOWN_CONDITION = WeatherCondition.cloudy;
+
+export function conditionFor(description: string) {
+  const phrase = description.toLowerCase();
+  for (const { condition, words } of CONDITION_WORDS) {
+    if (words.some(word => phrase.includes(word))) {
+      return condition;
+    }
+  }
+
+  return UNKNOWN_CONDITION;
+}
+
 export type WeatherReading = z.infer<typeof weatherReadingSchema>;
 
 /** Decided together from one source answer, so an icon never drifts from the words beside it. */
