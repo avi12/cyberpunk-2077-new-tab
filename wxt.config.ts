@@ -105,7 +105,7 @@ export default defineConfig({
   modules: ["@wxt-dev/module-svelte"],
   manifest: ({ browser }) => ({
     name: "Cyberpunk 2077 New Tab",
-    description: "An immersive Cyberpunk 2077 themed homepage with dynamic and interactive elements!",
+    description: "Jack into Night City on every new tab: a neon HUD, arranged your way",
     // No `action` key on purpose: the extension is the new tab, so a toolbar button would duplicate
     // Ctrl+T. Nothing may touch `browser.action` while it is absent - even reading it kills the worker.
     //
