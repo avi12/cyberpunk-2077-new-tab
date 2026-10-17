@@ -32,10 +32,17 @@ const COMPOSE_ORIGINS = ["https://claude.ai/*", "https://copilot.com/*"];
 
 /**
  * Google's own weather, read off its search page. Optional and asked for only when turned on in the
- * terminal panel - a refusal falls back to open-meteo. Chromium only: measured, Firefox never sends
+ * terminal panel - a refusal falls back to Bing. Chromium only: measured, Firefox never sends
  * the cookie jar the weather block depends on from an extension page, so the grant achieves nothing.
  */
-const WEATHER_ORIGIN = "https://www.google.com/*";
+const GOOGLE_WEATHER_ORIGIN = "https://www.google.com/*";
+
+/**
+ * Bing's weather, the fallback behind Google and Firefox's only source. Optional on both builds and
+ * asked for only from the terminal panel; until it is granted the widget says so. Duplicated from
+ * `weather/bing.ts` because the manifest is built before `src/` is bundled.
+ */
+const BING_WEATHER_ORIGIN = "https://api.msn.com/*";
 
 const SHARED_PERMISSIONS = [
   "search",
@@ -59,7 +66,7 @@ const FIREFOX_ID = "cyberpunk-2077-new-tab@avi12.com";
  * Required by Firefox for every new add-on since November 2025.
  *
  * `locationInfo` is required: the weather widget is on by default and sends coordinates to
- * bigdatacloud and open-meteo without asking first. `technicalAndInteraction` is the analytics,
+ * bigdatacloud and msn without asking first. `technicalAndInteraction` is the analytics,
  * which Firefox only allows as optional - `analytics/consent.ts` reads the reader's choice and
  * duplicates the string, since the manifest is built before `src/` is bundled.
  *
@@ -105,8 +112,9 @@ export default defineConfig({
     // `search` runs the browser's default engine; `topSites` seeds the netlinks on first run;
     // `storage` holds every setting and the account backup; `identity` is the greeting's "Use Google
     // account" button via `launchWebAuthFlow` alone - no `identity.email` (no email warning) and no
-    // `oauth2` key (Edge ignores it). No host permissions at install, and the only later ones are
-    // optional and Chromium's - allorigins, bigdatacloud, ipwho and open-meteo all send
+    // `oauth2` key (Edge ignores it). No host permissions at install. api.msn.com (Bing's weather) is
+    // optional on both builds, because its CORS header (`*.msn.com`) no extension origin matches; the
+    // rest are Chromium's - allorigins, bigdatacloud and ipwho all send
     // `Access-Control-Allow-Origin: *`.
     //
     // `geolocation` is required because Chromium refuses to make it optional. Declared, Chromium
@@ -124,7 +132,8 @@ export default defineConfig({
             data_collection_permissions: DATA_COLLECTION
           }
         },
-        permissions: SHARED_PERMISSIONS
+        permissions: SHARED_PERMISSIONS,
+        optional_host_permissions: [BING_WEATHER_ORIGIN]
       }
       : {
         author: {
@@ -133,7 +142,7 @@ export default defineConfig({
         key: publicKey,
         minimum_chrome_version: MINIMUM_CHROMIUM_VERSION,
         optional_permissions: [...COMPANION_PERMISSIONS, ...TIP_CONTEXT_PERMISSIONS],
-        optional_host_permissions: [...COMPOSE_ORIGINS, WEATHER_ORIGIN]
+        optional_host_permissions: [BING_WEATHER_ORIGIN, ...COMPOSE_ORIGINS, GOOGLE_WEATHER_ORIGIN]
       }),
     homepage_url: "https://avi12.com"
   }),
