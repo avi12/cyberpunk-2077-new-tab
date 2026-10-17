@@ -89,12 +89,12 @@ Everything **optional** is asked for at the moment a feature needs it, never at 
 `history` for the tips that ask about your own reading, and `claude.ai` and `copilot.com` to finish a
 prompt off at its destination. Every one of them is Chromium-only: the companion is Edge on Windows
 only, and the script that types a prompt is not built for Firefox at all - so the Firefox build
-declares nothing optional at all, and a Chromium install that never sends a prompt or links the app
+declares just `api.msn.com`, for Bing's weather (its CORS header only admits `*.msn.com`), and a Chromium install that never sends a prompt or links the app
 sees no prompt of its own.
 
-There is no optional origin for the weather, and there used to be: `google.com`, on both builds,
-because the sky was scraped off Google's search page. It reads an open API by coordinate now, which
-answers any browser without a site being handed over - see
+The weather's optional origins are ticked in the terminal panel. `api.msn.com`, on both builds, is
+Bing's weather: Chromium's fallback behind Google and Firefox's only source, and it shows none until
+it is granted. Chromium also offers `google.com`, for Google's own reading - see
 [How it differs from the original](#how-it-differs-from-the-original).
 
 ### Permanent extension id
@@ -219,10 +219,10 @@ The button fills the field - a `given_name` is a first name, and if you would ra
 something else it is one keystroke away. There is nothing to save: the field is the setting, and the
 greeting follows it as you type, falling back to `V` while it stands empty.
 
-No host permissions at install, and none granted afterwards either: allorigins, bigdatacloud, ipwho
-and open-meteo all answer with `Access-Control-Allow-Origin: *`, and an extension page follows
-ordinary CORS. The only origins declared anywhere are the two a finished prompt can be typed into,
-they are optional, and the Firefox build does not carry them.
+No host permissions at install. allorigins, bigdatacloud and ipwho all answer with
+`Access-Control-Allow-Origin: *`, and an extension page follows ordinary CORS. Every origin declared
+anywhere is optional: `api.msn.com` for Bing's weather on both builds, and on Chromium only
+`google.com` and the two a finished prompt can be typed into.
 
 ## Layout
 
@@ -319,12 +319,12 @@ its slot.
   a latitude and longitude pins those instead. Whichever one the widget is reading is lit and the
   other is dimmed, though both stay usable; a stored location *is* the override, so following the
   device again clears it.
-- **The sky comes from an open API, asked by coordinate.** Google used to answer it, scraped out of
-  the search page it draws the block on - and that took the `google.com` host permission, because
-  the block is only in the markup when the request goes out as a signed-in browser carrying its
-  cookies. A fresh profile, cleared cookies, a container tab or any Firefox has no such jar, so
-  those readers got a 92KB script-only shell with no weather in it and no way to tell. open-meteo
-  answers every browser the same way, wants no key and no site, and takes a latitude and longitude
+- **The sky comes from Google where it can, and Bing's weather otherwise.** Google's block is only in
+  the markup when the request goes out as a signed-in browser carrying its cookies. A fresh profile,
+  cleared cookies, a container tab or any Firefox has no such jar, so those readers got a 92KB
+  script-only shell with no weather in it and no way to tell. Bing's weather (MSN's service, which
+  draws bing.com's weather card) answers every browser the same way, needs no cookies, and takes a
+  latitude and longitude
   rather than a place name - so coordinates typed straight into the panel have a forecast now, which
   under Google they never did, since a search could only be run on a name. Where a reading still
   cannot be had the widget says which way it came up empty and keeps the town it found; Night City's
