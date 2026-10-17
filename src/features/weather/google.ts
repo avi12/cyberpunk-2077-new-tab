@@ -1,8 +1,7 @@
 import { conditionFor, toFahrenheit, weatherReadingSchema } from "./model";
 import { nonEmptyTextSchema } from "@/features/companion/model";
 import { fetchDocument } from "@/lib/fetch";
-import type { AccessRequest } from "@/lib/permissions";
-import { hasAccess, requestAccess } from "@/lib/permissions";
+import { originAccess } from "@/lib/permissions";
 import type { GeoLocation } from "@/lib/storage/schema";
 import { z } from "@/lib/zod";
 
@@ -11,27 +10,19 @@ import { z } from "@/lib/zod";
  * It only appears when the request carries the signed-in browser's cookies - hence the optional
  * google.com grant and `credentials: "include"` - and only for an aged Google cookie jar.
  *
- * Chromium only, ahead of open-meteo: Firefox never sends the Google cookie jar from an extension
- * page. Every failure answers null so the widget falls back to open-meteo.
+ * Chromium only, ahead of Bing: Firefox never sends the Google cookie jar from an extension
+ * page. Every failure answers null so the widget falls back to Bing.
  */
 
 /** `wxt.config.ts` repeats this origin because the manifest is built before any of this is bundled. */
 const SEARCH_URL = "https://www.google.com/search";
 
-export const GOOGLE_WEATHER_ORIGIN = `${new URL(SEARCH_URL).origin}/*`;
+/** Firefox never sends the Google cookie jar from an extension page. */
+export const IS_GOOGLE_READABLE = import.meta.env.CHROME || import.meta.env.EDGE;
 
-const GOOGLE_WEATHER_ACCESS: AccessRequest = {
-  origins: [GOOGLE_WEATHER_ORIGIN]
-};
+const GOOGLE_WEATHER_ORIGIN = `${new URL(SEARCH_URL).origin}/*`;
 
-export async function hasGoogleWeatherAccess() {
-  return hasAccess(GOOGLE_WEATHER_ACCESS);
-}
-
-/** Call straight from a click: a permission prompt needs the user gesture. */
-export async function requestGoogleWeatherAccess() {
-  return requestAccess(GOOGLE_WEATHER_ACCESS);
-}
+export const googleWeatherAccess = originAccess(GOOGLE_WEATHER_ORIGIN);
 
 const REQUEST_TIMEOUT_MS = 8000;
 
@@ -140,7 +131,7 @@ function readingFromPage(page: Document) {
 
 export async function readGoogleWeather(location: GeoLocation) {
   const placeName = location.name.trim();
-  const isAskable = placeName !== "" && await hasGoogleWeatherAccess();
+  const isAskable = placeName !== "" && await googleWeatherAccess.has();
   if (!isAskable) {
     return null;
   }

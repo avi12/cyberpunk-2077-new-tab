@@ -37,10 +37,7 @@
 
       <SoundSection />
 
-      <!-- Firefox never sends the cookies Google's weather depends on, so it has no site to offer -->
-      {#if import.meta.env.CHROME || import.meta.env.EDGE}
-        <WeatherSourceSection />
-      {/if}
+      <WeatherSourceSection />
 
       <PanelSection title="Scan Lines">
         <OptionGroup

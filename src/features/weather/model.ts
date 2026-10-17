@@ -84,14 +84,16 @@ export type WeatherSky = Pick<WeatherReading, "condition" | "description">;
 export enum WeatherRefusal {
   noPlace = "no-place",
   unreachable = "unreachable",
-  noReading = "no-reading"
+  noReading = "no-reading",
+  noAccess = "no-access"
 }
 
 /** None may imply a place: a reading and its city fall back together, so the card may say Night City. */
 export const WEATHER_REFUSAL_WORDING: Record<WeatherRefusal, string> = {
   [WeatherRefusal.noPlace]: "Nowhere to read the sky over yet",
   [WeatherRefusal.unreachable]: "Couldn't reach the sky",
-  [WeatherRefusal.noReading]: "Nothing came back"
+  [WeatherRefusal.noReading]: "Nothing came back",
+  [WeatherRefusal.noAccess]: "Allow Bing in the terminal panel"
 };
 
 export function isWeatherRefusal(answer: WeatherReading | WeatherRefusal): answer is WeatherRefusal {

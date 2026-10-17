@@ -16,6 +16,20 @@ export async function requestAccess(request: AccessRequest) {
   return browser.permissions.request(request).catch(() => false);
 }
 
+/** The has/request pair for one site, so a source declares its origin once and nothing else. */
+export function originAccess(origin: string) {
+  const request: AccessRequest = {
+    origins: [origin]
+  };
+
+  return {
+    origin,
+    has: () => hasAccess(request),
+    /** Call straight from a click: a permission prompt needs the user gesture. */
+    request: () => requestAccess(request)
+  };
+}
+
 /**
  * One press buys one dialog: its activation runs out while the reader reads the first one (measured:
  * six seconds after a click, `permissions.request` is refused as outside a user gesture), so a second

@@ -15,8 +15,9 @@
     WeatherRefusal
   } from "./model";
   import { nightCitySky } from "./night-city";
-  import { readOpenMeteoWeather } from "./open-meteo";
-  import { GOOGLE_WEATHER_ORIGIN, readGoogleWeather } from "./google";
+  import { readBingWeather } from "./bing";
+  import { IS_GOOGLE_READABLE, readGoogleWeather } from "./google";
+  import { WEATHER_SOURCES } from "./sources";
   import type { AccessRequest } from "@/lib/permissions";
   import { Glitch } from "@/lib/glitch.svelte";
   import LocationOverrideModal from "./LocationOverrideModal.svelte";
@@ -68,10 +69,7 @@
     return nightCitySky();
   }
 
-  /** Firefox never sends the Google cookie jar from an extension page - see `google.ts`. */
-  const isGoogleReadable = import.meta.env.CHROME || import.meta.env.EDGE;
-
-  /** Google first where it can answer, open-meteo otherwise. Night City's coordinates are invented, so it is never asked about. */
+  /** Google first where it can answer, Bing otherwise. Night City's coordinates are invented, so it is never asked about. */
   function readWeather(asked: GeoLocation) {
     if (isNightCityChosen) {
       return Promise.resolve(nightCitySky());
@@ -82,11 +80,11 @@
       return Promise.resolve(WeatherRefusal.noPlace);
     }
 
-    if (!isGoogleReadable) {
-      return readOpenMeteoWeather(asked);
+    if (!IS_GOOGLE_READABLE) {
+      return readBingWeather(asked);
     }
 
-    return readGoogleWeather(asked).then(reading => reading ?? readOpenMeteoWeather(asked));
+    return readGoogleWeather(asked).then(reading => reading ?? readBingWeather(asked));
   }
 
   /**
@@ -124,13 +122,13 @@
   });
 
   /** Listened to rather than tied to the press, so a grant made in the browser's settings re-reads too. */
-  let googleAccessChangeCount = $state(0);
+  let accessChangeCount = $state(0);
 
   $effect(() => {
     function noteAccessChange(changed: AccessRequest) {
-      const isWeatherOrigin = changed.origins?.includes(GOOGLE_WEATHER_ORIGIN);
+      const isWeatherOrigin = WEATHER_SOURCES.some(({ access }) => changed.origins?.includes(access.origin));
       if (isWeatherOrigin) {
-        googleAccessChangeCount += 1;
+        accessChangeCount += 1;
       }
     }
 
@@ -144,7 +142,7 @@
   });
 
   $effect(() => {
-    void googleAccessChangeCount;
+    void accessChangeCount;
     const asked = askedLocation;
     weather = readWeather(asked);
     const timer = setInterval(() => {
