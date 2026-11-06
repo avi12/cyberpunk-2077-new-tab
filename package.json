@@ -5,7 +5,7 @@
   "sideEffects": [
     "*.css"
   ],
-  "description": "A Cyberpunk 2077 themed new tab page: clock, search, quotes, netlinks seeded from your most-visited sites, and drag-ordered widgets.",
+  "description": "Jack into Night City on every new tab: a neon HUD, arranged your way",
   "author": "Avi <avi6106@gmail.com> (https://avi12.com)",
   "license": "GPL-3.0-or-later",
   "imports": {

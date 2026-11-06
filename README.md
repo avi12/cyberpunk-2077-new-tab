@@ -1,7 +1,6 @@
 # Cyberpunk 2077 New Tab
 
-A Cyberpunk 2077 themed new tab page: clock, search, quotes, netlinks seeded from your most-visited
-sites, and drag-ordered widgets.
+Jack into Night City on every new tab: a neon HUD, arranged your way
 
 A ground-up rebuild of the [Cyberpunk 2077 Themed Homepage][original] extension on **WXT + Svelte 5**,
 matching the original's visuals while replacing its React/Tailwind/dnd-kit stack.
