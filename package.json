@@ -1,6 +1,6 @@
 {
   "name": "cyberpunk-2077-new-tab",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "sideEffects": [
     "*.css"
