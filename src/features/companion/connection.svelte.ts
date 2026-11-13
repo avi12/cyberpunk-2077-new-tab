@@ -23,7 +23,8 @@ class Companion {
   }
 
   reportLink(state: CompanionState) {
-    if (this.#isLinkReported || state === CompanionState.LOADING) {
+    const isReportable = this.#isLinkReported || state === CompanionState.LOADING;
+    if (isReportable) {
       return;
     }
 

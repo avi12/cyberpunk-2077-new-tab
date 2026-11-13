@@ -365,7 +365,8 @@ export function sortableEngine({ node, options }: { node: HTMLElement; options: 
   function beginDrag() {
     snapshot();
 
-    if (!source || fromIndex === -1) {
+    const isMissingSource = !source || fromIndex === -1;
+    if (isMissingSource) {
       return;
     }
 

@@ -74,7 +74,8 @@ export function arrowFocus(node: HTMLElement) {
     }
 
     const isDown = key === ArrowKey.ARROW_DOWN;
-    if (!isDown && key !== ArrowKey.ARROW_UP) {
+    const isNotVertical = !isDown && key !== ArrowKey.ARROW_UP;
+    if (isNotVertical) {
       return null;
     }
 
