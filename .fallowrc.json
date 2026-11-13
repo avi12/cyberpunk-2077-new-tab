@@ -1,5 +1,6 @@
 {
-  "$schema": "https://raw.githubusercontent.com/getfallow/fallow/main/schema/fallowrc.json",
+  "$schema": "./node_modules/fallow/schema.json",
+  "extends": ["./node_modules/fallow-config-avi12/fallow.json"],
   // `companion/` is a separate private repository nested in this one, so it may not be present at
   // all - a glob that matches nothing there is the intended state for a clone of the extension.
   // The tray is a third way in: the packaging scripts spawn it by path rather than importing it, so
@@ -19,7 +20,7 @@
   //
   // `cp:hmr-entry` is not a package at all - it is the virtual specifier `scripts/dev-hmr.mjs`
   // resolves to the new tab's own entry, so the hot client can import it without naming a path.
-  "ignoreDependencies": ["@sveltejs/vite-plugin-svelte", "cp:hmr-entry", "postcss-html"],
+  "ignoreDependencies": ["@sveltejs/vite-plugin-svelte", "cp:hmr-entry", "postcss-html", "avi12-lint", "eslint-config-avi12", "fallow-config-avi12", "oxfmt-config-avi12", "oxlint-config-avi12", "oxlint-plugin-naming", "stylelint-config-avi12"],
   "health": {
     "maxCognitive": 30,
     "maxCrap": 10000

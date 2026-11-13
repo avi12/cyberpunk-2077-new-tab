@@ -19,3 +19,6 @@ reference/
 
 # The companion app is built, not committed.
 companion/bin/
+
+# Lint cache
+.verify/
