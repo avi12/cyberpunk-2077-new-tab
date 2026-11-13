@@ -2,7 +2,7 @@
   import { AnalyticsAction } from "@/lib/analytics/definitions";
   import type { Snippet } from "svelte";
 
-  type WidgetCardHeader = {
+  interface WidgetCardHeader {
     icon: string;
     label: string;
     action: {
@@ -11,7 +11,7 @@
       isPulsing?: boolean;
       onAct: () => void;
     };
-  };
+  }
 
   const {
     children,

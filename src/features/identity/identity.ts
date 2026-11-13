@@ -36,18 +36,18 @@ const claimsSchema = z.object({
   name: z.string().optional()
 });
 
-type TokenExchange = {
+interface TokenExchange {
   client_id: string;
   client_secret: string;
   code: string;
   code_verifier: string;
   redirect_uri: string;
   grant_type: "authorization_code";
-};
+}
 
-type Revocation = {
+interface Revocation {
   token: string;
-};
+}
 
 function toFormPost(parameters: TokenExchange | Revocation) {
   return {

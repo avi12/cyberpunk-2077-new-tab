@@ -1,7 +1,7 @@
 <script lang="ts">
   import { currentDate, currentDateIso, currentTime, currentTimeIso, localeHourCycle } from "./time";
   import { AnalyticsAction } from "@/lib/analytics/definitions";
-  import { GLITCH_LONG_MS, Glitch } from "@/lib/glitch.svelte";
+  import { Glitch, GLITCH_LONG_MS } from "@/lib/glitch.svelte";
   import { HourCycle } from "@/lib/storage/schema";
   import { settings } from "@/lib/storage/settings.svelte";
 

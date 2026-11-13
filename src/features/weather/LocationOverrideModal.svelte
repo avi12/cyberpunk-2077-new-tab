@@ -182,6 +182,7 @@
 
   function confirm(e: SubmitEvent) {
     e.preventDefault();
+
     if (isLocating) {
       return;
     }
@@ -277,7 +278,6 @@
           <p class="cyber-error" role="alert">{error}</p>
         {/if}
       </fieldset>
-
     </fieldset>
 
     <fieldset class="location__group">
@@ -298,7 +298,6 @@
       </button>
       <p class="location__caption">{NIGHT_CITY_CAPTION}</p>
     </fieldset>
-
   </form>
 
   <footer class="location__actions">
@@ -340,12 +339,12 @@
   }
 
   .is-dimmed {
-    opacity: 55%;
+    opacity: 0.55;
     transition: opacity 200ms;
 
     &:hover,
     &:focus-within {
-      opacity: 100%;
+      opacity: 1;
     }
   }
 

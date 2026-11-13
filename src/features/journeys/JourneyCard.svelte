@@ -10,7 +10,10 @@
   const { journey }: { journey: Journey } = $props();
 
   const onePagePerHost = $derived.by(() => {
-    const trail: { host: string; url: string }[] = [];
+    const trail: {
+       host: string;
+       url: string 
+    }[] = [];
     for (const { url } of journey.sourceInfos) {
       const host = hostOf(url);
       if (host && !trail.some(step => step.host === host)) {

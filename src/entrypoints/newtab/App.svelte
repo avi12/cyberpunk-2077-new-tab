@@ -232,7 +232,7 @@
 
     /* Kept in the tree while it glitches out, so the animation has something to play on */
     &.is-hidden {
-      opacity: 0%;
+      opacity: 0;
       pointer-events: none;
     }
   }

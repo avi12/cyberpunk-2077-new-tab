@@ -1,6 +1,6 @@
 <script lang="ts">
   import { AnalyticsAction } from "@/lib/analytics/definitions";
-  import { backupTakenAtMs, deleteBackup, saveBackup, restoreBackup } from "./settings-sync";
+  import { backupTakenAtMs, deleteBackup, restoreBackup, saveBackup } from "./settings-sync";
   import { exportSettings, importSettings, INVALID_SETTINGS_FILE, SETTINGS_FILE_STEM } from "./settings-file";
   import AccountBackup, { backupState } from "@/ui/AccountBackup.svelte";
   import { downloadFile, jsonFileName } from "@/lib/download";

@@ -1,8 +1,8 @@
-export type SlotCenter = {
+export interface SlotCenter {
   x: number;
   y: number;
   height: number;
-};
+}
 
 export function reorderedIds({ ids, fromIndex, toIndex }: { ids: string[]; fromIndex: number; toIndex: number }) {
   const draggedId = ids[fromIndex];

@@ -29,11 +29,13 @@
     return FALLBACK_SWATCH;
   });
 
-  const pureHueSwatch = $derived(hsvToHex({
+  const pureHueSwatch = $derived(
+                          hsvToHex({
     hue,
     saturation: 1,
     value: 1
-  }));
+  })
+                        );
 
   $effect(() => {
     if (!isHexColor(background)) {
@@ -63,11 +65,13 @@
   }) {
     hue = next.hue;
     darkness = next.darkness;
-    applyHex(hsvToHex({
+    applyHex(
+      hsvToHex({
       hue,
       saturation: 1,
       value: 1 - darkness / DARKNESS_MAX
-    }));
+    })
+    );
   }
 </script>
 

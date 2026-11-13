@@ -75,7 +75,7 @@ export const bookmarkSchema = z.object({
 export type Bookmark = z.infer<typeof bookmarkSchema>;
 
 /** Not a zod schema: engines ship with the extension, so there is no payload to validate. */
-export type SearchEngine = {
+export interface SearchEngine {
   id: SearchEngineId;
   name: string;
   /** Empty for the browser's own engine, which is asked over a message. */
@@ -86,7 +86,7 @@ export type SearchEngine = {
   /** Set when a script has to finish the engine's box on arrival - fill it, send it, or both. */
   composeSiteId?: ComposeSiteId;
   placeholder: string;
-};
+}
 
 /** Bounds belong to the shape so an input and an imported file are held to the same range. */
 export const LATITUDE_MIN = -90;

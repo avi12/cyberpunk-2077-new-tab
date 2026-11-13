@@ -39,10 +39,10 @@ import iconTvMinimalPlay from "@/assets/icons/tv-minimal-play.svg?raw";
 import iconWallet from "@/assets/icons/wallet.svg?raw";
 import iconZap from "@/assets/icons/zap.svg?raw";
 
-type IconChoice = {
+interface IconChoice {
   name: string;
   svg: string;
-};
+}
 
 // Bookmarks store the `name`, so these strings are a persisted contract: renaming one orphans
 // every bookmark that used it

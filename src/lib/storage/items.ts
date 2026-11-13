@@ -112,10 +112,10 @@ export const companionAnsweredItem = definePlainItem<boolean>("local:companionAn
  * database of tens of megabytes - a visible quarter second. Cards are rebuilt and revalidated on
  * every read, so nothing expired comes back from here.
  */
-export type CompanionSnapshot = {
+export interface CompanionSnapshot {
   fetchedAtMs: number;
   raw: unknown[];
-};
+}
 
 export const journeysSnapshotItem = definePlainItem<CompanionSnapshot | null>("local:journeysSnapshot", {
   fallback: null

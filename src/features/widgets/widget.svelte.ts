@@ -1,9 +1,9 @@
 import type { WidgetConfig } from "@/lib/storage/schema";
 
-export type WidgetProps = {
+export interface WidgetProps {
   config: WidgetConfig;
   onConfigChange: (patch: WidgetConfig) => void;
-};
+}
 
 const DEFAULT_SAVE_DEBOUNCE_MS = 500;
 

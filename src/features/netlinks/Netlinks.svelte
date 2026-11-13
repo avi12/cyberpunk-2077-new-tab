@@ -450,7 +450,7 @@
     transition: border-color 200ms, color 200ms, opacity 200ms;
 
     &:disabled {
-      opacity: 40%;
+      opacity: 0.4;
     }
 
     &:is(:hover, :focus-visible):not(:disabled) {

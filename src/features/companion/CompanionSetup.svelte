@@ -121,6 +121,7 @@
     const isReworded = previousWording !== undefined && wording !== previousWording;
 
     previousWording = wording;
+
     if (!isReworded) {
       return;
     }

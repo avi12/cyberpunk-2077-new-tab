@@ -1,7 +1,7 @@
-type Quote = {
+interface Quote {
   text: string;
   author: string;
-};
+}
 
 // Verbatim and in order, as the original shipped them
 const QUOTES: [Quote, ...Quote[]] = [

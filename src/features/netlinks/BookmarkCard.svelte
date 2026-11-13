@@ -120,7 +120,7 @@
 
   .card-slot:global(.sortable-dragging) .card {
     border-color: var(--cp-accent);
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 50%);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.5);
   }
 
   .card__icon {

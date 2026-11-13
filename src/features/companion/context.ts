@@ -116,25 +116,25 @@ function namedContextFor({ title, prompt }: {
 /** Silences a repeated refusal for the rest of this page; a new tab asks again. */
 let isWorthAsking = true;
 
-type VisitedPage = {
+interface VisitedPage {
   title: string;
   url: string;
   visits: number;
-};
+}
 
-type ListedEntry = {
+interface ListedEntry {
   title: string;
   url: string;
   note: string;
-};
+}
 
-export type CardSubject = {
+export interface CardSubject {
   facts: string[];
   pages: {
     title: string;
     url: string;
   }[];
-};
+}
 
 const worthSendingSchema = z.object({
   url: openableUrlSchema.refine(url => !NOT_READING_URL_PATTERN.test(url)),

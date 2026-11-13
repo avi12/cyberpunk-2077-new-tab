@@ -4,14 +4,13 @@ import { analyticsSessionItem } from "@/lib/storage/items";
 import { getOrCreateClientId } from "./client-id";
 import { isAnalyticsEnabled } from "./consent";
 import {
-  AnalyticsParam,
   AnalyticsUserProperty,
   MAX_EVENT_PARAMS,
   MAX_PARAM_NAME_LENGTH,
   MAX_PARAM_VALUE_LENGTH,
   MAX_USER_PROPERTY_VALUE_LENGTH
 } from "./definitions";
-import type { AnalyticsEvent } from "./definitions";
+import type { AnalyticsEvent, AnalyticsParam } from "./definitions";
 
 /**
  * The Measurement Protocol, since an extension cannot load gtag.js as remote code.

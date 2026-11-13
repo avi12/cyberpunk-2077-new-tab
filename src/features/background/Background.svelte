@@ -37,6 +37,7 @@
 
   $effect(() => {
     void version;
+
     if (!isCached) {
       return;
     }
@@ -57,6 +58,7 @@
       isRevoked = true;
       objectUrl = null;
       isVideoReady = false;
+
       if (url) {
         URL.revokeObjectURL(url);
       }
@@ -124,7 +126,7 @@
     position: fixed;
     inset: 0;
     z-index: -1;
-    background: linear-gradient(to bottom, rgb(0 0 0 / 70%) 0%, rgb(0 0 0 / 72%) 45%, rgb(0 0 0 / 88%) 100%);
+    background: linear-gradient(to bottom, rgb(0 0 0 / 0.7) 0%, rgb(0 0 0 / 0.72) 45%, rgb(0 0 0 / 0.88) 100%);
     pointer-events: none;
   }
 </style>

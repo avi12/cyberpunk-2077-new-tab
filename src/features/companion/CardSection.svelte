@@ -161,6 +161,7 @@
 
   $effect(() => {
     void companion.generation;
+
     if (!isCompanionReadable) {
       return;
     }

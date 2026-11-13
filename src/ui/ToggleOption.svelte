@@ -1,5 +1,6 @@
 <script lang="ts">
   import { AnalyticsAction } from "@/lib/analytics/definitions";
+
   const {
     label,
     isOn,

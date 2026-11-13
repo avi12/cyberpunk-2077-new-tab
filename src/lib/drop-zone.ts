@@ -3,10 +3,10 @@
  * document swallows the drops that miss.
  */
 
-type DropZoneOptions = {
+interface DropZoneOptions {
   accept: string;
   onFile: (file: File) => void;
-};
+}
 
 const DROPPING_ATTRIBUTE = "data-dropping";
 

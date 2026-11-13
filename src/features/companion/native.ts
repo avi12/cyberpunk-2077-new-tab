@@ -1,4 +1,5 @@
-import { CompanionAnswer, CompanionRequest } from "@/lib/messaging";
+import type { CompanionRequest } from "@/lib/messaging";
+import { CompanionAnswer } from "@/lib/messaging";
 import { z } from "@/lib/zod";
 
 /**

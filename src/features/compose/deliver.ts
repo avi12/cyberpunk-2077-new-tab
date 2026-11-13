@@ -1,4 +1,5 @@
-import { MessageType, sendMessage, TabDisposition } from "@/lib/messaging";
+import type { TabDisposition } from "@/lib/messaging";
+import { MessageType, sendMessage } from "@/lib/messaging";
 import { wait } from "@/lib/wait";
 
 import { composeAccess } from "./access.svelte";

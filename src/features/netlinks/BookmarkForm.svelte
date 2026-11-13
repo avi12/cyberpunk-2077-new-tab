@@ -38,11 +38,13 @@
   let elUrl: HTMLInputElement | undefined;
 
   const normalizedUrl = $derived(normalizeUrl(url));
-  const icon = $derived(pickIcon({
+  const icon = $derived(
+                 pickIcon({
     url: normalizedUrl,
     title,
     category
-  }));
+  })
+               );
   const submitLabel = $derived.by(() => {
     if (bookmarkToEdit) {
       return "Save link";
@@ -80,11 +82,13 @@
 
   async function submit(e: SubmitEvent) {
     e.preventDefault();
+
     if (isResolving) {
       return;
     }
 
     hasTriedSubmit = true;
+
     if (!isUrlOpenable) {
       elUrl?.focus();
 
@@ -213,7 +217,7 @@
     transition: color 200ms, opacity 200ms;
 
     &:disabled {
-      opacity: 40%;
+      opacity: 0.4;
     }
 
     &:hover:not(:disabled) {
@@ -248,7 +252,7 @@
 
   @keyframes pulse {
     to {
-      opacity: 35%;
+      opacity: 0.35;
     }
   }
 </style>

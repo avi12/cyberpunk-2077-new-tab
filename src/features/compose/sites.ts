@@ -19,7 +19,7 @@ export enum ComposerInsert {
   pasted = "pasted"
 }
 
-type ComposeSite = {
+interface ComposeSite {
   /** Also the origin a tab is recognised by */
   url: string;
   /** Without one, the prompt can only go by link and the script only presses send */
@@ -28,7 +28,7 @@ type ComposeSite = {
   /** Copilot ignores its prompt parameter (measured). Never defaulted, so no row hides that */
   isPromptCarriedByUrl: boolean;
   submitSelector: string;
-};
+}
 
 /** prosemirror-view's own class, which survives Claude's redesigns. Taken from the library, not a live page */
 const CLAUDE_COMPOSER_SELECTOR = 'div.ProseMirror[contenteditable="true"]';

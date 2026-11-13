@@ -219,7 +219,7 @@
     view-transition-class: above-scan-lines;
 
     &.is-disabled {
-      opacity: 50%;
+      opacity: 0.5;
     }
   }
 

@@ -19,10 +19,12 @@
   const COUNTER_FORMAT = counterFormat(COUNTER_DIGITS);
 
   // A stored list may come from another build, so a task that no longer validates is dropped.
-  let tasks = $state<Task[]>(untrack(() => validRecords({
+  let tasks = $state<Task[]>(
+                untrack(() => validRecords({
     raw: config.tasks,
     schema: taskSchema
-  })));
+  }))
+              );
   let completingTaskId = $state<string | null>(null);
   let focusedTaskId = $state<string | null>(null);
   let removalTimer: ReturnType<typeof setTimeout> | undefined;
@@ -237,7 +239,7 @@
 
     100% {
       border-color: #666666;
-      opacity: 0%;
+      opacity: 0;
       filter: hue-rotate(0deg) brightness(1);
       scale: 1;
       translate: 0;

@@ -14,14 +14,14 @@ import { withViewTransition } from "./view-transition";
  * of scrolling; only it knows which element that is.
  */
 
-export type SortableMove = {
+export interface SortableMove {
   id: string;
   fromKey: string;
   toKey: string;
   toIndex: number;
-};
+}
 
-export type SortableOptions = {
+export interface SortableOptions {
   ids: string[];
   onReorder: (ids: string[]) => void;
   /** Containers naming the same group hand items to each other. */
@@ -31,18 +31,18 @@ export type SortableOptions = {
   onMove?: (move: SortableMove) => void;
   handle?: string;
   disabled?: boolean;
-};
+}
 
-type Slot = {
+interface Slot {
   id: string;
   element: HTMLElement;
   left: number;
   top: number;
   width: number;
   height: number;
-};
+}
 
-type Board = {
+interface Board {
   node: HTMLElement;
   key: string;
   left: number;
@@ -54,17 +54,17 @@ type Board = {
   spare: Slot | null;
   ids: string[];
   centers: SlotCenter[];
-};
+}
 
-type Position = {
+interface Position {
   left: number;
   top: number;
-};
+}
 
-type Member = {
+interface Member {
   node: HTMLElement;
   read: () => SortableOptions;
-};
+}
 
 const ID_ATTRIBUTE = "data-sortable-id";
 

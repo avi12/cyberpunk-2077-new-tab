@@ -15,7 +15,10 @@
 
   const { onElementGlitch }: { onElementGlitch: (key: keyof DisplayPreferences | null) => void } = $props();
 
-  const DISPLAY_ELEMENTS: { key: keyof DisplayPreferences; label: string }[] = [
+  const DISPLAY_ELEMENTS: {
+     key: keyof DisplayPreferences;
+     label: string 
+  }[] = [
     {
       key: "showGreeting",
       label: "Greeting"

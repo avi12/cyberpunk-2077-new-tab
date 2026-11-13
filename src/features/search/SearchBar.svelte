@@ -301,7 +301,7 @@
   }
 
   .is-hidden {
-    opacity: 0%;
+    opacity: 0;
   }
 
   .search__overlay {

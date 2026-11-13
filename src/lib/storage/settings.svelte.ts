@@ -245,10 +245,10 @@ export async function loadSettings() {
 }
 
 /** Type-erased, for code that walks every setting. */
-type AnySetting = {
+interface AnySetting {
   current: unknown;
   readonly schema: z.ZodType;
   set(value: unknown): Promise<void>;
-};
+}
 
 export const allSettings: Record<keyof typeof settings, AnySetting> = settings;

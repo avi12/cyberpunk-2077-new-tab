@@ -8,11 +8,11 @@ import type { z } from "./zod";
 
 const DEFAULT_TIMEOUT_MS = 8000;
 
-type Request = {
+interface Request {
   url: string | URL;
   init?: RequestInit;
   timeoutMs?: number;
-};
+}
 
 /** An `init` that brings its own signal overrides the timeout. */
 async function fetchOk({ url, init, timeoutMs = DEFAULT_TIMEOUT_MS }: Request) {

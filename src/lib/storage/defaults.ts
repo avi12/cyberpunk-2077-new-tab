@@ -11,10 +11,10 @@ import {
   WidgetType
 } from "./schema";
 
-export type SelectOption<TValue extends string> = {
+export interface SelectOption<TValue extends string> {
   value: TValue;
   label: string;
-};
+}
 
 export const DEFAULT_CATEGORY_ORDER: string[] = [
   BookmarkCategory.daily,

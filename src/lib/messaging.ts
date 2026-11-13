@@ -25,11 +25,11 @@ export enum CompanionAnswer {
   nothingToRead = "nothingToRead"
 }
 
-type CompanionResult = {
+interface CompanionResult {
   answer: CompanionAnswer;
   /** Only filled when the answer is `read`. */
   records: unknown[];
-};
+}
 
 /**
  * `refused` is the browser turning the host down outright and is remembered; `failed` (say, the tab
@@ -46,10 +46,10 @@ export enum TabDisposition {
   new = "new"
 }
 
-export type ComposeRequest = {
+export interface ComposeRequest {
   siteId: ComposeSiteId;
   prompt: string;
-};
+}
 
 /** The values are the wire contract between the context that asks and the one that answers. */
 export enum MessageType {
@@ -61,7 +61,7 @@ export enum MessageType {
   takeComposeRequest = "takeComposeRequest"
 }
 
-type ProtocolMap = {
+interface ProtocolMap {
   [MessageType.getTopSites](): TopSite[];
   [MessageType.searchWithDefaultEngine](text: string): void;
   [MessageType.readCompanion](request: CompanionRequest): CompanionResult;
@@ -81,6 +81,6 @@ type ProtocolMap = {
    * is collected only once.
    */
   [MessageType.takeComposeRequest](): ComposeRequest | null;
-};
+}
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

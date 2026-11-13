@@ -43,10 +43,10 @@ export enum CompanionState {
 }
 
 /** The app was reached. Not reaching it is thrown as `CompanionUnreachable` instead. */
-export type CompanionRead<TCard> = {
+export interface CompanionRead<TCard> {
   state: CompanionState;
   cards: TCard[];
-};
+}
 
 const ANSWERED_STATES = [CompanionState.connected, CompanionState.edgeHasNothing];
 
