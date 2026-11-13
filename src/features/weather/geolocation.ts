@@ -223,7 +223,7 @@ export function forgetDeviceLocation() {
  * shared read, because a browser may keep saying `prompt` after answering and a second read would be
  * guarded away and overwrite the fix with nothing.
  */
-export async function askDeviceLocation(): Promise<AskedLocation> {
+export async function askDeviceLocation() {
   sharedLocationRead = null;
   const answer = await currentPosition(ASKED_TIMEOUT_MS);
   const asked = devicePlace(answer);
@@ -232,8 +232,8 @@ export async function askDeviceLocation(): Promise<AskedLocation> {
     sharedLocationRead = asked;
 
     return {
-      isFound: true,
-      source: LocationSource.DEVICE,
+      isFound: true as const,
+      source: LocationSource.DEVICE as const,
       location: fromDevice
     };
   }
@@ -241,7 +241,7 @@ export async function askDeviceLocation(): Promise<AskedLocation> {
   const fromConnection = await connectionLocation();
   if (!fromConnection) {
     return {
-      isFound: false,
+      isFound: false as const,
       refusal: refusalOf(answer)
     };
   }
@@ -249,8 +249,8 @@ export async function askDeviceLocation(): Promise<AskedLocation> {
   sharedLocationRead = Promise.resolve(fromConnection);
 
   return {
-    isFound: true,
-    source: LocationSource.CONNECTION,
+    isFound: true as const,
+    source: LocationSource.CONNECTION as const,
     location: fromConnection
   };
 }

@@ -71,7 +71,11 @@
         onclick={() => onToggleCollapse(category)}
         type="button">
         {category}
-        {@html isCollapsed ? iconChevronRight : iconChevronDown}
+        {#if isCollapsed}
+          {@html iconChevronRight}
+        {:else}
+          {@html iconChevronDown}
+        {/if}
       </button>
     </h3>
     {#if isEditing}

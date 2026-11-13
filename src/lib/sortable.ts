@@ -178,7 +178,7 @@ function swallowNextClick() {
   setTimeout(() => removeEventListener("click", onClick, true), 0);
 }
 
-export function sortableEngine(node: HTMLElement, options: SortableOptions) {
+export function sortableEngine({ node, options }: { node: HTMLElement; options: SortableOptions }) {
   let current = options;
   let boards: Board[] = [];
   let source: Board | null = null;
@@ -243,7 +243,12 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
    * the next. Raising the branch the source sits in carries the card over its neighbours.
    */
   function raiseBranch() {
-    if (boards.length < 2 || !source) {
+    const isSingleBoard = boards.length < 2;
+    if (isSingleBoard) {
+      return;
+    }
+
+    if (!source) {
       return;
     }
 
@@ -304,7 +309,8 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     for (const [position, id] of order.entries()) {
       const slot = source.slots[source.ids.indexOf(id)];
       const landing = source.slots[position];
-      if (id === draggedId || !slot || !landing) {
+      const isNoLanding = id === draggedId || !slot || !landing;
+      if (isNoLanding) {
         continue;
       }
 
@@ -322,7 +328,8 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
 
     for (const [index, slot] of source.slots.entries()) {
       const landing = source.slots[index - 1];
-      if (index <= fromIndex || !landing) {
+      const isNoLandingAfter = index <= fromIndex || !landing;
+      if (isNoLandingAfter) {
         continue;
       }
 
@@ -676,16 +683,19 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
   }
 
   function onPointerDown(event: PointerEvent) {
-    if (current.disabled || isDragging || event.button !== 0 || !(event.target instanceof Element)) {
+    const isNotDraggable = current.disabled || isDragging || event.button !== 0 || !(event.target instanceof Element);
+    if (isNotDraggable) {
       return;
     }
 
-    if (current.handle && !event.target.closest(current.handle)) {
+    const isOutsideHandle = current.handle && !event.target.closest(current.handle);
+    if (isOutsideHandle) {
       return;
     }
 
     const child = event.target.closest(`[${ID_ATTRIBUTE}]`);
-    if (!(child instanceof HTMLElement) || child.parentElement !== node) {
+    const isForeignChild = !(child instanceof HTMLElement) || child.parentElement !== node;
+    if (isForeignChild) {
       return;
     }
 
@@ -713,7 +723,8 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
    */
   function stampTouchAction() {
     for (const child of node.children) {
-      if (!(child instanceof HTMLElement) || !child.hasAttribute(ID_ATTRIBUTE)) {
+      const isNotSortableChild = !(child instanceof HTMLElement) || !child.hasAttribute(ID_ATTRIBUTE);
+      if (isNotSortableChild) {
         continue;
       }
 

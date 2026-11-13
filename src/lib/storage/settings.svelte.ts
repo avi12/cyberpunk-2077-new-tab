@@ -49,7 +49,7 @@ class Setting<TValue> {
   readonly schema: z.ZodType<TValue>;
   readonly #entrySchema: z.ZodType | null;
   readonly #normalize: (stored: TValue) => TValue;
-  #value: TValue = $state()!;
+  #value: TValue;
 
   constructor({
     item,
@@ -67,7 +67,7 @@ class Setting<TValue> {
     this.schema = schema;
     this.#entrySchema = entrySchema ?? null;
     this.#normalize = normalize ?? (stored => stored);
-    this.#value = item.fallback;
+    this.#value = $state(item.fallback);
   }
 
   get current() {

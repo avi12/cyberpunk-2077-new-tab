@@ -155,7 +155,8 @@ export async function googleAccountName() {
   const redirectParameters = new URL(redirectUrl).searchParams;
   const code = redirectParameters.get("code");
   // `state` proves this answers the request just made, not one injected into it
-  if (!code || redirectParameters.get("state") !== state) {
+  const isInvalidCallback = !code || redirectParameters.get("state") !== state;
+  if (isInvalidCallback) {
     return null;
   }
 
@@ -174,7 +175,8 @@ export async function googleAccountName() {
 
   const parsed = claimsFromIdToken(tokens.id_token);
   // `nonce` ties the token to this request, `aud` to this extension's client
-  if (!parsed?.success || parsed.data.nonce !== nonce || parsed.data.aud !== CLIENT_ID) {
+  const isInvalidToken = !parsed?.success || parsed.data.nonce !== nonce || parsed.data.aud !== CLIENT_ID;
+  if (isInvalidToken) {
     return null;
   }
 

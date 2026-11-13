@@ -92,13 +92,15 @@ export function arrowFocus(node: HTMLElement) {
 
   function onKeyDown(event: KeyboardEvent) {
     const isModifierHeld = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
-    if (isModifierHeld || !isArrowKey(event.key)) {
+    const isNotArrowNavigation = isModifierHeld || !isArrowKey(event.key);
+    if (isNotArrowNavigation) {
       return;
     }
 
     const links = [...node.querySelectorAll<HTMLElement>(LINK_SELECTOR)];
     const current = document.activeElement;
-    if (!(current instanceof HTMLElement) || !links.includes(current)) {
+    const isUnlistedLink = !(current instanceof HTMLElement) || !links.includes(current);
+    if (isUnlistedLink) {
       return;
     }
 

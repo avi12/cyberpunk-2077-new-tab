@@ -243,7 +243,8 @@ async function inlineBackground({ original, clone }: { original: HTMLElement; cl
 }
 
 async function asDataUrl(source: string) {
-  if (!source || source.startsWith("data:")) {
+  const isInlineOrMissing = !source || source.startsWith("data:");
+  if (isInlineOrMissing) {
     return source || TRANSPARENT_PIXEL;
   }
 

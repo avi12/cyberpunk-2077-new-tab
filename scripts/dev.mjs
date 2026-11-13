@@ -266,7 +266,8 @@ function start() {
       return;
     }
 
-    if (code === 0 || !shouldAnswerCrash()) {
+    const isCleanExitOrUnanswerable = code === 0 || !shouldAnswerCrash();
+    if (isCleanExitOrUnanswerable) {
       console.info(
         `
 [dev] wxt exited with ${code} and is not coming back - ending the session`
@@ -333,7 +334,8 @@ async function waitForBuild() {
 
   while (Date.now() < deadlineMs) {
     const outputDirectory = extensionOutputDirectory();
-    if (outputDirectory && existsSync(join(outputDirectory, "manifest.json"))) {
+    const hasManifest = outputDirectory && existsSync(join(outputDirectory, "manifest.json"));
+    if (hasManifest) {
       return true;
     }
 
@@ -538,7 +540,8 @@ for (const watcher of watchers) {
   watcher.on("error", error => console.info(`[dev] the watcher complained: ${error.message}`));
   watcher.on("all", (_event, path) => {
     const isUnderSource = path.startsWith(SOURCE_DIRECTORY);
-    if (!isUnderSource && !isBakedIntoBuild(basename(path))) {
+    const isUnrelatedToBuild = !isUnderSource && !isBakedIntoBuild(basename(path));
+    if (isUnrelatedToBuild) {
       return;
     }
 

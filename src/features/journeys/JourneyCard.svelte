@@ -16,7 +16,8 @@
     }[] = [];
     for (const { url } of journey.sourceInfos) {
       const host = hostOf(url);
-      if (host && !trail.some(step => step.host === host)) {
+      const isNewHost = host && !trail.some(step => step.host === host);
+      if (isNewHost) {
         trail.push({
           host,
           url

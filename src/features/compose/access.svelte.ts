@@ -45,7 +45,8 @@ class ComposeAccess {
   }
 
   accessWorthAsking(siteId: ComposeSiteId | null) {
-    if (siteId === null || !this.isWorthAsking(siteId)) {
+    const isNotWorthAsking = siteId === null || !this.isWorthAsking(siteId);
+    if (isNotWorthAsking) {
       return null;
     }
 

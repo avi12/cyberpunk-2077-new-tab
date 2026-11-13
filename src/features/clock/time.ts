@@ -63,15 +63,18 @@ const EVENING_START_HOUR = 17;
 const NIGHT_START_HOUR = 21;
 
 function timeOfDay(hours: number) {
-  if (hours >= MORNING_START_HOUR && hours < AFTERNOON_START_HOUR) {
+  const isMorning = hours >= MORNING_START_HOUR && hours < AFTERNOON_START_HOUR;
+  if (isMorning) {
     return "Morning";
   }
 
-  if (hours >= AFTERNOON_START_HOUR && hours < EVENING_START_HOUR) {
+  const isAfternoon = hours >= AFTERNOON_START_HOUR && hours < EVENING_START_HOUR;
+  if (isAfternoon) {
     return "Afternoon";
   }
 
-  if (hours >= EVENING_START_HOUR && hours < NIGHT_START_HOUR) {
+  const isEvening = hours >= EVENING_START_HOUR && hours < NIGHT_START_HOUR;
+  if (isEvening) {
     return "Evening";
   }
 

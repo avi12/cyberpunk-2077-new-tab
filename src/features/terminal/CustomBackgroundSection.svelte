@@ -216,7 +216,8 @@
             data-analytics={AnalyticsAction.BACKGROUND_LINKED}
             disabled={isFetching}
             type="submit">
-            {isFetching ? "Fetching" : "Apply"}
+            {#if isFetching}
+              Fetching{:else}Apply{/if}
           </button>
           <button class="cyber-button cyber-button--muted custom__small" data-analytics={AnalyticsAction.BACKGROUND_URL_CANCELLED} onclick={() => (urlEntry = null)} type="button">
             {@html iconXMark}

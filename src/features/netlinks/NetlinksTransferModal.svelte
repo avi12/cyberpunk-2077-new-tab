@@ -141,7 +141,9 @@
   {#if pendingImportFile}
     <div class="stack">
       <p class="cyber-note transfer__centred">
-        {pendingImportFile.name} - {arrivingNetlinkCount} netlink{arrivingNetlinkCount === 1 ? "" : "s"}
+        {pendingImportFile.name} - {arrivingNetlinkCount} netlink{#if arrivingNetlinkCount !== 1}
+          s
+        {/if}
       </p>
       <button
         class="cyber-button cyber-button--cyan cyber-button--action"

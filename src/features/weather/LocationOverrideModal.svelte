@@ -229,7 +229,8 @@
         onfocusin={event => event.stopPropagation()}
         type="button">
         <span class="location__sync-icon" class:pulse={isLocating}>{@html iconMapPin}</span>
-        {isLocating ? LOCATING_LABEL : FOLLOW_LABEL}
+        {#if isLocating}
+          {LOCATING_LABEL}{:else}{FOLLOW_LABEL}{/if}
       </button>
       {#if deviceError}
         <p class="cyber-error" role="alert">{deviceError}</p>

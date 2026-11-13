@@ -138,7 +138,8 @@
                   })
                 })}
                 type="button">
-                {widget.enabled ? "ON" : "OFF"}
+                {#if widget.enabled}
+                  ON{:else}OFF{/if}
               </button>
             </div>
           {/if}

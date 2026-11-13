@@ -27,7 +27,11 @@
   onclick={onToggle}
   type="button">
   <span>{label}</span>
-  {@html isOn ? iconOn : iconOff}
+  {#if isOn}
+    {@html iconOn}
+  {:else}
+    {@html iconOff}
+  {/if}
 </button>
 
 <style>

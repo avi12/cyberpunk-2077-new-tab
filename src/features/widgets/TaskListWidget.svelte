@@ -101,7 +101,11 @@
             data-analytics={AnalyticsAction.TASK_COMPLETED}
             onclick={() => completeTask(task.id)}
             type="button">
-            {@html isTicking ? iconSquareCheck : iconSquare}
+            {#if isTicking}
+              {@html iconSquareCheck}
+            {:else}
+              {@html iconSquare}
+            {/if}
           </button>
           <label class="visually-hidden" for="task-{task.id}">Gig</label>
           <textarea

@@ -116,13 +116,13 @@ export function dropZone({ accept, onFile }: DropZoneOptions) {
       markDropping(false);
 
       const file = event.dataTransfer?.files[0];
-      if (
+      const isRejected =
         !file ||
         !isAccepted({
           file,
           accept
-        })
-      ) {
+        });
+      if (isRejected) {
         return;
       }
 

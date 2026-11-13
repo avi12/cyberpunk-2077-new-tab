@@ -256,7 +256,8 @@ function aimedLink(target: EventTarget | null) {
   }
 
   const link = target.closest("a[href]");
-  if (!link || !isAimed(link)) {
+  const isNotAimed = !link || !isAimed(link);
+  if (isNotAimed) {
     return null;
   }
 

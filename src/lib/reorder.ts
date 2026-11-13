@@ -44,13 +44,13 @@ export function insertionIndex({
 }) {
   let passedSlotCount = 0;
   for (const [position, slot] of centers.entries()) {
-    if (
+    const isPassed =
       position !== fromIndex &&
       isBefore({
         slot,
         dragged
-      })
-    ) {
+      });
+    if (isPassed) {
       passedSlotCount += 1;
     }
   }
