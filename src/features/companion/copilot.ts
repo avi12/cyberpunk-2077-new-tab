@@ -46,18 +46,18 @@ export type CopilotCard =
   };
 
 /** The ids come from two different Microsoft catalogues, so the kind keeps them apart. */
-function journeyCard(journey: Journey): CopilotCard {
+function journeyCard(journey: Journey) {
   return {
     id: `${CopilotKind.JOURNEY}:${journey.id}`,
-    kind: CopilotKind.JOURNEY,
+    kind: CopilotKind.JOURNEY as const,
     journey
   };
 }
 
-function tipCard(tip: Tip): CopilotCard {
+function tipCard(tip: Tip) {
   return {
     id: `${CopilotKind.TIP}:${tip.id}`,
-    kind: CopilotKind.TIP,
+    kind: CopilotKind.TIP as const,
     tip
   };
 }

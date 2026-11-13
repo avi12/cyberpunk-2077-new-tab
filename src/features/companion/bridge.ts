@@ -109,7 +109,8 @@ export async function rememberedCompanion<TCard>({ snapshot, parse }: {
   parse: ParseCards<TCard>;
 }) {
   const cached = await snapshot.getValue();
-  if (!cached || !hasRecords(cached.raw)) {
+  const isCacheEmpty = !cached || !hasRecords(cached.raw);
+  if (isCacheEmpty) {
     return [];
   }
 

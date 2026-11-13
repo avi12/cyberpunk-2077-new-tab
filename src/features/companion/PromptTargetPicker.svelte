@@ -20,7 +20,8 @@
   async function choosePromptTarget(targetId: PromptTargetId) {
     const siteId = composeSiteFor(targetId);
     const isSiteWorthAsking = siteId !== null && composeAccess.isWorthAsking(siteId);
-    if (isSiteWorthAsking && !await composeAccess.allow(siteId)) {
+    const isDenied = isSiteWorthAsking && !await composeAccess.allow(siteId);
+    if (isDenied) {
       return;
     }
 
