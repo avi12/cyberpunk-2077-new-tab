@@ -168,6 +168,16 @@ pnpm lint && pnpm stylelint && pnpm svelte:check && pnpm fallow
   pinned at 6 for typescript-eslint, which does not support 7 yet. It transpiles components into
   `.svelte-check/` on the way, which is why every linter ignores that directory
 
+- Exemption: `house/positional-parameters` is off for `src/entrypoints/background.ts` in `.oxlintrc.json`,
+  because `browser.tabs.onUpdated` calls its listener with three positional arguments the browser
+  dictates; every other function takes one destructured object
+- `String.fromCodePoint(0x2014)` builds the em dash in `src/features/netlinks/link.ts`: the em-dash
+  rule reads source text, and the fixer rewrites a `—` escape back into the character
+- Known `avi12/lint-config` v0.4.8 defects, worked around here: the `eslint-config-avi12/svelte` fixer
+  turns `type X = {}` into an interface (which breaks a `URLSearchParams` argument; the form body is
+  built from entries instead); `declaration-no-important` with `selector-no-qualifying-type` leave no
+  way to style a shadow host
+
 # Dev server
 
 Never build - the dev server is always running and reloads the extension on any change under `src/`.
