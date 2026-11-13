@@ -21,9 +21,9 @@
   const ISSUES_URL = "https://github.com/avi12/cyberpunk-2077-new-tab/issues";
 
   const CAPTURE_MESSAGE = {
-    copied: "Copied to the clipboard",
-    undrawable: "The page could not be drawn",
-    unwritable: "Drawn, but the clipboard would not take it"
+    COPIED: "Copied to the clipboard",
+    UNDRAWABLE: "The page could not be drawn",
+    UNWRITABLE: "Drawn, but the clipboard would not take it"
   } as const;
 
   let captureMessage = $state("");
@@ -38,9 +38,9 @@
     } finally {
       isBusy = false;
       // Reported here instead of via `data-analytics`, since what counts is whether the copy succeeded
-      reportQuietly(AnalyticsEvent.controlPressed, {
-        [AnalyticsParam.action]: AnalyticsAction.screenshot,
-        [AnalyticsParam.isSuccess]: captureMessage === CAPTURE_MESSAGE.copied
+      reportQuietly(AnalyticsEvent.CONTROL_PRESSED, {
+        [AnalyticsParam.ACTION]: AnalyticsAction.SCREENSHOT,
+        [AnalyticsParam.IS_SUCCESS]: captureMessage === CAPTURE_MESSAGE.COPIED
       });
     }
   }
@@ -48,13 +48,13 @@
   async function captureToClipboard() {
     const png = await capturePage().catch(() => null);
     if (!png) {
-      captureMessage = CAPTURE_MESSAGE.undrawable;
+      captureMessage = CAPTURE_MESSAGE.UNDRAWABLE;
 
       return;
     }
 
     const isCopied = await copyToClipboard(png);
-    captureMessage = isCopied ? CAPTURE_MESSAGE.copied : CAPTURE_MESSAGE.unwritable;
+    captureMessage = isCopied ? CAPTURE_MESSAGE.COPIED : CAPTURE_MESSAGE.UNWRITABLE;
   }
 
   async function copyToClipboard(dataUrl: string) {
@@ -88,7 +88,7 @@
     <a
       class="about__action"
       aria-label={BUG_REPORT_LABEL}
-      data-analytics={AnalyticsAction.reportBug}
+      data-analytics={AnalyticsAction.REPORT_BUG}
       data-tooltip={BUG_REPORT_LABEL}
       href={ISSUES_URL}
       rel="noopener noreferrer"

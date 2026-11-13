@@ -6,7 +6,7 @@ import { MessageType, onMessage } from "@/lib/messaging";
 /** One per machine rather than per card family, since journeys and tips come through the same app. */
 class Companion {
   /** Written inside the view transition that redraws the rows, so the panel moves with them. */
-  state = $state(CompanionState.loading);
+  state = $state(CompanionState.LOADING);
 
   /**
    * Decides whether the Store link is drawn, rather than `companionAnswered`: a cache outlives the app
@@ -23,18 +23,18 @@ class Companion {
   }
 
   reportLink(state: CompanionState) {
-    if (this.#isLinkReported || state === CompanionState.loading) {
+    if (this.#isLinkReported || state === CompanionState.LOADING) {
       return;
     }
 
     this.#isLinkReported = true;
-    reportQuietly(AnalyticsEvent.companionLinked);
+    reportQuietly(AnalyticsEvent.COMPANION_LINKED);
   }
 }
 
 export const companion = new Companion();
 
-onMessage(MessageType.companionStarted, () => companion.refresh());
+onMessage(MessageType.COMPANION_STARTED, () => companion.refresh());
 
 // Listens for the grant rather than the button press, since it may also come from the browser's own
 // extension settings.

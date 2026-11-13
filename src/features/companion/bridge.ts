@@ -29,17 +29,17 @@ export const COMPANION_STORE_URL = "https://apps.microsoft.com/detail/9PL9NRMWFT
 export const MAX_CARDS = 3;
 
 export enum CompanionState {
-  loading = "loading",
-  connected = "connected",
-  setupNeeded = "setupNeeded",
-  permissionNeeded = "permissionNeeded",
-  companionOffline = "companionOffline",
+  LOADING = "loading",
+  CONNECTED = "connected",
+  SETUP_NEEDED = "setupNeeded",
+  PERMISSION_NEEDED = "permissionNeeded",
+  COMPANION_OFFLINE = "companionOffline",
   /** Installed and answering, but quit from its tray. */
-  companionNotRunning = "companionNotRunning",
+  COMPANION_NOT_RUNNING = "companionNotRunning",
   /** The app is running, but Edge wrote nothing - fixed by Edge's Copilot mode and Journeys switches. */
-  edgeHasNothing = "edgeHasNothing",
+  EDGE_HAS_NOTHING = "edgeHasNothing",
   /** Granted, but the worker that answered predates the grant - see `CompanionAnswer.unbound`. */
-  linking = "linking"
+  LINKING = "linking"
 }
 
 /** The app was reached. Not reaching it is thrown as `CompanionUnreachable` instead. */
@@ -48,7 +48,7 @@ export interface CompanionRead<TCard> {
   cards: TCard[];
 }
 
-const ANSWERED_STATES = [CompanionState.connected, CompanionState.edgeHasNothing];
+const ANSWERED_STATES = [CompanionState.CONNECTED, CompanionState.EDGE_HAS_NOTHING];
 
 /** Only an answer from the app may empty the row - failing to reach it says nothing about the cards. */
 export function hasCompanionSpoken(state: CompanionState) {
@@ -133,38 +133,38 @@ export async function readCompanion<TCard>({ request, snapshot, parse }: {
   const isCompanionAllowed = await browser.permissions.contains({ permissions: [NATIVE_MESSAGING] });
   const isSetupStarted = isCompanionAllowed || await companionSetupStartedItem.getValue();
   if (!isSetupStarted) {
-    throw new CompanionUnreachable(CompanionState.setupNeeded);
+    throw new CompanionUnreachable(CompanionState.SETUP_NEEDED);
   }
 
   if (!isCompanionAllowed) {
-    throw new CompanionUnreachable(CompanionState.permissionNeeded);
+    throw new CompanionUnreachable(CompanionState.PERMISSION_NEEDED);
   }
 
   const nowMs = Temporal.Now.instant().epochMilliseconds;
-  const result = await sendMessage(MessageType.readCompanion, request).catch(() => null);
-  if (!result || result.answer === CompanionAnswer.silent) {
-    throw new CompanionUnreachable(CompanionState.companionOffline);
+  const result = await sendMessage(MessageType.READ_COMPANION, request).catch(() => null);
+  if (!result || result.answer === CompanionAnswer.SILENT) {
+    throw new CompanionUnreachable(CompanionState.COMPANION_OFFLINE);
   }
 
   // `unbound` is the worker saying it holds no binding to send with, so the app was never reached.
-  const isAppSpeaking = result.answer !== CompanionAnswer.unbound;
+  const isAppSpeaking = result.answer !== CompanionAnswer.UNBOUND;
   if (isAppSpeaking) {
     await companionAnsweredItem.setValue(true);
   }
 
-  if (result.answer === CompanionAnswer.notRunning) {
-    throw new CompanionUnreachable(CompanionState.companionNotRunning);
+  if (result.answer === CompanionAnswer.NOT_RUNNING) {
+    throw new CompanionUnreachable(CompanionState.COMPANION_NOT_RUNNING);
   }
 
-  if (result.answer === CompanionAnswer.nothingToRead) {
+  if (result.answer === CompanionAnswer.NOTHING_TO_READ) {
     return {
-      state: CompanionState.edgeHasNothing,
+      state: CompanionState.EDGE_HAS_NOTHING,
       cards: []
     };
   }
 
-  if (result.answer === CompanionAnswer.unbound) {
-    throw new CompanionUnreachable(CompanionState.linking);
+  if (result.answer === CompanionAnswer.UNBOUND) {
+    throw new CompanionUnreachable(CompanionState.LINKING);
   }
 
   await rememberCompanion({
@@ -173,7 +173,7 @@ export async function readCompanion<TCard>({ request, snapshot, parse }: {
   });
 
   return {
-    state: CompanionState.connected,
+    state: CompanionState.CONNECTED,
     cards: parse({
       raw: result.records,
       nowMs

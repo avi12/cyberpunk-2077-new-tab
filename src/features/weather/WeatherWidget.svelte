@@ -77,7 +77,7 @@
 
     const isAskable = asked !== DEFAULT_WEATHER_LOCATION;
     if (!isAskable) {
-      return Promise.resolve(WeatherRefusal.noPlace);
+      return Promise.resolve(WeatherRefusal.NO_PLACE);
     }
 
     if (!IS_GOOGLE_READABLE) {
@@ -189,7 +189,7 @@
         <button
           class="weather__temp weather__temp--button"
           class:glitch={glitch.isActive}
-          data-analytics={AnalyticsAction.weatherSourceChanged}
+          data-analytics={AnalyticsAction.WEATHER_SOURCE_CHANGED}
           data-text={temperature}
           onclick={() => glitch.fire({ onDone: () => onConfigChange({ temperatureUnit: !isCelsius }) })}
           type="button">

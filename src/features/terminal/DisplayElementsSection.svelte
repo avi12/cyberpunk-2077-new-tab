@@ -145,7 +145,7 @@
   <div class="row">
     <button
       class="cyber-button cyber-button--primary cyber-button--grow"
-      data-analytics={AnalyticsAction.edgeOnlyDismissed}
+      data-analytics={AnalyticsAction.EDGE_ONLY_DISMISSED}
       onclick={() => (isEdgeOnlyOpen = false)}
       type="button">
       GOT IT

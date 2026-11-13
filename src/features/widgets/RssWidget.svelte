@@ -110,7 +110,7 @@
     <div class="rss__notice">
       <span class="rss__notice-icon">{@html iconWifiOff}</span>
       <p class="rss__message rss__message--error">Feed Error</p>
-      <button class="rss__edit" data-analytics={AnalyticsAction.rssUrlEditOpened} onclick={openSettings} type="button">
+      <button class="rss__edit" data-analytics={AnalyticsAction.RSS_URL_EDIT_OPENED} onclick={openSettings} type="button">
         {@html iconSettings}
         Edit URL
       </button>
@@ -118,7 +118,7 @@
   {:else if items.length === 0}
     <div class="rss__notice">
       <p class="rss__message">No items found</p>
-      <button class="rss__edit rss__edit--cyan" data-analytics={AnalyticsAction.rssUrlEditOpened} onclick={openSettings} type="button">
+      <button class="rss__edit rss__edit--cyan" data-analytics={AnalyticsAction.RSS_URL_EDIT_OPENED} onclick={openSettings} type="button">
         {@html iconSettings}
         Edit URL
       </button>
@@ -127,7 +127,7 @@
     <ul class="rss__list scrollbar-cyberpunk">
       {#each items as item (item.link)}
         <li>
-          <a class="rss__item" data-analytics={AnalyticsAction.rssItemOpened} href={item.link} rel="noopener noreferrer" target="_blank">
+          <a class="rss__item" data-analytics={AnalyticsAction.RSS_ITEM_OPENED} href={item.link} rel="noopener noreferrer" target="_blank">
             <span class="rss-title-container"><span class="rss-title">{item.title}</span></span>
             <span class="rss__item-icon">{@html iconExternalLink}</span>
           </a>
@@ -167,7 +167,7 @@
           <button
             class="spinner-button"
             aria-label="More items"
-            data-analytics={AnalyticsAction.rssMoreItems}
+            data-analytics={AnalyticsAction.RSS_MORE_ITEMS}
             onclick={() => setCount(countDraft + 1)}
             type="button">
             {@html iconChevronUp}
@@ -175,7 +175,7 @@
           <button
             class="spinner-button"
             aria-label="Fewer items"
-            data-analytics={AnalyticsAction.rssFewerItems}
+            data-analytics={AnalyticsAction.RSS_FEWER_ITEMS}
             onclick={() => setCount(countDraft - 1)}
             type="button">
             {@html iconChevronDown}
@@ -183,7 +183,7 @@
         </div>
       </div>
     </div>
-    <button class="cyber-button cyber-button--primary" data-analytics={AnalyticsAction.rssSettingsClosed} onclick={() => (isSettingsOpen = false)} type="button">
+    <button class="cyber-button cyber-button--primary" data-analytics={AnalyticsAction.RSS_SETTINGS_CLOSED} onclick={() => (isSettingsOpen = false)} type="button">
       Done
     </button>
   </div>

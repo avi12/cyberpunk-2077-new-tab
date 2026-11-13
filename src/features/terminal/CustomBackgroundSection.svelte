@@ -13,7 +13,7 @@
   import iconVideo from "@/assets/icons/video.svg?raw";
   import iconXMark from "@/assets/icons/x-mark.svg?raw";
 
-  type UploadableMedia = BackgroundMediaType.image | BackgroundMediaType.video;
+  type UploadableMedia = BackgroundMediaType.IMAGE | BackgroundMediaType.VIDEO;
 
   const BRIGHTNESS_STEP = 5;
 
@@ -25,16 +25,16 @@
     icon: string;
     exampleUrl: string;
   }> = {
-    [BackgroundMediaType.image]: {
-      value: BackgroundMediaType.image,
+    [BackgroundMediaType.IMAGE]: {
+      value: BackgroundMediaType.IMAGE,
       label: "Image",
       accept: "image/*",
       name: "an image",
       icon: iconImage,
       exampleUrl: "https://example.com/image.jpg"
     },
-    [BackgroundMediaType.video]: {
-      value: BackgroundMediaType.video,
+    [BackgroundMediaType.VIDEO]: {
+      value: BackgroundMediaType.VIDEO,
       label: "Video",
       accept: "video/mp4,video/webm",
       name: "a video",
@@ -45,7 +45,7 @@
 
   const MEDIA_KIND_OPTIONS = Object.values(MEDIA_KINDS);
 
-  let mediaKind = $state<UploadableMedia>(BackgroundMediaType.image);
+  let mediaKind = $state<UploadableMedia>(BackgroundMediaType.IMAGE);
   let urlEntry = $state<string | null>(null);
   let isFetching = $state(false);
   let error = $state("");
@@ -67,7 +67,7 @@
   }) {
     try {
       await saveMedia({
-        slot: MediaSlot.background,
+        slot: MediaSlot.BACKGROUND,
         blob,
         type: kind
       });
@@ -122,8 +122,8 @@
   }
 
   async function clearCustom() {
-    await clearMedia(MediaSlot.background);
-    settings.backgroundMediaType.current = BackgroundMediaType.none;
+    await clearMedia(MediaSlot.BACKGROUND);
+    settings.backgroundMediaType.current = BackgroundMediaType.NONE;
     settings.background.current = DEFAULT_BACKGROUND;
   }
 </script>
@@ -135,7 +135,7 @@
         <button
           class="option-button custom__kind"
           aria-pressed={mediaKind === option.value}
-          data-analytics={AnalyticsAction.backgroundKindPicked}
+          data-analytics={AnalyticsAction.BACKGROUND_KIND_PICKED}
           onclick={() => (mediaKind = option.value)}
           type="button">
           {@html option.icon}
@@ -178,12 +178,12 @@
           <span>Drop {selectedKind.name} here</span>
           <span class="drop-zone__hint">or click to pick one</span>
         </label>
-        <button class="custom__button" data-analytics={AnalyticsAction.backgroundUrlOpened} onclick={() => (urlEntry = "")} type="button">
+        <button class="custom__button" data-analytics={AnalyticsAction.BACKGROUND_URL_OPENED} onclick={() => (urlEntry = "")} type="button">
           {@html selectedKind.icon}
           Enter URL
         </button>
         {#if isCustom}
-          <button class="custom__button custom__button--danger" data-analytics={AnalyticsAction.backgroundCleared} onclick={() => void clearCustom()} type="button">
+          <button class="custom__button custom__button--danger" data-analytics={AnalyticsAction.BACKGROUND_CLEARED} onclick={() => void clearCustom()} type="button">
             {@html iconTrash2}
             Clear Custom
           </button>
@@ -213,12 +213,12 @@
         <div class="row">
           <button
             class="cyber-button cyber-button--primary cyber-button--grow custom__small"
-            data-analytics={AnalyticsAction.backgroundLinked}
+            data-analytics={AnalyticsAction.BACKGROUND_LINKED}
             disabled={isFetching}
             type="submit">
             {isFetching ? "Fetching" : "Apply"}
           </button>
-          <button class="cyber-button cyber-button--muted custom__small" data-analytics={AnalyticsAction.backgroundUrlCancelled} onclick={() => (urlEntry = null)} type="button">
+          <button class="cyber-button cyber-button--muted custom__small" data-analytics={AnalyticsAction.BACKGROUND_URL_CANCELLED} onclick={() => (urlEntry = null)} type="button">
             {@html iconXMark}
           </button>
         </div>

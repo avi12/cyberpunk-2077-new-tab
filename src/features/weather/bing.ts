@@ -86,7 +86,7 @@ function overviewUrl(query: z.infer<typeof overviewQuerySchema>) {
 export async function readBingWeather({ latitude, longitude }: GeoLocation) {
   const isAllowed = await bingWeatherAccess.has();
   if (!isAllowed) {
-    return WeatherRefusal.noAccess;
+    return WeatherRefusal.NO_ACCESS;
   }
 
   const parsedQuery = overviewQuerySchema.safeParse({
@@ -94,7 +94,7 @@ export async function readBingWeather({ latitude, longitude }: GeoLocation) {
     lon: longitude
   });
   if (!parsedQuery.success) {
-    return WeatherRefusal.noPlace;
+    return WeatherRefusal.NO_PLACE;
   }
 
   const overview = await fetchJson({
@@ -102,7 +102,7 @@ export async function readBingWeather({ latitude, longitude }: GeoLocation) {
     schema: overviewSchema
   });
   if (!overview) {
-    return WeatherRefusal.unreachable;
+    return WeatherRefusal.UNREACHABLE;
   }
 
   const { temp: temperature, cap: description } = overview.responses[0].weather[0].current;
@@ -112,7 +112,7 @@ export async function readBingWeather({ latitude, longitude }: GeoLocation) {
     description
   });
   if (!parsedReading.success) {
-    return WeatherRefusal.noReading;
+    return WeatherRefusal.NO_READING;
   }
 
   return parsedReading.data;

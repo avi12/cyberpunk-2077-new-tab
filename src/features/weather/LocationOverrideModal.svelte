@@ -31,9 +31,9 @@
   const COORDINATES_ERROR = "Enter valid coordinates";
 
   const REFUSAL_MESSAGES: Record<LocationRefusal, string> = {
-    [LocationRefusal.blocked]: "This page is blocked from reading your location - allow it in your browser's site settings",
-    [LocationRefusal.unavailable]: "Nothing here could work out where you are - type your coordinates below instead",
-    [LocationRefusal.timedOut]: "Your device took too long to answer - type your coordinates below instead"
+    [LocationRefusal.BLOCKED]: "This page is blocked from reading your location - allow it in your browser's site settings",
+    [LocationRefusal.UNAVAILABLE]: "Nothing here could work out where you are - type your coordinates below instead",
+    [LocationRefusal.TIMED_OUT]: "Your device took too long to answer - type your coordinates below instead"
   };
 
   const DEVICE_CAPTION = "Read from this device on every load, and never stored";
@@ -123,14 +123,14 @@
     }
 
     if (deviceAccess === "denied") {
-      return REFUSAL_MESSAGES[LocationRefusal.blocked];
+      return REFUSAL_MESSAGES[LocationRefusal.BLOCKED];
     }
 
     return "";
   });
 
   const deviceCaption = $derived.by(() => {
-    const isFromConnection = asked?.isFound && asked.source === LocationSource.connection;
+    const isFromConnection = asked?.isFound && asked.source === LocationSource.CONNECTION;
 
     return isFromConnection ? CONNECTION_CAPTION : DEVICE_CAPTION;
   });
@@ -171,7 +171,7 @@
     isLocating = false;
 
     /* Only the device answering proves the permission; the connection knows nothing about it. */
-    const isDeviceProved = asked.isFound && asked.source === LocationSource.device;
+    const isDeviceProved = asked.isFound && asked.source === LocationSource.DEVICE;
     if (!isDeviceProved) {
       return;
     }
@@ -223,7 +223,7 @@
         class:is-active={isDeviceLit}
         class:is-dimmed={!isDeviceLit}
         aria-pressed={isDeviceLit}
-        data-analytics={AnalyticsAction.weatherFollowDevice}
+        data-analytics={AnalyticsAction.WEATHER_FOLLOW_DEVICE}
         disabled={isLocating}
         onclick={() => void followDevice()}
         onfocusin={e => e.stopPropagation()}
@@ -268,7 +268,7 @@
 
         <button
           class="cyber-button cyber-button--primary location__confirm"
-          data-analytics={AnalyticsAction.weatherCoordinatesUsed}
+          data-analytics={AnalyticsAction.WEATHER_COORDINATES_USED}
           disabled={isLocating}
           type="submit">
           Use these coordinates
@@ -288,7 +288,7 @@
         class:is-active={isNightCity}
         class:is-dimmed={!isNightCity}
         aria-pressed={isNightCity}
-        data-analytics={AnalyticsAction.weatherNightCityUsed}
+        data-analytics={AnalyticsAction.WEATHER_NIGHT_CITY_USED}
         disabled={isLocating}
         onclick={onStayDark}
         onfocusin={e => e.stopPropagation()}
@@ -301,7 +301,7 @@
   </form>
 
   <footer class="location__actions">
-    <button class="cyber-button cyber-button--ghost cyber-button--block" data-analytics={AnalyticsAction.weatherLocationClosed} onclick={onClose} type="button">Close</button>
+    <button class="cyber-button cyber-button--ghost cyber-button--block" data-analytics={AnalyticsAction.WEATHER_LOCATION_CLOSED} onclick={onClose} type="button">Close</button>
   </footer>
 </Modal>
 

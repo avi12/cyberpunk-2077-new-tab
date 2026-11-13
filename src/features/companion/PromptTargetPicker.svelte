@@ -32,7 +32,7 @@
 <button
   class="picker__button"
   aria-label={LABEL}
-  data-analytics={AnalyticsAction.promptTargetOpened}
+  data-analytics={AnalyticsAction.PROMPT_TARGET_OPENED}
   data-tooltip={LABEL}
   popovertarget={PICKER_ID}
   type="button">

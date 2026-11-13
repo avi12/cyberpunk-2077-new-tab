@@ -55,7 +55,7 @@
         siteId,
         url,
         prompt: query,
-        disposition: TabDisposition.current,
+        disposition: TabDisposition.CURRENT,
         onCopied(isCopied) {
           notice = isCopied ? COPIED_NOTICE : UNCOPIED_NOTICE;
         }
@@ -91,7 +91,7 @@
     }
 
     /* Never the query itself - only which engine. */
-    reportQuietly(AnalyticsEvent.searchSubmitted, { [AnalyticsParam.engine]: engine.id });
+    reportQuietly(AnalyticsEvent.SEARCH_SUBMITTED, { [AnalyticsParam.ENGINE]: engine.id });
 
     const { composeSiteId } = engine;
     if (composeSiteId) {
@@ -121,7 +121,7 @@
       <button
         class="search__engine-button"
         aria-label={`Search engine: ${engine.name}`}
-        data-analytics={AnalyticsAction.searchEngineOpened}
+        data-analytics={AnalyticsAction.SEARCH_ENGINE_OPENED}
         popovertarget={ENGINE_POPOVER_ID}
         type="button">
         {engine.name}
@@ -135,7 +135,7 @@
               class="search__engine-option"
               class:is-active={isActive}
               aria-current={isActive}
-              data-analytics={AnalyticsAction.searchEnginePicked}
+              data-analytics={AnalyticsAction.SEARCH_ENGINE_PICKED}
               onclick={() => (settings.activeSearchEngine.current = option.id)}
               popovertarget={ENGINE_POPOVER_ID}
               popovertargetaction="hide"

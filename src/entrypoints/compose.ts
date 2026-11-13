@@ -65,7 +65,7 @@ function insertIntoEditor({
   selection?.removeAllRanges();
   selection?.addRange(range);
 
-  const isPasted = insert === ComposerInsert.pasted;
+  const isPasted = insert === ComposerInsert.PASTED;
   if (!isPasted) {
     document.execCommand("insertText", false, prompt);
 
@@ -192,7 +192,7 @@ export default defineUnlistedScript({
   // Named, so the return value comes back through `executeScript`
   globalName: "composePrompt",
   async main() {
-    const request = await sendMessage(MessageType.takeComposeRequest, undefined);
+    const request = await sendMessage(MessageType.TAKE_COMPOSE_REQUEST, undefined);
     if (!request) {
       return "nothing to send";
     }
@@ -204,7 +204,7 @@ export default defineUnlistedScript({
         composerSelector,
         submitSelector,
         prompt: request.prompt,
-        insert: composerInsert ?? ComposerInsert.typed
+        insert: composerInsert ?? ComposerInsert.TYPED
       });
       if (isSent) {
         return "sent";

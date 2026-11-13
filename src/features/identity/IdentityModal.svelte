@@ -1,6 +1,6 @@
 <script lang="ts">
   import { AnalyticsAction } from "@/lib/analytics/definitions";
-  import { googleAccountName, isGoogleAccountConfigured } from "./identity";
+  import { googleAccountName, IS_GOOGLE_ACCOUNT_CONFIGURED } from "./identity";
   import iconFingerprint from "@/assets/icons/fingerprint.svg?raw";
   import Modal from "@/ui/Modal.svelte";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -30,7 +30,7 @@
   }
 
   async function fillFromGoogle() {
-    if (!isGoogleAccountConfigured) {
+    if (!IS_GOOGLE_ACCOUNT_CONFIGURED) {
       error = "Google sign-in isn't set up in this build";
 
       return;
@@ -63,7 +63,7 @@
 
     <button
       class="cyber-button cyber-button--ghost identity__from-google"
-      data-analytics={AnalyticsAction.googleAccountUsed}
+      data-analytics={AnalyticsAction.GOOGLE_ACCOUNT_USED}
       onclick={() => void fillFromGoogle()}
       type="button">
       {@html iconFingerprint}
@@ -74,7 +74,7 @@
       <p class="cyber-error">{error}</p>
     {/if}
 
-    <button class="cyber-button cyber-button--primary" data-analytics={AnalyticsAction.identityClosed} type="submit">Close</button>
+    <button class="cyber-button cyber-button--primary" data-analytics={AnalyticsAction.IDENTITY_CLOSED} type="submit">Close</button>
   </form>
 </Modal>
 

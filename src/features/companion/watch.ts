@@ -73,7 +73,7 @@ async function connectWatch() {
     void ensureCompanionWatch();
     void refreshCompanionSnapshots();
     // No new tab open is no one to tell, which the messaging library reports as a failure
-    void sendMessage(MessageType.companionStarted).catch(() => {});
+    void sendMessage(MessageType.COMPANION_STARTED).catch(() => {});
   });
   /*
    * Never reconnected here: a host with nothing to watch exits, so it would loop spawning processes.

@@ -41,7 +41,7 @@
   <p class="cyber-note">{backupState(takenAtMs)}</p>
   <button
     class="cyber-button cyber-button--muted cyber-button--action"
-    data-analytics={AnalyticsAction.accountBackedUp}
+    data-analytics={AnalyticsAction.ACCOUNT_BACKED_UP}
     disabled={isWorking}
     onclick={onBackUp}
     type="button">
@@ -53,7 +53,7 @@
       {#if isConfirmingDelete}
         <button
           class="cyber-button cyber-button--danger cyber-button--grow"
-          data-analytics={AnalyticsAction.accountForgotten}
+          data-analytics={AnalyticsAction.ACCOUNT_FORGOTTEN}
           onclick={() => {
             isConfirmingDelete = false;
             onForget();
@@ -63,19 +63,19 @@
         </button>
         <button
           class="cyber-button cyber-button--ghost cyber-button--grow"
-          data-analytics={AnalyticsAction.accountForgetCancelled}
+          data-analytics={AnalyticsAction.ACCOUNT_FORGET_CANCELLED}
           onclick={() => (isConfirmingDelete = false)}
           type="button">
           Keep it
         </button>
       {:else}
-        <button class="cyber-button cyber-button--ghost cyber-button--grow" data-analytics={AnalyticsAction.accountRestored} onclick={onRestore} type="button">
+        <button class="cyber-button cyber-button--ghost cyber-button--grow" data-analytics={AnalyticsAction.ACCOUNT_RESTORED} onclick={onRestore} type="button">
           {@html iconCloud}
           Restore
         </button>
         <button
           class="cyber-button cyber-button--ghost cyber-button--grow"
-          data-analytics={AnalyticsAction.accountForgetOpened}
+          data-analytics={AnalyticsAction.ACCOUNT_FORGET_OPENED}
           onclick={() => (isConfirmingDelete = true)}
           type="button">
           {@html iconTrash2}

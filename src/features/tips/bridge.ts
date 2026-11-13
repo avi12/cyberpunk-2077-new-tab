@@ -13,7 +13,7 @@ import { parseTips } from "./model";
 export async function readTips() {
   const turn = await tipsTurnItem.getValue();
   const read = await readCompanion<Tip>({
-    request: CompanionRequest.tips,
+    request: CompanionRequest.TIPS,
     snapshot: tipsSnapshotItem,
     parse: ({ raw }) =>
       parseTips({

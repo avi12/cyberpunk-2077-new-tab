@@ -38,15 +38,15 @@
     firstMs: number;
     ceilingMs: number;
   }>> = {
-    [CompanionState.companionOffline]: {
+    [CompanionState.COMPANION_OFFLINE]: {
       firstMs: 3000,
       ceilingMs: 60_000
     },
-    [CompanionState.edgeHasNothing]: {
+    [CompanionState.EDGE_HAS_NOTHING]: {
       firstMs: 5000,
       ceilingMs: 60_000
     },
-    [CompanionState.linking]: {
+    [CompanionState.LINKING]: {
       firstMs: 35_000,
       ceilingMs: 35_000
     }
@@ -56,10 +56,10 @@
   const GIVE_UP_AFTER_MS = 45_000;
 
   /** Site permissions are asked for by the press that spends them, never by a banner above a full row. */
-  const SILENT_STATES = [CompanionState.loading, CompanionState.connected];
+  const SILENT_STATES = [CompanionState.LOADING, CompanionState.CONNECTED];
 
   /** Only these can be given up on: an app reporting Edge empty has been reached. */
-  const SILENT_WAITS = [CompanionState.companionOffline, CompanionState.linking];
+  const SILENT_WAITS = [CompanionState.COMPANION_OFFLINE, CompanionState.LINKING];
 
   /**
    * Only rewords a silence. It never decides whether the Store link is drawn: it stays true forever,
@@ -78,9 +78,9 @@
   let isConnectionGivenUp = $state(false);
 
   /** Worded apart: a stalled `linking` is a stale worker, so the app installation is not the fault. */
-  const isAppUnreachable = $derived(isConnectionGivenUp && companion.state === CompanionState.companionOffline);
+  const isAppUnreachable = $derived(isConnectionGivenUp && companion.state === CompanionState.COMPANION_OFFLINE);
 
-  const isLinkStalled = $derived(isConnectionGivenUp && companion.state === CompanionState.linking);
+  const isLinkStalled = $derived(isConnectionGivenUp && companion.state === CompanionState.LINKING);
 
   $effect(() => {
     if (!isWaitingOnApp) {
@@ -176,7 +176,7 @@
 {#snippet storeLink()}
   <a
     class="cyber-button cyber-button--primary cyber-button--link"
-    data-analytics={AnalyticsAction.companionStoreOpened}
+    data-analytics={AnalyticsAction.COMPANION_STORE_OPENED}
     href={COMPANION_STORE_URL}
     rel="noopener noreferrer"
     target="_blank">
@@ -188,7 +188,7 @@
 {#if isVisible}
   <!-- An outro rather than the page's view transition, which a permission prompt can skip -->
   <div class="page-section setup" transition:slide={{ duration: motionDuration(COLLAPSE_MS), easing: cubicOut }}>
-    {#if companion.state === CompanionState.setupNeeded}
+    {#if companion.state === CompanionState.SETUP_NEEDED}
       <CompanionNotice isTearing={glitch.isActive}>
         Microsoft Edge maps where your browsing is heading once {COPILOT_MODE_SETTING} and {JOURNEYS_SETTING}
         are on under {COPILOT_SETTINGS_SECTION} - the {COMPANION_NAME} that reads it is on the Microsoft Store
@@ -196,7 +196,7 @@
           <!-- Also starts the setup, moving the panel on to the permission while the Store opens -->
           <a
             class="cyber-button cyber-button--primary cyber-button--link"
-            data-analytics={AnalyticsAction.companionSetupStarted}
+            data-analytics={AnalyticsAction.COMPANION_SETUP_STARTED}
             href={COMPANION_STORE_URL}
             onclick={() => void startCompanionSetup().then(() => companion.refresh())}
             rel="noopener noreferrer"
@@ -206,7 +206,7 @@
           </a>
         {/snippet}
       </CompanionNotice>
-    {:else if companion.state === CompanionState.permissionNeeded}
+    {:else if companion.state === CompanionState.PERMISSION_NEEDED}
       <!-- Names the switches too, or a reader granting without them lands on "nothing from Microsoft Edge yet" -->
       <CompanionNotice isTearing={glitch.isActive}>
         Let the {COMPANION_NAME} through and this fills itself in - it reads what Microsoft Edge
@@ -215,7 +215,7 @@
           <div class="row">
             <a
               class="cyber-button cyber-button--ghost cyber-button--link"
-              data-analytics={AnalyticsAction.copilotSettingsOpened}
+              data-analytics={AnalyticsAction.COPILOT_SETTINGS_OPENED}
               href={COPILOT_SETTINGS_URL}
               onclick={e => {
                 e.preventDefault();
@@ -225,7 +225,7 @@
             </a>
             <button
               class="cyber-button cyber-button--primary"
-              data-analytics={AnalyticsAction.companionPermissionAsked}
+              data-analytics={AnalyticsAction.COMPANION_PERMISSION_ASKED}
               onclick={() => void requestCompanionPermission()}
               type="button">
               Link companion
@@ -233,7 +233,7 @@
           </div>
         {/snippet}
       </CompanionNotice>
-    {:else if companion.state === CompanionState.companionNotRunning}
+    {:else if companion.state === CompanionState.COMPANION_NOT_RUNNING}
       <CompanionNotice isTearing={glitch.isActive}>
         {#if companion.isRowFilled}
           {COMPANION_NAME} stopped - start it again; what is below it is the last read
@@ -241,7 +241,7 @@
           {COMPANION_NAME} stopped - start it again and this fills itself in
         {/if}
       </CompanionNotice>
-    {:else if companion.state === CompanionState.edgeHasNothing}
+    {:else if companion.state === CompanionState.EDGE_HAS_NOTHING}
       <!-- Covers switches that are off and ones just turned on, which the app cannot tell apart -->
       <CompanionNotice isTearing={glitch.isActive}>
         Nothing from Microsoft Edge yet - it needs {COPILOT_MODE_SETTING}, then {JOURNEYS_SETTING} under
@@ -249,7 +249,7 @@
         {#snippet action()}
           <a
             class="cyber-button cyber-button--primary cyber-button--link"
-            data-analytics={AnalyticsAction.copilotSettingsOpened}
+            data-analytics={AnalyticsAction.COPILOT_SETTINGS_OPENED}
             href={COPILOT_SETTINGS_URL}
             onclick={e => {
               e.preventDefault();
@@ -259,7 +259,7 @@
           </a>
         {/snippet}
       </CompanionNotice>
-    {:else if companion.state === CompanionState.linking}
+    {:else if companion.state === CompanionState.LINKING}
       <CompanionNotice action={companion.isRowFilled ? undefined : storeLink} isTearing={glitch.isActive}>
         {#if isLinkStalled}
           <!-- The worker predates the permission, and only going idle or a restart replaces it -->

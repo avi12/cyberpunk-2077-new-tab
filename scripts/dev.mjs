@@ -97,11 +97,11 @@ const SOURCE_DIRECTORY = join(PROJECT_ROOT, "src");
  * Firefox drops the manifest's CSP naming the dev server and applies `script-src 'self'`, so a
  * served page paints nothing. It is rebuilt instead, with hot swapping done from its own modules.
  */
-const isServedByDevServer = browser !== "firefox";
+const IS_SERVED_BY_DEV_SERVER = browser !== "firefox";
 
-const isPortNamed = args.includes("--port");
-const servedArgs = isPortNamed ? args : [...args, "--port", String(devServerPort(browser))];
-const wxtArgs = isServedByDevServer ? servedArgs : ["build", ...args];
+const IS_PORT_NAMED = args.includes("--port");
+const servedArgs = IS_PORT_NAMED ? args : [...args, "--port", String(devServerPort(browser))];
+const wxtArgs = IS_SERVED_BY_DEV_SERVER ? servedArgs : ["build", ...args];
 
 let wxtProcess = null;
 let runner = null;
@@ -172,7 +172,7 @@ async function rebuild(filename) {
   const isSwappable = isHotPlanted && isHotModule(filename);
   console.info(`\n[dev] ${filename} changed - ${isSwappable ? "swapping" : "rebuilding"}`);
   /* Before the build, because a build closes the extension's tabs, which can close the window. */
-  const openPages = isServedByDevServer || isSwappable ? null : await parkExtensionPages(FIREFOX_BIDI_PORT);
+  const openPages = IS_SERVED_BY_DEV_SERVER || isSwappable ? null : await parkExtensionPages(FIREFOX_BIDI_PORT);
   const isBuilt = isSwappable ? await refreshHotGraph() : await build();
   isBuilding = false;
 
@@ -325,7 +325,7 @@ async function announceReload() {
 }
 
 function extensionOutputDirectory() {
-  return isServedByDevServer ? devOutputDirectory(browser) : buildOutputDirectory(browser);
+  return IS_SERVED_BY_DEV_SERVER ? devOutputDirectory(browser) : buildOutputDirectory(browser);
 }
 
 async function waitForBuild() {
@@ -344,7 +344,7 @@ async function waitForBuild() {
 }
 
 async function answerChange(filename) {
-  if (!isServedByDevServer) {
+  if (!IS_SERVED_BY_DEV_SERVER) {
     await rebuild(filename);
 
     return;
@@ -473,7 +473,7 @@ if (runningOwnerPid) {
 
 claimLock();
 
-if (isServedByDevServer) {
+if (IS_SERVED_BY_DEV_SERVER) {
   start();
 } else {
   console.info(`[dev] ${browser} cannot be served, so this is a build - see the note at the top`);
@@ -487,7 +487,7 @@ if (!isBuildWritten) {
 }
 
 /* Before the browser, because the add-on is installed from this directory. */
-if (!isServedByDevServer) {
+if (!IS_SERVED_BY_DEV_SERVER) {
   reloadChannel = startReloadChannel();
   plantReloadClient({ outputDir: extensionOutputDirectory() });
   isHotPlanted = await plantHotGraph();
@@ -527,10 +527,10 @@ watchers = [
     ...WATCH_OPTIONS,
     depth: 0
   }),
-  ...(isServedByDevServer ? [] : [chokidar.watch(SOURCE_DIRECTORY, WATCH_OPTIONS)])
+  ...(IS_SERVED_BY_DEV_SERVER ? [] : [chokidar.watch(SOURCE_DIRECTORY, WATCH_OPTIONS)])
 ];
 
-if (isServedByDevServer) {
+if (IS_SERVED_BY_DEV_SERVER) {
   pollDevServer();
 }
 

@@ -25,7 +25,7 @@ export function settingsSnapshot() {
   const background = settings.background.current;
   const isCachedBackground = background.startsWith(CACHED_MEDIA_PREFIX);
   snapshot.background = isCachedBackground ? DEFAULT_BACKGROUND : background;
-  snapshot.backgroundMediaType = isCachedBackground ? BackgroundMediaType.image : settings.backgroundMediaType.current;
+  snapshot.backgroundMediaType = isCachedBackground ? BackgroundMediaType.IMAGE : settings.backgroundMediaType.current;
 
   // The same check the import runs, so what this page writes is what it will take back.
   return snapshotSchema.parse(snapshot);

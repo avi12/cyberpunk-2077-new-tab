@@ -16,21 +16,21 @@ export const IS_MAC = MAC_PATTERN.test(USER_AGENT);
 
 /** The values are a GA4 user dimension, so a rename splits every install ever counted into two names. */
 enum BrowserName {
-  edge = "edge",
-  firefox = "firefox",
-  chromium = "chromium"
+  EDGE = "edge",
+  FIREFOX = "firefox",
+  CHROMIUM = "chromium"
 }
 
 function detectBrowserName() {
   if (IS_EDGE) {
-    return BrowserName.edge;
+    return BrowserName.EDGE;
   }
 
   if (FIREFOX_PATTERN.test(USER_AGENT)) {
-    return BrowserName.firefox;
+    return BrowserName.FIREFOX;
   }
 
-  return BrowserName.chromium;
+  return BrowserName.CHROMIUM;
 }
 
 export const BROWSER_NAME = detectBrowserName();
@@ -40,9 +40,9 @@ export const BROWSER_NAME = detectBrowserName();
  * since Chrome, Brave, Vivaldi and the rest share it.
  */
 const BROWSER_LABELS: Record<BrowserName, string> = {
-  [BrowserName.edge]: "Microsoft Edge",
-  [BrowserName.firefox]: "Firefox",
-  [BrowserName.chromium]: "Chromium"
+  [BrowserName.EDGE]: "Microsoft Edge",
+  [BrowserName.FIREFOX]: "Firefox",
+  [BrowserName.CHROMIUM]: "Chromium"
 };
 
 /** The brands list always carries a nonsense "GREASE" brand whose punctuation varies by design. */
@@ -50,7 +50,7 @@ const GREASE_BRAND = /not.?a.?brand/i;
 
 function detectBrowserLabel() {
   const family = BROWSER_LABELS[BROWSER_NAME];
-  if (BROWSER_NAME !== BrowserName.chromium) {
+  if (BROWSER_NAME !== BrowserName.CHROMIUM) {
     return family;
   }
 

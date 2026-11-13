@@ -72,9 +72,9 @@ function sendableParams(params: ReportedParams) {
 /** GA4 keeps the latest value against the client id, so these are not repeated as event params. */
 function userProperties() {
   const values: Record<AnalyticsUserProperty, string> = {
-    [AnalyticsUserProperty.extensionVersion]: browser.runtime.getManifest().version,
-    [AnalyticsUserProperty.browserName]: BROWSER_NAME,
-    [AnalyticsUserProperty.uiLanguage]: browser.i18n.getUILanguage()
+    [AnalyticsUserProperty.EXTENSION_VERSION]: browser.runtime.getManifest().version,
+    [AnalyticsUserProperty.BROWSER_NAME]: BROWSER_NAME,
+    [AnalyticsUserProperty.UI_LANGUAGE]: browser.i18n.getUILanguage()
   };
 
   const properties: Partial<Record<AnalyticsUserProperty, { value: string }>> = {};

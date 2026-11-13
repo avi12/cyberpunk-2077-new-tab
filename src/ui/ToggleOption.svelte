@@ -22,7 +22,7 @@
 <button
   class="option-button toggle"
   aria-pressed={isOn}
-  data-analytics={AnalyticsAction.displayElementToggled}
+  data-analytics={AnalyticsAction.DISPLAY_ELEMENT_TOGGLED}
   disabled={!isEnabled}
   onclick={onToggle}
   type="button">

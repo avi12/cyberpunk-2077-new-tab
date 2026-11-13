@@ -21,19 +21,19 @@
     label: string;
     view: Component<WidgetProps>;
   }> = {
-    [WidgetType.weather]: {
+    [WidgetType.WEATHER]: {
       label: "Weather",
       view: WeatherWidget
     },
-    [WidgetType.scratchPad]: {
+    [WidgetType.SCRATCH_PAD]: {
       label: "Scratch Pad",
       view: ScratchPadWidget
     },
-    [WidgetType.taskList]: {
+    [WidgetType.TASK_LIST]: {
       label: "Gigs",
       view: TaskListWidget
     },
-    [WidgetType.rss]: {
+    [WidgetType.RSS]: {
       label: "RSS Feed",
       view: RssWidget
     }
@@ -81,12 +81,12 @@
     {/if}
     <div class="widgets__controls">
       {#if isEditing}
-        <button class="widgets__save" data-analytics={AnalyticsAction.widgetsEditFinished} onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
+        <button class="widgets__save" data-analytics={AnalyticsAction.WIDGETS_EDIT_FINISHED} onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
       {:else}
         <button
           class="widgets__icon-button"
           aria-label="Widget settings"
-          data-analytics={AnalyticsAction.widgetSettingsOpened}
+          data-analytics={AnalyticsAction.WIDGET_SETTINGS_OPENED}
           onclick={() => withViewTransition(() => (isEditing = true))}
           type="button">
           {@html iconSettings}
@@ -129,7 +129,7 @@
                 class="widgets__toggle"
                 class:is-on={widget.enabled}
                 aria-pressed={widget.enabled}
-                data-analytics={AnalyticsAction.widgetToggled}
+                data-analytics={AnalyticsAction.WIDGET_TOGGLED}
                 onclick={() => updateWidget({
                   id: widget.id,
                   change: current => ({

@@ -304,38 +304,38 @@ const KEYWORD_ICONS: {
 
 // A glyph left out has no opinion, so a link wearing it stays where its owner put it
 const ICON_CATEGORIES: Partial<Record<IconName, BookmarkCategory>> = {
-  Basket: BookmarkCategory.daily,
-  Bot: BookmarkCategory.work,
-  Brain: BookmarkCategory.work,
-  Camera: BookmarkCategory.social,
-  Chart: BookmarkCategory.work,
-  Chat: BookmarkCategory.social,
-  Code: BookmarkCategory.work,
-  Coffee: BookmarkCategory.daily,
-  Design: BookmarkCategory.work,
-  Food: BookmarkCategory.daily,
-  Gaming: BookmarkCategory.entertainment,
-  Heart: BookmarkCategory.daily,
-  Home: BookmarkCategory.daily,
-  Mail: BookmarkCategory.daily,
-  Money: BookmarkCategory.daily,
-  Music: BookmarkCategory.entertainment,
-  News: BookmarkCategory.daily,
-  Podcast: BookmarkCategory.entertainment,
-  Popcorn: BookmarkCategory.entertainment,
-  Security: BookmarkCategory.daily,
-  Skull: BookmarkCategory.work,
-  Terminal: BookmarkCategory.work,
-  Video: BookmarkCategory.entertainment,
-  Wallet: BookmarkCategory.daily,
-  Work: BookmarkCategory.work
+  Basket: BookmarkCategory.DAILY,
+  Bot: BookmarkCategory.WORK,
+  Brain: BookmarkCategory.WORK,
+  Camera: BookmarkCategory.SOCIAL,
+  Chart: BookmarkCategory.WORK,
+  Chat: BookmarkCategory.SOCIAL,
+  Code: BookmarkCategory.WORK,
+  Coffee: BookmarkCategory.DAILY,
+  Design: BookmarkCategory.WORK,
+  Food: BookmarkCategory.DAILY,
+  Gaming: BookmarkCategory.ENTERTAINMENT,
+  Heart: BookmarkCategory.DAILY,
+  Home: BookmarkCategory.DAILY,
+  Mail: BookmarkCategory.DAILY,
+  Money: BookmarkCategory.DAILY,
+  Music: BookmarkCategory.ENTERTAINMENT,
+  News: BookmarkCategory.DAILY,
+  Podcast: BookmarkCategory.ENTERTAINMENT,
+  Popcorn: BookmarkCategory.ENTERTAINMENT,
+  Security: BookmarkCategory.DAILY,
+  Skull: BookmarkCategory.WORK,
+  Terminal: BookmarkCategory.WORK,
+  Video: BookmarkCategory.ENTERTAINMENT,
+  Wallet: BookmarkCategory.DAILY,
+  Work: BookmarkCategory.WORK
 };
 
 const CATEGORY_ICONS: Record<string, IconName> = {
-  [BookmarkCategory.daily]: "Star",
-  [BookmarkCategory.entertainment]: "Popcorn",
-  [BookmarkCategory.social]: "Chat",
-  [BookmarkCategory.work]: "Work"
+  [BookmarkCategory.DAILY]: "Star",
+  [BookmarkCategory.ENTERTAINMENT]: "Popcorn",
+  [BookmarkCategory.SOCIAL]: "Chat",
+  [BookmarkCategory.WORK]: "Work"
 };
 
 function tokensOf(text: string) {

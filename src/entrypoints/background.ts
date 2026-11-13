@@ -47,7 +47,7 @@ export default defineBackground(() => {
           },
           files: [COMPOSE_SCRIPT]
         });
-        attempt.resolve(ComposeOutcome.composed);
+        attempt.resolve(ComposeOutcome.COMPOSED);
       } catch {
         // A closed tab says nothing about the host, so only a live tab's failure is remembered as a
         // refusal - otherwise the destination would never be tried again this session
@@ -56,13 +56,13 @@ export default defineBackground(() => {
           () => false
         );
         if (!isTabAlive) {
-          attempt.resolve(ComposeOutcome.failed);
+          attempt.resolve(ComposeOutcome.FAILED);
 
           return;
         }
 
         await rememberComposeRefusal(siteId);
-        attempt.resolve(ComposeOutcome.refused);
+        attempt.resolve(ComposeOutcome.REFUSED);
       }
     }
 
@@ -93,7 +93,7 @@ export default defineBackground(() => {
     return attempt.promise;
   }
 
-  onMessage(MessageType.getTopSites, async () => {
+  onMessage(MessageType.GET_TOP_SITES, async () => {
     const sites = await browser.topSites.get();
 
     return sites.map(site => ({
@@ -107,11 +107,11 @@ export default defineBackground(() => {
     // Mirrors Edge, which starts its tip rotation somewhere new on every launch
     browser.runtime.onStartup.addListener(reshuffleTips);
 
-    onMessage(MessageType.readCompanion, async ({ data }) => {
+    onMessage(MessageType.READ_COMPANION, async ({ data }) => {
       const result = await readCompanionRecords(data);
       // An answer proves the app is reachable, so open the watch now for an app started (or a
       // permission granted) after the browser. Not awaited - it serves the next tab, not this answer
-      const isAppReading = result.answer === CompanionAnswer.read;
+      const isAppReading = result.answer === CompanionAnswer.READ;
       if (isAppReading) {
         void ensureCompanionWatch();
       }
@@ -134,17 +134,17 @@ export default defineBackground(() => {
 
   // Awaited: the browser refuses this with no active window, and the page must hear about it rather
   // than sit on SCANNING forever
-  onMessage(MessageType.openPromptTarget, async ({ data, sender }) => {
+  onMessage(MessageType.OPEN_PROMPT_TARGET, async ({ data, sender }) => {
     const { url, disposition, compose } = data;
     // Every sender is our own today, but a message is the one way in, so the URL is still validated
     const isOpenable = openableUrlSchema.safeParse(url).success;
     if (!isOpenable) {
-      return ComposeOutcome.failed;
+      return ComposeOutcome.FAILED;
     }
 
     const senderTabId = sender.tab?.id;
 
-    const isReplacingSenderTab = disposition === TabDisposition.current && senderTabId !== undefined;
+    const isReplacingSenderTab = disposition === TabDisposition.CURRENT && senderTabId !== undefined;
     const tab = isReplacingSenderTab
       ? await browser.tabs.update(senderTabId, { url })
       : await browser.tabs.create({ url });
@@ -153,7 +153,7 @@ export default defineBackground(() => {
     }
 
     if (tab?.id === undefined) {
-      return ComposeOutcome.failed;
+      return ComposeOutcome.FAILED;
     }
 
     requestByTab.set(tab.id, compose);
@@ -164,7 +164,7 @@ export default defineBackground(() => {
     });
   });
 
-  onMessage(MessageType.takeComposeRequest, ({ sender }) => {
+  onMessage(MessageType.TAKE_COMPOSE_REQUEST, ({ sender }) => {
     const tabId = sender.tab?.id;
     if (tabId === undefined) {
       return null;
@@ -176,7 +176,7 @@ export default defineBackground(() => {
     return request;
   });
 
-  onMessage(MessageType.searchWithDefaultEngine, async ({ data }) => {
+  onMessage(MessageType.SEARCH_WITH_DEFAULT_ENGINE, async ({ data }) => {
     await browser.search.query({
       text: data,
       disposition: browser.search.Disposition.CURRENT_TAB

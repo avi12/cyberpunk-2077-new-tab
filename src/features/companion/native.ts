@@ -23,14 +23,14 @@ const answerSchema = z.looseObject({
 /** An app too old to send either marker reads as silent. */
 function refusalAnswer({ isRunning, hasEdgeData }: z.infer<typeof answerSchema>) {
   if (isRunning === false) {
-    return CompanionAnswer.notRunning;
+    return CompanionAnswer.NOT_RUNNING;
   }
 
   if (hasEdgeData === false) {
-    return CompanionAnswer.nothingToRead;
+    return CompanionAnswer.NOTHING_TO_READ;
   }
 
-  return CompanionAnswer.silent;
+  return CompanionAnswer.SILENT;
 }
 
 /** An app older than the request answers about journeys whatever it was asked, so a missing list is empty. */
@@ -40,7 +40,7 @@ export async function readCompanionRecords(request: CompanionRequest) {
   // A worker older than the grant holds no binding, which asking again fixes - unlike a missing app.
   if (!browser.runtime.sendNativeMessage) {
     return {
-      answer: CompanionAnswer.unbound,
+      answer: CompanionAnswer.UNBOUND,
       records: []
     };
   }
@@ -49,7 +49,7 @@ export async function readCompanionRecords(request: CompanionRequest) {
   const parsed = answerSchema.safeParse(response);
   if (!parsed.success) {
     return {
-      answer: CompanionAnswer.silent,
+      answer: CompanionAnswer.SILENT,
       records: []
     };
   }
@@ -62,7 +62,7 @@ export async function readCompanionRecords(request: CompanionRequest) {
   }
 
   return {
-    answer: CompanionAnswer.read,
+    answer: CompanionAnswer.READ,
     records: recordsSchema.parse(parsed.data[request])
   };
 }

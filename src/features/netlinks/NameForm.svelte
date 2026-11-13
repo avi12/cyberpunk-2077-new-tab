@@ -38,11 +38,11 @@
       class="cyber-button"
       class:cyber-button--cyan={isCyan}
       class:cyber-button--primary={!isCyan}
-      data-analytics={AnalyticsAction.categorySaved}
+      data-analytics={AnalyticsAction.CATEGORY_SAVED}
       type="submit">
       {confirmLabel}
     </button>
-    <button class="cyber-button cyber-button--muted" data-analytics={AnalyticsAction.categoryFormCancelled} onclick={onCancel} type="button">CANCEL</button>
+    <button class="cyber-button cyber-button--muted" data-analytics={AnalyticsAction.CATEGORY_FORM_CANCELLED} onclick={onCancel} type="button">CANCEL</button>
   </div>
 </form>
 

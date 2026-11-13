@@ -5,35 +5,35 @@ import { WEATHER_REFRESH_MS, WeatherCondition } from "./model";
 
 const NIGHT_CITY_SKIES: [WeatherSky, ...WeatherSky[]] = [
   {
-    condition: WeatherCondition.rain,
+    condition: WeatherCondition.RAIN,
     description: "Acid rain over Watson"
   },
   {
-    condition: WeatherCondition.cloudy,
+    condition: WeatherCondition.CLOUDY,
     description: "Smog haze over Heywood"
   },
   {
-    condition: WeatherCondition.thunderstorm,
+    condition: WeatherCondition.THUNDERSTORM,
     description: "Static storm off the coast"
   },
   {
-    condition: WeatherCondition.severe,
+    condition: WeatherCondition.SEVERE,
     description: "Dust in from the Badlands"
   },
   {
-    condition: WeatherCondition.clear,
+    condition: WeatherCondition.CLEAR,
     description: "Hard sun on Corpo Plaza"
   },
   {
-    condition: WeatherCondition.cloudy,
+    condition: WeatherCondition.CLOUDY,
     description: "Low cloud over Pacifica"
   },
   {
-    condition: WeatherCondition.rain,
+    condition: WeatherCondition.RAIN,
     description: "Drizzle in Japantown"
   },
   {
-    condition: WeatherCondition.snow,
+    condition: WeatherCondition.SNOW,
     description: "Ash falling on Santo Domingo"
   }
 ];

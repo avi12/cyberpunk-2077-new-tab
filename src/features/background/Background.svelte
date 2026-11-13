@@ -15,8 +15,8 @@
   const version = $derived(settings.backgroundMediaVersion.current);
   const isCached = $derived(background.startsWith(CACHED_MEDIA_PREFIX));
   const isVideo = $derived(
-    background.startsWith(`${CACHED_MEDIA_PREFIX}${BackgroundMediaType.video}`) ||
-    (isCached && settings.backgroundMediaType.current === BackgroundMediaType.video)
+    background.startsWith(`${CACHED_MEDIA_PREFIX}${BackgroundMediaType.VIDEO}`) ||
+    (isCached && settings.backgroundMediaType.current === BackgroundMediaType.VIDEO)
   );
   const isColor = $derived(isHexColor(background));
   const imageUrl = $derived.by(() => {
@@ -45,7 +45,7 @@
     let isRevoked = false;
     let url: string | null = null;
 
-    void loadMedia(MediaSlot.background).then(media => {
+    void loadMedia(MediaSlot.BACKGROUND).then(media => {
       if (isRevoked || !media) {
         return;
       }

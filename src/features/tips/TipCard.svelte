@@ -11,7 +11,7 @@
 <CompanionCard
   actionLabel={tip.cta}
   hint={HINT}
-  kind={CopilotKind.tip}
+  kind={CopilotKind.TIP}
   label={tip.title}
   prompt={tip.prompt}
   title={tip.description} />

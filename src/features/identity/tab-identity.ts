@@ -11,8 +11,8 @@ const TERMINAL_FAVICON = "/icon/terminal.svg";
  * query to pick. `src/public/icon/terminal.svg` duplicates the pair, as a static asset cannot import it.
  */
 const FAVICON_STROKE = {
-  light: "#0b7a8e",
-  dark: "#22d3ee"
+  LIGHT: "#0b7a8e",
+  DARK: "#22d3ee"
 } as const;
 
 const FAVICON_SIZE = 32;
@@ -38,10 +38,10 @@ function faviconHref(iconName: IconName) {
   const elIcon = new DOMParser().parseFromString(iconByName(iconName), "image/svg+xml").documentElement;
   elIcon.setAttribute("width", String(FAVICON_SIZE));
   elIcon.setAttribute("height", String(FAVICON_SIZE));
-  elIcon.setAttribute("stroke", FAVICON_STROKE.light);
+  elIcon.setAttribute("stroke", FAVICON_STROKE.LIGHT);
 
   const elStyle = document.createElementNS(elIcon.namespaceURI, "style");
-  elStyle.textContent = `@media(prefers-color-scheme:dark){svg{stroke:${FAVICON_STROKE.dark}}}`;
+  elStyle.textContent = `@media(prefers-color-scheme:dark){svg{stroke:${FAVICON_STROKE.DARK}}}`;
   elIcon.prepend(elStyle);
 
   return `data:image/svg+xml,${encodeURIComponent(elIcon.outerHTML)}`;

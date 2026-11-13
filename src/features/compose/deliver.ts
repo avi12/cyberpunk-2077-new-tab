@@ -36,7 +36,7 @@ async function copyToClipboard(prompt: string) {
 }
 
 async function openPrompt({ url, disposition }: { url: string; disposition: TabDisposition }) {
-  await sendMessage(MessageType.openPromptTarget, {
+  await sendMessage(MessageType.OPEN_PROMPT_TARGET, {
     url,
     disposition,
     compose: null
@@ -107,7 +107,7 @@ export async function handOffPrompt({
   // Prefer the link even with a script, so the prompt is in the box if the script never finds it
   const destination = isCarriedByUrl ? url : COMPOSE_SITES[siteId].url;
   if (isAllowed) {
-    await sendMessage(MessageType.openPromptTarget, {
+    await sendMessage(MessageType.OPEN_PROMPT_TARGET, {
       url: destination,
       disposition,
       compose: {

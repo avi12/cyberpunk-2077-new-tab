@@ -77,17 +77,17 @@
         prompt: promptWithContext
       }),
       prompt: promptWithContext,
-      disposition: TabDisposition.new,
+      disposition: TabDisposition.NEW,
       onCopied(isCopied) {
         notice = isCopied ? COPIED_NOTICE : UNCOPIED_NOTICE;
       }
     });
 
     // The prompt itself is never reported. `isSuccess` is whether context was added.
-    reportQuietly(AnalyticsEvent.promptSent, {
-      [AnalyticsParam.cardKind]: kind,
-      [AnalyticsParam.destination]: targetId,
-      [AnalyticsParam.isSuccess]: promptWithContext !== prompt
+    reportQuietly(AnalyticsEvent.PROMPT_SENT, {
+      [AnalyticsParam.CARD_KIND]: kind,
+      [AnalyticsParam.DESTINATION]: targetId,
+      [AnalyticsParam.IS_SUCCESS]: promptWithContext !== prompt
     });
   }
 </script>

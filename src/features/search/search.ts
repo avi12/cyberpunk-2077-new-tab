@@ -25,7 +25,7 @@ export function searchUrl({ engine, query }: { engine: SearchEngine; query: stri
  */
 export async function searchWithBrowserDefault(query: string) {
   try {
-    await sendMessage(MessageType.searchWithDefaultEngine, query);
+    await sendMessage(MessageType.SEARCH_WITH_DEFAULT_ENGINE, query);
 
     return true;
   } catch {

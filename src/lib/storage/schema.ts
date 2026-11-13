@@ -8,56 +8,56 @@ import { z } from "@/lib/zod";
  */
 
 export enum WidgetType {
-  weather = "weather",
-  scratchPad = "scratchpad",
-  taskList = "tasklist",
-  rss = "rss"
+  WEATHER = "weather",
+  SCRATCH_PAD = "scratchpad",
+  TASK_LIST = "tasklist",
+  RSS = "rss"
 }
 
 export enum ColorTheme {
-  cyberpunk2077 = "cyberpunk2077",
-  edgerunners = "edgerunners",
-  cyberNinja = "cyberninja"
+  CYBERPUNK2077 = "cyberpunk2077",
+  EDGERUNNERS = "edgerunners",
+  CYBER_NINJA = "cyberninja"
 }
 
 export enum ScanLinesMode {
-  default = "default",
-  belowUi = "belowUI",
-  none = "none"
+  DEFAULT = "default",
+  BELOW_UI = "belowUI",
+  NONE = "none"
 }
 
 export enum HourCycle {
-  hour12 = "12",
-  hour24 = "24"
+  HOUR12 = "12",
+  HOUR24 = "24"
 }
 
 export enum BackgroundMediaType {
-  none = "none",
-  image = "image",
-  video = "video"
+  NONE = "none",
+  IMAGE = "image",
+  VIDEO = "video"
 }
 
 export enum SearchEngineId {
-  browserDefault = "default",
-  google = "google",
-  googleAiMode = "google-ai",
-  bing = "bing",
-  duckDuckGo = "duck",
-  chatGpt = "ai",
-  claude = "claude",
-  perplexity = "ai2",
-  brave = "brave",
-  braveAi = "brave2",
-  braveResearch = "brave3",
-  copilot = "copilot"
+  BROWSER_DEFAULT = "default",
+  GOOGLE = "google",
+  GOOGLE_AI_MODE = "google-ai",
+  BING = "bing",
+  DUCK_DUCK_GO = "duck",
+  CHAT_GPT = "ai",
+  CLAUDE = "claude",
+  PERPLEXITY = "ai2",
+  BRAVE = "brave",
+  BRAVE_AI = "brave2",
+  BRAVE_RESEARCH = "brave3",
+  COPILOT = "copilot"
 }
 
 export enum BookmarkCategory {
-  daily = "daily",
-  work = "work",
-  entertainment = "entertainment",
-  social = "social",
-  other = "other"
+  DAILY = "daily",
+  WORK = "work",
+  ENTERTAINMENT = "entertainment",
+  SOCIAL = "social",
+  OTHER = "other"
 }
 
 /**

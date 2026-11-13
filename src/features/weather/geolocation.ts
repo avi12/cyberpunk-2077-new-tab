@@ -45,21 +45,21 @@ export function roundCoordinate(value: number) {
 }
 
 export enum LocationRefusal {
-  blocked = "blocked",
-  unavailable = "unavailable",
-  timedOut = "timed-out"
+  BLOCKED = "blocked",
+  UNAVAILABLE = "unavailable",
+  TIMED_OUT = "timed-out"
 }
 
 function refusalFor(error: GeolocationPositionError) {
   if (error.code === error.PERMISSION_DENIED) {
-    return LocationRefusal.blocked;
+    return LocationRefusal.BLOCKED;
   }
 
   if (error.code === error.TIMEOUT) {
-    return LocationRefusal.timedOut;
+    return LocationRefusal.TIMED_OUT;
   }
 
-  return LocationRefusal.unavailable;
+  return LocationRefusal.UNAVAILABLE;
 }
 
 function isRefusal(answer: GeolocationCoordinates | LocationRefusal): answer is LocationRefusal {
@@ -69,7 +69,7 @@ function isRefusal(answer: GeolocationCoordinates | LocationRefusal): answer is 
 function currentPosition(timeoutMs: number) {
   return new Promise<GeolocationCoordinates | LocationRefusal>(resolve => {
     if (!navigator.geolocation) {
-      resolve(LocationRefusal.unavailable);
+      resolve(LocationRefusal.UNAVAILABLE);
 
       return;
     }
@@ -178,8 +178,8 @@ async function locationFrom(coords: GeolocationCoordinates) {
 let sharedLocationRead: Promise<GeoLocation | null> | null = null;
 
 export enum LocationSource {
-  device = "device",
-  connection = "connection"
+  DEVICE = "device",
+  CONNECTION = "connection"
 }
 
 export type AskedLocation =
@@ -207,7 +207,7 @@ function refusalOf(answer: GeolocationCoordinates | LocationRefusal) {
     return answer;
   }
 
-  return LocationRefusal.unavailable;
+  return LocationRefusal.UNAVAILABLE;
 }
 
 /**
@@ -233,7 +233,7 @@ export async function askDeviceLocation(): Promise<AskedLocation> {
 
     return {
       isFound: true,
-      source: LocationSource.device,
+      source: LocationSource.DEVICE,
       location: fromDevice
     };
   }
@@ -250,7 +250,7 @@ export async function askDeviceLocation(): Promise<AskedLocation> {
 
   return {
     isFound: true,
-    source: LocationSource.connection,
+    source: LocationSource.CONNECTION,
     location: fromConnection
   };
 }

@@ -51,7 +51,7 @@
    * Shown while loading so it holds its place rather than shoving the page down later. Afterwards only
    * cards keep it, since reachability is reported once above both sections.
    */
-  const isVisible = $derived(!isCompanionReadable || cards.length > 0 || companion.state === CompanionState.loading);
+  const isVisible = $derived(!isCompanionReadable || cards.length > 0 || companion.state === CompanionState.LOADING);
 
   /** The grid stretches every card to the tallest, so that height is all a placeholder needs. */
   function measureRow(elList: HTMLElement) {

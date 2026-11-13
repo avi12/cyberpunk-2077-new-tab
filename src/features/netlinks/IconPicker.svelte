@@ -14,14 +14,14 @@
   } = $props();
 
   const panelId = $props.id();
-  const anchorName = `--icon-picker-${panelId}`;
+  const ANCHOR_NAME = `--icon-picker-${panelId}`;
 </script>
 
 <div class="picker">
   <button
-    style:anchor-name={anchorName}
+    style:anchor-name={ANCHOR_NAME}
     class="picker__trigger"
-    data-analytics={AnalyticsAction.iconPickerOpened}
+    data-analytics={AnalyticsAction.ICON_PICKER_OPENED}
     popovertarget={panelId}
     type="button">
     <span>{label}</span>
@@ -30,7 +30,7 @@
 
   <div
     id={panelId}
-    style:position-anchor={anchorName}
+    style:position-anchor={ANCHOR_NAME}
     class="picker__panel"
     popover="auto">
     <ul class="picker__grid scrollbar-cyberpunk">
@@ -41,7 +41,7 @@
             class:is-selected={choice.name === selected}
             aria-label={choice.name}
             aria-pressed={choice.name === selected}
-            data-analytics={AnalyticsAction.iconPicked}
+            data-analytics={AnalyticsAction.ICON_PICKED}
             data-tooltip={choice.name}
             onclick={() => onSelect(choice.name)}
             popovertarget={panelId}

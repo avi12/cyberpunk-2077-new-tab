@@ -38,7 +38,7 @@
 {/snippet}
 
 {#snippet copilotCard(card: CopilotCard)}
-  {#if card.kind === CopilotKind.journey}
+  {#if card.kind === CopilotKind.JOURNEY}
     <JourneyCard journey={card.journey} />
   {:else}
     <TipCard tip={card.tip} />
@@ -46,7 +46,7 @@
 {/snippet}
 
 {#snippet unavailable()}
-  {#if JOURNEYS_AVAILABILITY === JourneysAvailability.comingSoon}
+  {#if JOURNEYS_AVAILABILITY === JourneysAvailability.COMING_SOON}
     <CompanionNotice>
       {COMPANION_NAME} for Mac is coming soon - Microsoft Edge already maps your Journeys here
     </CompanionNotice>
@@ -56,7 +56,7 @@
       {#snippet action()}
         <a
           class="cyber-button cyber-button--ghost cyber-button--link"
-          data-analytics={AnalyticsAction.journeysSupportOpened}
+          data-analytics={AnalyticsAction.JOURNEYS_SUPPORT_OPENED}
           href={JOURNEYS_SUPPORT_URL}
           rel="noopener noreferrer"
           target="_blank">

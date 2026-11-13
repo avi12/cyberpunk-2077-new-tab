@@ -37,7 +37,7 @@
           class="widget-card__icon-button"
           class:pulse={header.action.isPulsing}
           aria-label={header.action.label}
-          data-analytics={AnalyticsAction.widgetHeaderAction}
+          data-analytics={AnalyticsAction.WIDGET_HEADER_ACTION}
           onclick={header.action.onAct}
           type="button">
           {@html header.action.icon}

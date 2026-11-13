@@ -85,7 +85,7 @@
 
   <div class="custom-color-picker">
     <details class="disclosure" bind:open={isPickerOpen}>
-      <summary class="picker__row picker__summary disclosure__gap" data-analytics={AnalyticsAction.colorPickerToggled}>
+      <summary class="picker__row picker__summary disclosure__gap" data-analytics={AnalyticsAction.COLOR_PICKER_TOGGLED}>
         <span class="cyber-row-label">Custom Color</span>
         <span style:background-color={swatch} class="custom-color-swatch"></span>
       </summary>
@@ -140,7 +140,7 @@
             <button
               class="picker__hex-close"
               aria-label={CLOSE_PICKER_LABEL}
-              data-analytics={AnalyticsAction.colorPickerClosed}
+              data-analytics={AnalyticsAction.COLOR_PICKER_CLOSED}
               data-tooltip={CLOSE_PICKER_LABEL}
               onclick={() => (isPickerOpen = false)}
               type="button">

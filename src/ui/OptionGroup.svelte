@@ -23,7 +23,7 @@
       <button
         class="option-button options__button"
         aria-pressed={option.value === selected}
-        data-analytics={AnalyticsAction.optionPicked}
+        data-analytics={AnalyticsAction.OPTION_PICKED}
         onclick={() => onSelect(option.value)}
         type="button">
         {option.label}

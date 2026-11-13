@@ -11,11 +11,11 @@ import {
   DEFAULT_CATEGORY_ORDER,
   DEFAULT_COLOR_THEME,
   DEFAULT_DISPLAY_PREFERENCES,
-  DEFAULT_PLAY_SOUNDS,
+  SHOULD_PLAY_SOUNDS_DEFAULT,
   DEFAULT_SCAN_LINES_MODE,
   DEFAULT_TAB_FAVICON,
   DEFAULT_TAB_TITLE,
-  DEFAULT_TEMPERATURE_UNIT,
+  IS_METRIC_TEMPERATURE_DEFAULT,
   DEFAULT_USER_NAME,
   DEFAULT_WEATHER_LOCATION,
   DEFAULT_WIDGET_ORDER,
@@ -38,7 +38,7 @@ export const collapsedCategoriesItem = definePlainItem<Record<string, boolean>>(
 export const customCategoriesItem = definePlainItem<string[]>("local:customCategories", { fallback: [] });
 
 export const activeSearchEngineItem = definePlainItem<SearchEngineId>("local:activeSearchEngine", {
-  fallback: SearchEngineId.browserDefault
+  fallback: SearchEngineId.BROWSER_DEFAULT
 });
 
 export const weatherLocationItem = definePlainItem<GeoLocation>("local:weatherLocation", {
@@ -46,7 +46,7 @@ export const weatherLocationItem = definePlainItem<GeoLocation>("local:weatherLo
 });
 
 export const temperatureUnitItem = definePlainItem<boolean>("local:temperatureUnit", {
-  fallback: DEFAULT_TEMPERATURE_UNIT
+  fallback: IS_METRIC_TEMPERATURE_DEFAULT
 });
 
 export const colorThemeItem = definePlainItem<ColorTheme>("local:colorTheme", { fallback: DEFAULT_COLOR_THEME });
@@ -62,7 +62,7 @@ export const backgroundBrightnessItem = definePlainItem<number>("local:backgroun
 });
 
 export const backgroundMediaTypeItem = definePlainItem<BackgroundMediaType>("local:backgroundMediaType", {
-  fallback: BackgroundMediaType.none
+  fallback: BackgroundMediaType.NONE
 });
 
 export const backgroundMediaVersionItem = definePlainItem<number>("local:backgroundMediaVersion", { fallback: 0 });
@@ -81,7 +81,7 @@ export const tabTitleItem = definePlainItem<string>("local:tabTitle", { fallback
 
 export const tabFaviconItem = definePlainItem<IconName>("local:tabFavicon", { fallback: DEFAULT_TAB_FAVICON });
 
-export const playSoundsItem = definePlainItem<boolean>("local:playSounds", { fallback: DEFAULT_PLAY_SOUNDS });
+export const playSoundsItem = definePlainItem<boolean>("local:playSounds", { fallback: SHOULD_PLAY_SOUNDS_DEFAULT });
 
 /** Absent means the locale decides. Only a press on the clock writes here. */
 export const hourCycleItem = definePlainItem<HourCycle | null>("local:hourCycle", { fallback: null });

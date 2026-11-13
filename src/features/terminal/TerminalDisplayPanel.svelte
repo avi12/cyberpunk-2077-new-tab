@@ -23,7 +23,7 @@
   <button
     class="corner-button"
     aria-label="Terminal display settings"
-    data-analytics={AnalyticsAction.terminalOpened}
+    data-analytics={AnalyticsAction.TERMINAL_OPENED}
     popovertarget={PANEL_ID}
     type="button">
     {@html iconMonitor}

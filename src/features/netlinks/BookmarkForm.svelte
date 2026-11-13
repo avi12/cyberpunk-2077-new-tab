@@ -28,8 +28,8 @@
   const URL_LABEL = "URL";
 
   const instanceId = $props.id();
-  const urlFieldId = `${instanceId}-url`;
-  const titleFieldId = `${instanceId}-title`;
+  const URL_FIELD_ID = `${instanceId}-url`;
+  const TITLE_FIELD_ID = `${instanceId}-title`;
 
   let title = $state(untrack(() => bookmarkToEdit?.title ?? ""));
   let url = $state(untrack(() => bookmarkToEdit?.url ?? ""));
@@ -109,9 +109,9 @@
 </script>
 
 <form class="link-card cyber-glass" novalidate onsubmit={e => void submit(e)}>
-  <label class="visually-hidden" for={urlFieldId}>{URL_LABEL}</label>
+  <label class="visually-hidden" for={URL_FIELD_ID}>{URL_LABEL}</label>
   <input
-    id={urlFieldId}
+    id={URL_FIELD_ID}
     class="link-card__field"
     class:is-rejected={isUrlRejected}
     {@attach focusUrl}
@@ -122,9 +122,9 @@
     type="text"
     bind:value={url} />
 
-  <label class="visually-hidden" for={titleFieldId}>{TITLE_LABEL}</label>
+  <label class="visually-hidden" for={TITLE_FIELD_ID}>{TITLE_LABEL}</label>
   <input
-    id={titleFieldId}
+    id={TITLE_FIELD_ID}
     class="link-card__field link-card__field--title"
     onkeydown={onKeyDown}
     placeholder={isResolving ? SCANNING_PLACEHOLDER : TITLE_LABEL}
@@ -136,7 +136,7 @@
       class="link-card__action link-card__action--fetch"
       class:is-working={isResolving}
       aria-label={FETCH_TITLE_LABEL}
-      data-analytics={AnalyticsAction.netlinkTitleFetched}
+      data-analytics={AnalyticsAction.NETLINK_TITLE_FETCHED}
       disabled={!isUrlOpenable || isResolving}
       onclick={() => void readTitle()}
       type="button">
@@ -145,7 +145,7 @@
     <button
       class="link-card__action"
       aria-label={submitLabel}
-      data-analytics={AnalyticsAction.netlinkSaved}
+      data-analytics={AnalyticsAction.NETLINK_SAVED}
       disabled={isResolving}
       type="submit">
       {@html iconSquareCheck}
@@ -153,7 +153,7 @@
     <button
       class="link-card__action link-card__action--cancel"
       aria-label={CANCEL_LABEL}
-      data-analytics={AnalyticsAction.netlinkFormCancelled}
+      data-analytics={AnalyticsAction.NETLINK_FORM_CANCELLED}
       onclick={onCancel}
       type="button">
       {@html iconXMark}

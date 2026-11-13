@@ -17,35 +17,35 @@ export interface SelectOption<TValue extends string> {
 }
 
 export const DEFAULT_CATEGORY_ORDER: string[] = [
-  BookmarkCategory.daily,
-  BookmarkCategory.work,
-  BookmarkCategory.entertainment,
-  BookmarkCategory.social,
-  BookmarkCategory.other
+  BookmarkCategory.DAILY,
+  BookmarkCategory.WORK,
+  BookmarkCategory.ENTERTAINMENT,
+  BookmarkCategory.SOCIAL,
+  BookmarkCategory.OTHER
 ];
 
-export const SEEDED_CATEGORY = BookmarkCategory.daily;
+export const SEEDED_CATEGORY = BookmarkCategory.DAILY;
 
 export const DEFAULT_BOOKMARKS: Bookmark[] = [];
 
 /** `default` defers to the browser's own engine via `chrome.search`; the rest are form targets. */
 export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
   {
-    id: SearchEngineId.browserDefault,
+    id: SearchEngineId.BROWSER_DEFAULT,
     name: "Default",
     action: "",
     queryParam: "q",
     placeholder: "Search with default engine..."
   },
   {
-    id: SearchEngineId.google,
+    id: SearchEngineId.GOOGLE,
     name: "Google",
     action: "https://www.google.com/search",
     queryParam: "q",
     placeholder: "Search the Net..."
   },
   {
-    id: SearchEngineId.googleAiMode,
+    id: SearchEngineId.GOOGLE_AI_MODE,
     name: "Google AI Mode",
     action: "https://www.google.com/search",
     queryParam: "q",
@@ -56,37 +56,37 @@ export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
     placeholder: "Search with an AI..."
   },
   {
-    id: SearchEngineId.bing,
+    id: SearchEngineId.BING,
     name: "Bing",
     action: "https://www.bing.com/search",
     queryParam: "q",
     placeholder: "Search the Net..."
   },
   {
-    id: SearchEngineId.duckDuckGo,
+    id: SearchEngineId.DUCK_DUCK_GO,
     name: "DuckDuckGo",
     action: "https://duckduckgo.com/",
     queryParam: "q",
     placeholder: "Search the Net securely..."
   },
   {
-    id: SearchEngineId.chatGpt,
+    id: SearchEngineId.CHAT_GPT,
     name: "ChatGPT",
     action: "https://chatgpt.com/",
     queryParam: "q",
     placeholder: "Query an AI..."
   },
   {
-    id: SearchEngineId.claude,
+    id: SearchEngineId.CLAUDE,
     name: "Claude",
     action: "https://claude.ai/new",
     queryParam: "q",
     /* Reads the prompt out of the URL and puts it in the box, but leaves the sending to whoever asked. */
-    composeSiteId: ComposeSiteId.claude,
+    composeSiteId: ComposeSiteId.CLAUDE,
     placeholder: "Think it through with an AI..."
   },
   {
-    id: SearchEngineId.copilot,
+    id: SearchEngineId.COPILOT,
     name: "Copilot",
     action: "https://copilot.com/chat",
     queryParam: "q",
@@ -94,32 +94,32 @@ export const DEFAULT_SEARCH_ENGINES: [SearchEngine, ...SearchEngine[]] = [
      * The one engine whose query parameter is decoration: the address keeps `q` through the redirect
      * and the page never reads it - measured - so the prompt only arrives by the script that types it.
      */
-    composeSiteId: ComposeSiteId.copilot,
+    composeSiteId: ComposeSiteId.COPILOT,
     placeholder: "Ask Copilot..."
   },
   {
-    id: SearchEngineId.perplexity,
+    id: SearchEngineId.PERPLEXITY,
     name: "Perplexity",
     action: "https://www.perplexity.ai/search",
     queryParam: "q",
     placeholder: "Initiate neural search..."
   },
   {
-    id: SearchEngineId.brave,
+    id: SearchEngineId.BRAVE,
     name: "Brave Search",
     action: "https://search.brave.com/search",
     queryParam: "q",
     placeholder: "Search the Net securely..."
   },
   {
-    id: SearchEngineId.braveAi,
+    id: SearchEngineId.BRAVE_AI,
     name: "Ask Brave",
     action: "https://search.brave.com/ask",
     queryParam: "q",
     placeholder: "Query an AI privately..."
   },
   {
-    id: SearchEngineId.braveResearch,
+    id: SearchEngineId.BRAVE_RESEARCH,
     name: "Brave Deep Research",
     action: "https://search.brave.com/ask",
     queryParam: "q",
@@ -139,7 +139,7 @@ export const DEFAULT_WEATHER_LOCATION: GeoLocation = {
 export const DEFAULT_WIDGETS: Widget[] = [
   {
     id: "weather-1",
-    type: WidgetType.weather,
+    type: WidgetType.WEATHER,
     enabled: true,
     config: {
       temperatureUnit: true
@@ -147,7 +147,7 @@ export const DEFAULT_WIDGETS: Widget[] = [
   },
   {
     id: "scratchpad-1",
-    type: WidgetType.scratchPad,
+    type: WidgetType.SCRATCH_PAD,
     enabled: false,
     config: {
       content: ""
@@ -155,7 +155,7 @@ export const DEFAULT_WIDGETS: Widget[] = [
   },
   {
     id: "tasklist-1",
-    type: WidgetType.taskList,
+    type: WidgetType.TASK_LIST,
     enabled: false,
     config: {
       tasks: []
@@ -163,7 +163,7 @@ export const DEFAULT_WIDGETS: Widget[] = [
   },
   {
     id: "rss-1",
-    type: WidgetType.rss,
+    type: WidgetType.RSS,
     enabled: false,
     config: {
       feedUrl: "",
@@ -222,41 +222,41 @@ export const BACKGROUND_IMAGES: SelectOption<string>[] = [
 
 export const COLOR_THEMES: SelectOption<ColorTheme>[] = [
   {
-    value: ColorTheme.cyberpunk2077,
+    value: ColorTheme.CYBERPUNK2077,
     label: "Cyberpunk 2077"
   },
   {
-    value: ColorTheme.edgerunners,
+    value: ColorTheme.EDGERUNNERS,
     label: "Edgerunners"
   },
   {
-    value: ColorTheme.cyberNinja,
+    value: ColorTheme.CYBER_NINJA,
     label: "Cyber Ninja"
   }
 ];
 
 export const SCAN_LINES_MODES: SelectOption<ScanLinesMode>[] = [
   {
-    value: ScanLinesMode.default,
+    value: ScanLinesMode.DEFAULT,
     label: "Default"
   },
   {
-    value: ScanLinesMode.belowUi,
+    value: ScanLinesMode.BELOW_UI,
     label: "Below UI"
   },
   {
-    value: ScanLinesMode.none,
+    value: ScanLinesMode.NONE,
     label: "None"
   }
 ];
 
 export const DEFAULT_USER_NAME = "V";
-export const DEFAULT_COLOR_THEME = ColorTheme.cyberpunk2077;
-export const DEFAULT_SCAN_LINES_MODE = ScanLinesMode.default;
+export const DEFAULT_COLOR_THEME = ColorTheme.CYBERPUNK2077;
+export const DEFAULT_SCAN_LINES_MODE = ScanLinesMode.DEFAULT;
 export const DEFAULT_TAB_TITLE = "Cyberpunk 2077";
 export const DEFAULT_TAB_FAVICON: IconName = "Terminal";
-export const DEFAULT_PLAY_SOUNDS = true;
+export const SHOULD_PLAY_SOUNDS_DEFAULT = true;
 export const DEFAULT_BACKGROUND_BRIGHTNESS = 100;
 
 /** `true` means the metric reading, matching the original's boolean. */
-export const DEFAULT_TEMPERATURE_UNIT = true;
+export const IS_METRIC_TEMPERATURE_DEFAULT = true;

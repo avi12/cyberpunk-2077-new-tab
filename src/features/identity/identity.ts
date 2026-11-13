@@ -13,7 +13,7 @@ import { z } from "@/lib/zod";
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = import.meta.env.VITE_GOOGLE_CLIENT_SECRET;
 
-export const isGoogleAccountConfigured = Boolean(CLIENT_ID) && Boolean(CLIENT_SECRET);
+export const IS_GOOGLE_ACCOUNT_CONFIGURED = Boolean(CLIENT_ID) && Boolean(CLIENT_SECRET);
 
 const AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";

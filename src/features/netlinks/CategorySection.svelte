@@ -67,7 +67,7 @@
       <button
         class="category__toggle"
         aria-expanded={!isCollapsed}
-        data-analytics={AnalyticsAction.categoryCollapsed}
+        data-analytics={AnalyticsAction.CATEGORY_COLLAPSED}
         onclick={() => onToggleCollapse(category)}
         type="button">
         {category}
@@ -79,7 +79,7 @@
         <button
           class="category__action category__action--edit"
           aria-label={EDIT_CATEGORY_LABEL}
-          data-analytics={AnalyticsAction.categoryEditOpened}
+          data-analytics={AnalyticsAction.CATEGORY_EDIT_OPENED}
           data-tooltip={EDIT_CATEGORY_LABEL}
           onclick={() => onEditCategory(category)}
           type="button">
@@ -88,7 +88,7 @@
         <button
           class="category__action category__action--delete"
           aria-label={DELETE_CATEGORY_LABEL}
-          data-analytics={AnalyticsAction.categoryDeleted}
+          data-analytics={AnalyticsAction.CATEGORY_DELETED}
           data-tooltip={DELETE_CATEGORY_LABEL}
           onclick={() => onDeleteCategory(category)}
           type="button">
@@ -130,7 +130,7 @@
           {:else}
             <button
               class="category__add cyber-glass"
-              data-analytics={AnalyticsAction.netlinkAddOpened}
+              data-analytics={AnalyticsAction.NETLINK_ADD_OPENED}
               onclick={() => onAddBookmark(category)}
               type="button">
               {@html iconPlus}

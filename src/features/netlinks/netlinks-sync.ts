@@ -26,7 +26,7 @@ export async function keepNetlinksBackup() {
 export async function restoreNetlinksBackup() {
   await importNetlinks({
     json: await backup.read(),
-    mode: ImportMode.replace
+    mode: ImportMode.REPLACE
   });
 }
 

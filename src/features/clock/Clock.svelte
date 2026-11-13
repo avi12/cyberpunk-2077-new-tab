@@ -58,7 +58,7 @@
   $effect(() => () => glitch.stop());
 
   const hourCycleHint = $derived.by(() => {
-    if (hourCycle === HourCycle.hour12) {
+    if (hourCycle === HourCycle.HOUR12) {
       return "Switch to 24-hour";
     }
 
@@ -66,9 +66,9 @@
   });
 
   function flipHourCycle() {
-    const isTwelveHour = hourCycle === HourCycle.hour12;
+    const isTwelveHour = hourCycle === HourCycle.HOUR12;
     glitch.fire({ durationMs: GLITCH_LONG_MS });
-    settings.hourCycle.current = isTwelveHour ? HourCycle.hour24 : HourCycle.hour12;
+    settings.hourCycle.current = isTwelveHour ? HourCycle.HOUR24 : HourCycle.HOUR12;
   }
 </script>
 
@@ -78,7 +78,7 @@
       <button
         class="clock__toggle"
         aria-label={hourCycleHint}
-        data-analytics={AnalyticsAction.hourCycleFlipped}
+        data-analytics={AnalyticsAction.HOUR_CYCLE_FLIPPED}
         data-tooltip={hourCycleHint}
         onclick={flipHourCycle}
         type="button">

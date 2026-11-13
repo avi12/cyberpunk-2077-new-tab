@@ -13,8 +13,8 @@ export const NETLINKS_FILE_STEM = "Cyberpunk-netlinks";
 export const INVALID_NETLINKS_FILE = "Invalid netlinks file";
 
 export enum ImportMode {
-  merge = "merge",
-  replace = "replace"
+  MERGE = "merge",
+  REPLACE = "replace"
 }
 
 type NetlinkKey = (typeof NETLINK_KEYS)[number];
@@ -119,7 +119,7 @@ function mergeNames({ existing, arriving }: { existing: string[]; arriving: stri
 // The file is fully validated before any setting moves, so a bad key never leaves a half import
 export async function importNetlinks({ json, mode }: { json: string; mode: ImportMode }) {
   const arriving = readNetlinksFile(json);
-  if (mode === ImportMode.replace) {
+  if (mode === ImportMode.REPLACE) {
     await Promise.all(
       NETLINK_KEYS.filter(key => arriving[key] !== undefined).map(key => allSettings[key].set(arriving[key]))
     );

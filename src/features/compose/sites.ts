@@ -6,8 +6,8 @@ import { hasAccess, requestAccess } from "@/lib/permissions";
  */
 
 export enum ComposeSiteId {
-  claude = "claude",
-  copilot = "copilot"
+  CLAUDE = "claude",
+  COPILOT = "copilot"
 }
 
 /**
@@ -15,8 +15,8 @@ export enum ComposeSiteId {
  * the default because some sites turn a large paste into an attachment.
  */
 export enum ComposerInsert {
-  typed = "typed",
-  pasted = "pasted"
+  TYPED = "typed",
+  PASTED = "pasted"
 }
 
 interface ComposeSite {
@@ -40,17 +40,17 @@ const COPILOT_COMPOSER_SELECTOR = '#m365-chat-editor-target-element[contentedita
 const COPILOT_SUBMIT_SELECTOR = "button.fai-SendButton";
 
 export const COMPOSE_SITES: Record<ComposeSiteId, ComposeSite> = {
-  [ComposeSiteId.claude]: {
+  [ComposeSiteId.CLAUDE]: {
     url: "https://claude.ai/new",
     composerSelector: CLAUDE_COMPOSER_SELECTOR,
     isPromptCarriedByUrl: true,
     submitSelector: '[data-testid="chat-input-send"]'
   },
   // `/chat` directly: the root redirects there, and the tab could report finished before the bounce
-  [ComposeSiteId.copilot]: {
+  [ComposeSiteId.COPILOT]: {
     url: "https://copilot.com/chat",
     composerSelector: COPILOT_COMPOSER_SELECTOR,
-    composerInsert: ComposerInsert.pasted,
+    composerInsert: ComposerInsert.PASTED,
     isPromptCarriedByUrl: false,
     submitSelector: COPILOT_SUBMIT_SELECTOR
   }

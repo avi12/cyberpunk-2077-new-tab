@@ -257,7 +257,7 @@
         <button
           class="netlinks__sort"
           aria-label={sortLabel}
-          data-analytics={AnalyticsAction.netlinksSorted}
+          data-analytics={AnalyticsAction.NETLINKS_SORTED}
           data-tooltip={sortLabel}
           disabled={isEverythingFiled}
           onclick={sortIntoCategories}
@@ -265,15 +265,15 @@
         <button
           class="netlinks__icon-button"
           aria-label={TRANSFER_LABEL}
-          data-analytics={AnalyticsAction.netlinksTransferOpened}
+          data-analytics={AnalyticsAction.NETLINKS_TRANSFER_OPENED}
           data-tooltip={TRANSFER_LABEL}
           onclick={() => (isTransferOpen = true)}
           type="button">
           {@html iconSave}
         </button>
-        <button class="netlinks__save" data-analytics={AnalyticsAction.netlinksEditFinished} onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
+        <button class="netlinks__save" data-analytics={AnalyticsAction.NETLINKS_EDIT_FINISHED} onclick={() => withViewTransition(() => (isEditing = false))} type="button">SAVE</button>
       {:else}
-        <button class="netlinks__icon-button" aria-label={EDIT_LABEL} data-analytics={AnalyticsAction.netlinksEditToggled} data-tooltip={EDIT_LABEL} onclick={() => withViewTransition(() => (isEditing = true))} type="button">
+        <button class="netlinks__icon-button" aria-label={EDIT_LABEL} data-analytics={AnalyticsAction.NETLINKS_EDIT_TOGGLED} data-tooltip={EDIT_LABEL} onclick={() => withViewTransition(() => (isEditing = true))} type="button">
           {@html iconSettings}
         </button>
       {/if}
@@ -336,7 +336,7 @@
     <div class="netlinks__empty-actions">
       <button
         class="netlinks__import-button cyber-glass"
-        data-analytics={AnalyticsAction.netlinksTopSitesImported}
+        data-analytics={AnalyticsAction.NETLINKS_TOP_SITES_IMPORTED}
         onclick={async () => {
           const imported = await importTopSites();
           if (imported) {
@@ -351,7 +351,7 @@
       {#if !isEditing}
         <button
           class="netlinks__add-link-button cyber-glass"
-          data-analytics={AnalyticsAction.netlinkAddOpened}
+          data-analytics={AnalyticsAction.NETLINK_ADD_OPENED}
           onclick={() => {
             bookmarkToEdit = null;
             linkFormCategory = SEEDED_CATEGORY;
@@ -377,7 +377,7 @@
       {:else}
         <button
           class="netlinks__add-button cyber-glass"
-          data-analytics={AnalyticsAction.categoryAddOpened}
+          data-analytics={AnalyticsAction.CATEGORY_ADD_OPENED}
           onclick={() => (isAddingCategory = true)}
           type="button">
           {@html iconPlus}
@@ -402,14 +402,14 @@
   <div class="row">
     <button
       class="cyber-button cyber-button--primary cyber-button--grow"
-      data-analytics={AnalyticsAction.categoryDeleteConfirmed}
+      data-analytics={AnalyticsAction.CATEGORY_DELETE_CONFIRMED}
       onclick={confirmDeleteCategory}
       type="button">
       DELETE
     </button>
     <button
       class="cyber-button cyber-button--ghost cyber-button--grow"
-      data-analytics={AnalyticsAction.categoryDeleteCancelled}
+      data-analytics={AnalyticsAction.CATEGORY_DELETE_CANCELLED}
       onclick={() => (pendingDelete = null)}
       type="button">
       CANCEL

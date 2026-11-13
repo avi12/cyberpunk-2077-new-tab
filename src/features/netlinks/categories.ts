@@ -8,7 +8,7 @@ export function normalizeName(name: string) {
 }
 
 export function categoryOf(bookmark: Bookmark) {
-  return bookmark.category || BookmarkCategory.other;
+  return bookmark.category || BookmarkCategory.OTHER;
 }
 
 export function addCategory(name: string) {
@@ -51,7 +51,7 @@ export function deleteCategory(name: string) {
   settings.customCategories.current = settings.customCategories.current.filter(entry => entry !== name);
 
   if (name in settings.collapsedCategories.current) {
-    const { [name]: _removed, ...rest } = settings.collapsedCategories.current;
+    const { [name]: removed, ...rest } = settings.collapsedCategories.current;
     settings.collapsedCategories.current = rest;
   }
 }

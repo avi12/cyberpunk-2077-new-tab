@@ -13,16 +13,16 @@ import type { Tip } from "@/features/tips/model";
  */
 
 export enum CopilotKind {
-  journey = "journey",
-  tip = "tip"
+  JOURNEY = "journey",
+  TIP = "tip"
 }
 
 export const COPILOT_KINDS = {
-  [CopilotKind.journey]: {
+  [CopilotKind.JOURNEY]: {
     label: "Journeys",
     icon: iconClock
   },
-  [CopilotKind.tip]: {
+  [CopilotKind.TIP]: {
     label: "Tips",
     icon: iconLightbulb
   }
@@ -36,28 +36,28 @@ export const COPILOT_KINDS = {
 export type CopilotCard =
   | {
     id: string;
-    kind: CopilotKind.journey;
+    kind: CopilotKind.JOURNEY;
     journey: Journey;
   }
   | {
     id: string;
-    kind: CopilotKind.tip;
+    kind: CopilotKind.TIP;
     tip: Tip;
   };
 
 /** The ids come from two different Microsoft catalogues, so the kind keeps them apart. */
 function journeyCard(journey: Journey): CopilotCard {
   return {
-    id: `${CopilotKind.journey}:${journey.id}`,
-    kind: CopilotKind.journey,
+    id: `${CopilotKind.JOURNEY}:${journey.id}`,
+    kind: CopilotKind.JOURNEY,
     journey
   };
 }
 
 function tipCard(tip: Tip): CopilotCard {
   return {
-    id: `${CopilotKind.tip}:${tip.id}`,
-    kind: CopilotKind.tip,
+    id: `${CopilotKind.TIP}:${tip.id}`,
+    kind: CopilotKind.TIP,
     tip
   };
 }
@@ -92,7 +92,7 @@ function stateOf(read: PromiseSettledResult<CompanionRead<unknown>>) {
     return read.reason.state;
   }
 
-  return CompanionState.companionOffline;
+  return CompanionState.COMPANION_OFFLINE;
 }
 
 /** Journeys first and tips in the seats they leave, as Edge's own row does. */
@@ -107,14 +107,14 @@ function dealRow({ journeys, tips }: {
 const STATE_ORDER = [
   // Quieter than connected, so it only shows when both families found nothing - otherwise a row of
   // journeys would sit under a request to switch journeys on.
-  CompanionState.edgeHasNothing,
-  CompanionState.connected,
-  CompanionState.companionOffline,
-  CompanionState.companionNotRunning,
-  CompanionState.linking,
-  CompanionState.permissionNeeded,
-  CompanionState.setupNeeded,
-  CompanionState.loading
+  CompanionState.EDGE_HAS_NOTHING,
+  CompanionState.CONNECTED,
+  CompanionState.COMPANION_OFFLINE,
+  CompanionState.COMPANION_NOT_RUNNING,
+  CompanionState.LINKING,
+  CompanionState.PERMISSION_NEEDED,
+  CompanionState.SETUP_NEEDED,
+  CompanionState.LOADING
 ];
 
 function louderState({ first, second }: {

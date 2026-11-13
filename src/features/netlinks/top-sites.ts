@@ -16,7 +16,7 @@ const seedableSiteSchema = z.object({
 });
 
 async function storeBookmarksFromTopSites() {
-  const sites = await sendMessage(MessageType.getTopSites, undefined).catch(() => null);
+  const sites = await sendMessage(MessageType.GET_TOP_SITES, undefined).catch(() => null);
   const seedable = sites?.filter(site => seedableSiteSchema.safeParse(site).success) ?? [];
   if (!seedable.length) {
     return null;

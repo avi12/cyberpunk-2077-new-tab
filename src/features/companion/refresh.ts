@@ -18,8 +18,8 @@ export const COMPANION_REFRESH_ALARM = "companionRefresh";
 const COMPANION_REFRESH_MINUTES = 240;
 
 const SNAPSHOTS: Record<CompanionRequest, StorageItem<CompanionSnapshot | null>> = {
-  [CompanionRequest.journeys]: journeysSnapshotItem,
-  [CompanionRequest.tips]: tipsSnapshotItem
+  [CompanionRequest.JOURNEYS]: journeysSnapshotItem,
+  [CompanionRequest.TIPS]: tipsSnapshotItem
 };
 
 /**

@@ -32,14 +32,14 @@
 <CompanionCard
   actionLabel={journey.buttonText}
   hint={journey.contextReason}
-  kind={CopilotKind.journey}
+  kind={CopilotKind.JOURNEY}
   prompt={copilotPrompt(journey)}
   subject={journeySubject(journey)}
   title={journeyHeadline(journey)}>
   {#snippet meta()}
     {#each onePagePerHost as source (source.host)}
       <li>
-        <a class="source" data-analytics={AnalyticsAction.journeySourceOpened} href={source.url} rel="noopener noreferrer" target="_blank">
+        <a class="source" data-analytics={AnalyticsAction.JOURNEY_SOURCE_OPENED} href={source.url} rel="noopener noreferrer" target="_blank">
           {@html iconExternalLink}
           {source.host}
         </a>

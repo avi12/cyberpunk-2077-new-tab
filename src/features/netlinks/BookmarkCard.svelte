@@ -46,7 +46,7 @@
   <a
     class="card glitch-border hover-glitch-host"
     class:is-editing={isEditing}
-    data-analytics={AnalyticsAction.netlinkOpened}
+    data-analytics={AnalyticsAction.NETLINK_OPENED}
     draggable={!isEditing}
     href={openableUrl}
     onclick={e => {
@@ -64,7 +64,7 @@
       <button
         class="card__action card__action--edit"
         aria-label={editLabel}
-        data-analytics={AnalyticsAction.netlinkEditOpened}
+        data-analytics={AnalyticsAction.NETLINK_EDIT_OPENED}
         data-tooltip={editLabel}
         onclick={() => onEdit(bookmark)}
         type="button">
@@ -73,7 +73,7 @@
       <button
         class="card__action card__action--delete"
         aria-label={deleteLabel}
-        data-analytics={AnalyticsAction.netlinkDeleted}
+        data-analytics={AnalyticsAction.NETLINK_DELETED}
         data-tooltip={deleteLabel}
         onclick={() => onDelete(bookmark.id)}
         type="button">

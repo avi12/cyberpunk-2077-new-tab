@@ -12,10 +12,10 @@ const LINK_SELECTOR = "a[href]";
 const ROW_TOLERANCE_PX = 2;
 
 enum ArrowKey {
-  right = "ArrowRight",
-  left = "ArrowLeft",
-  up = "ArrowUp",
-  down = "ArrowDown"
+  RIGHT = "ArrowRight",
+  LEFT = "ArrowLeft",
+  UP = "ArrowUp",
+  DOWN = "ArrowDown"
 }
 
 function isArrowKey(key: string): key is ArrowKey {
@@ -23,8 +23,8 @@ function isArrowKey(key: string): key is ArrowKey {
 }
 
 const STEP_BY_KEY: Partial<Record<ArrowKey, number>> = {
-  [ArrowKey.right]: 1,
-  [ArrowKey.left]: -1
+  [ArrowKey.RIGHT]: 1,
+  [ArrowKey.LEFT]: -1
 };
 
 function centerOf(box: DOMRect) {
@@ -73,8 +73,8 @@ export function arrowFocus(node: HTMLElement) {
       return links[links.indexOf(current) + step] ?? null;
     }
 
-    const isDown = key === ArrowKey.down;
-    if (!isDown && key !== ArrowKey.up) {
+    const isDown = key === ArrowKey.DOWN;
+    if (!isDown && key !== ArrowKey.UP) {
       return null;
     }
 

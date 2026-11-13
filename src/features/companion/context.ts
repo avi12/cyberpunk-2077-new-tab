@@ -13,14 +13,14 @@ import { z } from "@/lib/zod";
  */
 
 enum TipContext {
-  openTabs = "openTabs",
-  recentReading = "recentReading",
-  followedTopics = "followedTopics"
+  OPEN_TABS = "openTabs",
+  RECENT_READING = "recentReading",
+  FOLLOWED_TOPICS = "followedTopics"
 }
 
 /** Edge ships no field for this. Order matters: a tip naming several gets the narrowest one. */
 const CONTEXT_PHRASES: [TipContext, string[]][] = [
-  [TipContext.openTabs, [
+  [TipContext.OPEN_TABS, [
     "my tab",
     "open tab",
     "another tab",
@@ -30,7 +30,7 @@ const CONTEXT_PHRASES: [TipContext, string[]][] = [
     "i have opened",
     "i've opened"
   ]],
-  [TipContext.followedTopics, [
+  [TipContext.FOLLOWED_TOPICS, [
     "topics i",
     "ideas i",
     "i follow",
@@ -38,7 +38,7 @@ const CONTEXT_PHRASES: [TipContext, string[]][] = [
     "i have explored",
     "sites i"
   ]],
-  [TipContext.recentReading, [
+  [TipContext.RECENT_READING, [
     "my browsing",
     "browsing activity",
     "my browser",
@@ -55,24 +55,24 @@ const CONTEXT_PHRASES: [TipContext, string[]][] = [
 ];
 
 const CONTEXT_ACCESS: Record<TipContext, AccessRequest> = {
-  [TipContext.openTabs]: {
+  [TipContext.OPEN_TABS]: {
     permissions: ["tabs"]
   },
-  [TipContext.recentReading]: {
+  [TipContext.RECENT_READING]: {
     permissions: ["history"]
   },
-  [TipContext.followedTopics]: {
+  [TipContext.FOLLOWED_TOPICS]: {
     permissions: ["history"]
   }
 };
 
 /** Each says the addresses can be opened, or a provider answers from the titles alone. */
 const CONTEXT_HEADINGS: Record<TipContext, string> = {
-  [TipContext.openTabs]:
+  [TipContext.OPEN_TABS]:
     "Here are the tabs I have open right now. Open any of them you need, then answer the question below.",
-  [TipContext.recentReading]:
+  [TipContext.RECENT_READING]:
     "Here is what I have been reading, most recent first. Open any of them you need, then answer the question below.",
-  [TipContext.followedTopics]:
+  [TipContext.FOLLOWED_TOPICS]:
     "Here is what I keep coming back to, with how many times I have visited each. Open any of them you need, then answer the question below."
 };
 
@@ -92,7 +92,7 @@ const FOLLOWED_MINIMUM_VISITS = 2;
 const NOT_READING_URL_PATTERN = /[?&](q|query|search_query)=|\/search\b|\/login\b|\/signin\b|\/sign-in\b/i;
 
 /** Edge's resolver is the live tab one, so the tabs are the likeliest subject. */
-const DEFAULT_CONTEXT = TipContext.openTabs;
+const DEFAULT_CONTEXT = TipContext.OPEN_TABS;
 
 /**
  * The title counts as much as the prompt, because Microsoft's copy disagrees with itself: "Suggest a
@@ -225,11 +225,11 @@ async function rankedPages({ context, keywords }: {
   context: TipContext;
   keywords: Set<string>;
 }) {
-  const found = context === TipContext.openTabs
+  const found = context === TipContext.OPEN_TABS
     ? (await openTabs()).filter(isWorthSending)
     : (await visitedPages()).filter(isWorthSending);
 
-  const ordered = context === TipContext.followedTopics
+  const ordered = context === TipContext.FOLLOWED_TOPICS
     ? found.filter(page => page.visits >= FOLLOWED_MINIMUM_VISITS).sort((first, second) => second.visits - first.visits)
     : found;
 
@@ -281,7 +281,7 @@ const OPEN_NOW_NOTE = " - open in a tab right now";
  * press gets one dialog, and it is not worth spending on the open-now mark.
  */
 async function subjectLines(subject: CardSubject) {
-  const isListingHeld = await hasAccess(CONTEXT_ACCESS[TipContext.openTabs]);
+  const isListingHeld = await hasAccess(CONTEXT_ACCESS[TipContext.OPEN_TABS]);
   const openNow = isListingHeld ? new Set((await openTabs()).map(tab => tab.url)) : new Set<string>();
 
   return [
@@ -365,7 +365,7 @@ async function contextBlock({ title, prompt, subject, budget }: {
     context,
     keywords: keywordsOf(`${title} ${prompt}`)
   });
-  const isCounted = context === TipContext.followedTopics;
+  const isCounted = context === TipContext.FOLLOWED_TOPICS;
 
   return blockWithinBudget({
     heading: CONTEXT_HEADINGS[context],

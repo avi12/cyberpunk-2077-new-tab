@@ -132,7 +132,7 @@
 </script>
 
 {#snippet cancel(onCancel: () => void)}
-  <button class="cyber-button cyber-button--ghost cyber-button--block" data-analytics={AnalyticsAction.netlinksTransferCancelled} onclick={onCancel} type="button">
+  <button class="cyber-button cyber-button--ghost cyber-button--block" data-analytics={AnalyticsAction.NETLINKS_TRANSFER_CANCELLED} onclick={onCancel} type="button">
     Cancel
   </button>
 {/snippet}
@@ -145,18 +145,18 @@
       </p>
       <button
         class="cyber-button cyber-button--cyan cyber-button--action"
-        data-analytics={AnalyticsAction.netlinksImportedMerge}
+        data-analytics={AnalyticsAction.NETLINKS_IMPORTED_MERGE}
         disabled={isWorking}
-        onclick={() => void importAs(ImportMode.merge)}
+        onclick={() => void importAs(ImportMode.MERGE)}
         type="button">
         {@html iconUpload}
         Add them to mine
       </button>
       <button
         class="cyber-button cyber-button--danger cyber-button--action"
-        data-analytics={AnalyticsAction.netlinksImportedReplace}
+        data-analytics={AnalyticsAction.NETLINKS_IMPORTED_REPLACE}
         disabled={isWorking}
-        onclick={() => void importAs(ImportMode.replace)}
+        onclick={() => void importAs(ImportMode.REPLACE)}
         type="button">
         {@html iconTriangleAlert}
         Replace mine entirely
@@ -172,7 +172,7 @@
       <p class="cyber-note transfer__centred">{backupState(backupAtMs)}</p>
       <button
         class="cyber-button cyber-button--primary cyber-button--action"
-        data-analytics={AnalyticsAction.netlinksBackupRestored}
+        data-analytics={AnalyticsAction.NETLINKS_BACKUP_RESTORED}
         disabled={isWorking}
         onclick={() => void restoreFromBackup()}
         type="button">
@@ -184,7 +184,7 @@
   {:else}
     <div class="stack">
       <p class="cyber-note transfer__centred">Your netlinks alone - not your name, your wallpaper or anything else</p>
-      <button class="cyber-button cyber-button--cyan cyber-button--action" data-analytics={AnalyticsAction.netlinksExported} onclick={saveToFile} type="button">
+      <button class="cyber-button cyber-button--cyan cyber-button--action" data-analytics={AnalyticsAction.NETLINKS_EXPORTED} onclick={saveToFile} type="button">
         {@html iconDownload}
         Export netlinks
       </button>

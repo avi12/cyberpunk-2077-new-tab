@@ -121,7 +121,7 @@
 {/snippet}
 
 {#snippet cancel(onCancel: () => void)}
-  <button class="cyber-button cyber-button--ghost cyber-button--block" data-analytics={AnalyticsAction.settingsImportCancelled} onclick={onCancel} type="button">
+  <button class="cyber-button cyber-button--ghost cyber-button--block" data-analytics={AnalyticsAction.SETTINGS_IMPORT_CANCELLED} onclick={onCancel} type="button">
     Cancel
   </button>
 {/snippet}
@@ -139,7 +139,7 @@
       {#if waitingFile}
         <button
           class="cyber-button cyber-button--primary cyber-button--action"
-          data-analytics={AnalyticsAction.settingsImported}
+          data-analytics={AnalyticsAction.SETTINGS_IMPORTED}
           onclick={() => void importWaitingFile()}
           type="button">
           {@html iconUpload}
@@ -152,7 +152,7 @@
             accept: SETTINGS_ACCEPT,
             onFile: file => void importFrom(file)
           })}
-          data-analytics={AnalyticsAction.settingsImportChosen}
+          data-analytics={AnalyticsAction.SETTINGS_IMPORT_CHOSEN}
           for="settings-import">
           {@html iconUpload}
           <span>Drop your settings file here</span>
@@ -170,7 +170,7 @@
       <p class="cyber-note">{backupState(backupAtMs)}</p>
       <button
         class="cyber-button cyber-button--primary cyber-button--action"
-        data-analytics={AnalyticsAction.settingsBackupRestored}
+        data-analytics={AnalyticsAction.SETTINGS_BACKUP_RESTORED}
         disabled={isWorking}
         onclick={() => void restoreFromBackup()}
         type="button">
@@ -183,7 +183,7 @@
     <div class="stack">
       <button
         class="cyber-button cyber-button--cyan cyber-button--action"
-        data-analytics={AnalyticsAction.settingsExported}
+        data-analytics={AnalyticsAction.SETTINGS_EXPORTED}
         onclick={saveToFile}
         type="button">
         {@html iconDownload}

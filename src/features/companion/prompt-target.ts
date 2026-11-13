@@ -10,21 +10,21 @@ import { SearchEngineId } from "@/lib/storage/schema";
  */
 
 export enum PromptTargetId {
-  chatGpt = "chatgpt",
-  claude = "claude",
-  perplexity = "perplexity",
-  googleAiMode = "google-ai",
-  askBrave = "brave-ai",
-  copilot = "copilot"
+  CHAT_GPT = "chatgpt",
+  CLAUDE = "claude",
+  PERPLEXITY = "perplexity",
+  GOOGLE_AI_MODE = "google-ai",
+  ASK_BRAVE = "brave-ai",
+  COPILOT = "copilot"
 }
 
 const PROMPT_TARGET_ENGINES: Record<PromptTargetId, SearchEngineId> = {
-  [PromptTargetId.chatGpt]: SearchEngineId.chatGpt,
-  [PromptTargetId.claude]: SearchEngineId.claude,
-  [PromptTargetId.perplexity]: SearchEngineId.perplexity,
-  [PromptTargetId.googleAiMode]: SearchEngineId.googleAiMode,
-  [PromptTargetId.askBrave]: SearchEngineId.braveAi,
-  [PromptTargetId.copilot]: SearchEngineId.copilot
+  [PromptTargetId.CHAT_GPT]: SearchEngineId.CHAT_GPT,
+  [PromptTargetId.CLAUDE]: SearchEngineId.CLAUDE,
+  [PromptTargetId.PERPLEXITY]: SearchEngineId.PERPLEXITY,
+  [PromptTargetId.GOOGLE_AI_MODE]: SearchEngineId.GOOGLE_AI_MODE,
+  [PromptTargetId.ASK_BRAVE]: SearchEngineId.BRAVE_AI,
+  [PromptTargetId.COPILOT]: SearchEngineId.COPILOT
 };
 
 function engineFor(targetId: PromptTargetId) {
@@ -36,7 +36,7 @@ function promptTargetLabel(targetId: PromptTargetId) {
 }
 
 /** The cards are Copilot's own. The search engine is deliberately not consulted. */
-export const DEFAULT_PROMPT_TARGET = PromptTargetId.copilot;
+export const DEFAULT_PROMPT_TARGET = PromptTargetId.COPILOT;
 
 /** A pick this build no longer offers reads as no pick, falling back to Copilot. */
 export function withShippedPromptTarget(stored: PromptTargetId | null) {

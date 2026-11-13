@@ -7,7 +7,7 @@ import { parseJourneys } from "./model";
 
 export async function readJourneys() {
   return readCompanion<Journey>({
-    request: CompanionRequest.journeys,
+    request: CompanionRequest.JOURNEYS,
     snapshot: journeysSnapshotItem,
     parse: parseJourneys
   });

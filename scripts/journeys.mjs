@@ -20,9 +20,9 @@ const COMPANION_SCRIPTS = {
 
 const [command = "", ...rest] = process.argv.slice(2);
 
-const isPackaging = command === "package";
-const script = isPackaging ? COMPANION_SCRIPTS.package : COMPANION_SCRIPTS.default;
-const forwardedArguments = isPackaging ? rest : [command, ...rest].filter(Boolean);
+const IS_PACKAGING = command === "package";
+const script = IS_PACKAGING ? COMPANION_SCRIPTS.package : COMPANION_SCRIPTS.default;
+const forwardedArguments = IS_PACKAGING ? rest : [command, ...rest].filter(Boolean);
 if (!existsSync(script)) {
   console.info(
     [

@@ -8,12 +8,12 @@ import { nonEmptyTextSchema } from "@/features/companion/model";
 import { z } from "@/lib/zod";
 
 export enum WeatherCondition {
-  clear = "clear",
-  cloudy = "cloudy",
-  rain = "rain",
-  snow = "snow",
-  thunderstorm = "thunderstorm",
-  severe = "severe"
+  CLEAR = "clear",
+  CLOUDY = "cloudy",
+  RAIN = "rain",
+  SNOW = "snow",
+  THUNDERSTORM = "thunderstorm",
+  SEVERE = "severe"
 }
 
 /**
@@ -38,32 +38,32 @@ const CONDITION_WORDS: {
   words: string[];
 }[] = [
   {
-    condition: WeatherCondition.thunderstorm,
+    condition: WeatherCondition.THUNDERSTORM,
     words: ["thunder", "lightning", "hail"]
   },
   {
-    condition: WeatherCondition.snow,
+    condition: WeatherCondition.SNOW,
     words: ["snow", "sleet", "blizzard", "flurr", "wintry", "freezing", "ice", "icy"]
   },
   {
-    condition: WeatherCondition.rain,
+    condition: WeatherCondition.RAIN,
     words: ["rain", "drizzle", "shower", "sprinkle"]
   },
   {
-    condition: WeatherCondition.severe,
+    condition: WeatherCondition.SEVERE,
     words: ["tornado", "cyclone", "hurricane", "squall", "wind", "blustery", "dust", "sand", "smoke", "ash"]
   },
   {
-    condition: WeatherCondition.clear,
+    condition: WeatherCondition.CLEAR,
     words: ["sunny", "clear", "sun"]
   },
   {
-    condition: WeatherCondition.cloudy,
+    condition: WeatherCondition.CLOUDY,
     words: ["cloud", "overcast", "fog", "mist", "haze", "dreary"]
   }
 ];
 
-const UNKNOWN_CONDITION = WeatherCondition.cloudy;
+const UNKNOWN_CONDITION = WeatherCondition.CLOUDY;
 
 export function conditionFor(description: string) {
   const phrase = description.toLowerCase();
@@ -82,18 +82,18 @@ export type WeatherReading = z.infer<typeof weatherReadingSchema>;
 export type WeatherSky = Pick<WeatherReading, "condition" | "description">;
 
 export enum WeatherRefusal {
-  noPlace = "no-place",
-  unreachable = "unreachable",
-  noReading = "no-reading",
-  noAccess = "no-access"
+  NO_PLACE = "no-place",
+  UNREACHABLE = "unreachable",
+  NO_READING = "no-reading",
+  NO_ACCESS = "no-access"
 }
 
 /** None may imply a place: a reading and its city fall back together, so the card may say Night City. */
 export const WEATHER_REFUSAL_WORDING: Record<WeatherRefusal, string> = {
-  [WeatherRefusal.noPlace]: "Nowhere to read the sky over yet",
-  [WeatherRefusal.unreachable]: "Couldn't reach the sky",
-  [WeatherRefusal.noReading]: "Nothing came back",
-  [WeatherRefusal.noAccess]: "Allow Bing in the terminal panel"
+  [WeatherRefusal.NO_PLACE]: "Nowhere to read the sky over yet",
+  [WeatherRefusal.UNREACHABLE]: "Couldn't reach the sky",
+  [WeatherRefusal.NO_READING]: "Nothing came back",
+  [WeatherRefusal.NO_ACCESS]: "Allow Bing in the terminal panel"
 };
 
 export function isWeatherRefusal(answer: WeatherReading | WeatherRefusal): answer is WeatherRefusal {
@@ -109,27 +109,27 @@ export const WEATHER_ICONS: Record<
     color: string;
   }
 > = {
-  [WeatherCondition.clear]: {
+  [WeatherCondition.CLEAR]: {
     svg: iconSun,
     color: "var(--cp-accent)"
   },
-  [WeatherCondition.cloudy]: {
+  [WeatherCondition.CLOUDY]: {
     svg: iconCloud,
     color: "var(--cp-text-dimmer)"
   },
-  [WeatherCondition.rain]: {
+  [WeatherCondition.RAIN]: {
     svg: iconCloudRain,
     color: "var(--cp-primary)"
   },
-  [WeatherCondition.snow]: {
+  [WeatherCondition.SNOW]: {
     svg: iconCloudSnow,
     color: "var(--cp-text)"
   },
-  [WeatherCondition.thunderstorm]: {
+  [WeatherCondition.THUNDERSTORM]: {
     svg: iconCloudLightning,
     color: "var(--cp-secondary)"
   },
-  [WeatherCondition.severe]: {
+  [WeatherCondition.SEVERE]: {
     svg: iconWind,
     color: "var(--cp-text-dim)"
   }

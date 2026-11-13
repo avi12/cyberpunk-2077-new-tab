@@ -12,7 +12,7 @@
 </script>
 
 <div class="widget-location-row">
-  <button class="widget-location" data-analytics={AnalyticsAction.weatherLocationOpened} onclick={onEdit} type="button">
+  <button class="widget-location" data-analytics={AnalyticsAction.WEATHER_LOCATION_OPENED} onclick={onEdit} type="button">
     {@html iconMapPin}
     {name}
   </button>

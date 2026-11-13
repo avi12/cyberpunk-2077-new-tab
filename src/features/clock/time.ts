@@ -10,18 +10,18 @@ const TIME_FORMAT = new Intl.DateTimeFormat(undefined, TIME_PARTS);
 
 /** Only the cycle is overridden, so a 12-hour Hebrew clock still says the Hebrew day period. */
 const TIME_FORMATS: Record<HourCycle, Intl.DateTimeFormat> = {
-  [HourCycle.hour12]: new Intl.DateTimeFormat(undefined, {
+  [HourCycle.HOUR12]: new Intl.DateTimeFormat(undefined, {
     ...TIME_PARTS,
     hourCycle: "h12"
   }),
-  [HourCycle.hour24]: new Intl.DateTimeFormat(undefined, {
+  [HourCycle.HOUR24]: new Intl.DateTimeFormat(undefined, {
     ...TIME_PARTS,
     hourCycle: "h23"
   })
 };
 
 export function localeHourCycle() {
-  return TIME_FORMAT.resolvedOptions().hour12 ? HourCycle.hour12 : HourCycle.hour24;
+  return TIME_FORMAT.resolvedOptions().hour12 ? HourCycle.HOUR12 : HourCycle.HOUR24;
 }
 
 const DATE_FORMAT = new Intl.DateTimeFormat(undefined, {

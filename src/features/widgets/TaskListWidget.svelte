@@ -98,7 +98,7 @@
           <button
             class="tasks__check"
             aria-label="Complete gig"
-            data-analytics={AnalyticsAction.taskCompleted}
+            data-analytics={AnalyticsAction.TASK_COMPLETED}
             onclick={() => completeTask(task.id)}
             type="button">
             {@html isTicking ? iconSquareCheck : iconSquare}

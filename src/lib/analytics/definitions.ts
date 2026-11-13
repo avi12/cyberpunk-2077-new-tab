@@ -5,11 +5,11 @@
 
 /** Nothing here may name a person or a page. */
 export enum AnalyticsEvent {
-  newTabOpened = "new_tab_opened",
-  searchSubmitted = "search_submitted",
-  promptSent = "prompt_sent",
-  companionLinked = "companion_linked",
-  controlPressed = "control_pressed"
+  NEW_TAB_OPENED = "new_tab_opened",
+  SEARCH_SUBMITTED = "search_submitted",
+  PROMPT_SENT = "prompt_sent",
+  COMPANION_LINKED = "companion_linked",
+  CONTROL_PRESSED = "control_pressed"
 }
 
 /**
@@ -18,126 +18,126 @@ export enum AnalyticsEvent {
  */
 export enum AnalyticsAction {
   /* Page furniture */
-  identityOpened = "identity_opened",
-  systemSettingsOpened = "system_settings_opened",
-  aboutOpened = "about_opened",
-  authorSiteOpened = "author_site_opened",
-  terminalOpened = "terminal_opened",
+  IDENTITY_OPENED = "identity_opened",
+  SYSTEM_SETTINGS_OPENED = "system_settings_opened",
+  ABOUT_OPENED = "about_opened",
+  AUTHOR_SITE_OPENED = "author_site_opened",
+  TERMINAL_OPENED = "terminal_opened",
 
   /* About panel */
-  screenshot = "screenshot",
-  reportBug = "report_bug",
+  SCREENSHOT = "screenshot",
+  REPORT_BUG = "report_bug",
 
   /* Clock */
-  hourCycleFlipped = "hour_cycle_flipped",
+  HOUR_CYCLE_FLIPPED = "hour_cycle_flipped",
 
   /* Search */
-  searchEngineOpened = "search_engine_opened",
-  searchEnginePicked = "search_engine_picked",
+  SEARCH_ENGINE_OPENED = "search_engine_opened",
+  SEARCH_ENGINE_PICKED = "search_engine_picked",
 
   /* Netlinks */
-  netlinkOpened = "netlink_opened",
-  netlinkEditOpened = "netlink_edit_opened",
-  netlinkDeleted = "netlink_deleted",
-  netlinkAddOpened = "netlink_add_opened",
-  netlinkTitleFetched = "netlink_title_fetched",
-  netlinkSaved = "netlink_saved",
-  netlinkFormCancelled = "netlink_form_cancelled",
-  netlinksSorted = "netlinks_sorted",
-  netlinksEditToggled = "netlinks_edit_toggled",
-  netlinksEditFinished = "netlinks_edit_finished",
-  netlinksTopSitesImported = "netlinks_top_sites_imported",
-  netlinksTransferOpened = "netlinks_transfer_opened",
-  netlinksExported = "netlinks_exported",
-  netlinksImportedMerge = "netlinks_imported_merge",
-  netlinksImportedReplace = "netlinks_imported_replace",
-  netlinksBackupRestored = "netlinks_backup_restored",
-  netlinksTransferCancelled = "netlinks_transfer_cancelled",
-  categoryAddOpened = "category_add_opened",
-  categoryCollapsed = "category_collapsed",
-  categoryEditOpened = "category_edit_opened",
-  categoryDeleted = "category_deleted",
-  categorySaved = "category_saved",
-  categoryFormCancelled = "category_form_cancelled",
-  categoryDeleteConfirmed = "category_delete_confirmed",
-  categoryDeleteCancelled = "category_delete_cancelled",
-  iconPickerOpened = "icon_picker_opened",
-  iconPicked = "icon_picked",
+  NETLINK_OPENED = "netlink_opened",
+  NETLINK_EDIT_OPENED = "netlink_edit_opened",
+  NETLINK_DELETED = "netlink_deleted",
+  NETLINK_ADD_OPENED = "netlink_add_opened",
+  NETLINK_TITLE_FETCHED = "netlink_title_fetched",
+  NETLINK_SAVED = "netlink_saved",
+  NETLINK_FORM_CANCELLED = "netlink_form_cancelled",
+  NETLINKS_SORTED = "netlinks_sorted",
+  NETLINKS_EDIT_TOGGLED = "netlinks_edit_toggled",
+  NETLINKS_EDIT_FINISHED = "netlinks_edit_finished",
+  NETLINKS_TOP_SITES_IMPORTED = "netlinks_top_sites_imported",
+  NETLINKS_TRANSFER_OPENED = "netlinks_transfer_opened",
+  NETLINKS_EXPORTED = "netlinks_exported",
+  NETLINKS_IMPORTED_MERGE = "netlinks_imported_merge",
+  NETLINKS_IMPORTED_REPLACE = "netlinks_imported_replace",
+  NETLINKS_BACKUP_RESTORED = "netlinks_backup_restored",
+  NETLINKS_TRANSFER_CANCELLED = "netlinks_transfer_cancelled",
+  CATEGORY_ADD_OPENED = "category_add_opened",
+  CATEGORY_COLLAPSED = "category_collapsed",
+  CATEGORY_EDIT_OPENED = "category_edit_opened",
+  CATEGORY_DELETED = "category_deleted",
+  CATEGORY_SAVED = "category_saved",
+  CATEGORY_FORM_CANCELLED = "category_form_cancelled",
+  CATEGORY_DELETE_CONFIRMED = "category_delete_confirmed",
+  CATEGORY_DELETE_CANCELLED = "category_delete_cancelled",
+  ICON_PICKER_OPENED = "icon_picker_opened",
+  ICON_PICKED = "icon_picked",
 
   /* Identity */
-  googleAccountUsed = "google_account_used",
-  identityClosed = "identity_closed",
+  GOOGLE_ACCOUNT_USED = "google_account_used",
+  IDENTITY_CLOSED = "identity_closed",
 
   /* Weather */
-  weatherLocationOpened = "weather_location_opened",
-  weatherSourceChanged = "weather_source_changed",
-  weatherFollowDevice = "weather_follow_device",
-  weatherCoordinatesUsed = "weather_coordinates_used",
-  weatherNightCityUsed = "weather_night_city_used",
-  weatherLocationClosed = "weather_location_closed",
+  WEATHER_LOCATION_OPENED = "weather_location_opened",
+  WEATHER_SOURCE_CHANGED = "weather_source_changed",
+  WEATHER_FOLLOW_DEVICE = "weather_follow_device",
+  WEATHER_COORDINATES_USED = "weather_coordinates_used",
+  WEATHER_NIGHT_CITY_USED = "weather_night_city_used",
+  WEATHER_LOCATION_CLOSED = "weather_location_closed",
 
   /* Widgets */
-  widgetSettingsOpened = "widget_settings_opened",
-  widgetsEditFinished = "widgets_edit_finished",
-  widgetToggled = "widget_toggled",
-  widgetHeaderAction = "widget_header_action",
-  taskCompleted = "task_completed",
-  rssUrlEditOpened = "rss_url_edit_opened",
-  rssItemOpened = "rss_item_opened",
-  rssMoreItems = "rss_more_items",
-  rssFewerItems = "rss_fewer_items",
-  rssSettingsClosed = "rss_settings_closed",
+  WIDGET_SETTINGS_OPENED = "widget_settings_opened",
+  WIDGETS_EDIT_FINISHED = "widgets_edit_finished",
+  WIDGET_TOGGLED = "widget_toggled",
+  WIDGET_HEADER_ACTION = "widget_header_action",
+  TASK_COMPLETED = "task_completed",
+  RSS_URL_EDIT_OPENED = "rss_url_edit_opened",
+  RSS_ITEM_OPENED = "rss_item_opened",
+  RSS_MORE_ITEMS = "rss_more_items",
+  RSS_FEWER_ITEMS = "rss_fewer_items",
+  RSS_SETTINGS_CLOSED = "rss_settings_closed",
 
   /* Terminal panel */
-  displayElementToggled = "display_element_toggled",
-  edgeOnlyDismissed = "edge_only_dismissed",
-  colorPickerToggled = "color_picker_toggled",
-  colorPickerClosed = "color_picker_closed",
-  backgroundKindPicked = "background_kind_picked",
-  backgroundUrlOpened = "background_url_opened",
-  backgroundCleared = "background_cleared",
-  backgroundLinked = "background_linked",
-  backgroundUrlCancelled = "background_url_cancelled",
+  DISPLAY_ELEMENT_TOGGLED = "display_element_toggled",
+  EDGE_ONLY_DISMISSED = "edge_only_dismissed",
+  COLOR_PICKER_TOGGLED = "color_picker_toggled",
+  COLOR_PICKER_CLOSED = "color_picker_closed",
+  BACKGROUND_KIND_PICKED = "background_kind_picked",
+  BACKGROUND_URL_OPENED = "background_url_opened",
+  BACKGROUND_CLEARED = "background_cleared",
+  BACKGROUND_LINKED = "background_linked",
+  BACKGROUND_URL_CANCELLED = "background_url_cancelled",
 
   /* Settings and backup */
-  settingsExported = "settings_exported",
-  settingsImportChosen = "settings_import_chosen",
-  settingsImported = "settings_imported",
-  settingsBackupRestored = "settings_backup_restored",
-  settingsImportCancelled = "settings_import_cancelled",
-  accountBackedUp = "account_backed_up",
-  accountRestored = "account_restored",
-  accountForgetOpened = "account_forget_opened",
-  accountForgotten = "account_forgotten",
-  accountForgetCancelled = "account_forget_cancelled",
+  SETTINGS_EXPORTED = "settings_exported",
+  SETTINGS_IMPORT_CHOSEN = "settings_import_chosen",
+  SETTINGS_IMPORTED = "settings_imported",
+  SETTINGS_BACKUP_RESTORED = "settings_backup_restored",
+  SETTINGS_IMPORT_CANCELLED = "settings_import_cancelled",
+  ACCOUNT_BACKED_UP = "account_backed_up",
+  ACCOUNT_RESTORED = "account_restored",
+  ACCOUNT_FORGET_OPENED = "account_forget_opened",
+  ACCOUNT_FORGOTTEN = "account_forgotten",
+  ACCOUNT_FORGET_CANCELLED = "account_forget_cancelled",
 
   /* Companion */
-  companionSetupStarted = "companion_setup_started",
-  companionStoreOpened = "companion_store_opened",
-  companionPermissionAsked = "companion_permission_asked",
-  promptTargetOpened = "prompt_target_opened",
-  journeysSupportOpened = "journeys_support_opened",
-  copilotSettingsOpened = "copilot_settings_opened",
-  journeySourceOpened = "journey_source_opened",
+  COMPANION_SETUP_STARTED = "companion_setup_started",
+  COMPANION_STORE_OPENED = "companion_store_opened",
+  COMPANION_PERMISSION_ASKED = "companion_permission_asked",
+  PROMPT_TARGET_OPENED = "prompt_target_opened",
+  JOURNEYS_SUPPORT_OPENED = "journeys_support_opened",
+  COPILOT_SETTINGS_OPENED = "copilot_settings_opened",
+  JOURNEY_SOURCE_OPENED = "journey_source_opened",
 
   /* Shared controls whose parent does not name them */
-  optionPicked = "option_picked"
+  OPTION_PICKED = "option_picked"
 }
 
 /** Event-scoped parameters. Each one needs a matching EVENT custom dimension on the property. */
 export enum AnalyticsParam {
-  action = "action",
-  cardKind = "card_kind",
-  destination = "destination",
-  engine = "engine",
-  isSuccess = "is_success"
+  ACTION = "action",
+  CARD_KIND = "card_kind",
+  DESTINATION = "destination",
+  ENGINE = "engine",
+  IS_SUCCESS = "is_success"
 }
 
 /** Traits of the install rather than the moment. Each needs a matching USER custom dimension. */
 export enum AnalyticsUserProperty {
-  extensionVersion = "extension_version",
-  browserName = "browser_name",
-  uiLanguage = "ui_language"
+  EXTENSION_VERSION = "extension_version",
+  BROWSER_NAME = "browser_name",
+  UI_LANGUAGE = "ui_language"
 }
 
 /** GA4 drops the whole event past these, so they are enforced before the request rather than after. */

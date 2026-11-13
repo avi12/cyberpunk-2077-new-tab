@@ -14,4 +14,4 @@ applyCachedTabTitle();
 mount(App, { target: document.getElementById("app")! });
 
 // After mounting, so the page is never waiting behind the beacon
-reportQuietly(AnalyticsEvent.newTabOpened);
+reportQuietly(AnalyticsEvent.NEW_TAB_OPENED);

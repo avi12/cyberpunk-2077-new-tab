@@ -72,20 +72,20 @@
 
 <div
   class="cyberpunk-container"
-  class:cyberninja={settings.colorTheme.current === ColorTheme.cyberNinja}
-  class:edgerunners={settings.colorTheme.current === ColorTheme.edgerunners}
+  class:cyberninja={settings.colorTheme.current === ColorTheme.CYBER_NINJA}
+  class:edgerunners={settings.colorTheme.current === ColorTheme.EDGERUNNERS}
   {@attach menuSounds}
   {@attach reportClicks}>
-  {#if settings.scanLinesMode.current !== ScanLinesMode.none}
+  {#if settings.scanLinesMode.current !== ScanLinesMode.NONE}
     <div
-      class:scan-lines={settings.scanLinesMode.current === ScanLinesMode.default}
-      class:scan-lines-below={settings.scanLinesMode.current === ScanLinesMode.belowUi}>
+      class:scan-lines={settings.scanLinesMode.current === ScanLinesMode.DEFAULT}
+      class:scan-lines-below={settings.scanLinesMode.current === ScanLinesMode.BELOW_UI}>
     </div>
   {/if}
   <div class="cyberpunk-vignette"></div>
 
   <header class="identity">
-    <button class="identity__button" data-analytics={AnalyticsAction.identityOpened} onclick={() => (isIdentityOpen = true)} type="button">
+    <button class="identity__button" data-analytics={AnalyticsAction.IDENTITY_OPENED} onclick={() => (isIdentityOpen = true)} type="button">
       {@html iconSettings}
       <span class="mono">IDENTITY</span>
     </button>
@@ -139,7 +139,7 @@
     <button
       class="corner-button"
       aria-label={SYSTEM_SETTINGS_LABEL}
-      data-analytics={AnalyticsAction.systemSettingsOpened}
+      data-analytics={AnalyticsAction.SYSTEM_SETTINGS_OPENED}
       data-tooltip={SYSTEM_SETTINGS_LABEL}
       onclick={() => (isSystemOpen = true)}
       type="button">
@@ -154,11 +154,11 @@
   <SystemSettingsModal isOpen={isSystemOpen} onClose={() => (isSystemOpen = false)} />
 
   <footer class="footer">
-    <button class="footer__info" aria-label="Show information" data-analytics={AnalyticsAction.aboutOpened} onclick={() => (isAboutOpen = true)} type="button">
+    <button class="footer__info" aria-label="Show information" data-analytics={AnalyticsAction.ABOUT_OPENED} onclick={() => (isAboutOpen = true)} type="button">
       {@html iconInfo}
     </button>
     <p class="footer__text">
-      © 2077 <a class="footer__author" data-analytics={AnalyticsAction.authorSiteOpened} href="https://avi12.com" rel="noopener noreferrer" target="_blank">Avi</a>. All
+      © 2077 <a class="footer__author" data-analytics={AnalyticsAction.AUTHOR_SITE_OPENED} href="https://avi12.com" rel="noopener noreferrer" target="_blank">Avi</a>. All
       rights reserved. Night City License #NC-77-2077
     </p>
   </footer>
