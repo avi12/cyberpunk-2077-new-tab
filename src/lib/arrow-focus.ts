@@ -12,10 +12,10 @@ const LINK_SELECTOR = "a[href]";
 const ROW_TOLERANCE_PX = 2;
 
 enum ArrowKey {
-  RIGHT = "ArrowRight",
-  LEFT = "ArrowLeft",
-  UP = "ArrowUp",
-  DOWN = "ArrowDown"
+  ARROW_RIGHT = "ArrowRight",
+  ARROW_LEFT = "ArrowLeft",
+  ARROW_UP = "ArrowUp",
+  ARROW_DOWN = "ArrowDown"
 }
 
 function isArrowKey(key: string): key is ArrowKey {
@@ -23,8 +23,8 @@ function isArrowKey(key: string): key is ArrowKey {
 }
 
 const STEP_BY_KEY: Partial<Record<ArrowKey, number>> = {
-  [ArrowKey.RIGHT]: 1,
-  [ArrowKey.LEFT]: -1
+  [ArrowKey.ARROW_RIGHT]: 1,
+  [ArrowKey.ARROW_LEFT]: -1
 };
 
 function centerOf(box: DOMRect) {
@@ -73,8 +73,8 @@ export function arrowFocus(node: HTMLElement) {
       return links[links.indexOf(current) + step] ?? null;
     }
 
-    const isDown = key === ArrowKey.DOWN;
-    if (!isDown && key !== ArrowKey.UP) {
+    const isDown = key === ArrowKey.ARROW_DOWN;
+    if (!isDown && key !== ArrowKey.ARROW_UP) {
       return null;
     }
 
@@ -90,9 +90,9 @@ export function arrowFocus(node: HTMLElement) {
     });
   }
 
-  function onKeyDown(e: KeyboardEvent) {
-    const isModifierHeld = e.altKey || e.ctrlKey || e.metaKey || e.shiftKey;
-    if (isModifierHeld || !isArrowKey(e.key)) {
+  function onKeyDown(event: KeyboardEvent) {
+    const isModifierHeld = event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
+    if (isModifierHeld || !isArrowKey(event.key)) {
       return;
     }
 
@@ -103,7 +103,7 @@ export function arrowFocus(node: HTMLElement) {
     }
 
     const next = nextLink({
-      key: e.key,
+      key: event.key,
       links,
       current
     });
@@ -112,7 +112,7 @@ export function arrowFocus(node: HTMLElement) {
     }
 
     // Only once a link has actually been found, so an arrow at the edge still scrolls the page.
-    e.preventDefault();
+    event.preventDefault();
     next.focus();
   }
 

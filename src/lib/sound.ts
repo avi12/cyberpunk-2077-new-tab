@@ -271,8 +271,8 @@ export function menuSounds(node: HTMLElement) {
   /** Kept so crossing a link's padding onto its label says nothing new. */
   let elHoveredLink: Element | null = null;
 
-  function onPointerOver(e: PointerEvent) {
-    const link = aimedLink(e.target);
+  function onPointerOver(event: PointerEvent) {
+    const link = aimedLink(event.target);
     if (link === elHoveredLink) {
       return;
     }
@@ -285,21 +285,21 @@ export function menuSounds(node: HTMLElement) {
   }
 
   /** Leaving the window is the one exit no `pointerover` arrives to describe. */
-  function onPointerOut(e: PointerEvent) {
-    if (!e.relatedTarget) {
+  function onPointerOut(event: PointerEvent) {
+    if (!event.relatedTarget) {
       elHoveredLink = null;
     }
   }
 
-  function onPointerDown(e: PointerEvent) {
-    if (aimedLink(e.target)) {
+  function onPointerDown(event: PointerEvent) {
+    if (aimedLink(event.target)) {
       playPressClick();
     }
   }
 
-  function onFocusIn(e: FocusEvent) {
+  function onFocusIn(event: FocusEvent) {
     const isTabbedOntoLink =
-      e.target instanceof Element && e.target.matches(":focus-visible") && Boolean(aimedLink(e.target));
+      event.target instanceof Element && event.target.matches(":focus-visible") && Boolean(aimedLink(event.target));
     if (isTabbedOntoLink) {
       playHoverTick();
     }

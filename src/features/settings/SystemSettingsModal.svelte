@@ -41,21 +41,21 @@
     void backupTakenAtMs().then(takenAt => (backupAtMs = takenAt));
   });
 
-  function showError(e: unknown) {
-    error = e instanceof Error ? e.message : INVALID_SETTINGS_FILE;
+  function showError(thrown: unknown) {
+    error = thrown instanceof Error ? thrown.message : INVALID_SETTINGS_FILE;
   }
 
   async function importFrom(file: File) {
     try {
       await importSettings(await file.text());
       location.reload();
-    } catch (e) {
-      showError(e);
+    } catch (thrown) {
+      showError(thrown);
     }
   }
 
-  async function importPicked(e: Event) {
-    const file = e.currentTarget instanceof HTMLInputElement ? e.currentTarget.files?.[0] : null;
+  async function importPicked(event: Event) {
+    const file = event.currentTarget instanceof HTMLInputElement ? event.currentTarget.files?.[0] : null;
     if (!file) {
       return;
     }
@@ -79,8 +79,8 @@
         contents: exportSettings(),
         mimeType: "application/json"
       });
-    } catch (e) {
-      showError(e);
+    } catch (thrown) {
+      showError(thrown);
     }
   }
 
@@ -89,8 +89,8 @@
     try {
       backupAtMs = await saveBackup();
       error = "";
-    } catch (e) {
-      showError(e);
+    } catch (thrown) {
+      showError(thrown);
     } finally {
       isWorking = false;
     }
@@ -101,8 +101,8 @@
     try {
       await restoreBackup();
       location.reload();
-    } catch (e) {
-      showError(e);
+    } catch (thrown) {
+      showError(thrown);
       isWorking = false;
     }
   }
@@ -134,7 +134,7 @@
         id="settings-import"
         class="visually-hidden"
         accept={SETTINGS_ACCEPT}
-        onchange={e => void importPicked(e)}
+        onchange={event => void importPicked(event)}
         type="file" />
       {#if waitingFile}
         <button

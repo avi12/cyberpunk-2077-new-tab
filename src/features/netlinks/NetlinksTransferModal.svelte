@@ -48,8 +48,8 @@
     void netlinksBackupTakenAtMs().then(takenAt => (backupAtMs = takenAt));
   });
 
-  function showError(e: unknown) {
-    error = e instanceof Error ? e.message : INVALID_NETLINKS_FILE;
+  function showError(thrown: unknown) {
+    error = thrown instanceof Error ? thrown.message : INVALID_NETLINKS_FILE;
   }
 
   async function validateArrivingFile(file: File) {
@@ -57,14 +57,14 @@
       arrivingNetlinkCount = countNetlinks(readNetlinksFile(await file.text()));
       error = "";
       pendingImportFile = file;
-    } catch (e) {
-      showError(e);
+    } catch (thrown) {
+      showError(thrown);
       pendingImportFile = null;
     }
   }
 
-  async function filePicked(e: Event) {
-    const file = e.currentTarget instanceof HTMLInputElement ? e.currentTarget.files?.[0] : null;
+  async function filePicked(event: Event) {
+    const file = event.currentTarget instanceof HTMLInputElement ? event.currentTarget.files?.[0] : null;
     if (!file) {
       return;
     }
@@ -84,8 +84,8 @@
         mode
       });
       location.reload();
-    } catch (e) {
-      showError(e);
+    } catch (thrown) {
+      showError(thrown);
       isWorking = false;
     }
   }
@@ -97,8 +97,8 @@
         contents: exportNetlinks(),
         mimeType: "application/json"
       });
-    } catch (e) {
-      showError(e);
+    } catch (thrown) {
+      showError(thrown);
     }
   }
 
@@ -107,8 +107,8 @@
     try {
       backupAtMs = await keepNetlinksBackup();
       error = "";
-    } catch (e) {
-      showError(e);
+    } catch (thrown) {
+      showError(thrown);
     } finally {
       isWorking = false;
     }
@@ -119,8 +119,8 @@
     try {
       await restoreNetlinksBackup();
       location.reload();
-    } catch (e) {
-      showError(e);
+    } catch (thrown) {
+      showError(thrown);
       isWorking = false;
     }
   }
@@ -193,7 +193,7 @@
         id="netlinks-import"
         class="visually-hidden"
         accept={NETLINKS_ACCEPT}
-        onchange={e => void filePicked(e)}
+        onchange={event => void filePicked(event)}
         type="file" />
       <label
         class="drop-zone"

@@ -30,12 +30,12 @@
   });
 
   const pureHueSwatch = $derived(
-                          hsvToHex({
-    hue,
-    saturation: 1,
-    value: 1
-  })
-                        );
+    hsvToHex({
+      hue,
+      saturation: 1,
+      value: 1
+    })
+  );
 
   $effect(() => {
     if (!isHexColor(background)) {
@@ -67,10 +67,10 @@
     darkness = next.darkness;
     applyHex(
       hsvToHex({
-      hue,
-      saturation: 1,
-      value: 1 - darkness / DARKNESS_MAX
-    })
+        hue,
+        saturation: 1,
+        value: 1 - darkness / DARKNESS_MAX
+      })
     );
   }
 </script>

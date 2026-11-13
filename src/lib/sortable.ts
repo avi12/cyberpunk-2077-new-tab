@@ -164,11 +164,11 @@ function commonAncestor(nodes: HTMLElement[]) {
 
 /** A drop must not also fire the click the browser synthesizes, which would open the link dropped. */
 function swallowNextClick() {
-  function onClick(e: Event) {
-    e.stopPropagation();
+  function onClick(event: Event) {
+    event.stopPropagation();
 
-    if (e.cancelable) {
-      e.preventDefault();
+    if (event.cancelable) {
+      event.preventDefault();
     }
 
     removeEventListener("click", onClick, true);
@@ -405,20 +405,20 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     return null;
   }
 
-  function follow(e: PointerEvent) {
+  function follow(event: PointerEvent) {
     const dragged = source?.slots[fromIndex];
     if (!source || !target || !dragged) {
       return;
     }
 
-    const left = e.clientX - grabX;
-    const top = e.clientY - grabY;
+    const left = event.clientX - grabX;
+    const top = event.clientY - grabY;
     dragged.element.style.translate = `${left - dragged.left}px ${top - dragged.top}px`;
 
     const over =
       boardAt({
-        x: e.clientX,
-        y: e.clientY
+        x: event.clientX,
+        y: event.clientY
       }) ?? target;
     if (over !== target) {
       if (target !== source) {
@@ -631,13 +631,13 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     settle(isCancelled);
   }
 
-  function onPointerMove(e: PointerEvent) {
-    if (e.pointerId !== pointerId) {
+  function onPointerMove(event: PointerEvent) {
+    if (event.pointerId !== pointerId) {
       return;
     }
 
     if (!isDragging) {
-      if (Math.hypot(e.clientX - startX, e.clientY - startY) < ACTIVATION_DISTANCE) {
+      if (Math.hypot(event.clientX - startX, event.clientY - startY) < ACTIVATION_DISTANCE) {
         return;
       }
 
@@ -650,41 +650,41 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
       }
     }
 
-    e.preventDefault();
-    follow(e);
+    event.preventDefault();
+    follow(event);
   }
 
-  function onPointerUp(e: PointerEvent) {
-    if (e.pointerId === pointerId) {
+  function onPointerUp(event: PointerEvent) {
+    if (event.pointerId === pointerId) {
       finish(false);
     }
   }
 
-  function onPointerCancel(e: PointerEvent) {
-    if (e.pointerId === pointerId) {
+  function onPointerCancel(event: PointerEvent) {
+    if (event.pointerId === pointerId) {
       finish(true);
     }
   }
 
-  function onKeyDown(e: KeyboardEvent) {
-    if (e.key !== "Escape" || !isDragging) {
+  function onKeyDown(event: KeyboardEvent) {
+    if (event.key !== "Escape" || !isDragging) {
       return;
     }
 
-    e.preventDefault();
+    event.preventDefault();
     finish(true);
   }
 
-  function onPointerDown(e: PointerEvent) {
-    if (current.disabled || isDragging || e.button !== 0 || !(e.target instanceof Element)) {
+  function onPointerDown(event: PointerEvent) {
+    if (current.disabled || isDragging || event.button !== 0 || !(event.target instanceof Element)) {
       return;
     }
 
-    if (current.handle && !e.target.closest(current.handle)) {
+    if (current.handle && !event.target.closest(current.handle)) {
       return;
     }
 
-    const child = e.target.closest(`[${ID_ATTRIBUTE}]`);
+    const child = event.target.closest(`[${ID_ATTRIBUTE}]`);
     if (!(child instanceof HTMLElement) || child.parentElement !== node) {
       return;
     }
@@ -695,12 +695,12 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     }
 
     draggedId = id;
-    pointerId = e.pointerId;
-    startX = e.clientX;
-    startY = e.clientY;
+    pointerId = event.pointerId;
+    startX = event.clientX;
+    startY = event.clientY;
     const rect = child.getBoundingClientRect();
-    grabX = e.clientX - rect.left;
-    grabY = e.clientY - rect.top;
+    grabX = event.clientX - rect.left;
+    grabY = event.clientY - rect.top;
     document.addEventListener("pointermove", onPointerMove);
     document.addEventListener("pointerup", onPointerUp);
     document.addEventListener("pointercancel", onPointerCancel);

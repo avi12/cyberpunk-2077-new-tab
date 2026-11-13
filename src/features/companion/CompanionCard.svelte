@@ -38,11 +38,11 @@
 
   /** Shared with the hand-off, so a middle-click lands where a click would, minus the reader's context. */
   const destinationUrl = $derived(
-                           promptUrl({
-    targetId,
-    prompt
-  })
-                         );
+    promptUrl({
+      targetId,
+      prompt
+    })
+  );
 
   /** A refused site permission only costs the auto-send: the prompt still goes by clipboard. */
   async function handOff(site: ComposeSiteId | null) {

@@ -12,11 +12,11 @@ const DROPPING_ATTRIBUTE = "data-dropping";
 
 let zoneCount = 0;
 
-function swallowStray(e: DragEvent) {
-  e.preventDefault();
+function swallowStray(event: DragEvent) {
+  event.preventDefault();
 
-  if (e.dataTransfer) {
-    e.dataTransfer.dropEffect = "none";
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = "none";
   }
 }
 
@@ -42,8 +42,8 @@ function unwatchStrays() {
   document.removeEventListener("drop", swallowStray);
 }
 
-function carriesFile(e: DragEvent) {
-  return e.dataTransfer?.types.includes("Files") ?? false;
+function carriesFile(event: DragEvent) {
+  return event.dataTransfer?.types.includes("Files") ?? false;
 }
 
 function isAccepted({ file, accept }: { file: File; accept: string }) {
@@ -73,8 +73,8 @@ export function dropZone({ accept, onFile }: DropZoneOptions) {
       node.toggleAttribute(DROPPING_ATTRIBUTE, isOver);
     }
 
-    function onDragEnter(e: DragEvent) {
-      if (!carriesFile(e)) {
+    function onDragEnter(event: DragEvent) {
+      if (!carriesFile(event)) {
         return;
       }
 
@@ -82,22 +82,22 @@ export function dropZone({ accept, onFile }: DropZoneOptions) {
       markDropping(true);
     }
 
-    function onDragOver(e: DragEvent) {
-      if (!carriesFile(e)) {
+    function onDragOver(event: DragEvent) {
+      if (!carriesFile(event)) {
         return;
       }
 
       // Stopped here so the document's own handler leaves the copy cursor alone over a real target.
-      e.preventDefault();
-      e.stopPropagation();
+      event.preventDefault();
+      event.stopPropagation();
 
-      if (e.dataTransfer) {
-        e.dataTransfer.dropEffect = "copy";
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "copy";
       }
     }
 
-    function onDragLeave(e: DragEvent) {
-      if (!carriesFile(e)) {
+    function onDragLeave(event: DragEvent) {
+      if (!carriesFile(event)) {
         return;
       }
 
@@ -109,13 +109,13 @@ export function dropZone({ accept, onFile }: DropZoneOptions) {
       }
     }
 
-    function onDrop(e: DragEvent) {
-      e.preventDefault();
-      e.stopPropagation();
+    function onDrop(event: DragEvent) {
+      event.preventDefault();
+      event.stopPropagation();
       depth = 0;
       markDropping(false);
 
-      const file = e.dataTransfer?.files[0];
+      const file = event.dataTransfer?.files[0];
       if (
         !file ||
         !isAccepted({

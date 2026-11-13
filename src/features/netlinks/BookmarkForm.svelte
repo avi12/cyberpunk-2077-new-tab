@@ -39,12 +39,12 @@
 
   const normalizedUrl = $derived(normalizeUrl(url));
   const icon = $derived(
-                 pickIcon({
-    url: normalizedUrl,
-    title,
-    category
-  })
-               );
+    pickIcon({
+      url: normalizedUrl,
+      title,
+      category
+    })
+  );
   const submitLabel = $derived.by(() => {
     if (bookmarkToEdit) {
       return "Save link";
@@ -64,8 +64,8 @@
     elField.scrollLeft = 0;
   }
 
-  function onKeyDown(e: KeyboardEvent) {
-    if (e.key === "Escape") {
+  function onKeyDown(event: KeyboardEvent) {
+    if (event.key === "Escape") {
       onCancel();
     }
   }
@@ -80,8 +80,8 @@
     isResolving = false;
   }
 
-  async function submit(e: SubmitEvent) {
-    e.preventDefault();
+  async function submit(event: SubmitEvent) {
+    event.preventDefault();
 
     if (isResolving) {
       return;
@@ -108,7 +108,7 @@
   }
 </script>
 
-<form class="link-card cyber-glass" novalidate onsubmit={e => void submit(e)}>
+<form class="link-card cyber-glass" novalidate onsubmit={event => void submit(event)}>
   <label class="visually-hidden" for={URL_FIELD_ID}>{URL_LABEL}</label>
   <input
     id={URL_FIELD_ID}

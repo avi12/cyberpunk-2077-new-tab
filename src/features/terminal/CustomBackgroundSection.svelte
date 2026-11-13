@@ -85,8 +85,8 @@
     error = "";
   }
 
-  async function storePickedFile(e: Event) {
-    const file = e.currentTarget instanceof HTMLInputElement ? e.currentTarget.files?.[0] : null;
+  async function storePickedFile(event: Event) {
+    const file = event.currentTarget instanceof HTMLInputElement ? event.currentTarget.files?.[0] : null;
     if (!file) {
       return;
     }
@@ -156,7 +156,7 @@
         max={BACKGROUND_BRIGHTNESS_MAX}
         min={BACKGROUND_BRIGHTNESS_MIN}
         ondblclick={() => (settings.backgroundBrightness.current = DEFAULT_BACKGROUND_BRIGHTNESS)}
-        oninput={e => (settings.backgroundBrightness.current = Number.parseInt(e.currentTarget.value, 10))}
+        oninput={event => (settings.backgroundBrightness.current = Number.parseInt(event.currentTarget.value, 10))}
         step={BRIGHTNESS_STEP}
         type="range"
         value={brightness} />
@@ -193,8 +193,8 @@
       <form
         class="stack stack--tight"
         novalidate
-        onsubmit={e => {
-          e.preventDefault();
+        onsubmit={event => {
+          event.preventDefault();
           if (isFetching) {
             return;
           }
@@ -233,7 +233,7 @@
       id="background-file"
       class="visually-hidden"
       {accept}
-      onchange={e => void storePickedFile(e)}
+      onchange={event => void storePickedFile(event)}
       type="file" />
   </div>
 </PanelSection>

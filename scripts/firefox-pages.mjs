@@ -61,8 +61,8 @@ async function withSession({ port, use }) {
     pendingReplies.delete(id);
   }
 
-  socket.addEventListener("message", e => {
-    const message = JSON.parse(e.data);
+  socket.addEventListener("message", event => {
+    const message = JSON.parse(event.data);
     settle(message.id, message);
   });
   socket.addEventListener("close", () => {

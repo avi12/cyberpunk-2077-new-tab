@@ -11,12 +11,12 @@ const ACTION_ATTRIBUTE = "data-analytics";
  * The page root still contains the top layer - a `<dialog>` and a popover only move their painting.
  */
 export function reportClicks(elRoot: Element) {
-  function reportMarkedControl(e: Event) {
-    if (!(e.target instanceof Element)) {
+  function reportMarkedControl(event: Event) {
+    if (!(event.target instanceof Element)) {
       return;
     }
 
-    const action = e.target.closest(`[${ACTION_ATTRIBUTE}]`)?.getAttribute(ACTION_ATTRIBUTE);
+    const action = event.target.closest(`[${ACTION_ATTRIBUTE}]`)?.getAttribute(ACTION_ATTRIBUTE);
     if (!action) {
       return;
     }

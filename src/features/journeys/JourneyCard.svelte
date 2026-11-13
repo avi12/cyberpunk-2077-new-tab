@@ -11,8 +11,8 @@
 
   const onePagePerHost = $derived.by(() => {
     const trail: {
-       host: string;
-       url: string 
+      host: string;
+      url: string 
     }[] = [];
     for (const { url } of journey.sourceInfos) {
       const host = hostOf(url);

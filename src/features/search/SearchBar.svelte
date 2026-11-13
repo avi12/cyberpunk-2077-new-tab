@@ -82,9 +82,9 @@
    * Plain engines are left to the native form submission. Two are taken off it: the browser's own
    * engine has no URL, only a worker API, and a compose engine needs a script to press send.
    */
-  async function onSubmit(e: SubmitEvent) {
+  async function onSubmit(event: SubmitEvent) {
     if (!query.trim()) {
-      e.preventDefault();
+      event.preventDefault();
       await scanEmptyQuery();
 
       return;
@@ -95,7 +95,7 @@
 
     const { composeSiteId } = engine;
     if (composeSiteId) {
-      e.preventDefault();
+      event.preventDefault();
       await handOff(composeSiteId);
 
       return;
@@ -105,7 +105,7 @@
       return;
     }
 
-    e.preventDefault();
+    event.preventDefault();
     isScanning = true;
     isScanning = await searchWithBrowserDefault(query);
   }

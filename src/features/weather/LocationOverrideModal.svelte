@@ -180,8 +180,8 @@
     onClose();
   }
 
-  function confirm(e: SubmitEvent) {
-    e.preventDefault();
+  function confirm(event: SubmitEvent) {
+    event.preventDefault();
 
     if (isLocating) {
       return;
@@ -226,7 +226,7 @@
         data-analytics={AnalyticsAction.WEATHER_FOLLOW_DEVICE}
         disabled={isLocating}
         onclick={() => void followDevice()}
-        onfocusin={e => e.stopPropagation()}
+        onfocusin={event => event.stopPropagation()}
         type="button">
         <span class="location__sync-icon" class:pulse={isLocating}>{@html iconMapPin}</span>
         {isLocating ? LOCATING_LABEL : FOLLOW_LABEL}
@@ -291,7 +291,7 @@
         data-analytics={AnalyticsAction.WEATHER_NIGHT_CITY_USED}
         disabled={isLocating}
         onclick={onStayDark}
-        onfocusin={e => e.stopPropagation()}
+        onfocusin={event => event.stopPropagation()}
         type="button">
         <span class="location__sync-icon">{@html iconSparkles}</span>
         {NIGHT_CITY_LABEL}

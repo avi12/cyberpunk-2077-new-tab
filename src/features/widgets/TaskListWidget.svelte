@@ -20,11 +20,11 @@
 
   // A stored list may come from another build, so a task that no longer validates is dropped.
   let tasks = $state<Task[]>(
-                untrack(() => validRecords({
-    raw: config.tasks,
-    schema: taskSchema
-  }))
-              );
+    untrack(() => validRecords({
+      raw: config.tasks,
+      schema: taskSchema
+    }))
+  );
   let completingTaskId = $state<string | null>(null);
   let focusedTaskId = $state<string | null>(null);
   let removalTimer: ReturnType<typeof setTimeout> | undefined;
