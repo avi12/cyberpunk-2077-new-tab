@@ -55,7 +55,7 @@ function toFormPost(parameters: TokenExchange | Revocation) {
     headers: {
       "Content-Type": "application/x-www-form-urlencoded"
     },
-    body: new URLSearchParams(parameters)
+    body: new URLSearchParams(Object.entries(parameters))
   };
 }
 
