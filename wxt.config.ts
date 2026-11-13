@@ -96,11 +96,13 @@ const MINIMUM_FIREFOX_VERSION = "147.0";
  */
 const { publicKey } = extensionIdentity;
 
+const MANIFEST_VERSION = 3;
+
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   srcDir: "src",
   // `wxt` still defaults Firefox to MV2; declaring it here means no command needs `--mv3`.
-  manifestVersion: 3,
+  manifestVersion: MANIFEST_VERSION,
   // `srcDir` does not carry `publicDir` with it - that one still resolves against the project root.
   publicDir: "src/public",
   modules: ["@wxt-dev/module-svelte"],

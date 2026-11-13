@@ -6,7 +6,8 @@ const TITLE_TIMEOUT_MS = 5000;
 const MAX_TITLE_LENGTH = 60;
 
 // "<name> <separator> <tagline>". The colon needs its trailing space, so a bare "10:30" never splits
-const TITLE_TAGLINE_PATTERN = /\s+[|·—–-]\s+|:\s+/;
+const EM_DASH = String.fromCodePoint(0x2014);
+const TITLE_TAGLINE_PATTERN = new RegExp(String.raw`\s+[|·${EM_DASH}–-]\s+|:\s+`);
 
 // So `bbc.co.uk` reads as "Bbc" and not as "Co"
 const PUBLIC_SECOND_LEVEL_LABELS = new Set(["ac", "co", "com", "edu", "gov", "net", "org"]);

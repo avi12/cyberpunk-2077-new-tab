@@ -19,6 +19,7 @@ const BUILD_DIRECTORIES = {
 };
 
 const args = process.argv.slice(2);
+const KEEP_ALIVE_BITS = 1 << 30;
 const iPortFlag = args.indexOf("--port");
 const firstPort = iPortFlag === -1 ? CDP_PORT : Number(args[iPortFlag + 1]);
 
@@ -100,4 +101,4 @@ for (const runner of runners) {
 console.log("open a new tab to see the page; press Ctrl+C to close every browser");
 
 // web-ext resolves once a browser is up; hold the process open so none is orphaned.
-setInterval(() => undefined, 1 << 30);
+setInterval(() => undefined, KEEP_ALIVE_BITS);

@@ -9,6 +9,25 @@ import { deflateSync, inflateSync } from "node:zlib";
 const CHANNELS = 4;
 const ALPHA = 3;
 const OPAQUE = 255;
+const CHANNEL_MAX = 255;
+const BYTE_MASK = 0xff;
+const PAETH_AVERAGE_FILTER = 3;
+const ICO_WIDTH_OFFSET_HEIGHT = 12;
+const ICO_BYTES_OFFSET = 8;
+const PNG_CHUNK_OVERHEAD = 12;
+const PNG_TYPE_END = 8;
+const PNG_BODY_START = 8;
+const IHDR_COLOR_TYPE_OFFSET = 9;
+const IHDR_INTERLACE_OFFSET = 12;
+const PAETH_PREDICTOR = 4;
+const CRC_MASK = 0xffffffff;
+const CRC_POLYNOMIAL = CRC_POLYNOMIAL;
+const BITS_PER_BYTE = 8;
+const CHUNK_FIELD_SIZE = 4;
+const ZLIB_MAX_LEVEL = 9;
+const IHDR_SIZE = 13;
+const IHDR_BIT_DEPTH_OFFSET = 8;
+const IHDR_HEIGHT_OFFSET = 4;
 
 const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 const BIT_DEPTH_8 = 8;
@@ -26,7 +45,7 @@ const ICO_FULL_SIZE = 256;
 
 /** sRGB is a display encoding; light only averages correctly once it is undone. */
 const SRGB_TO_LINEAR = Float64Array.from({ length: 256 }, (_, byte) => {
-  const value = byte / 255;
+  const value = byte / CHANNEL_MAX;
 
   return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
 });
@@ -34,7 +53,7 @@ const SRGB_TO_LINEAR = Float64Array.from({ length: 256 }, (_, byte) => {
 function linearToSrgb(value) {
   const encoded = value <= 0.0031308 ? value * 12.92 : 1.055 * value ** (1 / 2.4) - 0.055;
 
-  return Math.max(0, Math.min(255, Math.round(encoded * 255)));
+  return Math.max(0, Math.min(CHANNEL_MAX, Math.round(encoded * CHANNEL_MAX)));
 }
 
 function readLargestIcoFrame({ ico, source }) {
@@ -47,11 +66,12 @@ function readLargestIcoFrame({ ico, source }) {
   for (let index = 0; index < count; index++) {
     const entry = ICO_DIRECTORY_OFFSET + index * ICO_ENTRY_SIZE;
     const width = ico[entry] || ICO_FULL_SIZE;
-    if (!largest || width > largest.width) {
+    const isLargerThanLargest = !largest || width > largest.width;
+    if (isLargerThanLargest) {
       largest = {
         width,
-        offset: ico.readUInt32LE(entry + 12),
-        length: ico.readUInt32LE(entry + 8)
+        offset: ico.readUInt32LE(entry + ICO_WIDTH_OFFSET_HEIGHT),
+        length: ico.readUInt32LE(entry + ICO_BYTES_OFFSET)
       };
     }
   }
@@ -72,9 +92,12 @@ function unfilter({ raw, width, height, channels }) {
     const filter = raw[row * (stride + 1)];
     const line = raw.subarray(row * (stride + 1) + 1, (row + 1) * (stride + 1));
     for (let index = 0; index < stride; index++) {
-      const left = index >= channels ? pixels[row * stride + index - channels] : 0;
-      const above = row > 0 ? pixels[(row - 1) * stride + index] : 0;
-      const aboveLeft = row > 0 && index >= channels ? pixels[(row - 1) * stride + index - channels] : 0;
+      const hasLeft = index >= channels;
+      const hasAbove = row > 0;
+      const hasAboveLeft = hasAbove && hasLeft;
+      const left = hasLeft ? pixels[row * stride + index - channels] : 0;
+      const above = hasAbove ? pixels[(row - 1) * stride + index] : 0;
+      const aboveLeft = hasAboveLeft ? pixels[(row - 1) * stride + index - channels] : 0;
       pixels[row * stride + index] =
         (line[index] +
           predict({
@@ -83,7 +106,7 @@ function unfilter({ raw, width, height, channels }) {
             above,
             aboveLeft
           })) &
-        0xff;
+        BYTE_MASK;
     }
   }
 
@@ -99,11 +122,11 @@ function predict({ filter, left, above, aboveLeft }) {
     return above;
   }
 
-  if (filter === 3) {
+  if (filter === PAETH_AVERAGE_FILTER) {
     return (left + above) >> 1;
   }
 
-  if (filter !== 4) {
+  if (filter !== PAETH_PREDICTOR) {
     return 0;
   }
 
@@ -111,7 +134,8 @@ function predict({ filter, left, above, aboveLeft }) {
   const toLeft = Math.abs(estimate - left);
   const toAbove = Math.abs(estimate - above);
   const toAboveLeft = Math.abs(estimate - aboveLeft);
-  if (toLeft <= toAbove && toLeft <= toAboveLeft) {
+  const isLeftNearest = toLeft <= toAbove && toLeft <= toAboveLeft;
+  if (isLeftNearest) {
     return left;
   }
 
@@ -125,8 +149,8 @@ function decodePng(png) {
   let offset = PNG_SIGNATURE.length;
   while (offset < png.length) {
     const length = png.readUInt32BE(offset);
-    const type = png.subarray(offset + 4, offset + 8).toString("ascii");
-    const body = png.subarray(offset + 8, offset + 8 + length);
+    const type = png.subarray(offset + CHUNK_FIELD_SIZE, offset + PNG_TYPE_END).toString("ascii");
+    const body = png.subarray(offset + PNG_BODY_START, offset + PNG_BODY_START + length);
     if (type === "IHDR") {
       header = body;
     }
@@ -135,13 +159,15 @@ function decodePng(png) {
       chunks.push(body);
     }
 
-    offset += 12 + length;
+    offset += PNG_CHUNK_OVERHEAD + length;
   }
 
   const width = header.readUInt32BE(0);
-  const height = header.readUInt32BE(4);
-  const channels = CHANNELS_BY_COLOR_TYPE[header[9]];
-  if (header[8] !== BIT_DEPTH_8 || !channels || header[12] !== 0) {
+  const height = header.readUInt32BE(IHDR_HEIGHT_OFFSET);
+  const channels = CHANNELS_BY_COLOR_TYPE[header[IHDR_COLOR_TYPE_OFFSET]];
+  const isUnsupportedHeader =
+    header[IHDR_BIT_DEPTH_OFFSET] !== BIT_DEPTH_8 || !channels || header[IHDR_INTERLACE_OFFSET] !== 0;
+  if (isUnsupportedHeader) {
     throw new Error("the logo must be an 8-bit non-interlaced RGB or RGBA PNG");
   }
 
@@ -241,22 +267,22 @@ export function renderLogo({ source, width, height, artworkRatio }) {
 }
 
 function crc32(buffer) {
-  let crc = 0xffffffff;
+  let crc = CRC_MASK;
   for (const byte of buffer) {
     crc ^= byte;
-    for (let bit = 0; bit < 8; bit++) {
-      crc = crc & 1 ? (crc >>> 1) ^ 0xedb88320 : crc >>> 1;
+    for (let bit = 0; bit < BITS_PER_BYTE; bit++) {
+      crc = crc & 1 ? (crc >>> 1) ^ CRC_POLYNOMIAL : crc >>> 1;
     }
   }
 
-  return (crc ^ 0xffffffff) >>> 0;
+  return (crc ^ CRC_MASK) >>> 0;
 }
 
-function chunk(type, data) {
-  const length = Buffer.alloc(4);
+function chunk({ type, data }) {
+  const length = Buffer.alloc(CHUNK_FIELD_SIZE);
   length.writeUInt32BE(data.length);
   const body = Buffer.concat([Buffer.from(type, "ascii"), data]);
-  const checksum = Buffer.alloc(4);
+  const checksum = Buffer.alloc(CHUNK_FIELD_SIZE);
   checksum.writeUInt32BE(crc32(body));
 
   return Buffer.concat([length, body, checksum]);
@@ -264,11 +290,11 @@ function chunk(type, data) {
 
 /** Minimal 8-bit RGBA PNG: signature, IHDR, one IDAT of filter-0 scanlines, IEND. */
 export function encodePng({ width, height, pixels }) {
-  const header = Buffer.alloc(13);
+  const header = Buffer.alloc(IHDR_SIZE);
   header.writeUInt32BE(width, 0);
-  header.writeUInt32BE(height, 4);
-  header[8] = BIT_DEPTH_8;
-  header[9] = COLOR_TYPE_RGBA;
+  header.writeUInt32BE(height, IHDR_HEIGHT_OFFSET);
+  header[IHDR_BIT_DEPTH_OFFSET] = BIT_DEPTH_8;
+  header[IHDR_COLOR_TYPE_OFFSET] = COLOR_TYPE_RGBA;
 
   const stride = width * CHANNELS;
   const raw = Buffer.alloc((stride + 1) * height);
@@ -278,8 +304,17 @@ export function encodePng({ width, height, pixels }) {
 
   return Buffer.concat([
     PNG_SIGNATURE,
-    chunk("IHDR", header),
-    chunk("IDAT", deflateSync(raw, { level: 9 })),
-    chunk("IEND", Buffer.alloc(0))
+    chunk({
+      type: "IHDR",
+      data: header
+    }),
+    chunk({
+      type: "IDAT",
+      data: deflateSync(raw, { level: ZLIB_MAX_LEVEL })
+    }),
+    chunk({
+      type: "IEND",
+      data: Buffer.alloc(0)
+    })
   ]);
 }

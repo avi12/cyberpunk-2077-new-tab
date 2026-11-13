@@ -135,8 +135,12 @@ export const WEATHER_ICONS: Record<
   }
 };
 
+const FAHRENHEIT_RATIO_NUMERATOR = 9;
+const FAHRENHEIT_RATIO_DENOMINATOR = 5;
+const FAHRENHEIT_OFFSET = 32;
+
 export function toFahrenheit(celsius: number) {
-  return Math.round((celsius * 9) / 5 + 32);
+  return Math.round((celsius * FAHRENHEIT_RATIO_NUMERATOR) / FAHRENHEIT_RATIO_DENOMINATOR + FAHRENHEIT_OFFSET);
 }
 
 const TEMPERATURE_FORMATS = {

@@ -58,7 +58,7 @@ const QUOTES: [Quote, ...Quote[]] = [
     author: "Johnny Silverhand"
   },
   {
-    text: "Get the payload on the elevator, arm it, let gravity do its thing. Explosion rocks the foundation, tower crumbles — chaos, screaming, roll credits.",
+    text: "Get the payload on the elevator, arm it, let gravity do its thing. Explosion rocks the foundation, tower crumbles - chaos, screaming, roll credits.",
     author: "Johnny Silverhand"
   },
   {
@@ -106,7 +106,7 @@ const QUOTES: [Quote, ...Quote[]] = [
     author: "Yorinobu Arasaka"
   },
   {
-    text: "Now, as that old Greek dawg says, life's a banquet — so don't go thirsty, but don't get drunk, either.",
+    text: "Now, as that old Greek dawg says, life's a banquet - so don't go thirsty, but don't get drunk, either.",
     author: "Dexter 'Dex' DeShawn"
   },
   {
@@ -226,7 +226,7 @@ const QUOTES: [Quote, ...Quote[]] = [
     author: "Rosalind Myers"
   },
   {
-    text: "I don't know how much they're paying you, but you better ask yourself — is it worth it?",
+    text: "I don't know how much they're paying you, but you better ask yourself - is it worth it?",
     author: "Solomon Reed"
   },
   {
@@ -286,7 +286,7 @@ const QUOTES: [Quote, ...Quote[]] = [
     author: "Aurore Cassel"
   },
   {
-    text: "All or nothin' — whaddaya say?",
+    text: "All or nothin' - whaddaya say?",
     author: "Aurore Cassel"
   },
   {

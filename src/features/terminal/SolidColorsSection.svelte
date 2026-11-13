@@ -14,11 +14,13 @@
   const CLOSE_PICKER_LABEL = "Close custom color";
   const HUE_MAX = 360;
   const DARKNESS_MAX = 100;
+  const DEFAULT_HUE = 180;
+  const DEFAULT_DARKNESS = 80;
 
   let customColor = $state(DEFAULT_CUSTOM_COLOR);
   let isPickerOpen = $state(false);
-  let hue = $state(180);
-  let darkness = $state(80);
+  let hue = $state(DEFAULT_HUE);
+  let darkness = $state(DEFAULT_DARKNESS);
 
   const background = $derived(settings.background.current);
   const swatch = $derived.by(() => {
