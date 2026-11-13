@@ -12,7 +12,10 @@ export type { SortableMove } from "./sortable";
  */
 export function sortable(options: () => SortableOptions) {
   return (node: HTMLElement) => {
-    const engine = sortableEngine(node, untrack(options));
+    const engine = sortableEngine({
+      node,
+      options: untrack(options)
+    });
 
     $effect(() => engine.update(options()));
 

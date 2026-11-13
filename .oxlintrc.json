@@ -15,6 +15,14 @@
       }
     ]
   },
+  "overrides": [
+    {
+      "files": ["src/entrypoints/background.ts"],
+      "rules": {
+        "house/positional-parameters": "off"
+      }
+    }
+  ],
   "ignorePatterns": [
     "node_modules/**",
     ".output/**",

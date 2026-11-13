@@ -91,7 +91,12 @@
     }
 
     /* Never the query itself - only which engine. */
-    reportQuietly(AnalyticsEvent.SEARCH_SUBMITTED, { [AnalyticsParam.ENGINE]: engine.id });
+    reportQuietly({
+      name: AnalyticsEvent.SEARCH_SUBMITTED,
+      params: {
+        [AnalyticsParam.ENGINE]: engine.id 
+      } 
+    });
 
     const { composeSiteId } = engine;
     if (composeSiteId) {

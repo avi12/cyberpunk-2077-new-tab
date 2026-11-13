@@ -38,9 +38,12 @@
     } finally {
       isBusy = false;
       // Reported here instead of via `data-analytics`, since what counts is whether the copy succeeded
-      reportQuietly(AnalyticsEvent.CONTROL_PRESSED, {
-        [AnalyticsParam.ACTION]: AnalyticsAction.SCREENSHOT,
-        [AnalyticsParam.IS_SUCCESS]: captureMessage === CAPTURE_MESSAGE.COPIED
+      reportQuietly({
+        name: AnalyticsEvent.CONTROL_PRESSED,
+        params: {
+          [AnalyticsParam.ACTION]: AnalyticsAction.SCREENSHOT,
+          [AnalyticsParam.IS_SUCCESS]: captureMessage === CAPTURE_MESSAGE.COPIED
+        } 
       });
     }
   }

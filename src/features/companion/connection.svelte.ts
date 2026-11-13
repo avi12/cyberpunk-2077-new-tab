@@ -28,7 +28,7 @@ class Companion {
     }
 
     this.#isLinkReported = true;
-    reportQuietly(AnalyticsEvent.COMPANION_LINKED);
+    reportQuietly({ name: AnalyticsEvent.COMPANION_LINKED });
   }
 }
 

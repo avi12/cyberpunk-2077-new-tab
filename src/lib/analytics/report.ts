@@ -39,7 +39,8 @@ const FORBIDDEN_PARAMS = new Set(["email", "name", "phone", "address", "page_ref
 type ReportedParams = Partial<Record<AnalyticsParam, string | number | boolean>>;
 
 function isSendable({ key, value }: { key: string; value: ReportedParams[AnalyticsParam] }) {
-  if (FORBIDDEN_PARAMS.has(key) || key.length > MAX_PARAM_NAME_LENGTH) {
+  const isForbiddenParam = FORBIDDEN_PARAMS.has(key) || key.length > MAX_PARAM_NAME_LENGTH;
+  if (isForbiddenParam) {
     return false;
   }
 
@@ -55,13 +56,13 @@ function sendableParams(params: ReportedParams) {
   const kept: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(params)) {
     const isBelowParamCap = Object.keys(kept).length < MAX_EVENT_PARAMS;
-    if (
+    const isKept =
       isBelowParamCap &&
       isSendable({
         key,
         value
-      })
-    ) {
+      });
+    if (isKept) {
       kept[key] = value;
     }
   }
@@ -121,8 +122,9 @@ async function currentSession() {
   };
 }
 
-async function report(name: AnalyticsEvent, params: ReportedParams = {}) {
-  if (!MEASUREMENT_ID || !API_SECRET || !(await isAnalyticsEnabled())) {
+async function report({ name, params = {} }: { name: AnalyticsEvent; params?: ReportedParams | undefined }) {
+  const isUnavailable = !MEASUREMENT_ID || !API_SECRET || !(await isAnalyticsEnabled());
+  if (isUnavailable) {
     return;
   }
 
@@ -161,6 +163,9 @@ async function report(name: AnalyticsEvent, params: ReportedParams = {}) {
 }
 
 /** Never awaited: a page must not stall because a beacon did. */
-export function reportQuietly(name: AnalyticsEvent, params?: ReportedParams) {
-  void report(name, params).catch(() => undefined);
+export function reportQuietly({ name, params }: { name: AnalyticsEvent; params?: ReportedParams | undefined }) {
+  void report({
+    name,
+    params
+  }).catch(() => undefined);
 }

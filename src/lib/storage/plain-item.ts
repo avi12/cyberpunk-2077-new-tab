@@ -13,12 +13,15 @@ import { plainCopy } from "@/lib/plain";
  * The one exception is `sliced-backup.ts`, which writes its slices through `storage.setItems` - but
  * those are always strings, so there is no proxy to strip.
  */
-export function definePlainItem<TValue>(
-  key: StorageItemKey,
+export function definePlainItem<TValue>({
+  key,
+  options
+}: {
+  key: StorageItemKey;
   options: WxtStorageItemOptions<TValue> & {
     fallback: TValue;
-  }
-) {
+  };
+}) {
   const item = storage.defineItem<TValue>(key, options);
 
   return {

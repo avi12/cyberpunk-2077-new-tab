@@ -35,7 +35,12 @@ export function slicedBackup({
   /** The error message when the snapshot will not fit. */
   tooBigMessage: string;
 }) {
-  const recordItem = definePlainItem<BackupRecord | null>(`sync:${name}Backup`, { fallback: null });
+  const recordItem = definePlainItem<BackupRecord | null>({
+    key: `sync:${name}Backup`,
+    options: {
+      fallback: null
+    }
+  });
 
   function sliceKey(index: number) {
     return `sync:${name}BackupSlice${index}` as const;

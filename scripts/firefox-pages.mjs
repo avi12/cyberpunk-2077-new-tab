@@ -56,26 +56,43 @@ async function withSession({ port, use }) {
   let nextId = 0;
   const pendingReplies = new Map();
 
-  function settle(id, answer) {
+  function settle({ id, answer }) {
     pendingReplies.get(id)?.(answer);
     pendingReplies.delete(id);
   }
 
   socket.addEventListener("message", event => {
     const message = JSON.parse(event.data);
-    settle(message.id, message);
+    settle({
+      id: message.id,
+      answer: message
+    });
   });
   socket.addEventListener("close", () => {
     for (const id of pendingReplies.keys()) {
-      settle(id, { error: "the socket closed" });
+      settle({
+        id,
+        answer: {
+          error: "the socket closed"
+        }
+      });
     }
   });
 
-  function send(method, params) {
+  function send({ method, params }) {
     const id = ++nextId;
 
     return new Promise(resolve => {
-      const giveUp = setTimeout(() => settle(id, { error: "timed out" }), REQUEST_TIMEOUT_MS);
+      const giveUp = setTimeout(
+        () =>
+          settle({
+            id,
+            answer: {
+              error: "timed out"
+            }
+          }),
+        REQUEST_TIMEOUT_MS
+      );
       pendingReplies.set(id, answer => {
         clearTimeout(giveUp);
         resolve(answer);
@@ -90,8 +107,11 @@ async function withSession({ port, use }) {
     });
   }
 
-  const started = await send("session.new", {
-    capabilities: {}
+  const started = await send({
+    method: "session.new",
+    params: {
+      capabilities: {}
+    }
   });
   if (started.error) {
     socket.close();
@@ -100,7 +120,10 @@ async function withSession({ port, use }) {
   }
 
   const answer = await use(send).catch(() => null);
-  await send("session.end", {});
+  await send({
+    method: "session.end",
+    params: {}
+  });
   socket.close();
 
   return answer;
@@ -119,14 +142,20 @@ export function parkExtensionPages(port) {
   return withSession({
     port,
     async use(send) {
-      const tree = await send("browsingContext.getTree", {});
+      const tree = await send({
+        method: "browsingContext.getTree",
+        params: {}
+      });
       const pages = extensionContexts(tree);
 
       for (const page of pages) {
-        await send("browsingContext.navigate", {
-          context: page.context,
-          url: PARKED_URL,
-          wait: "complete"
+        await send({
+          method: "browsingContext.navigate",
+          params: {
+            context: page.context,
+            url: PARKED_URL,
+            wait: "complete"
+          }
         });
       }
 
@@ -149,7 +178,10 @@ export async function restoreExtensionPages({ port, pages }) {
   const restoredCount = await withSession({
     port,
     async use(send) {
-      const tree = await send("browsingContext.getTree", {});
+      const tree = await send({
+        method: "browsingContext.getTree",
+        params: {}
+      });
       const contexts = tree.result?.contexts ?? [];
       const shownUrls = new Set(contexts.map(context => context.url));
       const parkedContexts = contexts.filter(context => context.url === PARKED_URL).map(context => context.context);
@@ -180,16 +212,28 @@ export async function restoreExtensionPages({ port, pages }) {
 
 /** Created then navigated, because `browsingContext.create` silently ignores an address. */
 async function navigateTab({ send, url, context }) {
-  const target = context ?? (await send("browsingContext.create", { type: "tab" })).result?.context;
+  const target =
+    context ??
+    (
+      await send({
+        method: "browsingContext.create",
+        params: {
+          type: "tab"
+        }
+      })
+    ).result?.context;
   if (!target) {
     return false;
   }
 
   for (let attempt = 1; attempt <= NAVIGATE_ATTEMPTS; attempt++) {
-    const answer = await send("browsingContext.navigate", {
-      context: target,
-      url,
-      wait: "none"
+    const answer = await send({
+      method: "browsingContext.navigate",
+      params: {
+        context: target,
+        url,
+        wait: "none"
+      }
     });
     if (!answer.error) {
       return true;

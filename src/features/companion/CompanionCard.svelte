@@ -84,10 +84,13 @@
     });
 
     // The prompt itself is never reported. `isSuccess` is whether context was added.
-    reportQuietly(AnalyticsEvent.PROMPT_SENT, {
-      [AnalyticsParam.CARD_KIND]: kind,
-      [AnalyticsParam.DESTINATION]: targetId,
-      [AnalyticsParam.IS_SUCCESS]: promptWithContext !== prompt
+    reportQuietly({
+      name: AnalyticsEvent.PROMPT_SENT,
+      params: {
+        [AnalyticsParam.CARD_KIND]: kind,
+        [AnalyticsParam.DESTINATION]: targetId,
+        [AnalyticsParam.IS_SUCCESS]: promptWithContext !== prompt
+      } 
     });
   }
 </script>

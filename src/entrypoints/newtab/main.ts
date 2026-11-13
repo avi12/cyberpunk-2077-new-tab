@@ -11,7 +11,12 @@ import "@/controls.css";
 
 applyCachedTabTitle();
 
-mount(App, { target: document.getElementById("app")! });
+const target = document.getElementById("app");
+if (!target) {
+  throw new Error("The new tab page has no #app element");
+}
+
+mount(App, { target });
 
 // After mounting, so the page is never waiting behind the beacon
-reportQuietly(AnalyticsEvent.NEW_TAB_OPENED);
+reportQuietly({ name: AnalyticsEvent.NEW_TAB_OPENED });

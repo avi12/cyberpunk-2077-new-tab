@@ -21,7 +21,12 @@ export function reportClicks(elRoot: Element) {
       return;
     }
 
-    reportQuietly(AnalyticsEvent.CONTROL_PRESSED, { [AnalyticsParam.ACTION]: action });
+    reportQuietly({
+      name: AnalyticsEvent.CONTROL_PRESSED,
+      params: {
+        [AnalyticsParam.ACTION]: action
+      }
+    });
   }
 
   elRoot.addEventListener("click", reportMarkedControl);
