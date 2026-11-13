@@ -1,10 +1,13 @@
-import App from "./App.svelte";
-import "@/app.css";
-import "@/controls.css";
+import { mount } from "svelte";
+
 import { applyCachedTabTitle } from "@/features/identity/tab-identity";
 import { AnalyticsEvent } from "@/lib/analytics/definitions";
 import { reportQuietly } from "@/lib/analytics/report";
-import { mount } from "svelte";
+
+import App from "./App.svelte";
+
+import "@/app.css";
+import "@/controls.css";
 
 applyCachedTabTitle();
 

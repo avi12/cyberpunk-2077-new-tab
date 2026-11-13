@@ -8,6 +8,7 @@ import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
+
 import webExt from "web-ext";
 
 export const CDP_PORT = 9223;
@@ -81,11 +82,7 @@ export async function launchBrowser({ browser, sourceDir, port = CDP_PORT }) {
     target: "firefox-desktop",
     firefox: binaries.firefox,
     firefoxProfile: profile,
-    args: [
-      "--remote-debugging-port",
-      String(FIREFOX_BIDI_PORT),
-      "--remote-allow-system-access"
-    ]
+    args: ["--remote-debugging-port", String(FIREFOX_BIDI_PORT), "--remote-allow-system-access"]
   };
 
   const chromiumOptions = {
@@ -106,7 +103,7 @@ export async function launchBrowser({ browser, sourceDir, port = CDP_PORT }) {
       keepProfileChanges: true,
       noReload: true,
       noInput: true,
-      ...isFirefox ? firefoxOptions : chromiumOptions
+      ...(isFirefox ? firefoxOptions : chromiumOptions)
     },
     { shouldExitProgram: false }
   );
@@ -175,8 +172,9 @@ function outputDirectory({ browser, isDev }) {
     return null;
   }
 
-  const buildDirectoryName = readdirSync(outputRoot)
-    .find(name => name.startsWith(`${browser}-`) && name.endsWith("-dev") === isDev);
+  const buildDirectoryName = readdirSync(outputRoot).find(
+    name => name.startsWith(`${browser}-`) && name.endsWith("-dev") === isDev
+  );
 
   return buildDirectoryName ? join(outputRoot, buildDirectoryName) : null;
 }

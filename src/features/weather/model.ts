@@ -102,10 +102,13 @@ export function isWeatherRefusal(answer: WeatherReading | WeatherRefusal): answe
 
 export const WEATHER_REFRESH_MS = Temporal.Duration.from({ minutes: 15 }).total("milliseconds");
 
-export const WEATHER_ICONS: Record<WeatherCondition, {
-  svg: string;
-  color: string;
-}> = {
+export const WEATHER_ICONS: Record<
+  WeatherCondition,
+  {
+    svg: string;
+    color: string;
+  }
+> = {
   [WeatherCondition.clear]: {
     svg: iconSun,
     color: "var(--cp-accent)"
@@ -157,10 +160,7 @@ function temperatureFormat(isCelsius: boolean) {
   return TEMPERATURE_FORMATS.fahrenheit;
 }
 
-export function formatTemperature({ celsius, isCelsius }: {
-  celsius: number;
-  isCelsius: boolean;
-}) {
+export function formatTemperature({ celsius, isCelsius }: { celsius: number; isCelsius: boolean }) {
   return temperatureFormat(isCelsius).format(isCelsius ? celsius : toFahrenheit(celsius));
 }
 

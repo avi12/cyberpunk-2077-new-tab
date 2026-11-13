@@ -1,3 +1,6 @@
+import type { Browser } from "wxt/browser";
+
+import { defineBackground } from "#imports";
 import { readCompanionRecords } from "@/features/companion/native";
 import {
   COMPANION_REFRESH_ALARM,
@@ -8,17 +11,9 @@ import { ensureCompanionWatch } from "@/features/companion/watch";
 import type { ComposeSiteId } from "@/features/compose/sites";
 import { isAtComposeSite } from "@/features/compose/sites";
 import type { ComposeRequest } from "@/lib/messaging";
-import {
-  CompanionAnswer,
-  ComposeOutcome,
-  MessageType,
-  onMessage,
-  TabDisposition
-} from "@/lib/messaging";
+import { CompanionAnswer, ComposeOutcome, MessageType, onMessage, TabDisposition } from "@/lib/messaging";
 import { forgetComposeRefusals, rememberComposeRefusal, reshuffleTips } from "@/lib/storage/items";
 import { openableUrlSchema } from "@/lib/url";
-import { defineBackground } from "#imports";
-import type { Browser } from "wxt/browser";
 
 const COMPOSE_SCRIPT = "/compose.js";
 
@@ -35,10 +30,7 @@ export default defineBackground(() => {
    * A tab reports itself several times, starting at `about:blank`, so inject on the first finished
    * report at the destination and stop listening, so later browsing in that tab is never injected.
    */
-  function injectWhenReady({ tabId, siteId }: {
-    tabId: number;
-    siteId: ComposeSiteId;
-  }) {
+  function injectWhenReady({ tabId, siteId }: { tabId: number; siteId: ComposeSiteId }) {
     const attempt = Promise.withResolvers<ComposeOutcome>();
 
     function stopWaiting() {
@@ -59,7 +51,10 @@ export default defineBackground(() => {
       } catch {
         // A closed tab says nothing about the host, so only a live tab's failure is remembered as a
         // refusal - otherwise the destination would never be tried again this session
-        const isTabAlive = await browser.tabs.get(tabId).then(() => true, () => false);
+        const isTabAlive = await browser.tabs.get(tabId).then(
+          () => true,
+          () => false
+        );
         if (!isTabAlive) {
           attempt.resolve(ComposeOutcome.failed);
 
@@ -77,10 +72,12 @@ export default defineBackground(() => {
         return;
       }
 
-      const isAtDestination = tab.url !== undefined && isAtComposeSite({
-        url: tab.url,
-        siteId
-      });
+      const isAtDestination =
+        tab.url !== undefined &&
+        isAtComposeSite({
+          url: tab.url,
+          siteId
+        });
       if (!isAtDestination) {
         return;
       }

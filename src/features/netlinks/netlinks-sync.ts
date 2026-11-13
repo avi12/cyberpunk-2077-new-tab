@@ -1,5 +1,6 @@
-import { ImportMode, importNetlinks, netlinksSnapshot } from "./netlinks-file";
 import { slicedBackup } from "@/lib/storage/sliced-backup";
+
+import { ImportMode, importNetlinks, netlinksSnapshot } from "./netlinks-file";
 
 // Kept apart from the settings backup so restoring links never restores an old wallpaper too. The
 // sync area is shared: this is what is left after the settings backup's 80,000 characters and the

@@ -35,7 +35,7 @@
 - Avoid `setTimeout` unless absolutely necessary
 - Avoid comments unless absolutely necessary - prefer descriptive names; default to zero comments
   and rename variables/functions until they read like the comment would. Where one still earns its
-  place, it says *why*, never what
+  place, it says _why_, never what
 - Don't use em dashes - use regular hyphens
 - If a callback arrow function has a typed param, don't annotate the type explicitly
 - Avoid nested try/catch - flatten with early returns or extracted functions

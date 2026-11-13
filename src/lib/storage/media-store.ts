@@ -51,7 +51,10 @@ async function getDatabase() {
   });
 }
 
-async function runRequest<TResult>({ mode, run }: {
+async function runRequest<TResult>({
+  mode,
+  run
+}: {
   mode: IDBTransactionMode;
   run: (store: IDBObjectStore) => IDBRequest<TResult>;
 }) {
@@ -64,7 +67,12 @@ async function runRequest<TResult>({ mode, run }: {
   });
 }
 
-export async function saveMedia({ slot, blob, type, name }: {
+export async function saveMedia({
+  slot,
+  blob,
+  type,
+  name
+}: {
   slot: MediaSlot;
   blob: Blob;
   type: string;

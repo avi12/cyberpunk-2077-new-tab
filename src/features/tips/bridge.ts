@@ -1,8 +1,9 @@
-import type { Tip } from "./model";
-import { parseTips } from "./model";
 import { readCompanion, rememberedCompanion } from "@/features/companion/bridge";
 import { CompanionRequest } from "@/lib/messaging";
 import { tipsSnapshotItem, tipsTurnItem } from "@/lib/storage/items";
+
+import type { Tip } from "./model";
+import { parseTips } from "./model";
 
 /**
  * The turn only advances when there were tips to show, so an unreachable app does not skip the reader
@@ -14,10 +15,11 @@ export async function readTips() {
   const read = await readCompanion<Tip>({
     request: CompanionRequest.tips,
     snapshot: tipsSnapshotItem,
-    parse: ({ raw }) => parseTips({
-      raw,
-      turn
-    })
+    parse: ({ raw }) =>
+      parseTips({
+        raw,
+        turn
+      })
   });
   if (read.cards.length > 0) {
     await tipsTurnItem.setValue(turn + 1);
@@ -32,9 +34,10 @@ export async function rememberedTips() {
 
   return rememberedCompanion<Tip>({
     snapshot: tipsSnapshotItem,
-    parse: ({ raw }) => parseTips({
-      raw,
-      turn
-    })
+    parse: ({ raw }) =>
+      parseTips({
+        raw,
+        turn
+      })
   });
 }

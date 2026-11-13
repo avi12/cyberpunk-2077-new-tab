@@ -1,7 +1,8 @@
-import { composeAccess } from "./access.svelte";
-import { COMPOSE_SITES, type ComposeSiteId, isComposerFillable } from "./sites";
 import { MessageType, sendMessage, TabDisposition } from "@/lib/messaging";
 import { wait } from "@/lib/wait";
+
+import { composeAccess } from "./access.svelte";
+import { COMPOSE_SITES, type ComposeSiteId, isComposerFillable } from "./sites";
 
 /*
  * A prompt goes by the first carrier that fits: a script typing into the site's box, a link, or
@@ -33,10 +34,7 @@ async function copyToClipboard(prompt: string) {
   }
 }
 
-async function openPrompt({ url, disposition }: {
-  url: string;
-  disposition: TabDisposition;
-}) {
+async function openPrompt({ url, disposition }: { url: string; disposition: TabDisposition }) {
   await sendMessage(MessageType.openPromptTarget, {
     url,
     disposition,
@@ -45,7 +43,12 @@ async function openPrompt({ url, disposition }: {
 }
 
 /** `onCopied` fires before the pause, so the pause is the reader's time to read the notice */
-async function copyThenOpen({ url, prompt, disposition, onCopied }: {
+async function copyThenOpen({
+  url,
+  prompt,
+  disposition,
+  onCopied
+}: {
   url: string;
   prompt: string;
   disposition: TabDisposition;
@@ -63,7 +66,13 @@ async function copyThenOpen({ url, prompt, disposition, onCopied }: {
  * `url` is the prompt as a link, swapped for the site's own address when the prompt outgrows it.
  * `siteId` is null for a destination that only reads its link.
  */
-export async function handOffPrompt({ siteId, url, prompt, disposition, onCopied }: {
+export async function handOffPrompt({
+  siteId,
+  url,
+  prompt,
+  disposition,
+  onCopied
+}: {
   siteId: ComposeSiteId | null;
   url: string;
   prompt: string;

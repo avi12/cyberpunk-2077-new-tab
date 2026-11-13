@@ -1,6 +1,7 @@
+import { untrack } from "svelte";
+
 import { sortableEngine } from "./sortable";
 import type { SortableOptions } from "./sortable";
-import { untrack } from "svelte";
 
 export type { SortableMove } from "./sortable";
 

@@ -109,7 +109,7 @@ function noiseBuffer(audio: AudioContext) {
     return sharedNoiseBuffer;
   }
 
-  const length = Math.round(audio.sampleRate * NOISE_MS / MS_PER_SECOND);
+  const length = Math.round((audio.sampleRate * NOISE_MS) / MS_PER_SECOND);
   sharedNoiseBuffer = audio.createBuffer(1, length, audio.sampleRate);
   sharedNoiseBuffer.getChannelData(0).set(Float32Array.from({ length }, () => Math.random() * 2 - 1));
 
@@ -169,7 +169,10 @@ function playTick(audio: AudioContext) {
     frequency: TICK_HASH_HZ,
     Q: TICK_HASH_Q
   });
-  bed.connect(band).connect(new GainNode(audio, { gain: TICK_HASH_GAIN })).connect(envelope);
+  bed
+    .connect(band)
+    .connect(new GainNode(audio, { gain: TICK_HASH_GAIN }))
+    .connect(envelope);
   bed.start(startedAt);
   bed.stop(endsAt);
 }
@@ -295,9 +298,8 @@ export function menuSounds(node: HTMLElement) {
   }
 
   function onFocusIn(e: FocusEvent) {
-    const isTabbedOntoLink = e.target instanceof Element
-      && e.target.matches(":focus-visible")
-      && Boolean(aimedLink(e.target));
+    const isTabbedOntoLink =
+      e.target instanceof Element && e.target.matches(":focus-visible") && Boolean(aimedLink(e.target));
     if (isTabbedOntoLink) {
       playHoverTick();
     }

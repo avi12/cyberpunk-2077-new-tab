@@ -1,7 +1,7 @@
+import { defineUnlistedScript } from "#imports";
 import { COMPOSE_SITES, ComposerInsert } from "@/features/compose/sites";
 import { MessageType, sendMessage } from "@/lib/messaging";
 import { wait } from "@/lib/wait";
-import { defineUnlistedScript } from "#imports";
 
 /*
  * Unlisted rather than a content script: a declared one would ask for the sites at install, and a
@@ -37,10 +37,7 @@ function composerText(composer: HTMLElement) {
  * React only believes its own installed setter, so assigning `value` leaves the send button
  * disabled. The prototype's setter plus an `input` event makes React agree.
  */
-function fillField({ composer, prompt }: {
-  composer: HTMLTextAreaElement;
-  prompt: string;
-}) {
+function fillField({ composer, prompt }: { composer: HTMLTextAreaElement; prompt: string }) {
   const setValue = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
   setValue?.call(composer, prompt);
   composer.dispatchEvent(new Event("input", { bubbles: true }));
@@ -52,7 +49,11 @@ function fillField({ composer, prompt }: {
  * on some sites). The editor keeps its own cursor, so a second insertion appends rather than
  * replaces - measured on Copilot - which is why only an empty box is filled.
  */
-function insertIntoEditor({ composer, prompt, insert }: {
+function insertIntoEditor({
+  composer,
+  prompt,
+  insert
+}: {
   composer: HTMLElement;
   prompt: string;
   insert: ComposerInsert;
@@ -87,10 +88,7 @@ function insertIntoEditor({ composer, prompt, insert }: {
  * True when there is no box (the URL already carried the prompt). Queried every time because Copilot
  * swaps its editor node out while starting up (measured), orphaning any held reference.
  */
-function isComposerHoldingPrompt({ selector, prompt }: {
-  selector: string | undefined;
-  prompt: string;
-}) {
+function isComposerHoldingPrompt({ selector, prompt }: { selector: string | undefined; prompt: string }) {
   if (selector === undefined) {
     return true;
   }
@@ -101,7 +99,11 @@ function isComposerHoldingPrompt({ selector, prompt }: {
 }
 
 /** Only into an empty box, since an insertion appends rather than replaces. */
-function offerPrompt({ selector, prompt, insert }: {
+function offerPrompt({
+  selector,
+  prompt,
+  insert
+}: {
   selector: string | undefined;
   prompt: string;
   insert: ComposerInsert;
@@ -141,7 +143,12 @@ function offerPrompt({ selector, prompt, insert }: {
  * Re-checks the box after finding the send button: a page still starting up can replace the box in
  * between, and Copilot then posted an empty message. Anything lost is offered again next round.
  */
-function deliverOnce({ composerSelector, submitSelector, prompt, insert }: {
+function deliverOnce({
+  composerSelector,
+  submitSelector,
+  prompt,
+  insert
+}: {
   composerSelector: string | undefined;
   submitSelector: string;
   prompt: string;

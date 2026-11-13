@@ -40,7 +40,12 @@ export async function fetchText({ url, init, timeoutMs }: Request) {
   return response.text().catch(() => null);
 }
 
-export async function fetchJson<TSchema extends z.ZodType>({ url, init, timeoutMs, schema }: Request & {
+export async function fetchJson<TSchema extends z.ZodType>({
+  url,
+  init,
+  timeoutMs,
+  schema
+}: Request & {
   schema: TSchema;
 }) {
   const response = await fetchOk({

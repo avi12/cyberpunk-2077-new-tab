@@ -78,7 +78,10 @@
   padding: 0.5rem 1rem;
   font-family: var(--cp-mono);
   text-transform: uppercase;
-  transition: background-color 200ms, color 200ms, border-color 200ms;
+  transition:
+    background-color 200ms,
+    color 200ms,
+    border-color 200ms;
 }
 
 .cyber-button--primary {
@@ -185,7 +188,9 @@
   font-size: 0.75rem;
   line-height: 1rem;
   text-transform: uppercase;
-  transition: background-color 200ms, color 200ms;
+  transition:
+    background-color 200ms,
+    color 200ms;
 
   &:hover {
     background: var(--cp-surface-3);
@@ -224,7 +229,11 @@
   line-height: 1rem;
   text-align: center;
   text-transform: uppercase;
-  transition: background-color 200ms, border-color 200ms, color 200ms, box-shadow 200ms;
+  transition:
+    background-color 200ms,
+    border-color 200ms,
+    color 200ms,
+    box-shadow 200ms;
 
   svg {
     width: 20px;

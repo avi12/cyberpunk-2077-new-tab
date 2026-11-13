@@ -52,10 +52,7 @@ function fractionOf(turn: number) {
   return (Math.imul(turn, TURN_HASH_FACTOR) >>> 0) / TURN_HASH_RANGE;
 }
 
-function pickedFrom<TItem>({ items, fraction }: {
-  items: [TItem, ...TItem[]];
-  fraction: number;
-}) {
+function pickedFrom<TItem>({ items, fraction }: { items: [TItem, ...TItem[]]; fraction: number }) {
   return items[Math.floor(fraction * items.length)] ?? items[0];
 }
 

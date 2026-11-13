@@ -1,3 +1,6 @@
+import { ComposeSiteId } from "@/features/compose/sites";
+import type { IconName } from "@/features/netlinks/icons/choices";
+
 import type { Bookmark, GeoLocation, SearchEngine, Widget } from "./schema";
 import {
   BookmarkCategory,
@@ -7,8 +10,6 @@ import {
   SearchEngineId,
   WidgetType
 } from "./schema";
-import { ComposeSiteId } from "@/features/compose/sites";
-import type { IconName } from "@/features/netlinks/icons/choices";
 
 export type SelectOption<TValue extends string> = {
   value: TValue;

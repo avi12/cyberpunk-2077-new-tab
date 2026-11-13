@@ -1,3 +1,9 @@
+import { nonEmptyTextSchema } from "@/features/companion/model";
+import { fetchJson } from "@/lib/fetch";
+import { originAccess } from "@/lib/permissions";
+import type { GeoLocation } from "@/lib/storage/schema";
+import { z } from "@/lib/zod";
+
 import { coordinatesSchema } from "./geolocation";
 import {
   conditionFor,
@@ -6,11 +12,6 @@ import {
   weatherReadingSchema,
   WeatherRefusal
 } from "./model";
-import { nonEmptyTextSchema } from "@/features/companion/model";
-import { fetchJson } from "@/lib/fetch";
-import { originAccess } from "@/lib/permissions";
-import type { GeoLocation } from "@/lib/storage/schema";
-import { z } from "@/lib/zod";
 
 /**
  * Bing's weather is MSN's weather: the same service answers bing.com's weather card, msn.com/weather
@@ -53,18 +54,24 @@ const overviewSchema = z.looseObject({
   units: z.looseObject({
     temperature: z.literal(CELSIUS_SYMBOL)
   }),
-  responses: z.tuple([
-    z.looseObject({
-      weather: z.tuple([
-        z.looseObject({
-          current: z.looseObject({
-            temp: z.number().min(TEMPERATURE_CELSIUS_MIN).max(TEMPERATURE_CELSIUS_MAX),
-            cap: nonEmptyTextSchema
-          })
-        })
-      ], z.unknown())
-    })
-  ], z.unknown())
+  responses: z.tuple(
+    [
+      z.looseObject({
+        weather: z.tuple(
+          [
+            z.looseObject({
+              current: z.looseObject({
+                temp: z.number().min(TEMPERATURE_CELSIUS_MIN).max(TEMPERATURE_CELSIUS_MAX),
+                cap: nonEmptyTextSchema
+              })
+            })
+          ],
+          z.unknown()
+        )
+      })
+    ],
+    z.unknown()
+  )
 });
 
 function overviewUrl(query: z.infer<typeof overviewQuerySchema>) {

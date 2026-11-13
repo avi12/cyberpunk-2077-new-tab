@@ -4,7 +4,13 @@ export function isHexColor(value: string) {
   return HEX_PATTERN.test(value);
 }
 
-function hueOf({ red, green, blue, max, chroma }: {
+function hueOf({
+  red,
+  green,
+  blue,
+  max,
+  chroma
+}: {
   red: number;
   green: number;
   blue: number;
@@ -46,11 +52,7 @@ export function hexToHsv(hex: string) {
   return [hue < 0 ? hue + 360 : hue, max ? chroma / max : 0, max] as const;
 }
 
-function channelsOf({ hue, chroma, second }: {
-  hue: number;
-  chroma: number;
-  second: number;
-}) {
+function channelsOf({ hue, chroma, second }: { hue: number; chroma: number; second: number }) {
   if (hue < 60) {
     return [chroma, second, 0];
   }
@@ -74,11 +76,7 @@ function channelsOf({ hue, chroma, second }: {
   return [chroma, 0, second];
 }
 
-export function hsvToHex({ hue, saturation, value }: {
-  hue: number;
-  saturation: number;
-  value: number;
-}) {
+export function hsvToHex({ hue, saturation, value }: { hue: number; saturation: number; value: number }) {
   const chroma = value * saturation;
   const offset = value - chroma;
   const channels = channelsOf({
@@ -87,5 +85,11 @@ export function hsvToHex({ hue, saturation, value }: {
     second: chroma * (1 - Math.abs(((hue / 60) % 2) - 1))
   });
 
-  return `#${channels.map(channel => Math.round((channel + offset) * 255).toString(16).padStart(2, "0")).join("")}`;
+  return `#${channels
+    .map(channel =>
+      Math.round((channel + offset) * 255)
+        .toString(16)
+        .padStart(2, "0")
+    )
+    .join("")}`;
 }

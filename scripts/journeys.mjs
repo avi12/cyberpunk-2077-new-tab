@@ -38,5 +38,6 @@ if (!existsSync(script)) {
   process.exit(0);
 }
 
-spawn(process.execPath, [script, ...forwardedArguments], { stdio: "inherit" })
-  .on("exit", code => process.exit(code ?? 0));
+spawn(process.execPath, [script, ...forwardedArguments], { stdio: "inherit" }).on("exit", code =>
+  process.exit(code ?? 0)
+);

@@ -3,11 +3,7 @@ export function jsonFileName(stem: string) {
   return `${stem}-${Temporal.Now.plainDateISO()}.json`;
 }
 
-export function downloadFile({ name, contents, mimeType }: {
-  name: string;
-  contents: BlobPart;
-  mimeType: string;
-}) {
+export function downloadFile({ name, contents, mimeType }: { name: string; contents: BlobPart; mimeType: string }) {
   const url = URL.createObjectURL(new Blob([contents], { type: mimeType }));
   const elAnchor = document.createElement("a");
   elAnchor.href = url;

@@ -1,7 +1,8 @@
-import { composeAccessRequest, ComposeSiteId, hasComposeAccess, requestComposeAccess } from "./sites";
 import type { AccessRequest } from "@/lib/permissions";
 import { requestAccessTogether } from "@/lib/permissions";
 import { composeRefusalsItem } from "@/lib/storage/items";
+
+import { composeAccessRequest, ComposeSiteId, hasComposeAccess, requestComposeAccess } from "./sites";
 
 /**
  * A site needs both the reader's grant and the browser not refusing the script. Refusals are
@@ -55,10 +56,7 @@ class ComposeAccess {
    * `also` joins the same dialog because one press only buys one: the gesture expires while the
    * first dialog is read, so a second request would be refused.
    */
-  async allowAlongside({ siteId, also = null }: {
-    siteId: ComposeSiteId | null;
-    also?: AccessRequest | null;
-  }) {
+  async allowAlongside({ siteId, also = null }: { siteId: ComposeSiteId | null; also?: AccessRequest | null }) {
     await requestAccessTogether([this.accessWorthAsking(siteId), also]);
     await this.refresh();
   }

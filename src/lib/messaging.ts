@@ -1,6 +1,7 @@
-import type { ComposeSiteId } from "@/features/compose/sites";
 import { defineExtensionMessaging } from "@webext-core/messaging";
 import type { Browser } from "wxt/browser";
+
+import type { ComposeSiteId } from "@/features/compose/sites";
 
 type TopSite = Browser.topSites.MostVisitedURL;
 

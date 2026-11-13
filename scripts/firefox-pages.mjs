@@ -27,14 +27,22 @@ function connect(port) {
 
   return new Promise(resolve => {
     const giveUp = setTimeout(() => resolve(null), CONNECT_TIMEOUT_MS);
-    socket.addEventListener("open", () => {
-      clearTimeout(giveUp);
-      resolve(socket);
-    }, { once: true });
-    socket.addEventListener("error", () => {
-      clearTimeout(giveUp);
-      resolve(null);
-    }, { once: true });
+    socket.addEventListener(
+      "open",
+      () => {
+        clearTimeout(giveUp);
+        resolve(socket);
+      },
+      { once: true }
+    );
+    socket.addEventListener(
+      "error",
+      () => {
+        clearTimeout(giveUp);
+        resolve(null);
+      },
+      { once: true }
+    );
   });
 }
 

@@ -37,7 +37,7 @@ export async function locationAccess() {
 }
 
 async function hasLocationAccess() {
-  return await locationAccess() === "granted";
+  return (await locationAccess()) === "granted";
 }
 
 export function roundCoordinate(value: number) {
@@ -96,11 +96,7 @@ const connectionPlaceSchema = coordinatesSchema.extend({
   country: nonEmptyTextSchema.optional()
 });
 
-function placeNamed({ latitude, longitude, name }: {
-  latitude: number;
-  longitude: number;
-  name?: string;
-}) {
+function placeNamed({ latitude, longitude, name }: { latitude: number; longitude: number; name?: string }) {
   return {
     name: name ?? `${latitude}, ${longitude}`,
     latitude,
@@ -148,7 +144,7 @@ async function reverseGeocode({ latitude, longitude }: z.infer<typeof coordinate
 
 /** Never prompts: without an outright grant, or on a refusal, the connection is asked instead. */
 async function detectLocation() {
-  if (!await hasLocationAccess()) {
+  if (!(await hasLocationAccess())) {
     return connectionLocation();
   }
 
@@ -188,14 +184,14 @@ export enum LocationSource {
 
 export type AskedLocation =
   | {
-    isFound: true;
-    source: LocationSource;
-    location: GeoLocation;
-  }
+      isFound: true;
+      source: LocationSource;
+      location: GeoLocation;
+    }
   | {
-    isFound: false;
-    refusal: LocationRefusal;
-  };
+      isFound: false;
+      refusal: LocationRefusal;
+    };
 
 function devicePlace(answer: GeolocationCoordinates | LocationRefusal) {
   if (isRefusal(answer)) {

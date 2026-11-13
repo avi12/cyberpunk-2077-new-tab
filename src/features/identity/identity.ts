@@ -1,6 +1,6 @@
+import { browser } from "#imports";
 import { fetchJson, fetchText } from "@/lib/fetch";
 import { z } from "@/lib/zod";
-import { browser } from "#imports";
 
 /*
  * No browser API exposes the profile's name (`identity.getProfileUserInfo` only gives an email), so
@@ -98,7 +98,11 @@ function revokeAccessToken(accessToken: string) {
   });
 }
 
-async function redeemAuthorizationCode({ code, codeVerifier, redirectUri }: {
+async function redeemAuthorizationCode({
+  code,
+  codeVerifier,
+  redirectUri
+}: {
   code: string;
   codeVerifier: string;
   redirectUri: string;

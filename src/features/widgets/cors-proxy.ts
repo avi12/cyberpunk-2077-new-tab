@@ -18,7 +18,10 @@ function isProxyableUrl(url: string) {
 }
 
 /** `Promise.any` only skips a rejection, so a failed read's null is turned into one. */
-async function raceProxies<TBody>({ url, readBody }: {
+async function raceProxies<TBody>({
+  url,
+  readBody
+}: {
   url: string;
   readBody: (proxyUrl: string) => Promise<TBody | null>;
 }) {
@@ -35,27 +38,22 @@ async function raceProxies<TBody>({ url, readBody }: {
   );
 }
 
-export async function readProxied({ url, timeoutMs = PROXY_TIMEOUT_MS }: {
-  url: string;
-  timeoutMs?: number;
-}) {
+export async function readProxied({ url, timeoutMs = PROXY_TIMEOUT_MS }: { url: string; timeoutMs?: number }) {
   if (!isProxyableUrl(url)) {
     return "";
   }
 
   return raceProxies({
     url,
-    readBody: proxyUrl => fetchText({
-      url: proxyUrl,
-      timeoutMs
-    })
+    readBody: proxyUrl =>
+      fetchText({
+        url: proxyUrl,
+        timeoutMs
+      })
   }).catch(() => "");
 }
 
-export async function fetchBlob({ url, timeoutMs = PROXY_TIMEOUT_MS }: {
-  url: string;
-  timeoutMs?: number;
-}) {
+export async function fetchBlob({ url, timeoutMs = PROXY_TIMEOUT_MS }: { url: string; timeoutMs?: number }) {
   if (!isProxyableUrl(url)) {
     return null;
   }
@@ -70,9 +68,10 @@ export async function fetchBlob({ url, timeoutMs = PROXY_TIMEOUT_MS }: {
 
   return raceProxies({
     url,
-    readBody: proxyUrl => fetchBytes({
-      url: proxyUrl,
-      timeoutMs
-    })
+    readBody: proxyUrl =>
+      fetchBytes({
+        url: proxyUrl,
+        timeoutMs
+      })
   }).catch(() => null);
 }

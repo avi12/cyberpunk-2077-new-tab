@@ -54,10 +54,7 @@ const journeySchema = z.object({
 
 export type Journey = z.infer<typeof journeySchema>;
 
-function isLive({ card, nowMs }: {
-  card: Journey;
-  nowMs: number;
-}) {
+function isLive({ card, nowMs }: { card: Journey; nowMs: number }) {
   const start = instantOf(card.validStartTime);
   const end = instantOf(card.validEndTime);
   if (!start || !end) {
@@ -71,18 +68,17 @@ function isLive({ card, nowMs }: {
  * Kept in stored order, not sorted by `rankScore`: measured with three live journeys scoring 60.94,
  * 65.33 and 60.57, Edge showed them in exactly that order.
  */
-export function parseJourneys({ raw, nowMs }: {
-  raw: unknown;
-  nowMs: number;
-}) {
+export function parseJourneys({ raw, nowMs }: { raw: unknown; nowMs: number }) {
   return validRecords({
     raw,
     schema: journeySchema
   })
-    .filter(card => isLive({
-      card,
-      nowMs
-    }))
+    .filter(card =>
+      isLive({
+        card,
+        nowMs
+      })
+    )
     .slice(0, MAX_CARDS);
 }
 
@@ -97,9 +93,7 @@ export function journeyHeadline(card: Journey) {
 }
 
 function stageOf(card: Journey) {
-  return [card.journeyState?.phase, card.journeyState?.activityStatus]
-    .filter(part => part !== undefined)
-    .join(", ");
+  return [card.journeyState?.phase, card.journeyState?.activityStatus].filter(part => part !== undefined).join(", ");
 }
 
 function lastActiveOf(card: Journey) {

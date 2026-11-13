@@ -1,8 +1,9 @@
+import { tick } from "svelte";
+
 import { prefersReducedMotion } from "./motion";
 import { insertionIndex, reorderedIds } from "./reorder";
 import type { SlotCenter } from "./reorder";
 import { withViewTransition } from "./view-transition";
-import { tick } from "svelte";
 
 /**
  * Geometry is snapshotted once at lift, so the landing slot is decided against a layout that is not
@@ -90,10 +91,7 @@ function centerOf(slot: Slot) {
   };
 }
 
-function slotOf({ id, element }: {
-  id: string;
-  element: HTMLElement;
-}) {
+function slotOf({ id, element }: { id: string; element: HTMLElement }) {
   const rect = element.getBoundingClientRect();
   if (rect.width === 0 || rect.height === 0) {
     return null;
@@ -276,14 +274,14 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     elRaised = null;
   }
 
-  function slideTo({ slot, landing }: {
-    slot: Slot;
-    landing: Position;
-  }) {
+  function slideTo({ slot, landing }: { slot: Slot; landing: Position }) {
     slot.element.style.translate = `${landing.left - slot.left}px ${landing.top - slot.top}px`;
   }
 
-  function sizeTo({ slot, landing }: {
+  function sizeTo({
+    slot,
+    landing
+  }: {
     slot: Slot;
     landing: {
       width: number;
@@ -335,12 +333,9 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     }
   }
 
-  function openGap({ board, before }: {
-    board: Board;
-    before: number;
-  }) {
+  function openGap({ board, before }: { board: Board; before: number }) {
     for (const [index, slot] of board.slots.entries()) {
-      const landing = index < before ? slot : board.slots[index + 1] ?? board.spare;
+      const landing = index < before ? slot : (board.slots[index + 1] ?? board.spare);
       if (landing) {
         slideTo({
           slot,
@@ -399,10 +394,7 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     }
   }
 
-  function boardAt({ x, y }: {
-    x: number;
-    y: number;
-  }) {
+  function boardAt({ x, y }: { x: number; y: number }) {
     for (const board of boards) {
       const isInside = x >= board.left && x <= board.right && y >= board.top && y <= board.bottom;
       if (isInside) {
@@ -423,10 +415,11 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     const top = e.clientY - grabY;
     dragged.element.style.translate = `${left - dragged.left}px ${top - dragged.top}px`;
 
-    const over = boardAt({
-      x: e.clientX,
-      y: e.clientY
-    }) ?? target;
+    const over =
+      boardAt({
+        x: e.clientX,
+        y: e.clientY
+      }) ?? target;
     if (over !== target) {
       if (target !== source) {
         releaseBoard(target);
@@ -491,10 +484,7 @@ export function sortableEngine(node: HTMLElement, options: SortableOptions) {
     lowerBranch();
   }
 
-  function reportDrop({ from, to }: {
-    from: Board;
-    to: Board;
-  }) {
+  function reportDrop({ from, to }: { from: Board; to: Board }) {
     if (to === from) {
       current.onReorder(
         reorderedIds({

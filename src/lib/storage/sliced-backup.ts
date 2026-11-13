@@ -1,6 +1,7 @@
-import { definePlainItem } from "./plain-item";
-import { z } from "@/lib/zod";
 import { storage } from "#imports";
+import { z } from "@/lib/zod";
+
+import { definePlainItem } from "./plain-item";
 
 /**
  * The sync area holds roughly 100KB in all and 8KB per value, so a snapshot is stored as numbered
@@ -23,7 +24,11 @@ const recordSchema = z.object({
 type BackupRecord = z.infer<typeof recordSchema>;
 
 /** The name decides the storage keys, so `settings` must keep the exact keys it has always written. */
-export function slicedBackup({ name, maxLength, tooBigMessage }: {
+export function slicedBackup({
+  name,
+  maxLength,
+  tooBigMessage
+}: {
   name: string;
   /** In characters of JSON. */
   maxLength: number;
@@ -57,9 +62,8 @@ export function slicedBackup({ name, maxLength, tooBigMessage }: {
       }
 
       const previous = await readRecord();
-      const slices = Array.from(
-        { length: Math.ceil(json.length / SLICE_LENGTH) },
-        (_, index) => json.slice(index * SLICE_LENGTH, (index + 1) * SLICE_LENGTH)
+      const slices = Array.from({ length: Math.ceil(json.length / SLICE_LENGTH) }, (_, index) =>
+        json.slice(index * SLICE_LENGTH, (index + 1) * SLICE_LENGTH)
       );
       const savedAtMs = Temporal.Now.instant().epochMilliseconds;
 

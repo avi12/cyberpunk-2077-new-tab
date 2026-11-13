@@ -1,9 +1,10 @@
-import { conditionFor, toFahrenheit, weatherReadingSchema } from "./model";
 import { nonEmptyTextSchema } from "@/features/companion/model";
 import { fetchDocument } from "@/lib/fetch";
 import { originAccess } from "@/lib/permissions";
 import type { GeoLocation } from "@/lib/storage/schema";
 import { z } from "@/lib/zod";
+
+import { conditionFor, toFahrenheit, weatherReadingSchema } from "./model";
 
 /**
  * Google's weather, scraped from the search page HTML (measured: the block is in the returned markup).
@@ -64,10 +65,7 @@ const temperatureTextSchema = z
  */
 const CONVERSION_SLACK = 2;
 
-function isFahrenheitOf({ celsius, fahrenheit }: {
-  celsius: number;
-  fahrenheit: number;
-}) {
+function isFahrenheitOf({ celsius, fahrenheit }: { celsius: number; fahrenheit: number }) {
   return Math.abs(toFahrenheit(celsius) - fahrenheit) <= CONVERSION_SLACK;
 }
 
@@ -75,21 +73,22 @@ function isFahrenheitOf({ celsius, fahrenheit }: {
  * The locale decides which value is Celsius, so it is the one whose pairing satisfies
  * f = c * 9 / 5 + 32. Null when neither does.
  */
-function celsiusOf({ displayed, alternate }: {
-  displayed: number;
-  alternate: number;
-}) {
-  if (isFahrenheitOf({
-    celsius: displayed,
-    fahrenheit: alternate
-  })) {
+function celsiusOf({ displayed, alternate }: { displayed: number; alternate: number }) {
+  if (
+    isFahrenheitOf({
+      celsius: displayed,
+      fahrenheit: alternate
+    })
+  ) {
     return displayed;
   }
 
-  if (isFahrenheitOf({
-    celsius: alternate,
-    fahrenheit: displayed
-  })) {
+  if (
+    isFahrenheitOf({
+      celsius: alternate,
+      fahrenheit: displayed
+    })
+  ) {
     return alternate;
   }
 
@@ -131,7 +130,7 @@ function readingFromPage(page: Document) {
 
 export async function readGoogleWeather(location: GeoLocation) {
   const placeName = location.name.trim();
-  const isAskable = placeName !== "" && await googleWeatherAccess.has();
+  const isAskable = placeName !== "" && (await googleWeatherAccess.has());
   if (!isAskable) {
     return null;
   }

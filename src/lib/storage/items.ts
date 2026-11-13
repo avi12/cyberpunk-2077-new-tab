@@ -1,3 +1,9 @@
+import type { WxtStorageItem } from "wxt/utils/storage";
+
+import type { PromptTargetId } from "@/features/companion/prompt-target";
+import type { ComposeSiteId } from "@/features/compose/sites";
+import type { IconName } from "@/features/netlinks/icons/choices";
+
 import {
   DEFAULT_BACKGROUND,
   DEFAULT_BACKGROUND_BRIGHTNESS,
@@ -16,20 +22,8 @@ import {
   DEFAULT_WIDGETS
 } from "./defaults";
 import { definePlainItem } from "./plain-item";
-import type {
-  Bookmark,
-  ColorTheme,
-  DisplayPreferences,
-  GeoLocation,
-  HourCycle,
-  ScanLinesMode,
-  Widget
-} from "./schema";
+import type { Bookmark, ColorTheme, DisplayPreferences, GeoLocation, HourCycle, ScanLinesMode, Widget } from "./schema";
 import { BackgroundMediaType, SearchEngineId } from "./schema";
-import type { PromptTargetId } from "@/features/companion/prompt-target";
-import type { ComposeSiteId } from "@/features/compose/sites";
-import type { IconName } from "@/features/netlinks/icons/choices";
-import type { WxtStorageItem } from "wxt/utils/storage";
 
 export type StorageItem<TValue> = WxtStorageItem<TValue, Record<string, unknown>>;
 
@@ -43,21 +37,33 @@ export const collapsedCategoriesItem = definePlainItem<Record<string, boolean>>(
 
 export const customCategoriesItem = definePlainItem<string[]>("local:customCategories", { fallback: [] });
 
-export const activeSearchEngineItem = definePlainItem<SearchEngineId>("local:activeSearchEngine", { fallback: SearchEngineId.browserDefault });
+export const activeSearchEngineItem = definePlainItem<SearchEngineId>("local:activeSearchEngine", {
+  fallback: SearchEngineId.browserDefault
+});
 
-export const weatherLocationItem = definePlainItem<GeoLocation>("local:weatherLocation", { fallback: DEFAULT_WEATHER_LOCATION });
+export const weatherLocationItem = definePlainItem<GeoLocation>("local:weatherLocation", {
+  fallback: DEFAULT_WEATHER_LOCATION
+});
 
-export const temperatureUnitItem = definePlainItem<boolean>("local:temperatureUnit", { fallback: DEFAULT_TEMPERATURE_UNIT });
+export const temperatureUnitItem = definePlainItem<boolean>("local:temperatureUnit", {
+  fallback: DEFAULT_TEMPERATURE_UNIT
+});
 
 export const colorThemeItem = definePlainItem<ColorTheme>("local:colorTheme", { fallback: DEFAULT_COLOR_THEME });
 
-export const displayPreferencesItem = definePlainItem<DisplayPreferences>("local:displayPreferences", { fallback: DEFAULT_DISPLAY_PREFERENCES });
+export const displayPreferencesItem = definePlainItem<DisplayPreferences>("local:displayPreferences", {
+  fallback: DEFAULT_DISPLAY_PREFERENCES
+});
 
 export const backgroundItem = definePlainItem<string>("local:background", { fallback: DEFAULT_BACKGROUND });
 
-export const backgroundBrightnessItem = definePlainItem<number>("local:backgroundBrightness", { fallback: DEFAULT_BACKGROUND_BRIGHTNESS });
+export const backgroundBrightnessItem = definePlainItem<number>("local:backgroundBrightness", {
+  fallback: DEFAULT_BACKGROUND_BRIGHTNESS
+});
 
-export const backgroundMediaTypeItem = definePlainItem<BackgroundMediaType>("local:backgroundMediaType", { fallback: BackgroundMediaType.none });
+export const backgroundMediaTypeItem = definePlainItem<BackgroundMediaType>("local:backgroundMediaType", {
+  fallback: BackgroundMediaType.none
+});
 
 export const backgroundMediaVersionItem = definePlainItem<number>("local:backgroundMediaVersion", { fallback: 0 });
 
@@ -67,7 +73,9 @@ export const widgetsItem = definePlainItem<Widget[]>("local:widgets", { fallback
 
 export const widgetOrderItem = definePlainItem<string[]>("local:widgetOrder", { fallback: DEFAULT_WIDGET_ORDER });
 
-export const scanLinesModeItem = definePlainItem<ScanLinesMode>("local:scanLinesMode", { fallback: DEFAULT_SCAN_LINES_MODE });
+export const scanLinesModeItem = definePlainItem<ScanLinesMode>("local:scanLinesMode", {
+  fallback: DEFAULT_SCAN_LINES_MODE
+});
 
 export const tabTitleItem = definePlainItem<string>("local:tabTitle", { fallback: DEFAULT_TAB_TITLE });
 
@@ -155,10 +163,7 @@ export const analyticsClientIdItem = definePlainItem<string | null>("local:analy
 export const analyticsSessionItem = definePlainItem<{
   sessionId: string;
   atMs: number;
-} | null>(
-  "local:analyticsSession",
-  { fallback: null }
-);
+} | null>("local:analyticsSession", { fallback: null });
 
 /** Absent is consent. */
 export const analyticsOptOutItem = definePlainItem<boolean>("local:analyticsOptOut", { fallback: false });

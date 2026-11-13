@@ -1,7 +1,8 @@
-import { categoryOf } from "./categories";
 import type { Bookmark } from "@/lib/storage/schema";
 import { allSettings, settings } from "@/lib/storage/settings.svelte";
 import { z } from "@/lib/zod";
+
+import { categoryOf } from "./categories";
 
 // The grid apart from the full settings file, which also carries a reader's name, location, theme
 // and wallpaper - nothing to hand over, or to accept, along with someone's links
@@ -71,13 +72,13 @@ function parseJson(json: string) {
 
 // Duplicates are decided by address, never by title - a title is a label each reader chose
 function comparableUrl(url: string) {
-  return url.replace(/^https?:\/\//u, "").replace(/\/+$/u, "").toLowerCase();
+  return url
+    .replace(/^https?:\/\//u, "")
+    .replace(/\/+$/u, "")
+    .toLowerCase();
 }
 
-function withFreeId({ bookmark, taken }: {
-  bookmark: Bookmark;
-  taken: Set<string>;
-}) {
+function withFreeId({ bookmark, taken }: { bookmark: Bookmark; taken: Set<string> }) {
   if (!taken.has(bookmark.id)) {
     return bookmark;
   }
@@ -88,10 +89,7 @@ function withFreeId({ bookmark, taken }: {
   };
 }
 
-function mergeBookmarks({ existing, arriving }: {
-  existing: Bookmark[];
-  arriving: Bookmark[];
-}) {
+function mergeBookmarks({ existing, arriving }: { existing: Bookmark[]; arriving: Bookmark[] }) {
   const takenUrls = new Set(existing.map(bookmark => comparableUrl(bookmark.url)));
   const takenIds = new Set(existing.map(bookmark => bookmark.id));
   const added: Bookmark[] = [];
@@ -114,18 +112,12 @@ function mergeBookmarks({ existing, arriving }: {
   return [...existing, ...added];
 }
 
-function mergeNames({ existing, arriving }: {
-  existing: string[];
-  arriving: string[];
-}) {
+function mergeNames({ existing, arriving }: { existing: string[]; arriving: string[] }) {
   return [...existing, ...arriving.filter(name => !existing.includes(name))];
 }
 
 // The file is fully validated before any setting moves, so a bad key never leaves a half import
-export async function importNetlinks({ json, mode }: {
-  json: string;
-  mode: ImportMode;
-}) {
+export async function importNetlinks({ json, mode }: { json: string; mode: ImportMode }) {
   const arriving = readNetlinksFile(json);
   if (mode === ImportMode.replace) {
     await Promise.all(

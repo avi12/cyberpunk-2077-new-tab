@@ -1,3 +1,8 @@
+import { PromptTargetId, withShippedPromptTarget } from "@/features/companion/prompt-target";
+import { ICON_NAMES } from "@/features/netlinks/icons/choices";
+import { plainCopy } from "@/lib/plain";
+import { z } from "@/lib/zod";
+
 import { DEFAULT_WIDGET_ORDER, DEFAULT_WIDGETS } from "./defaults";
 import {
   activeSearchEngineItem,
@@ -37,10 +42,6 @@ import {
   SearchEngineId,
   widgetSchema
 } from "./schema";
-import { PromptTargetId, withShippedPromptTarget } from "@/features/companion/prompt-target";
-import { ICON_NAMES } from "@/features/netlinks/icons/choices";
-import { plainCopy } from "@/lib/plain";
-import { z } from "@/lib/zod";
 
 /** Storage is parsed like an imported file: older builds wrote looser shapes, and their values outlive them. */
 class Setting<TValue> {
@@ -50,7 +51,12 @@ class Setting<TValue> {
   readonly #normalize: (stored: TValue) => TValue;
   #value: TValue = $state()!;
 
-  constructor({ item, schema, entrySchema, normalize }: {
+  constructor({
+    item,
+    schema,
+    entrySchema,
+    normalize
+  }: {
     item: StorageItem<TValue>;
     schema: z.ZodType<TValue>;
     /** For a list, so one entry that no longer reads does not cost the rest. */
@@ -109,7 +115,11 @@ class Setting<TValue> {
 }
 
 class ListSetting<TItem> extends Setting<TItem[]> {
-  constructor({ item, entrySchema, normalize }: {
+  constructor({
+    item,
+    entrySchema,
+    normalize
+  }: {
     item: StorageItem<TItem[]>;
     entrySchema: z.ZodType<TItem>;
     normalize?: (stored: TItem[]) => TItem[];

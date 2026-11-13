@@ -21,15 +21,15 @@ export function addCategory(name: string) {
   }
 }
 
-export function renameCategory({ from, to }: {
-  from: string;
-  to: string;
-}) {
+export function renameCategory({ from, to }: { from: string; to: string }) {
   settings.bookmarks.current = settings.bookmarks.current.map(bookmark =>
-    (categoryOf(bookmark) === from ? {
-      ...bookmark,
-      category: to
-    } : bookmark));
+    categoryOf(bookmark) === from
+      ? {
+          ...bookmark,
+          category: to
+        }
+      : bookmark
+  );
   settings.categoryOrder.current = settings.categoryOrder.current.map(name => (name === from ? to : name));
 
   if (settings.customCategories.current.includes(from)) {

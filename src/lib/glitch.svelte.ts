@@ -5,7 +5,10 @@ export class Glitch {
   isActive = $state(false);
   #timer: ReturnType<typeof setTimeout> | undefined;
 
-  fire({ onDone, durationMs = GLITCH_SHORT_MS }: {
+  fire({
+    onDone,
+    durationMs = GLITCH_SHORT_MS
+  }: {
     onDone?: () => void;
     durationMs?: number;
   } = {}) {

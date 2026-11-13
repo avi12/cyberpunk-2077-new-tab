@@ -96,7 +96,11 @@ export async function capturePage() {
 }
 
 /** No stylesheet reaches the detached copy, so every computed property is inlined. */
-function copyStyles({ originals, clones, pseudoRules }: {
+function copyStyles({
+  originals,
+  clones,
+  pseudoRules
+}: {
   originals: HTMLElement[];
   clones: HTMLElement[];
   pseudoRules: string[];
@@ -118,7 +122,12 @@ function copyStyles({ originals, clones, pseudoRules }: {
 }
 
 /** A pseudo-element has no node to carry a style attribute, so it gets a class and a real rule. */
-function collectPseudoRules({ original, clone, iElement, pseudoRules }: {
+function collectPseudoRules({
+  original,
+  clone,
+  iElement,
+  pseudoRules
+}: {
   original: HTMLElement;
   clone: HTMLElement;
   iElement: number;
@@ -142,11 +151,7 @@ function collectPseudoRules({ original, clone, iElement, pseudoRules }: {
  * transformed: a transform would become the containing block for every `fixed` element inside.
  * This relies on `LOGICAL_BOX_PROPERTY` keeping the logical insets, which would overrule it, out.
  */
-function alignToScroll({ clone, scrollX, scrollY }: {
-  clone: HTMLElement;
-  scrollX: number;
-  scrollY: number;
-}) {
+function alignToScroll({ clone, scrollX, scrollY }: { clone: HTMLElement; scrollX: number; scrollY: number }) {
   clone.style.position = "absolute";
   clone.style.left = `${-scrollX}px`;
   clone.style.top = `${-scrollY}px`;
@@ -156,10 +161,7 @@ function alignToScroll({ clone, scrollX, scrollY }: {
  * Asks the original, since `:popover-open` is live state a detached copy cannot answer. Runs after
  * `copyStyles`, whose whole-`cssText` assignment would wipe this.
  */
-function hideTopLayer({ originals, clones }: {
-  originals: HTMLElement[];
-  clones: HTMLElement[];
-}) {
+function hideTopLayer({ originals, clones }: { originals: HTMLElement[]; clones: HTMLElement[] }) {
   for (const [i, original] of originals.entries()) {
     const clone = clones[i];
     const isRaised = original.matches(TOP_LAYER_SELECTOR);
@@ -185,20 +187,19 @@ function declarationsOf(style: CSSStyleDeclaration) {
   return declarations;
 }
 
-async function inlineMedia({ originals, clones }: {
-  originals: HTMLElement[];
-  clones: HTMLElement[];
-}) {
+async function inlineMedia({ originals, clones }: { originals: HTMLElement[]; clones: HTMLElement[] }) {
   const [clone] = clones;
   await Promise.all([
     ...[...(clone?.querySelectorAll("video") ?? [])].map(async video => replaceVideo(video)),
     ...[...(clone?.querySelectorAll("img") ?? [])].map(async image => {
       image.src = await asDataUrl(image.src);
     }),
-    ...originals.map(async (original, i) => inlineBackground({
-      original,
-      clone: clones[i]
-    }))
+    ...originals.map(async (original, i) =>
+      inlineBackground({
+        original,
+        clone: clones[i]
+      })
+    )
   ]);
 }
 
@@ -225,10 +226,7 @@ function urlPattern() {
 }
 
 /** Read from the original: the copy's `background-image` round trip through `cssText` was losing it. */
-async function inlineBackground({ original, clone }: {
-  original: HTMLElement;
-  clone: HTMLElement | undefined;
-}) {
+async function inlineBackground({ original, clone }: { original: HTMLElement; clone: HTMLElement | undefined }) {
   if (!clone) {
     return;
   }
@@ -278,7 +276,13 @@ function takeBackground(clone: HTMLElement) {
 }
 
 /** Built through the DOM so the markup is well-formed XML, which `foreignObject` requires. */
-function buildSvg({ body, backgroundDeclarations, pseudoRules, width, height }: {
+function buildSvg({
+  body,
+  backgroundDeclarations,
+  pseudoRules,
+  width,
+  height
+}: {
   body: HTMLElement;
   backgroundDeclarations: string;
   pseudoRules: string[];
@@ -306,12 +310,7 @@ function buildSvg({ body, backgroundDeclarations, pseudoRules, width, height }: 
   return new XMLSerializer().serializeToString(svg);
 }
 
-async function drawToPng({ svg, width, height, scale }: {
-  svg: string;
-  width: number;
-  height: number;
-  scale: number;
-}) {
+async function drawToPng({ svg, width, height, scale }: { svg: string; width: number; height: number; scale: number }) {
   const canvas = document.createElement("canvas");
   canvas.width = width * scale;
   canvas.height = height * scale;

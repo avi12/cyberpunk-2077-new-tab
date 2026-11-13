@@ -8,10 +8,7 @@ export function engineById(id: SearchEngineId) {
 }
 
 /** The address the form submission would build, for when the form cannot be left to submit. */
-export function searchUrl({ engine, query }: {
-  engine: SearchEngine;
-  query: string;
-}) {
+export function searchUrl({ engine, query }: { engine: SearchEngine; query: string }) {
   const url = new URL(engine.action);
   for (const [name, value] of Object.entries(engine.params ?? {})) {
     url.searchParams.set(name, value);

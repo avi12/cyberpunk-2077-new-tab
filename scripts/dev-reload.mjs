@@ -6,10 +6,11 @@
  * The client is written into the build output, never `src/`, so no production build can carry it.
  */
 
-import { HOT_CLIENT_PATH, HOT_REGISTRY } from "./dev-hmr.mjs";
 import { readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { join } from "node:path";
+
+import { HOT_CLIENT_PATH, HOT_REGISTRY } from "./dev-hmr.mjs";
 
 const RELOAD_PORT = 9225;
 
@@ -76,7 +77,9 @@ export function startReloadChannel() {
     request.on("close", () => openPageStreams.delete(response));
   });
 
-  server.on("error", error => console.info(`[dev] the reload channel could not listen on ${RELOAD_PORT}: ${error.message}`));
+  server.on("error", error =>
+    console.info(`[dev] the reload channel could not listen on ${RELOAD_PORT}: ${error.message}`)
+  );
   server.listen(RELOAD_PORT, "127.0.0.1");
 
   function notifyPages({ event, data }) {
@@ -88,14 +91,16 @@ export function startReloadChannel() {
   }
 
   return {
-    broadcast: () => notifyPages({
-      event: RELOAD_EVENT,
-      data: Date.now()
-    }),
-    swap: moduleId => notifyPages({
-      event: SWAP_EVENT,
-      data: moduleId
-    }),
+    broadcast: () =>
+      notifyPages({
+        event: RELOAD_EVENT,
+        data: Date.now()
+      }),
+    swap: moduleId =>
+      notifyPages({
+        event: SWAP_EVENT,
+        data: moduleId
+      }),
     close() {
       for (const pageStream of openPageStreams) {
         pageStream.end();

@@ -31,11 +31,7 @@ function centerOf(box: DOMRect) {
   return box.left + box.width / 2;
 }
 
-function adjacentRow({ links, origin, isDown }: {
-  links: HTMLElement[];
-  origin: DOMRect;
-  isDown: boolean;
-}) {
+function adjacentRow({ links, origin, isDown }: { links: HTMLElement[]; origin: DOMRect; isDown: boolean }) {
   const beyond = links.filter(link => {
     const box = link.getBoundingClientRect();
 
@@ -55,10 +51,7 @@ function adjacentRow({ links, origin, isDown }: {
   return beyond.filter((link, index) => Math.abs((edges[index] ?? 0) - nearestEdge) < ROW_TOLERANCE_PX);
 }
 
-function closestInColumn({ row, origin }: {
-  row: HTMLElement[];
-  origin: DOMRect;
-}) {
+function closestInColumn({ row, origin }: { row: HTMLElement[]; origin: DOMRect }) {
   const column = centerOf(origin);
   let closest: HTMLElement | null = null;
   let shortest = Number.POSITIVE_INFINITY;
@@ -74,11 +67,7 @@ function closestInColumn({ row, origin }: {
 }
 
 export function arrowFocus(node: HTMLElement) {
-  function nextLink({ key, links, current }: {
-    key: ArrowKey;
-    links: HTMLElement[];
-    current: HTMLElement;
-  }) {
+  function nextLink({ key, links, current }: { key: ArrowKey; links: HTMLElement[]; current: HTMLElement }) {
     const step = STEP_BY_KEY[key];
     if (step) {
       return links[links.indexOf(current) + step] ?? null;

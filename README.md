@@ -49,8 +49,8 @@ MV2, so saying it once there is what keeps a command from quietly building somet
 does not ship.
 
 Opera is not a target, and cannot be. It refuses `chrome_url_overrides` outright - the key is
-whitelisted per extension id, and an id that is not on the list gets *"'chrome_url_overrides' is not
-allowed for specified extension ID"*. Opera staff [say so on their own forum][opera-block], renaming
+whitelisted per extension id, and an id that is not on the list gets _"'chrome_url_overrides' is not
+allowed for specified extension ID"_. Opera staff [say so on their own forum][opera-block], renaming
 the key to `startpage` hits the same block, and the extension installs there and then does nothing
 while Speed Dial keeps the new tab. Measured: developer mode, the pinned `key` and a keyless copy all
 change nothing.
@@ -316,7 +316,7 @@ its slot.
   came from, because a connection follows a VPN and a device does not. Its location line opens a form
   holding the two sources side by side: "Follow my location" keeps reading the device, and confirming
   a latitude and longitude pins those instead. Whichever one the widget is reading is lit and the
-  other is dimmed, though both stay usable; a stored location *is* the override, so following the
+  other is dimmed, though both stay usable; a stored location _is_ the override, so following the
   device again clears it.
 - **The sky comes from Google where it can, and Bing's weather otherwise.** Google's block is only in
   the markup when the request goes out as a signed-in browser carrying its cookies. A fresh profile,

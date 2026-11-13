@@ -1,6 +1,7 @@
+import { defineConfig } from "wxt";
+
 import extensionIdentity from "./extension-identity.json";
 import { CDP_PORT } from "./scripts/browser.mjs";
-import { defineConfig } from "wxt";
 
 /**
  * Copilot Journeys and tips are read through the companion app over native messaging, which only
@@ -123,27 +124,27 @@ export default defineConfig({
     permissions: SHARED_PERMISSIONS,
     ...(browser === "firefox"
       ? {
-        // Firefox wants `author` as a string and rejects Chromium's object form, and vice versa.
-        author: "avi12",
-        browser_specific_settings: {
-          gecko: {
-            id: FIREFOX_ID,
-            strict_min_version: MINIMUM_FIREFOX_VERSION,
-            data_collection_permissions: DATA_COLLECTION
-          }
-        },
-        permissions: SHARED_PERMISSIONS,
-        optional_host_permissions: [BING_WEATHER_ORIGIN]
-      }
+          // Firefox wants `author` as a string and rejects Chromium's object form, and vice versa.
+          author: "avi12",
+          browser_specific_settings: {
+            gecko: {
+              id: FIREFOX_ID,
+              strict_min_version: MINIMUM_FIREFOX_VERSION,
+              data_collection_permissions: DATA_COLLECTION
+            }
+          },
+          permissions: SHARED_PERMISSIONS,
+          optional_host_permissions: [BING_WEATHER_ORIGIN]
+        }
       : {
-        author: {
-          email: "avi6106@gmail.com"
-        },
-        key: publicKey,
-        minimum_chrome_version: MINIMUM_CHROMIUM_VERSION,
-        optional_permissions: [...COMPANION_PERMISSIONS, ...TIP_CONTEXT_PERMISSIONS],
-        optional_host_permissions: [BING_WEATHER_ORIGIN, ...COMPOSE_ORIGINS, GOOGLE_WEATHER_ORIGIN]
-      }),
+          author: {
+            email: "avi6106@gmail.com"
+          },
+          key: publicKey,
+          minimum_chrome_version: MINIMUM_CHROMIUM_VERSION,
+          optional_permissions: [...COMPANION_PERMISSIONS, ...TIP_CONTEXT_PERMISSIONS],
+          optional_host_permissions: [BING_WEATHER_ORIGIN, ...COMPOSE_ORIGINS, GOOGLE_WEATHER_ORIGIN]
+        }),
     homepage_url: "https://avi12.com"
   }),
   vite: () => ({

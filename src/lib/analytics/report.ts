@@ -1,3 +1,6 @@
+import { BROWSER_NAME } from "@/features/companion/platform";
+import { analyticsSessionItem } from "@/lib/storage/items";
+
 import { getOrCreateClientId } from "./client-id";
 import { isAnalyticsEnabled } from "./consent";
 import {
@@ -9,8 +12,6 @@ import {
   MAX_USER_PROPERTY_VALUE_LENGTH
 } from "./definitions";
 import type { AnalyticsEvent } from "./definitions";
-import { BROWSER_NAME } from "@/features/companion/platform";
-import { analyticsSessionItem } from "@/lib/storage/items";
 
 /**
  * The Measurement Protocol, since an extension cannot load gtag.js as remote code.
@@ -38,10 +39,7 @@ const FORBIDDEN_PARAMS = new Set(["email", "name", "phone", "address", "page_ref
 
 type ReportedParams = Partial<Record<AnalyticsParam, string | number | boolean>>;
 
-function isSendable({ key, value }: {
-  key: string;
-  value: ReportedParams[AnalyticsParam];
-}) {
+function isSendable({ key, value }: { key: string; value: ReportedParams[AnalyticsParam] }) {
   if (FORBIDDEN_PARAMS.has(key) || key.length > MAX_PARAM_NAME_LENGTH) {
     return false;
   }
@@ -58,10 +56,13 @@ function sendableParams(params: ReportedParams) {
   const kept: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(params)) {
     const isBelowParamCap = Object.keys(kept).length < MAX_EVENT_PARAMS;
-    if (isBelowParamCap && isSendable({
-      key,
-      value
-    })) {
+    if (
+      isBelowParamCap &&
+      isSendable({
+        key,
+        value
+      })
+    ) {
       kept[key] = value;
     }
   }
@@ -114,9 +115,10 @@ async function currentSession() {
 
   return {
     sessionId,
-    engagementMs: isNewSession || sinceLastMs === null
-      ? MIN_ENGAGEMENT_MS
-      : Math.min(Math.max(sinceLastMs, MIN_ENGAGEMENT_MS), MAX_ENGAGEMENT_MS)
+    engagementMs:
+      isNewSession || sinceLastMs === null
+        ? MIN_ENGAGEMENT_MS
+        : Math.min(Math.max(sinceLastMs, MIN_ENGAGEMENT_MS), MAX_ENGAGEMENT_MS)
   };
 }
 
@@ -130,7 +132,8 @@ async function report(name: AnalyticsEvent, params: ReportedParams = {}) {
     `${COLLECT_URL}?${new URLSearchParams({
       measurement_id: MEASUREMENT_ID,
       api_secret: API_SECRET
-    })}`, {
+    })}`,
+    {
       method: "POST",
       body: JSON.stringify({
         client_id: await getOrCreateClientId(),
@@ -141,14 +144,16 @@ async function report(name: AnalyticsEvent, params: ReportedParams = {}) {
           ad_user_data: "DENIED",
           ad_personalization: "DENIED"
         },
-        events: [{
-          name,
-          params: {
-            ...sendableParams(params),
-            session_id: session.sessionId,
-            engagement_time_msec: session.engagementMs
+        events: [
+          {
+            name,
+            params: {
+              ...sendableParams(params),
+              session_id: session.sessionId,
+              engagement_time_msec: session.engagementMs
+            }
           }
-        }]
+        ]
       }),
       /* A new tab is often closing as this is sent, and a report is not worth holding it open for. */
       keepalive: true

@@ -1,4 +1,3 @@
-import { hostOf } from "./link";
 import { pickIcon } from "@/features/netlinks/icons/auto";
 import { MessageType, sendMessage } from "@/lib/messaging";
 import { SEEDED_CATEGORY } from "@/lib/storage/defaults";
@@ -6,6 +5,8 @@ import { bookmarksItem, bookmarksSeededItem } from "@/lib/storage/items";
 import type { Bookmark } from "@/lib/storage/schema";
 import { openableUrlSchema } from "@/lib/url";
 import { z } from "@/lib/zod";
+
+import { hostOf } from "./link";
 
 // Top sites include `chrome://` pages and pinned search shortcuts. Each entry is checked on its own,
 // so one bad entry never costs the whole one-time seed

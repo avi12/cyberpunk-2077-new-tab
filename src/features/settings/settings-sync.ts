@@ -1,5 +1,6 @@
-import { importSettings, settingsSnapshot } from "./settings-file";
 import { slicedBackup } from "@/lib/storage/sliced-backup";
+
+import { importSettings, settingsSnapshot } from "./settings-file";
 
 /** What is left of the area's own limit once the keys, the record and the netlinks backup are counted. */
 const MAX_SNAPSHOT_LENGTH = 80_000;

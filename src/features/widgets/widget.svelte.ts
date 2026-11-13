@@ -11,7 +11,11 @@ const DEFAULT_SAVE_DEBOUNCE_MS = 500;
  * `save` wraps the `onConfigChange` prop rather than being it: a prop read at setup time is the
  * value the widget mounted with, and the timer fires long after that.
  */
-export function configSaver({ save, delayMs = DEFAULT_SAVE_DEBOUNCE_MS, flashMs = delayMs }: {
+export function configSaver({
+  save,
+  delayMs = DEFAULT_SAVE_DEBOUNCE_MS,
+  flashMs = delayMs
+}: {
   save: (patch: WidgetConfig) => void;
   delayMs?: number;
   flashMs?: number;

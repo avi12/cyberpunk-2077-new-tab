@@ -11,6 +11,15 @@
  * Usage: `pnpm ext:dev:hmr [-b edge|firefox]`
  */
 
+import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
+import process from "node:process";
+
+import chokidar from "chokidar";
+
 import {
   buildOutputDirectory,
   CDP_PORT,
@@ -24,26 +33,6 @@ import {
 import { buildHotGraph, hotModuleId, isHotModule } from "./dev-hmr.mjs";
 import { plantHotEntry, plantReloadClient, startReloadChannel } from "./dev-reload.mjs";
 import { parkExtensionPages, restoreExtensionPages } from "./firefox-pages.mjs";
-import chokidar from "chokidar";
-import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync
-} from "node:fs";
-import { createRequire } from "node:module";
-import {
-  basename,
-  dirname,
-  join,
-  relative,
-  resolve,
-  sep
-} from "node:path";
-import process from "node:process";
 
 // The package's `exports` map does not expose `bin/`, so the CLI is located relative to the entry.
 const wxtEntry = createRequire(import.meta.url).resolve("wxt");
@@ -162,9 +151,12 @@ function refreshHotGraph() {
 async function plantHotGraph() {
   const isBuilt = await refreshHotGraph();
 
-  return isBuilt && plantHotEntry({
-    outputDir: extensionOutputDirectory()
-  });
+  return (
+    isBuilt &&
+    plantHotEntry({
+      outputDir: extensionOutputDirectory()
+    })
+  );
 }
 
 /** A save mid-build is queued, since the running build read the tree before it. */
@@ -200,11 +192,7 @@ async function rebuild(filename) {
 
   if (isSwappable) {
     const isHeard = reloadChannel.swap(hotModuleId(filename)) > 0;
-    console.info(
-      isHeard
-        ? "[dev] swapped into the open page - nothing reloaded"
-        : "[dev] no open page heard the swap"
-    );
+    console.info(isHeard ? "[dev] swapped into the open page - nothing reloaded" : "[dev] no open page heard the swap");
 
     return;
   }
@@ -239,7 +227,9 @@ async function putPagesBack(openPages) {
     return;
   }
 
-  console.info(`[dev] ${restored} page${restored === 1 ? "" : "s"} put back where ${restored === 1 ? "it was" : "they were"}`);
+  console.info(
+    `[dev] ${restored} page${restored === 1 ? "" : "s"} put back where ${restored === 1 ? "it was" : "they were"}`
+  );
 }
 
 /** Hashed from the output, since only the bundler knows which sources reach the background. */
@@ -391,7 +381,9 @@ function pollDevServer() {
     /* `localhost`, not `127.0.0.1`: Vite binds `::1` only. */
     const isAnswering = await fetch(`http://localhost:${port}/@vite/client`, {
       signal: AbortSignal.timeout(SERVER_HEARTBEAT_MS)
-    }).then(() => true).catch(() => false);
+    })
+      .then(() => true)
+      .catch(() => false);
     if (isAnswering) {
       hasAnswered = true;
       misses = 0;
@@ -471,10 +463,10 @@ async function stop(code) {
 const runningOwnerPid = runningLockOwnerPid();
 if (runningOwnerPid) {
   console.error(
-    `[dev] a ${browser} dev server is already running as process ${runningOwnerPid}.\n`
-    + "      Two for one browser overwrite each other's build, so this one is stopping.\n"
-    + "      Stop that one first, or use its window - it is the same extension.\n"
-    + "      Another browser is fine: each has its own lock, output directory and port."
+    `[dev] a ${browser} dev server is already running as process ${runningOwnerPid}.\n` +
+      "      Two for one browser overwrite each other's build, so this one is stopping.\n" +
+      "      Stop that one first, or use its window - it is the same extension.\n" +
+      "      Another browser is fine: each has its own lock, output directory and port."
   );
   process.exit(1);
 }
@@ -510,9 +502,10 @@ runner = await launchBrowser({
   await stop(1);
 });
 
-const remoteAddress = browser === "firefox"
-  ? `WebDriver BiDi at ws://127.0.0.1:${FIREFOX_BIDI_PORT}/session`
-  : `the devtools protocol at http://127.0.0.1:${CDP_PORT}`;
+const remoteAddress =
+  browser === "firefox"
+    ? `WebDriver BiDi at ws://127.0.0.1:${FIREFOX_BIDI_PORT}/session`
+    : `the devtools protocol at http://127.0.0.1:${CDP_PORT}`;
 
 console.info(`\n[dev] ${browser} is open on ${remoteAddress}`);
 console.info("[dev] it stays open across restarts; the extension is reloaded instead\n");
@@ -534,7 +527,7 @@ watchers = [
     ...WATCH_OPTIONS,
     depth: 0
   }),
-  ...isServedByDevServer ? [] : [chokidar.watch(SOURCE_DIRECTORY, WATCH_OPTIONS)]
+  ...(isServedByDevServer ? [] : [chokidar.watch(SOURCE_DIRECTORY, WATCH_OPTIONS)])
 ];
 
 if (isServedByDevServer) {

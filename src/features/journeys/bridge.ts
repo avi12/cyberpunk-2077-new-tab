@@ -1,8 +1,9 @@
-import type { Journey } from "./model";
-import { parseJourneys } from "./model";
 import { readCompanion, rememberedCompanion } from "@/features/companion/bridge";
 import { CompanionRequest } from "@/lib/messaging";
 import { journeysSnapshotItem } from "@/lib/storage/items";
+
+import type { Journey } from "./model";
+import { parseJourneys } from "./model";
 
 export async function readJourneys() {
   return readCompanion<Journey>({

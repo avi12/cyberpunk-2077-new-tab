@@ -46,10 +46,7 @@ function carriesFile(e: DragEvent) {
   return e.dataTransfer?.types.includes("Files") ?? false;
 }
 
-function isAccepted({ file, accept }: {
-  file: File;
-  accept: string;
-}) {
+function isAccepted({ file, accept }: { file: File; accept: string }) {
   const type = file.type.toLowerCase();
   const name = file.name.toLowerCase();
 
@@ -119,10 +116,13 @@ export function dropZone({ accept, onFile }: DropZoneOptions) {
       markDropping(false);
 
       const file = e.dataTransfer?.files[0];
-      if (!file || !isAccepted({
-        file,
-        accept
-      })) {
+      if (
+        !file ||
+        !isAccepted({
+          file,
+          accept
+        })
+      ) {
         return;
       }
 

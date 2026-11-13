@@ -22,8 +22,14 @@
    * button's own icon and label. Each cursor has a dark under-stroke so it stays visible over a
    * pressed button filled with the same accent.
    */
-  --cp-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' stroke='%2300ffff'%3E%3C/path%3E%3C/svg%3E") 0 0, auto;
-  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23f9f002'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
+  --cp-cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z' stroke='%2300ffff'%3E%3C/path%3E%3C/svg%3E")
+      0 0,
+    auto;
+  --cp-cursor-pointer:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23f9f002'%3E%3C/path%3E%3C/svg%3E")
+      12 12,
+    pointer;
 
   cursor: var(--cp-cursor);
 }
@@ -151,7 +157,10 @@ svg {
   --cp-glitch-a: #ef4444;
   --cp-accent-vivid: #ef4444;
   --cp-pulse: #ef4444;
-  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23ef4444'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
+  --cp-cursor-pointer:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23ef4444'%3E%3C/path%3E%3C/svg%3E")
+      12 12,
+    pointer;
 }
 
 .edgerunners {
@@ -171,7 +180,10 @@ svg {
   --cp-accent-vivid: #10b981;
   --cp-pulse: #10b981;
   --cp-slider-thumb: #10b981;
-  --cp-cursor-pointer: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%2310b981'%3E%3C/path%3E%3C/svg%3E") 12 12, pointer;
+  --cp-cursor-pointer:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14' stroke='%23000c14' stroke-width='6'%3E%3C/path%3E%3Cpath d='M12 5v14M5 12h14' stroke='%2310b981'%3E%3C/path%3E%3C/svg%3E")
+      12 12,
+    pointer;
 }
 
 /*
@@ -399,22 +411,30 @@ label {
 /* Edgerunners cycles a third colour, so it has its own keyframes */
 @keyframes hover-glitch {
   0% {
-    text-shadow: 2px 2px var(--cp-glitch-a), -2px -2px var(--cp-glitch-b);
+    text-shadow:
+      2px 2px var(--cp-glitch-a),
+      -2px -2px var(--cp-glitch-b);
     translate: 0;
   }
 
   25% {
-    text-shadow: -2px 2px var(--cp-glitch-a), 2px -2px var(--cp-glitch-b);
+    text-shadow:
+      -2px 2px var(--cp-glitch-a),
+      2px -2px var(--cp-glitch-b);
     translate: 1px;
   }
 
   50% {
-    text-shadow: 2px -2px var(--cp-glitch-a), -2px 2px var(--cp-glitch-b);
+    text-shadow:
+      2px -2px var(--cp-glitch-a),
+      -2px 2px var(--cp-glitch-b);
     translate: -1px;
   }
 
   75% {
-    text-shadow: -2px -2px var(--cp-glitch-a), 2px 2px var(--cp-glitch-b);
+    text-shadow:
+      -2px -2px var(--cp-glitch-a),
+      2px 2px var(--cp-glitch-b);
     translate: 1px;
   }
 
@@ -426,22 +446,30 @@ label {
 
 @keyframes edgerunners-hover-glitch {
   0% {
-    text-shadow: 2px 2px var(--cp-glitch-a), -2px -2px var(--cp-glitch-b);
+    text-shadow:
+      2px 2px var(--cp-glitch-a),
+      -2px -2px var(--cp-glitch-b);
     translate: 0;
   }
 
   25% {
-    text-shadow: -2px 2px var(--cp-glitch-c), 2px -2px var(--cp-glitch-a);
+    text-shadow:
+      -2px 2px var(--cp-glitch-c),
+      2px -2px var(--cp-glitch-a);
     translate: 1px;
   }
 
   50% {
-    text-shadow: 2px -2px var(--cp-glitch-b), -2px 2px var(--cp-glitch-c);
+    text-shadow:
+      2px -2px var(--cp-glitch-b),
+      -2px 2px var(--cp-glitch-c);
     translate: -1px;
   }
 
   75% {
-    text-shadow: -2px -2px var(--cp-glitch-a), 2px 2px var(--cp-glitch-c);
+    text-shadow:
+      -2px -2px var(--cp-glitch-a),
+      2px 2px var(--cp-glitch-c);
     translate: 1px;
   }
 
@@ -717,7 +745,12 @@ label {
     left: -100%;
     width: 50%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, color-mix(in sRGB, var(--cp-neon-cyan) 20%, transparent), transparent);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in sRGB, var(--cp-neon-cyan) 20%, transparent),
+      transparent
+    );
     animation: 2000ms infinite scan;
   }
 }

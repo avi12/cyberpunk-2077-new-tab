@@ -5,9 +5,10 @@
  * Usage: `pnpm ext:sideload [--port 9223] [--edge] [--firefox] [--opera] [--all]`
  */
 
-import { CDP_PORT, launchBrowser, PROJECT_ROOT } from "./browser.mjs";
 import { join } from "node:path";
 import process from "node:process";
+
+import { CDP_PORT, launchBrowser, PROJECT_ROOT } from "./browser.mjs";
 
 /** Opera is not a target (it blocks `chrome_url_overrides`), only a spare Chromium to check against. */
 const BUILD_DIRECTORIES = {

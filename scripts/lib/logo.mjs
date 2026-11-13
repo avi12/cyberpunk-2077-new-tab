@@ -75,12 +75,15 @@ function unfilter({ raw, width, height, channels }) {
       const left = index >= channels ? pixels[row * stride + index - channels] : 0;
       const above = row > 0 ? pixels[(row - 1) * stride + index] : 0;
       const aboveLeft = row > 0 && index >= channels ? pixels[(row - 1) * stride + index - channels] : 0;
-      pixels[row * stride + index] = (line[index] + predict({
-        filter,
-        left,
-        above,
-        aboveLeft
-      })) & 0xff;
+      pixels[row * stride + index] =
+        (line[index] +
+          predict({
+            filter,
+            left,
+            above,
+            aboveLeft
+          })) &
+        0xff;
     }
   }
 

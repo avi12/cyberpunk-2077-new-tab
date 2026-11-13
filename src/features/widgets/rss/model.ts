@@ -55,18 +55,13 @@ function withoutRepeatedLinks(items: FeedItem[]) {
  * Throws only for a document that is not XML ("Feed Error"); a malformed story is dropped instead.
  * Reads RSS `item`s only - Atom's `entry` is not supported.
  */
-export function parseFeed({ xml, maxItems }: {
-  xml: string;
-  maxItems: number;
-}) {
+export function parseFeed({ xml, maxItems }: { xml: string; maxItems: number }) {
   const feed = new DOMParser().parseFromString(xml, "text/xml");
   if (feed.querySelector("parsererror")) {
     throw new Error(INVALID_FEED_MESSAGE);
   }
 
-  const items = [...feed.querySelectorAll("item")]
-    .map(readItem)
-    .filter(item => item !== null);
+  const items = [...feed.querySelectorAll("item")].map(readItem).filter(item => item !== null);
 
   return withoutRepeatedLinks(items).slice(0, maxItems);
 }

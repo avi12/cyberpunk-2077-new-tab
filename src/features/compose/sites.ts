@@ -31,10 +31,10 @@ type ComposeSite = {
 };
 
 /** prosemirror-view's own class, which survives Claude's redesigns. Taken from the library, not a live page */
-const CLAUDE_COMPOSER_SELECTOR = "div.ProseMirror[contenteditable=\"true\"]";
+const CLAUDE_COMPOSER_SELECTOR = 'div.ProseMirror[contenteditable="true"]';
 
 /** Microsoft's own id, which survives redesigns and translations */
-const COPILOT_COMPOSER_SELECTOR = "#m365-chat-editor-target-element[contenteditable=\"true\"]";
+const COPILOT_COMPOSER_SELECTOR = '#m365-chat-editor-target-element[contenteditable="true"]';
 
 /** No test id and a localized `aria-label`, so the one unhashed class is the anchor */
 const COPILOT_SUBMIT_SELECTOR = "button.fai-SendButton";
@@ -44,7 +44,7 @@ export const COMPOSE_SITES: Record<ComposeSiteId, ComposeSite> = {
     url: "https://claude.ai/new",
     composerSelector: CLAUDE_COMPOSER_SELECTOR,
     isPromptCarriedByUrl: true,
-    submitSelector: "[data-testid=\"chat-input-send\"]"
+    submitSelector: '[data-testid="chat-input-send"]'
   },
   // `/chat` directly: the root redirects there, and the tab could report finished before the bounce
   [ComposeSiteId.copilot]: {
@@ -85,10 +85,7 @@ export async function hasComposeAccess(siteId: ComposeSiteId) {
 }
 
 /** By origin, so a redirect within the site still counts */
-export function isAtComposeSite({ url, siteId }: {
-  url: string;
-  siteId: ComposeSiteId;
-}) {
+export function isAtComposeSite({ url, siteId }: { url: string; siteId: ComposeSiteId }) {
   try {
     return new URL(url).origin === new URL(COMPOSE_SITES[siteId].url).origin;
   } catch {

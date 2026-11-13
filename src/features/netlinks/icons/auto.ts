@@ -1,7 +1,8 @@
-import type { IconName } from "./choices";
-import { DEFAULT_ICON } from "./choices";
 import { hostLabel, hostOf } from "@/features/netlinks/link";
 import { BookmarkCategory } from "@/lib/storage/schema";
+
+import type { IconName } from "./choices";
+import { DEFAULT_ICON } from "./choices";
 
 // Layered like Niagara Launcher's Anycons: a known site wins, then keyword classes, then the
 // section, then the default. Tables rather than heuristics, so a wrong guess is one line to fix
@@ -123,7 +124,23 @@ const KEYWORD_ICONS: {
   },
   {
     icon: "Code",
-    keywords: ["code", "coding", "dev", "git", "api", "sdk", "docs", "npm", "repo", "compil", "debug", "deploy", "devops", "program", "engineer"]
+    keywords: [
+      "code",
+      "coding",
+      "dev",
+      "git",
+      "api",
+      "sdk",
+      "docs",
+      "npm",
+      "repo",
+      "compil",
+      "debug",
+      "deploy",
+      "devops",
+      "program",
+      "engineer"
+    ]
   },
   {
     icon: "Terminal",
@@ -175,7 +192,20 @@ const KEYWORD_ICONS: {
   },
   {
     icon: "Brain",
-    keywords: ["learn", "course", "study", "wiki", "edu", "research", "paper", "science", "univers", "academ", "tutorial", "lecture"]
+    keywords: [
+      "learn",
+      "course",
+      "study",
+      "wiki",
+      "edu",
+      "research",
+      "paper",
+      "science",
+      "univers",
+      "academ",
+      "tutorial",
+      "lecture"
+    ]
   },
   {
     icon: "Chart",
@@ -207,7 +237,20 @@ const KEYWORD_ICONS: {
   },
   {
     icon: "Work",
-    keywords: ["work", "office", "task", "project", "team", "calendar", "meeting", "ticket", "crm", "payroll", "recruit", "drive"]
+    keywords: [
+      "work",
+      "office",
+      "task",
+      "project",
+      "team",
+      "calendar",
+      "meeting",
+      "ticket",
+      "crm",
+      "payroll",
+      "recruit",
+      "drive"
+    ]
   },
   {
     icon: "Design",
@@ -296,20 +339,17 @@ const CATEGORY_ICONS: Record<string, IconName> = {
 };
 
 function tokensOf(text: string) {
-  return text.toLowerCase().split(/[^a-z\d]+/).filter(Boolean);
+  return text
+    .toLowerCase()
+    .split(/[^a-z\d]+/)
+    .filter(Boolean);
 }
 
-function hasKeywordPrefix({ tokens, keywords }: {
-  tokens: string[];
-  keywords: string[];
-}) {
+function hasKeywordPrefix({ tokens, keywords }: { tokens: string[]; keywords: string[] }) {
   return tokens.some(token => keywords.some(keyword => token.startsWith(keyword)));
 }
 
-function iconFromLink({ url, title }: {
-  url: string;
-  title: string;
-}) {
+function iconFromLink({ url, title }: { url: string; title: string }) {
   const site = SITE_ICONS[hostLabel(url)];
   if (site) {
     return site;
@@ -317,31 +357,32 @@ function iconFromLink({ url, title }: {
 
   const tokens = tokensOf(`${hostOf(url)} ${title}`);
 
-  return KEYWORD_ICONS.find(entry => hasKeywordPrefix({
-    tokens,
-    keywords: entry.keywords
-  }))?.icon ?? null;
+  return (
+    KEYWORD_ICONS.find(entry =>
+      hasKeywordPrefix({
+        tokens,
+        keywords: entry.keywords
+      })
+    )?.icon ?? null
+  );
 }
 
-export function pickIcon({ url, title, category }: {
-  url: string;
-  title: string;
-  category: string;
-}) {
-  return iconFromLink({
-    url,
-    title
-  }) ?? CATEGORY_ICONS[category.toLowerCase()] ?? DEFAULT_ICON;
+export function pickIcon({ url, title, category }: { url: string; title: string; category: string }) {
+  return (
+    iconFromLink({
+      url,
+      title
+    }) ??
+    CATEGORY_ICONS[category.toLowerCase()] ??
+    DEFAULT_ICON
+  );
 }
 
-export function pickCategory({ url, title }: {
-  url: string;
-  title: string;
-}) {
+export function pickCategory({ url, title }: { url: string; title: string }) {
   const icon = iconFromLink({
     url,
     title
   });
 
-  return icon ? ICON_CATEGORIES[icon] ?? null : null;
+  return icon ? (ICON_CATEGORIES[icon] ?? null) : null;
 }

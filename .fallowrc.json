@@ -14,13 +14,33 @@
   // reachable here and their specifiers exempted from the unresolved-import check.
   "dynamicallyLoaded": ["src/**/*.svelte.ts"],
   // Vite resolves `?raw` to the file's text; fallow sees the query and gives up on the path.
-  "ignoreUnresolvedImports": ["@/assets/icons/*.svg?raw", "@/features/companion/connection.svelte", "@/lib/glitch.svelte", "@/lib/sortable.svelte", "@/lib/storage/settings.svelte", "./widget.svelte", "@/features/widgets/widget.svelte", "@/features/compose/access.svelte"],
+  "ignoreUnresolvedImports": [
+    "@/assets/icons/*.svg?raw",
+    "@/features/companion/connection.svelte",
+    "@/lib/glitch.svelte",
+    "@/lib/sortable.svelte",
+    "@/lib/storage/settings.svelte",
+    "./widget.svelte",
+    "@/features/widgets/widget.svelte",
+    "@/features/compose/access.svelte"
+  ],
   // Both are used through tooling rather than an import: the Svelte Vite plugin by
   // @wxt-dev/module-svelte, postcss-html as stylelint's customSyntax.
   //
   // `cp:hmr-entry` is not a package at all - it is the virtual specifier `scripts/dev-hmr.mjs`
   // resolves to the new tab's own entry, so the hot client can import it without naming a path.
-  "ignoreDependencies": ["@sveltejs/vite-plugin-svelte", "cp:hmr-entry", "postcss-html", "avi12-lint", "eslint-config-avi12", "fallow-config-avi12", "oxfmt-config-avi12", "oxlint-config-avi12", "oxlint-plugin-naming", "stylelint-config-avi12"],
+  "ignoreDependencies": [
+    "@sveltejs/vite-plugin-svelte",
+    "cp:hmr-entry",
+    "postcss-html",
+    "avi12-lint",
+    "eslint-config-avi12",
+    "fallow-config-avi12",
+    "oxfmt-config-avi12",
+    "oxlint-config-avi12",
+    "oxlint-plugin-naming",
+    "stylelint-config-avi12"
+  ],
   "health": {
     "maxCognitive": 30,
     "maxCrap": 10000

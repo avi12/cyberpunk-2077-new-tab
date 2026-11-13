@@ -7,15 +7,10 @@
  * replaces `import.meta.*` with `undefined` in a build, so `import.meta.hot` is rewritten first.
  */
 
-import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
-import {
-  dirname,
-  join,
-  relative,
-  resolve,
-  sep
-} from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
 import { compile, compileModule, preprocess } from "svelte/compiler";
 import { build, transformWithOxc } from "vite";
 
@@ -66,9 +61,7 @@ function svelteHotPlugin() {
       const isRuneModule = id.endsWith(".svelte.ts") || id.endsWith(".svelte.js");
       if (isRuneModule) {
         /* Module-scope runes need Svelte's module transform, or `$state` throws `rune_outside_svelte`. */
-        const script = id.endsWith(".ts")
-          ? (await transformWithOxc(code, id, { lang: "ts" })).code
-          : code;
+        const script = id.endsWith(".ts") ? (await transformWithOxc(code, id, { lang: "ts" })).code : code;
         const compiled = compileModule(script, {
           filename: id,
           generate: "client",
