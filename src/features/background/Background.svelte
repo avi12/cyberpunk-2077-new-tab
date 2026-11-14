@@ -89,7 +89,7 @@
     class="background__layer"></div>
 {/if}
 
-{#if !isVideo || objectUrl}
+{#if !isCached}
   <div class="background__scrim"></div>
 {/if}
 
