@@ -2,6 +2,11 @@
 
 Jack into Night City on every new tab: a neon HUD, arranged your way
 
+[![Chrome users](https://img.shields.io/chrome-web-store/users/loeholjgiahjakohgpmglbhlfkhegccp?label=Chrome%20users)](https://chromewebstore.google.com/detail/loeholjgiahjakohgpmglbhlfkhegccp)
+[![Firefox users](https://img.shields.io/amo/users/cyberpunk-2077-new-tab@avi12.com?label=Firefox%20users)](https://addons.mozilla.org/firefox/addon/cyberpunk-2077-new-tab@avi12.com)
+
+[Get complimentary Cyberpunk themes here](https://github.com/avi12/cyberpunk-2077-themes)
+
 A ground-up rebuild of the [Cyberpunk 2077 Themed Homepage][original] extension on **WXT + Svelte 5**,
 matching the original's visuals while replacing its React/Tailwind/dnd-kit stack.
 
