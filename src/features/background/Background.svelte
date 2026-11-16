@@ -1,6 +1,6 @@
 <script lang="ts">
   import { BackgroundMediaType } from "@/lib/storage/schema";
-  import { BASE_BACKGROUND_COLOR } from "@/lib/storage/defaults";
+  import { BASE_BACKGROUND_COLOR, BUNDLED_BACKGROUND_PREFIX } from "@/lib/storage/defaults";
   import { CACHED_MEDIA_PREFIX, loadMedia, MediaSlot } from "@/lib/storage/media-store";
   import { isHexColor } from "@/lib/color";
   import { settings } from "@/lib/storage/settings.svelte";
@@ -19,6 +19,7 @@
     (isCached && settings.backgroundMediaType.current === BackgroundMediaType.VIDEO)
   );
   const isColor = $derived(isHexColor(background));
+  const isBundled = $derived(background.startsWith(BUNDLED_BACKGROUND_PREFIX));
   const imageUrl = $derived.by(() => {
     if (isVideo) {
       return null;
@@ -89,7 +90,7 @@
     class="background__layer"></div>
 {/if}
 
-{#if !isCached}
+{#if !isCached && !isBundled}
   <div class="background__scrim"></div>
 {/if}
 
@@ -120,7 +121,7 @@
   /*
    * Deepens toward the bottom: a night city is brightest at street level, where the footer and corner
    * buttons sit. No text colour or halo rescues 12px text over lit windows (measured), so the scrim
-   * does it for all of them.
+   * does it for all of them. A bundled image is graded dark already, so it skips this.
    */
   .background__scrim {
     position: fixed;
