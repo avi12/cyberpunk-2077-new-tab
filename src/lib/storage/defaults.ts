@@ -198,16 +198,22 @@ export const BACKGROUND_COLORS: SelectOption<string>[] = [
   }
 ];
 
-export const DEFAULT_BACKGROUND =
-  "https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg?auto=compress&cs=tinysrgb&w=1600";
+/** Shipped inside the extension, so it paints with no network and no host to depend on. */
+export const BUNDLED_BACKGROUND_PREFIX = "/backgrounds/";
+
+export const DEFAULT_BACKGROUND = `${BUNDLED_BACKGROUND_PREFIX}cybercity.webp`;
 
 export const BACKGROUND_IMAGES: SelectOption<string>[] = [
+  {
+    value: DEFAULT_BACKGROUND,
+    label: "Cyber City"
+  },
   {
     value: "https://images.pexels.com/photos/1470405/pexels-photo-1470405.jpeg?auto=compress&cs=tinysrgb&w=1600",
     label: "City Night"
   },
   {
-    value: DEFAULT_BACKGROUND,
+    value: "https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg?auto=compress&cs=tinysrgb&w=1600",
     label: "Neon City"
   },
   {
