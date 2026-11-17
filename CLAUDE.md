@@ -164,7 +164,7 @@ pnpm lint && pnpm stylelint && pnpm svelte:check && pnpm fallow
 - After every bug fix, feature or refactor - anything that removes or rewires code - act on what it
   flags as newly unused (imports, helpers, exports, whole files) so a change never leaves orphans.
   Never run `fallow fix` to do it automatically
-- `svelte:check` runs with `--tsgo`, which type checks through TypeScript 7 while `typescript` stays
+- `svelte:check` runs `avi12-svelte-check` (svelte-check in `--tsgo` mode with the compiler lookup handed to `tsrs`), which type checks through TypeScript 7 while `typescript` stays
   pinned at 6 for typescript-eslint, which does not support 7 yet. It transpiles components into
   `.svelte-check/` on the way, which is why every linter ignores that directory
 

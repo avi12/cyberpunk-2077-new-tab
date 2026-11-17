@@ -33,6 +33,7 @@
     "@sveltejs/vite-plugin-svelte",
     "cp:hmr-entry",
     "postcss-html",
+    "tsrs",
     "avi12-lint",
     "eslint-config-avi12",
     "fallow-config-avi12",
