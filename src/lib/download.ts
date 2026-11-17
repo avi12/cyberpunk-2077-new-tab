@@ -1,6 +1,6 @@
 /** An ISO date rather than a locale format: it sorts in a file manager and has no slashes or colons. */
 export function jsonFileName(stem: string) {
-  return `${stem}-${Temporal.Now.plainDateISO()}.json`;
+  return `${stem}-${Temporal.Now.plainDateISO().toString()}.json`;
 }
 
 export function downloadFile({ name, contents, mimeType }: { name: string; contents: BlobPart; mimeType: string }) {

@@ -253,7 +253,7 @@ async function asDataUrl(source: string) {
 
     return await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.addEventListener("load", () => resolve(String(reader.result)));
+      reader.addEventListener("load", () => resolve(typeof reader.result === "string" ? reader.result : ""));
       reader.addEventListener("error", () => reject(new Error(`could not read ${source}`)));
       reader.readAsDataURL(blob);
     });

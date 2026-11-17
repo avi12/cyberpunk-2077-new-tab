@@ -19,6 +19,6 @@ export function sortable(options: () => SortableOptions) {
 
     $effect(() => engine.update(options()));
 
-    return engine.destroy;
+    return () => engine.destroy();
   };
 }

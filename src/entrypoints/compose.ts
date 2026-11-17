@@ -38,8 +38,8 @@ function composerText(composer: HTMLElement) {
  * disabled. The prototype's setter plus an `input` event makes React agree.
  */
 function fillField({ composer, prompt }: { composer: HTMLTextAreaElement; prompt: string }) {
-  const setValue = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")?.set;
-  setValue?.call(composer, prompt);
+  const descriptor = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value");
+  descriptor?.set?.call(composer, prompt);
   composer.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
